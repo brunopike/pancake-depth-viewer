@@ -18,7 +18,7 @@ const price = n => Number.isFinite(n) ? n !== 0 && (Math.abs(n) >= 1e12 || Math.
 const bandPrice = n => n === 0 || !Number.isFinite(n) || Math.abs(n) >= 1e12 ? price(n) : n < state.config.step ? `＜${state.config.step.toFixed(state.config.precision)}` : Number(n).toLocaleString('en-US', { minimumFractionDigits: state.config.precision, maximumFractionDigits: state.config.precision });
 const time = n => new Date(n).toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai', hour12: false });
 const protocolName = { v2: 'V2', v3: 'V3', infinityCl: 'Infinity CL', infinityBin: 'Infinity Bin', stable: 'StableSwap', infinityStable: 'Infinity Stable' };
-const state = { catalog: null, markets: [], market: null, config: settings(100, 6), live: null, depth: null, request: 0, hover: null, focusPrice: null, busy: false };
+const state = { catalog: null, markets: [], market: null, config: settings(50, 4), live: null, depth: null, request: 0, hover: null, focusPrice: null, busy: false };
 let plot;
 
 function pairMarket(p) {
@@ -353,7 +353,7 @@ setInterval(() => { if ($('auto').checked && !state.busy && !document.hidden) re
 
 async function init() {
   const params = new URLSearchParams(location.search);
-  try { state.config = settings(params.get('range') || (params.has('levels') && params.has('bps') ? Number(params.get('levels')) * Number(params.get('bps')) / 100 : 100), params.get('precision') ?? 6); } catch (e) { setError(`${e.message}；已恢复默认显示设置。`); }
+  try { state.config = settings(params.get('range') || (params.has('levels') && params.has('bps') ? Number(params.get('levels')) * Number(params.get('bps')) / 100 : 50), params.get('precision') ?? 4); } catch (e) { setError(`${e.message}；已恢复默认显示设置。`); }
   updateControls();
   try {
     let catalog;
