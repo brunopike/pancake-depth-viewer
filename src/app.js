@@ -116,7 +116,7 @@ async function refresh() {
     if (request !== state.request || !usable(live)) return false;
     const depth = buildDepth(live.pools, market.base.id, config);
     state.live = live; state.depth = depth; state.hover = null;
-    render(); $('export').disabled = false; $('jump-button').disabled = false;
+    render(); $('jump-button').disabled = false;
     $('status').textContent = `${time(live.timestamp)} · 合并 ${live.pools.length}/${market.pools.length} 个池子${live.failed.length ? ` · ${live.failed.length} 个未计入` : ''}${updating ? ' · 正在更新…' : ''}`;
     setError(Date.now() - live.timestamp > 180000 ? '显示的是较早的数据，正在检查更新。' : '');
     displayed = true; return true;
@@ -167,7 +167,7 @@ async function refresh() {
       $('chart-empty').textContent = '暂时没有可用数据';
     }
   } finally {
-    if (request === state.request) { state.busy = false; $('refresh').disabled = false; $('export').disabled = !state.depth; $('jump-button').disabled = !state.depth; }
+    if (request === state.request) { state.busy = false; $('refresh').disabled = false; $('jump-button').disabled = !state.depth; }
   }
 }
 function render() {
@@ -304,17 +304,6 @@ $('maximum').addEventListener('click', () => { $('maximum').setAttribute('aria-p
 $('refresh').addEventListener('click', refresh);
 $('coverage-button').addEventListener('click', coverage);
 $('method-button').addEventListener('click', methodology);
-$('share').addEventListener('click', async () => {
-  try { updateURL(); await navigator.clipboard.writeText(location.href); $('share').textContent = '链接已复制'; setTimeout(() => $('share').textContent = '复制分享链接', 2000); }
-  catch { setError('浏览器没有允许复制。请直接复制地址栏中的链接，当前设置已包含在链接里。'); }
-});
-$('export').addEventListener('click', () => {
-  if (!state.depth || !state.live) return;
-  const lines = [`# chainId=56,block=${state.live.blockNumber},timestamp=${new Date(state.live.timestamp).toISOString()},base=${state.market.base.id},quote=${state.market.quote.id},pools=${state.live.pools.length}/${state.market.pools.length},range_percent=${state.config.percent},precision=${state.config.precision},adjacent_bands_merged=${state.depth.grouped}`, 'side,level,price,base_quantity,cumulative_base_quantity,quote_amount,cumulative_quote_amount,offset_percent'];
-  for (const side of ['bids', 'asks']) for (const r of state.depth[side]) lines.push([side, r.level, r.price, r.quantity, r.cumulativeQuantity, r.quote, r.cumulativeQuote, r.offset / 100].join(','));
-  const url = URL.createObjectURL(new Blob([lines.join('\n')], { type: 'text/csv;charset=utf-8' }));
-  const a = document.createElement('a'); a.href = url; a.download = `pancake-depth-${state.live.blockNumber}.csv`; a.click(); setTimeout(() => URL.revokeObjectURL(url), 1000);
-});
 for (const id of ['bids', 'asks']) {
   $(id).addEventListener('pointerover', e => { const row = e.target.closest('[data-index]'); if (row) inspect(row.dataset.side, Number(row.dataset.index)); });
   $(id).addEventListener('click', e => { const row = e.target.closest('[data-index]'); if (row) inspect(row.dataset.side, Number(row.dataset.index)); });
@@ -353,7 +342,6 @@ new ResizeObserver(draw).observe($('chart').parentElement);
 setInterval(() => { if ($('auto').checked && !state.busy && !document.hidden) refresh(); }, 60000);
 
 async function init() {
-  $('export').disabled = true;
   const params = new URLSearchParams(location.search);
   try { state.config = settings(params.get('range') || (params.has('levels') && params.has('bps') ? Number(params.get('levels')) * Number(params.get('bps')) / 100 : 'max'), params.get('precision') ?? 8); } catch (e) { setError(`${e.message}；已恢复默认显示设置。`); }
   updateControls();
