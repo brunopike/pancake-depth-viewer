@@ -15,3 +15,4 @@
 @media(max-width:600px){.book-scroll{height:235px}.book-mid{padding:13px 8px}.book-mid strong{font-size:20px}.book-row{padding:7px 8px}}
 
 .mobile-book-hint{display:none}@media(max-width:600px){.mobile-book-hint{display:block;color:var(--muted);font-size:10px;margin:0 0 8px}}
+.workspace>section{min-width:0}@media(max-width:1150px){.chart-section{grid-row:auto}}
