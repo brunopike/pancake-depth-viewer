@@ -2,7 +2,7 @@ import { readFile, writeFile, mkdir, rename } from 'node:fs/promises';
 import { createPublicClient, http } from 'viem';
 import { bsc } from 'viem/chains';
 import { client as publicClient, loadPools } from '../src/chain.mjs';
-import { DEFAULT_BASE, DEFAULT_QUOTE, SHARED_URL, parseSnapshot, serializeSnapshot } from '../src/snapshot.mjs';
+import { DEFAULT_BASE, DEFAULT_QUOTE, latestSharedURL, parseSnapshot, serializeSnapshot } from '../src/snapshot.mjs';
 
 // This script runs on the server only. The build never reads this environment variable.
 const key = process.env.ALCHEMY_API_KEY;
@@ -16,7 +16,8 @@ const catalog = JSON.parse(await readFile('public/data/catalog.json', 'utf8'));
 const metas = catalog.pools.filter(p => [p.token0.id.toLowerCase(), p.token1.id.toLowerCase()].sort().join('/') === [DEFAULT_BASE, DEFAULT_QUOTE].sort().join('/'));
 let previous;
 try {
-  const response = await fetch(SHARED_URL, { cache: 'no-store', signal: AbortSignal.timeout(12000) });
+  const signal = AbortSignal.timeout(12000);
+  const response = await fetch(await latestSharedURL(signal), { cache: 'no-store', signal });
   if (response.ok) previous = parseSnapshot(await response.text(), metas, DEFAULT_BASE, DEFAULT_QUOTE);
 } catch { /* A missing or invalid cache triggers a full chain scan. */ }
 if (!previous) try { previous = parseSnapshot(await readFile(file, 'utf8'), metas, DEFAULT_BASE, DEFAULT_QUOTE); } catch {}

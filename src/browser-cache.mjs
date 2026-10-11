@@ -1,4 +1,4 @@
-import { defaultPair, parseSnapshot, serializeSnapshot, SHARED_URL } from './snapshot.mjs';
+import { defaultPair, parseSnapshot, serializeSnapshot, latestSharedURL } from './snapshot.mjs';
 const key = market => `pancake-depth:v1:${market.key}`;
 export function readBrowserCache(market) {
   try { return parseSnapshot(localStorage.getItem(key(market)), market.pools, market.base.id, market.quote.id); } catch { return null; }
@@ -12,7 +12,9 @@ export function saveBrowserCache(market, live) {
 export async function readSharedCache(market, seed = false) {
   if (!defaultPair(market.base.id, market.quote.id)) return null;
   try {
-    const response = await fetch(seed ? './data/esim-usdt.json' : SHARED_URL, { cache: 'no-store', signal: AbortSignal.timeout(6000) });
+    const signal = AbortSignal.timeout(6000);
+    const url = seed ? './data/esim-usdt.json' : await latestSharedURL(signal);
+    const response = await fetch(url, { cache: 'no-store', signal });
     if (!response.ok) return null;
     return parseSnapshot(await response.text(), market.pools, market.base.id, market.quote.id);
   } catch { return null; }
