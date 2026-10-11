@@ -83,6 +83,60 @@ export function cumulative(pool, baseId, targetPrice, side, fromPrice) {
   return result;
 }
 
+function requireFullPools(pools) {
+  if (!pools.length) throw new Error('暂时没有可计算的池子。');
+  if (pools.some(p => p.kind === 'cl' && (!p.fullRange || p.minTick !== MIN_TICK || p.maxTick !== MAX_TICK))) {
+    throw new Error('全池数据还在读取，请稍后再试。');
+  }
+}
+
+// Principal available for swaps, across every initialized interval. Accrued CL fees are separate.
+export function poolInventory(pools, baseId) {
+  requireFullPools(pools);
+  let base = 0, quote = 0;
+  for (const pool of pools) {
+    if (pool.kind === 'v2') {
+      const direct = pool.token0.id.toLowerCase() === baseId.toLowerCase();
+      base += (direct ? pool.reserve0 : pool.reserve1) / 10 ** (direct ? pool.token0.decimals : pool.token1.decimals);
+      quote += (direct ? pool.reserve1 : pool.reserve0) / 10 ** (direct ? pool.token1.decimals : pool.token0.decimals);
+    } else {
+      base += cumulative(pool, baseId, Infinity, 'ask').quantity;
+      quote += cumulative(pool, baseId, 0, 'bid').quote;
+    }
+  }
+  if (![base, quote].every(n => Number.isFinite(n) && n >= 0)) throw new Error('池内币量暂时无法计算。');
+  return { base, quote };
+}
+
+// Static price-impact estimate. Quote is paid on a buy and received on a sell.
+export function estimateTarget(pools, baseId, targetPrice, reference) {
+  targetPrice = Number(targetPrice);
+  if (!Number.isFinite(targetPrice) || targetPrice <= 0) throw new Error('目标价格请输入大于 0 的数字。');
+  if (!Number.isFinite(reference) || reference <= 0) throw new Error('参考价格尚未读到，请稍后再试。');
+  requireFullPools(pools);
+  const side = targetPrice > reference ? 'ask' : targetPrice < reference ? 'bid' : 'same';
+  let quantity = 0, quote = 0, emptyPools = 0;
+  if (side === 'same') return { side, quantity, quote, emptyPools, targetPrice };
+  for (const pool of pools) {
+    if (pool.kind === 'cl') {
+      const bounds = [priceAtTick(pool, baseId, MIN_TICK), priceAtTick(pool, baseId, MAX_TICK)].sort((a, b) => a - b);
+      if (targetPrice < bounds[0] || targetPrice > bounds[1]) throw new Error('目标价格超出池子的合约价格范围。');
+      const target = sqrtAtPrice(pool, baseId, targetPrice), current = Number(pool.sqrtPriceX96) / Q96;
+      let active = pool.liquidity;
+      for (const t of pool.ticks) {
+        const boundary = Math.exp(t.index * LOG_TICK / 2);
+        if (target > current && t.index > pool.tick && boundary <= target) active += t.net;
+        if (target < current && t.index <= pool.tick && boundary >= target) active -= t.net;
+      }
+      if (active <= 0n) emptyPools++;
+    }
+    const value = cumulative(pool, baseId, targetPrice, side);
+    quantity += value.quantity; quote += value.quote;
+  }
+  if (![quantity, quote].every(n => Number.isFinite(n) && n >= 0)) throw new Error('目标价估算超出可计算范围。');
+  return { side, quantity, quote, emptyPools, targetPrice };
+}
+
 // At most 500 rows: merge adjacent decimal bands, never truncate range totals.
 function boundaries(center, endpoint, config, sign) {
   const infinite = endpoint === Infinity;
