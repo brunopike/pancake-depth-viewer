@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content="PancakeSwap 全市场池目录与链上深度查看。自定义价格 bps、100 档深度、累计流动性曲线及池覆盖明细。">
+  <meta name="theme-color" content="#0b1017"><title>MMDock · Pancake Depth</title>
+  <link rel="stylesheet" href="./style.css"><script type="module" src="./app.js"></script>
+</head>
+<body>
+<header class="topbar"><a class="brand" href="./"><span class="mark">M</span> MMDock <span class="brand-sub">/ Pancake Depth</span></a><div class="top-right"><span class="chain-dot"></span> BNB Chain <a href="https://github.com/starkweng/pancake-depth-viewer" target="_blank" rel="noopener">GitHub ↗</a></div></header>
+<main>
+  <div class="page-heading"><div><div class="eyebrow">PANCAKESWAP MARKET EXPLORER</div><h1>链上深度，一眼看清。</h1></div><span class="readonly">公开数据 · 只读</span></div>
+  <section class="marketbar" aria-label="交易对与市场"><button id="market-button" class="market-button" aria-haspopup="dialog"><strong id="pair-name">选择交易对</strong><span>切换市场 ⌄</span></button><div class="market-value"><span>参考池现价</span><strong id="mark-price">—</strong><small id="quote-unit">—</small></div><div class="market-value"><span>买入侧累计深度</span><strong id="ask-total">—</strong><small class="ask-color">池内供给</small></div><div class="market-value"><span>卖出侧累计深度</span><strong id="bid-total">—</strong><small class="bid-color">池内承接</small></div></section>
+  <form id="settings-form" class="toolbar"><div class="control"><label for="levels">每侧档数</label><input id="levels" type="number" min="20" max="500" step="1" value="100" required></div><div class="presets"><button type="button" data-levels="50">50</button><button type="button" data-levels="100" class="active">100</button><button type="button" data-levels="200">200</button></div><div class="control"><label for="bps">每档价格</label><input id="bps" type="number" min="0.1" max="1000" step="0.1" value="10" required><span>bps</span></div><button class="button apply" type="submit">应用</button><span id="range-label" class="range-label">±10.00%</span><div class="toolbar-end"><label class="auto"><input id="auto" type="checkbox"> 60 秒更新</label><button id="refresh" class="button" type="button">刷新深度</button><button id="share" class="button" type="button">复制链接</button><button id="export" class="icon-button" type="button" title="导出深度 CSV" aria-label="导出深度 CSV">↓ CSV</button></div></form>
+  <div class="statusbar"><span id="status" role="status">正在加载 PancakeSwap 市场目录…</span><button id="coverage-button" class="text-button">池覆盖明细 ↗</button></div>
+  <div id="error" class="error" role="alert" hidden></div>
+  <div class="workspace">
+    <section class="depth-section"><div class="section-heading"><h2>价格档位</h2><span id="levels-summary">每侧 100 档</span></div><div class="books"><div class="book"><div class="side-heading bid-color">卖出代币 · Bid</div><div class="book-header"><span>价格</span><span>数量</span><span>本档金额</span><span>累计金额</span></div><div class="book-scroll" id="bids" tabindex="0" aria-label="卖出侧深度档位"><div class="empty">请选择市场</div></div></div><div class="book"><div class="side-heading ask-color">买入代币 · Ask</div><div class="book-header"><span>价格</span><span>数量</span><span>本档金额</span><span>累计金额</span></div><div class="book-scroll" id="asks" tabindex="0" aria-label="买入侧深度档位"><div class="empty">请选择市场</div></div></div></div><div class="book-foot"><span id="book-units">价格：报价币 / 基础币</span><span>从参考价格向外</span></div></section>
+    <section class="chart-section"><div class="section-heading"><h2>累计深度曲线</h2><div class="legend"><span class="bid-color">● 卖出侧</span><span class="ask-color">● 买入侧</span></div></div><div class="canvas-wrap"><canvas id="chart" aria-label="累计深度曲线" role="img"></canvas><div id="chart-tip" class="chart-tip" hidden></div><div id="chart-empty" class="chart-empty">选择市场后，显示真实池流动性。</div></div><div class="chart-foot"><span>横轴：价格</span><span id="chart-unit">纵轴：累计报价币金额</span><span>悬停查看 · 点击定位档位</span></div><div class="inspection" id="inspection"><span class="eyebrow">DEPTH INSPECTOR</span><p>移动到曲线或档位，查看该价格的数量、金额与累计深度。</p></div></section>
+  </div>
+  <div class="bottomline"><span id="catalog-status">市场目录：加载中</span><button id="method-button" class="text-button">计算口径与数据来源 ↗</button></div>
+  <footer>AMM 流动性按价格区间积分，金额不含手续费、Gas、税费和 Hook 影响；这是一份池流动性视图。<span>1 bps = 0.01%</span></footer>
+</main>
+<dialog id="market-dialog"><div class="dialog-heading"><div><span class="eyebrow">MARKET DIRECTORY</span><h2>选择 PancakeSwap 市场</h2></div><button class="close" aria-label="关闭" data-close="market-dialog">×</button></div><input id="search" class="search" placeholder="搜索代币、交易对或合约地址" aria-label="搜索市场"><div class="market-list-head"><span>交易对 / 池数</span><span>目录 TVL</span></div><div id="market-list" class="market-list"></div><div id="search-summary" class="dialog-foot"></div></dialog>
+<dialog id="detail-dialog"><div class="dialog-heading"><h2 id="detail-title">池覆盖明细</h2><button class="close" aria-label="关闭" data-close="detail-dialog">×</button></div><div id="detail-body"></div></dialog>
+</body></html>
