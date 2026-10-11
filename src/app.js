@@ -3,9 +3,14 @@ import { buildDepth, settings } from './math.mjs';
 const $ = id => document.getElementById(id);
 const escape = value => String(value ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const number = (n, digits = 2) => Number(n) !== 0 && Math.abs(n) < 10 ** -digits
-  ? Number(n).toExponential(2) : Number(n).toLocaleString('en-US', { maximumFractionDigits: digits });
-const compact = n => Number(n) !== 0 && Math.abs(n) < 0.01
-  ? Number(n).toExponential(2) : Number(n).toLocaleString('en-US', { notation: 'compact', maximumFractionDigits: 2 });
+  ? Number(n).toLocaleString('en-US', { maximumSignificantDigits: 3 }) : Number(n).toLocaleString('en-US', { maximumFractionDigits: digits });
+const compact = n => {
+  n = Number(n);
+  if (n !== 0 && Math.abs(n) < 0.000001) return '＜0.000001';
+  if (Math.abs(n) >= 100000000) return `${number(n / 100000000)}亿`;
+  if (Math.abs(n) >= 10000) return `${number(n / 10000)}万`;
+  return number(n, Math.abs(n) < 1 ? 6 : 2);
+};
 const price = n => Number(n).toLocaleString('en-US', { maximumSignificantDigits: 7 });
 const time = n => new Date(n).toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai', hour12: false });
 const protocolName = { v2: 'V2', v3: 'V3', infinityCl: 'Infinity CL', infinityBin: 'Infinity Bin', stable: 'StableSwap', infinityStable: 'Infinity Stable' };
@@ -28,12 +33,35 @@ function catalogMarkets(pools) {
   }
   return [...groups.values()].sort((a, b) => b.tvl - a.tvl);
 }
-function setError(message) { $('error').hidden = !message; $('error').textContent = message || ''; }
+function plainError(message) {
+  const known = {
+    'RPC 合约读取失败，请重试或缩小范围': '暂时读不到这个池子的链上数据，请稍后刷新。',
+    '目录与链上代币身份不一致': '列表中的币种与链上实际币种对不上，这个池子未计入。',
+    'Infinity PoolKey 身份校验失败': '这个池子的币种或所属合约对不上，未计入。',
+    '空池': '这个池子目前没有可用于买卖的资金。',
+    '池尚未初始化': '这个池子尚未开始提供买卖资金。',
+    '无效 tick spacing': '这个池子的价格设置数据异常，暂时无法计算。',
+    'tick 范围过大，请降低档数或 bps': '要读取的价格范围太大。可先减少档数或价格间隔，再刷新。',
+    '初始化 tick 数过多，请缩小范围': '这个价格范围内的数据太多。请减少档数或价格间隔，再刷新。',
+    '此版本尚未支持深度计算': '这种类型的池子暂时还不能计算，没有加进图里。',
+    '目标价格超出已读取 tick 范围，请刷新': '所选价格超出这次读取的范围，请刷新数据。',
+    '负流动性：池数据不一致': '这个池子的资金数据不一致，暂时无法计算。',
+    '深度超出数值范围': '这次读取的数值过大，暂时无法计算。',
+    '没有可计算深度的池': '暂时没有读到可用于计算的池子，请刷新或切换代币。',
+    '池现价无效': '没有读到有效价格，请刷新或切换代币。',
+  };
+  return known[message] || '这次没能读到可用数据，请稍后刷新。';
+}
+function setError(message, technical = '') {
+  $('error').hidden = !message;
+  $('error').innerHTML = escape(message || '') + (technical && technical !== message
+    ? `<details><summary>查看技术信息</summary><p>${escape(technical)}</p></details>` : '');
+}
 function clearDepth() {
   state.depth = null; state.live = null; state.hover = null;
   ['mark-price', 'ask-total', 'bid-total'].forEach(id => $(id).textContent = '—');
-  ['bids', 'asks'].forEach(id => $(id).innerHTML = '<div class="empty">读取链上流动性…</div>');
-  $('chart-empty').style.display = 'flex'; $('chart-empty').textContent = '读取所选市场的链上流动性…';
+  ['bids', 'asks'].forEach(id => $(id).innerHTML = '<div class="empty">正在读取池子里的资金…</div>');
+  $('chart-empty').style.display = 'flex'; $('chart-empty').textContent = '正在读取这个代币的买卖资金…';
   $('chart-tip').hidden = true; draw();
 }
 function updateURL() {
@@ -44,41 +72,52 @@ function updateURL() {
 }
 function updateControls() {
   $('levels').value = state.config.levels; $('bps').value = state.config.bps;
-  $('range-label').textContent = `±${(state.config.levels * state.config.bps / 100).toFixed(2)}%`;
+  const step = number(state.config.bps / 100, 3), range = number(state.config.levels * state.config.bps / 100);
+  $('range-label').textContent = `上下 ${range}%`;
+  $('settings-hint').textContent = `${state.config.bps} bps = 参考价的 ${step}%；买入和卖出各看 ${state.config.levels} 档，范围为参考价上下 ${range}%。`;
+  $('ask-range-note').textContent = `到比参考价高 ${range}% 的位置`;
+  $('bid-range-note').textContent = `到比参考价低 ${range}% 的位置`;
   document.querySelectorAll('[data-levels]').forEach(b => b.classList.toggle('active', Number(b.dataset.levels) === state.config.levels));
-  $('levels-summary').textContent = `每侧 ${state.config.levels} 档 · ${state.config.bps} bps`;
+  $('levels-summary').textContent = `买卖各 ${state.config.levels} 档 · 每档 ${step}%`;
 }
 async function selectMarket(market) {
   state.market = market;
   $('pair-name').textContent = `${market.base.symbol} / ${market.quote.symbol}`;
-  $('quote-unit').textContent = `${market.quote.symbol} / ${market.base.symbol}`;
+  $('quote-unit').textContent = `1 ${market.base.symbol} 的价格，单位 ${market.quote.symbol}`;
   $('book-units').textContent = `数量：${market.base.symbol} · 金额：${market.quote.symbol}`;
-  $('chart-unit').textContent = `纵轴：累计 ${market.quote.symbol}`;
+  $('chart-unit').textContent = `竖着看：合计金额（${market.quote.symbol}）`;
   updateURL(); $('market-dialog').close(); await refresh();
 }
 async function refresh() {
   if (!state.market) return;
   const request = ++state.request, market = state.market, config = { ...state.config };
   clearDepth(); setError(''); state.busy = true; $('refresh').disabled = true; $('export').disabled = true;
-  $('status').textContent = `正在读取 ${market.pools.length} 个池，所有合约固定同一区块…`;
+  $('status').textContent = `正在从链上读取 ${market.pools.length} 个池子的数据…`;
   try {
     const live = await loadPools(market.pools, market.base.id, config.levels * config.bps / 10000, (done, total) => {
-      if (request === state.request) $('status').textContent = `读取池流动性 ${done} / ${total}…`;
+      if (request === state.request) $('status').textContent = `正在读取池子 ${done} / ${total}…`;
     });
     if (request !== state.request) return;
     state.live = live;
-    if (!live.pools.length) throw new Error('该市场暂无可用深度。请查看池覆盖明细，或切换交易对后重试。');
+    if (!live.pools.length) {
+      setError('这个代币暂时没有可用数据。点击“查看数据明细”了解原因，或换个代币再试。');
+      $('status').textContent = '这次没有读到可用数据';
+      ['bids', 'asks'].forEach(id => $(id).innerHTML = '<div class="empty">暂时没有可用数据</div>');
+      $('chart-empty').textContent = '暂时没有可用数据';
+      return;
+    }
     state.depth = buildDepth(live.pools, market.base.id, config);
     render();
     const age = Date.now() - live.timestamp;
-    $('status').textContent = `区块 ${live.blockNumber} · ${time(live.timestamp)} CST · 已读取 ${live.pools.length}/${market.pools.length} 个池${live.failed.length ? ' · 部分覆盖' : ''}`;
-    if (age > 180000) setError('RPC 区块超过 3 分钟，当前显示为旧区块深度，请刷新。');
+    $('status').textContent = `数据时间：${time(live.timestamp)}（北京时间） · 已合并 ${live.pools.length}/${market.pools.length} 个池子${live.failed.length ? ` · ${live.failed.length} 个未计入` : ''}`;
+    if (age > 180000) setError('当前数据已超过 3 分钟，可能有变化，请点击“刷新数据”。');
   } catch (e) {
     if (request !== state.request) return;
-    setError(e.shortMessage || e.message || '数据读取失败，请重试');
-    $('status').textContent = '本次读取未成功';
-    ['bids', 'asks'].forEach(id => $(id).innerHTML = '<div class="empty">暂无可用深度</div>');
-    $('chart-empty').textContent = '暂无可用深度';
+    const technical = e.shortMessage || e.message || '读取失败';
+    setError(plainError(technical), technical);
+    $('status').textContent = '这次没有读到可用数据';
+    ['bids', 'asks'].forEach(id => $(id).innerHTML = '<div class="empty">暂时没有可用数据</div>');
+    $('chart-empty').textContent = '暂时没有可用数据';
   } finally {
     if (request === state.request) { state.busy = false; $('refresh').disabled = false; $('export').disabled = !state.depth; }
   }
@@ -86,14 +125,14 @@ async function refresh() {
 function render() {
   const d = state.depth;
   $('mark-price').textContent = price(d.price);
-  $('ask-total').textContent = compact(d.asks.at(-1).cumulativeQuote);
-  $('bid-total').textContent = compact(d.bids.at(-1).cumulativeQuote);
+  $('ask-total').textContent = `${compact(d.asks.at(-1).cumulativeQuote)} ${state.market.quote.symbol}`;
+  $('bid-total').textContent = `${compact(d.bids.at(-1).cumulativeQuote)} ${state.market.quote.symbol}`;
   const maximum = Math.max(d.bids.at(-1).cumulativeQuote, d.asks.at(-1).cumulativeQuote, 1e-20);
   for (const [id, rows, side] of [['bids', d.bids, 'bid'], ['asks', d.asks, 'ask']]) {
-    $(id).innerHTML = rows.map((r, i) => `<button class="book-row ${side}" data-side="${side}" data-index="${i}" style="--fill:${r.cumulativeQuote / maximum * 100}%;--side:var(--${side === 'bid' ? 'green' : 'red'})" aria-label="${side === 'bid' ? '卖出' : '买入'}侧第 ${r.level} 档，价格 ${r.price}，本档数量 ${r.quantity}，本档金额 ${r.quote}，累计金额 ${r.cumulativeQuote}"><span>${price(r.price)}</span><span>${compact(r.quantity)}</span><span>${compact(r.quote)}</span><span>${compact(r.cumulativeQuote)}</span></button>`).join('');
+    $(id).innerHTML = rows.map((r, i) => `<button class="book-row ${side}" data-side="${side}" data-index="${i}" style="--fill:${r.cumulativeQuote / maximum * 100}%;--side:var(--${side === 'bid' ? 'green' : 'red'})" aria-label="${side === 'bid' ? '卖出' : '买入'}第 ${r.level} 档，价格 ${r.price}，这一档数量 ${r.quantity}，这一档金额 ${r.quote}，合计金额 ${r.cumulativeQuote}"><span>${price(r.price)}</span><span>${compact(r.quantity)}</span><span>${compact(r.quote)}</span><span>${compact(r.cumulativeQuote)}</span></button>`).join('');
   }
   $('chart-empty').style.display = 'none';
-  $('inspection').innerHTML = '<span class="eyebrow">DEPTH INSPECTOR</span><p>移动到曲线或档位，查看该价格的数量、金额与累计深度。</p>';
+  $('inspection').innerHTML = '<span class="eyebrow">查看某一档</span><p>指到曲线或点一行表格，就能看到这一档的具体数量和金额。</p>';
   draw();
 }
 function inspect(side, index, locate = false) {
@@ -102,7 +141,7 @@ function inspect(side, index, locate = false) {
   if (!row) return;
   state.hover = { side, index };
   const color = side === 'bid' ? 'bid-color' : 'ask-color';
-  $('inspection').innerHTML = `<span class="eyebrow ${color}">${side === 'bid' ? '卖出' : '买入'}侧 · 第 ${row.level} 档 · ${row.offset > 0 ? '+' : ''}${number(row.offset, 1)} bps</span><div class="inspection-data"><div><span>价格 · ${escape(state.market.quote.symbol)}</span><strong>${price(row.price)}</strong></div><div><span>本档数量 · ${escape(state.market.base.symbol)}</span><strong>${number(row.quantity, 5)}</strong></div><div><span>本档金额</span><strong>${number(row.quote, 5)}</strong></div><div><span>累计金额</span><strong>${number(row.cumulativeQuote, 5)}</strong></div></div>`;
+  $('inspection').innerHTML = `<span class="eyebrow ${color}">${side === 'bid' ? '卖出' : '买入'} · 第 ${row.level} 档 · 比参考价${row.offset > 0 ? '高' : '低'} ${number(Math.abs(row.offset) / 100, 3)}%</span><div class="inspection-data"><div><span>每个 ${escape(state.market.base.symbol)} 的价格（${escape(state.market.quote.symbol)}）</span><strong>${price(row.price)}</strong></div><div><span>这一档数量（${escape(state.market.base.symbol)}）</span><strong>${number(row.quantity, 5)}</strong></div><div><span>这一档金额（${escape(state.market.quote.symbol)}）</span><strong>${number(row.quote, 5)}</strong></div><div><span>从第 1 档合计（${escape(state.market.quote.symbol)}）</span><strong>${number(row.cumulativeQuote, 5)}</strong></div></div>`;
   document.querySelectorAll('.book-row.selected').forEach(e => e.classList.remove('selected'));
   const button = document.querySelector(`.book-row[data-side="${side}"][data-index="${index}"]`);
   button?.classList.add('selected');
@@ -155,23 +194,23 @@ function showMarkets() { $('market-dialog').showModal(); $('search').value = '';
 function renderMarkets() {
   const query = $('search').value.trim().toLowerCase();
   const matches = state.markets.filter(m => `${m.base.symbol} ${m.quote.symbol} ${m.base.name} ${m.quote.name} ${m.base.id} ${m.quote.id} ${m.pools.map(p => p.id).join(' ')}`.toLowerCase().includes(query));
-  $('market-list').innerHTML = matches.slice(0, 200).map(m => `<button class="market-option" data-market="${escape(m.key)}"><span><strong>${escape(m.base.symbol)} / ${escape(m.quote.symbol)}</strong><small>${m.pools.length} 个池 · ${[...new Set(m.pools.map(p => protocolName[p.protocol] || p.protocol))].map(escape).join(' / ')} · ${escape(m.base.id.slice(0, 8))}…${escape(m.base.id.slice(-4))}</small></span><span>$${compact(m.tvl)}</span></button>`).join('') || '<div class="empty">目录中没有匹配市场</div>';
-  $('search-summary').textContent = `匹配 ${matches.length} 个交易对${matches.length > 200 ? '，显示前 200 个；输入关键词可缩小范围' : ''}。目录中未发现的池不计入深度；支持按代币或池地址查询。`;
+  $('market-list').innerHTML = matches.slice(0, 200).map(m => `<button class="market-option" data-market="${escape(m.key)}"><span><strong>${escape(m.base.symbol)} / ${escape(m.quote.symbol)}</strong><small>${m.pools.length} 个池子 · ${[...new Set(m.pools.map(p => protocolName[p.protocol] || p.protocol))].map(escape).join(' / ')} · ${escape(m.base.id.slice(0, 8))}…${escape(m.base.id.slice(-4))}</small></span><span>$${compact(m.tvl)}</span></button>`).join('') || '<div class="empty">没有找到，请换个名称或粘贴地址试试</div>';
+  $('search-summary').textContent = `找到 ${matches.length} 组买卖币种${matches.length > 200 ? '，先显示前 200 组；输入名称可缩小范围' : ''}。例如 ESIM / USDT 表示用 USDT 买卖 ESIM。列表未收录的池子不会计入。`;
 }
 function coverage() {
-  $('detail-title').textContent = '池覆盖明细';
+  $('detail-title').textContent = '哪些池子算进来了？';
   if (!state.market) return;
   const live = state.live;
-  $('detail-body').innerHTML = `<p>${escape(state.market.base.symbol)} / ${escape(state.market.quote.symbol)} · 目录发现 ${state.market.pools.length} 个直接交易池。${live ? `已读取 ${live.pools.length} 个；未计入 ${live.failed.length} 个。` : '链上数据尚未就绪。'}<br>只聚合同一对合约地址的直接池；其他报价币、多跳路径和其他交易所不在这条曲线中。</p>` + state.market.pools.map(p => {
+  $('detail-body').innerHTML = `<p>“池子”是 PancakeSwap 里用于买卖两种币的一组资金。这里把成功读取的池子合在一起看。</p><p>${escape(state.market.base.symbol)} / ${escape(state.market.quote.symbol)}：已找到 ${state.market.pools.length} 个池子。${live ? `图中已计入 ${live.pools.length} 个，未计入 ${live.failed.length} 个。<br>数据时间：${time(live.timestamp)}（北京时间）；链上记录编号（区块）：${live.blockNumber}。` : '还没有读取完链上数据。'}<br>只合并买卖同样两种币的池子。其他币种、其他链和其他交易所的资金另算。</p>` + state.market.pools.map(p => {
     const ready = live?.pools.find(x => x.id === p.id && x.protocol === p.protocol), failure = live?.failed.find(x => x.id === p.id && x.protocol === p.protocol);
-    const special = ready?.hook && !/^0x0{40}$/i.test(ready.hook) ? ' · 含 Hook，图中未计入其执行影响' : '';
-    return `<div class="detail-pool"><strong>${escape(protocolName[p.protocol] || p.protocol)} · ${Number(p.feeTier) / 10000}%</strong><span class="badge ${ready ? '' : 'failed'}">${ready ? '已计入' : failure ? '未计入' : '待读取'}</span><p>目录 TVL $${compact(p.tvlUSD)}${ready ? ` · ${ready.ticks.length} 个范围内初始化 tick${special}${ready.dynamicFee ? ' · 动态费' : ''}` : ''}${failure ? `<br>${escape(failure.error)}` : ''}</p><a class="address" href="https://pancakeswap.finance/liquidity/pool/bsc/${escape(p.protocol)}/${escape(p.id)}" target="_blank" rel="noopener">${escape(p.id)} ↗</a></div>`;
+    const special = ready?.hook && !/^0x0{40}$/i.test(ready.hook) ? ' · 这个池子有额外交易规则，本页估算未考虑这些规则' : '';
+    return `<div class="detail-pool"><strong>${escape(protocolName[p.protocol] || p.protocol)} · 列表费率 ${Number(p.feeTier) / 10000}%</strong><span class="badge ${ready ? '' : 'failed'}">${ready ? '已加进图里' : failure ? '未加进图里' : '还在读取'}</span><p>列表中的池内资金估值：$${compact(p.tvlUSD)}${ready ? ` · ${ready.kind === 'cl' ? `已读取 ${ready.ticks.length} 个价格分界点` : '已读取两种币的余额'}${special}${ready.dynamicFee ? ' · 手续费会变动' : ''}` : ''}${failure ? `<br>${escape(plainError(failure.error))}` : ''}</p>${failure ? `<details><summary>查看技术信息</summary><p>${escape(failure.error)}</p></details>` : ''}<a class="address" href="https://pancakeswap.finance/liquidity/pool/bsc/${escape(p.protocol)}/${escape(p.id)}" target="_blank" rel="noopener">池子地址：${escape(p.id)} ↗</a></div>`;
   }).join('');
   $('detail-dialog').showModal();
 }
 function methodology() {
-  $('detail-title').textContent = '计算口径与数据来源';
-  $('detail-body').innerHTML = `<p>市场目录来自 PancakeSwap Explorer API，GitHub Actions 每小时尝试更新。目录更新时间：${state.catalog ? time(state.catalog.fetchedAt) + ' CST' : '未知'}。${state.catalog?.complete ? '本次目录分页已走完。' : '本次目录分页未走完，覆盖不完整。'}分页完成仅代表该接口已返回完毕，不能证明已发现链上所有池。</p><p>深度由浏览器直接读取 BNB Chain 公开 RPC。V2 使用 getReserves 的恒定乘积曲线；V3 与 Infinity CL 使用现价、活跃流动性、tick bitmap 和初始化 tick 的 liquidityNet 跨区间积分。同一次刷新固定同一区块。曲线参考价格取已读取池中目录 TVL 最大的池。</p><p>买入侧金额为池内曲线从各池自身现价到价格上界的报价币增量；卖出侧金额为到价格下界的报价币增量。各池现价不同时，第一档包含各池到共同价格边界的增量。每档采用线性相对价格：参考价 × (1 ± 档号 × bps / 10000)。每侧最大 500 档，总范围小于 99%。</p><p>显示数量使用浮点积分估算，原始链上状态和 tick 的流动性变化使用 BigInt。这是静态池流动性深度，未扣手续费、协议费、Gas、税费或 Hook 执行影响，没有模拟最优路由或真实成交。Infinity Bin / StableSwap 目前只列入目录和覆盖明细，不计入曲线。</p><p>“市场”按两种代币合约地址分组；同名代币不合并。其他报价币市场可在搜索中切换。不能把不同报价币的金额直接相加。目录 TVL 与链上深度读取时间可能不同；RPC 或单池失败会明确显示部分覆盖。</p><p><a href="https://developer.pancakeswap.finance/apis/subgraph" target="_blank" rel="noopener">PancakeSwap 开发文档 ↗</a><br><a href="https://github.com/pancakeswap/pancakeswap-ai" target="_blank" rel="noopener">PancakeSwap 官方 API 使用示例 ↗</a><br><a href="https://github.com/pancakeswap/infinity-core" target="_blank" rel="noopener">Infinity CL 合约与数学 ↗</a></p>`;
+  $('detail-title').textContent = '怎么看这些数据？';
+  $('detail-body').innerHTML = `<h3>先选币种，再看金额</h3><p>例如 ESIM / USDT，表示用 USDT 买卖 ESIM。价格 0.06 表示 1 个 ESIM 对应 0.06 USDT。绿色看卖出，红色看买入。这里的“深度”，就是选定价格范围里的买卖数量和金额，按池内资金估算。</p><h3>一行表格是什么意思？</h3><p>每一行是一小段价格区间。“这一档数量”和“这一档金额”只看这一段；“合计金额”是从第 1 档一直加到当前这一档。大数字用万、亿简写，点击一行能看具体数字。曲线越高，表示累计金额越多。</p><h3>档数和 bps 怎么设置？</h3><p>档数决定买入、卖出各显示多少行。bps 是价格间隔的单位：1 bps = 0.01%，10 bps = 参考价的 0.1%。例如各看 100 档、每档 10 bps，就是看参考价上下 10% 的范围。档数越多或间隔越大，看到的范围越宽。</p><h3>池子是什么？为什么只显示部分数据？</h3><p>池子是用于买卖两种币的一组资金。同样两种币可以有多个池子，本页合并成功读取的池子。参考价格取这些池子中，官方列表资金估值最大的那个。读不到的池子、还未支持的池子类型不会加进图里，可点“查看数据明细”了解原因。当前只看 BNB 链上的 PancakeSwap。ESIM / USDT 与 ESIM / BNB 分开显示；同名但地址不同的代币也分开显示。</p><h3>数据从哪里来？多久更新？</h3><p>代币和池子列表来自 PancakeSwap 官方数据接口，后台每小时尝试更新。列表更新时间：${state.catalog ? time(state.catalog.fetchedAt) + '（北京时间）' : '暂时未知'}。${state.catalog?.complete ? '这次已读取完接口提供的列表，但不保证链上所有池子都在里面。' : '列表还未收集完整，有些池子可能尚未收录。'}买卖金额由浏览器读取链上数据后计算，点击“刷新数据”或勾选“每分钟刷新”可更新。池子列表中的美元估值和图里的买卖金额是不同指标，更新时间也可能不同。</p><h3>金额是估算值</h3><p>这些数值按池子的资金计算，未计入手续费、网络费用、代币转账税费，以及某些池子的额外交易规则。实际买卖金额以交易时的报价为准。</p><details><summary>查看详细算法与技术来源</summary><p>V2 使用实际储备量的恒定乘积曲线；V3 与 Infinity CL 使用当前价格、活跃流动性、tick bitmap 和初始化 tick 的 liquidityNet，按价格区间积分。一次刷新固定同一区块。原始状态及流动性变化使用 BigInt，显示积分使用浮点数。Infinity Bin / StableSwap 目前只列入列表与明细，不计入曲线。</p><p>第 i 档价格 = 参考价 ×（1 ± i × bps / 10000）。买入、卖出各可设 20–500 档，总价格范围小于 99%。各池从自身现价积分到共同价格边界；各池现价不同，第一档可能包含已有池间价差。这里只合并同一对代币地址的直接池，未模拟多跳路由或真实成交。</p><p><a href="https://developer.pancakeswap.finance/apis/subgraph" target="_blank" rel="noopener">PancakeSwap 开发文档 ↗</a><br><a href="https://github.com/pancakeswap/pancakeswap-ai" target="_blank" rel="noopener">官方数据接口使用示例 ↗</a><br><a href="https://github.com/pancakeswap/infinity-core" target="_blank" rel="noopener">Infinity CL 合约与计算方法 ↗</a></p></details>`;
   $('detail-dialog').showModal();
 }
 
@@ -185,8 +224,8 @@ $('refresh').addEventListener('click', refresh);
 $('coverage-button').addEventListener('click', coverage);
 $('method-button').addEventListener('click', methodology);
 $('share').addEventListener('click', async () => {
-  try { updateURL(); await navigator.clipboard.writeText(location.href); $('share').textContent = '链接已复制'; setTimeout(() => $('share').textContent = '复制链接', 2000); }
-  catch { setError('浏览器未允许复制，请从地址栏复制当前链接；参数已保存。'); }
+  try { updateURL(); await navigator.clipboard.writeText(location.href); $('share').textContent = '链接已复制'; setTimeout(() => $('share').textContent = '复制分享链接', 2000); }
+  catch { setError('浏览器没有允许复制。请直接复制地址栏中的链接，当前设置已包含在链接里。'); }
 });
 $('export').addEventListener('click', () => {
   if (!state.depth || !state.live) return;
@@ -208,7 +247,7 @@ function chartPointer(e, locate = false) {
   const index = Math.max(0, Math.min(state.config.levels - 1, Math.ceil(Math.abs(p / state.depth.price - 1) * 10000 / state.config.bps) - 1));
   inspect(side, index, locate);
   const r = (side === 'bid' ? state.depth.bids : state.depth.asks)[index];
-  const tip = $('chart-tip'); tip.hidden = false; tip.innerHTML = `<strong class="${side === 'bid' ? 'bid-color' : 'ask-color'}">${price(r.price)} ${escape(state.market.quote.symbol)}</strong><span>累计 ${number(r.cumulativeQuote, 2)}</span>`;
+  const tip = $('chart-tip'); tip.hidden = false; tip.innerHTML = `<strong class="${side === 'bid' ? 'bid-color' : 'ask-color'}">${price(r.price)} ${escape(state.market.quote.symbol)}</strong><span>从第 1 档合计 ${number(r.cumulativeQuote, 2)} ${escape(state.market.quote.symbol)}</span>`;
   tip.style.left = `${Math.max(0, Math.min(rect.width - 180, px + 12))}px`; tip.style.top = '26px';
 }
 $('chart').addEventListener('pointermove', e => chartPointer(e));
@@ -239,12 +278,12 @@ async function init() {
     }
     if (!Array.isArray(catalog.pools) || catalog.chainId !== 56) throw new Error('市场目录格式错误');
     state.catalog = catalog; state.markets = catalogMarkets(catalog.pools);
-    $('catalog-status').textContent = `目录 ${number(catalog.pools.length, 0)} 个池 / ${number(state.markets.length, 0)} 个市场 · ${time(catalog.fetchedAt)} CST${catalog.complete ? '' : ' · 分页未完成'}`;
+    $('catalog-status').textContent = `已收录 ${number(state.markets.length, 0)} 组买卖币种、${number(catalog.pools.length, 0)} 个池子 · 列表更新于 ${time(catalog.fetchedAt)}（北京时间）${catalog.complete ? '' : ' · 列表还未收集完整'}`;
     const requested = params.has('base') && params.has('quote');
     let market = state.markets.find(m => m.base.id.toLowerCase() === params.get('base')?.toLowerCase() && m.quote.id.toLowerCase() === params.get('quote')?.toLowerCase());
     if (!requested) market = state.markets.find(m => m.base.symbol === 'ARTX' && m.quote.symbol === 'USDT') || state.markets.find(m => m.base.symbol === 'WBNB' && m.quote.symbol === 'USDT') || state.markets[0];
     if (market) await selectMarket(market);
-    else { $('status').textContent = '链接交易对未在当前目录中发现，请选择市场'; $('chart-empty').textContent = '请选择市场'; setError('链接中的交易对未在目录中发现，没有自动替换为其他市场。'); showMarkets(); }
-  } catch (e) { $('status').textContent = '市场目录不可用'; setError(e.message); }
+    else { $('status').textContent = '列表还没有收录链接中的币种，请重新选择'; $('chart-empty').textContent = '请先选择代币'; setError('暂时找不到链接中的币种，请从列表里重新选择。'); showMarkets(); }
+  } catch (e) { $('status').textContent = '暂时无法加载代币列表'; setError('代币列表加载失败，请刷新页面或稍后再试。', e.message); }
 }
 init();

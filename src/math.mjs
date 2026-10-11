@@ -3,9 +3,9 @@ const LOG_TICK = Math.log(1.0001);
 
 export function settings(levels, bps) {
   levels = Number(levels); bps = Number(bps);
-  if (!Number.isInteger(levels) || levels < 20 || levels > 500) throw new Error('每侧档数须为 20–500 的整数');
-  if (!Number.isFinite(bps) || bps < 0.1 || bps > 1000) throw new Error('每档 bps 须为 0.1–1000');
-  if (levels * bps >= 9900) throw new Error('总价格范围须小于 99%，请降低档数或 bps');
+  if (!Number.isInteger(levels) || levels < 20 || levels > 500) throw new Error('显示档数请输入 20–500 之间的整数。');
+  if (!Number.isFinite(bps) || bps < 0.1 || bps > 1000) throw new Error('价格间隔请输入 0.1–1000 bps（0.001%–10%）。');
+  if (levels * bps >= 9900) throw new Error('看到的价格范围太大：上下幅度必须小于 99%。请减少档数或价格间隔。');
   return { levels, bps, range: levels * bps / 10000 };
 }
 
