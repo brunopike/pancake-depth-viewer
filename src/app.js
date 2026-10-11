@@ -2,8 +2,10 @@ import { loadPools } from './chain.mjs';
 import { buildDepth, settings } from './math.mjs';
 const $ = id => document.getElementById(id);
 const escape = value => String(value ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-const number = (n, digits = 2) => Number(n).toLocaleString('en-US', { maximumFractionDigits: digits });
-const compact = n => Number(n).toLocaleString('en-US', { notation: 'compact', maximumFractionDigits: 2 });
+const number = (n, digits = 2) => Number(n) !== 0 && Math.abs(n) < 10 ** -digits
+  ? Number(n).toExponential(2) : Number(n).toLocaleString('en-US', { maximumFractionDigits: digits });
+const compact = n => Number(n) !== 0 && Math.abs(n) < 0.01
+  ? Number(n).toExponential(2) : Number(n).toLocaleString('en-US', { notation: 'compact', maximumFractionDigits: 2 });
 const price = n => Number(n).toLocaleString('en-US', { maximumSignificantDigits: 7 });
 const time = n => new Date(n).toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai', hour12: false });
 const protocolName = { v2: 'V2', v3: 'V3', infinityCl: 'Infinity CL', infinityBin: 'Infinity Bin', stable: 'StableSwap', infinityStable: 'Infinity Stable' };

@@ -26,6 +26,8 @@ jobs:
       - run: npm test
       - run: npm run catalog
         if: github.event_name != 'push'
+      - run: node scripts/sync-published-catalog.mjs
+        if: github.event_name == 'push'
       - run: npm run build
       - uses: actions/upload-pages-artifact@v3
         with:
