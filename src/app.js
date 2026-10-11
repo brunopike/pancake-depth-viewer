@@ -18,7 +18,7 @@ const price = n => Number.isFinite(n) ? n !== 0 && (Math.abs(n) >= 1e12 || Math.
 const bandPrice = n => n === 0 || !Number.isFinite(n) || Math.abs(n) >= 1e12 ? price(n) : n < state.config.step ? `＜${state.config.step.toFixed(state.config.precision)}` : Number(n).toLocaleString('en-US', { minimumFractionDigits: state.config.precision, maximumFractionDigits: state.config.precision });
 const time = n => new Date(n).toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai', hour12: false });
 const protocolName = { v2: 'V2', v3: 'V3', infinityCl: 'Infinity CL', infinityBin: 'Infinity Bin', stable: 'StableSwap', infinityStable: 'Infinity Stable' };
-const state = { catalog: null, markets: [], market: null, config: settings('max', 8), live: null, depth: null, request: 0, hover: null, focusPrice: null, busy: false };
+const state = { catalog: null, markets: [], market: null, config: settings(100, 6), live: null, depth: null, request: 0, hover: null, focusPrice: null, busy: false };
 let plot;
 
 function pairMarket(p) {
@@ -222,9 +222,9 @@ function draw() {
   const w = Math.max(1, rect.width), h = Math.max(1, rect.height);
   canvas.width = Math.round(w * ratio); canvas.height = Math.round(h * ratio);
   const ctx = canvas.getContext('2d'); ctx.scale(ratio, ratio); ctx.clearRect(0, 0, w, h);
-  const left = 57, right = w - 12, top = 16, bottom = h - 35;
+  const left = 57, right = w - 12, top = 16, bottom = h - (w < 400 ? 47 : 35);
   const d = state.depth, max = d ? Math.max(...[...d.bids, ...d.asks].map(r => Number.isFinite(r.cumulativeQuote) ? r.cumulativeQuote : 0), 1e-20) * 1.1 : 100;
-  ctx.font = '10px "IBM Plex Mono", monospace'; ctx.fillStyle = '#76899a'; ctx.strokeStyle = '#202b37'; ctx.lineWidth = 1;
+  ctx.font = '12px "IBM Plex Mono", monospace'; ctx.fillStyle = '#76899a'; ctx.strokeStyle = '#202b37'; ctx.lineWidth = 1;
   for (let i = 0; i <= 4; i++) {
     const y = bottom - (bottom - top) * i / 4;
     ctx.beginPath(); ctx.moveTo(left, y); ctx.lineTo(right, y); ctx.stroke();
@@ -257,9 +257,9 @@ function draw() {
     for (const r of rows) { ctx.lineTo(x(r.price), previousY); ctx.lineTo(x(r.price), y(r.cumulativeQuote)); previousY = y(r.cumulativeQuote); }
     ctx.strokeStyle = color; ctx.lineWidth = 1.7; ctx.stroke();
   }
-  ctx.fillStyle = '#7e8f9f'; ctx.textAlign = 'left'; ctx.fillText(price(minPrice), left, h - 10);
-  ctx.textAlign = 'right'; ctx.fillText(price(maxPrice), right, h - 10);
-  ctx.fillStyle = '#d9c593'; ctx.textAlign = 'center'; ctx.fillText(price(d.price), x(d.price), h - 10);
+  ctx.fillStyle = '#7e8f9f'; ctx.textAlign = 'left'; ctx.fillText(price(minPrice), left, h - (w < 400 ? 24 : 10));
+  ctx.textAlign = 'right'; ctx.fillText(price(maxPrice), right, h - (w < 400 ? 24 : 10));
+  ctx.fillStyle = '#d9c593'; ctx.textAlign = 'center'; ctx.fillText(price(d.price), x(d.price), h - (w < 400 ? 4 : 10));
   if (state.hover) {
     const r = (state.hover.side === 'bid' ? d.bids : d.asks)[state.hover.index];
     if (!r || r.price < 0 || !Number.isFinite(r.price) || !Number.isFinite(r.cumulativeQuote)) return;
@@ -353,7 +353,7 @@ setInterval(() => { if ($('auto').checked && !state.busy && !document.hidden) re
 
 async function init() {
   const params = new URLSearchParams(location.search);
-  try { state.config = settings(params.get('range') || (params.has('levels') && params.has('bps') ? Number(params.get('levels')) * Number(params.get('bps')) / 100 : 'max'), params.get('precision') ?? 8); } catch (e) { setError(`${e.message}；已恢复默认显示设置。`); }
+  try { state.config = settings(params.get('range') || (params.has('levels') && params.has('bps') ? Number(params.get('levels')) * Number(params.get('bps')) / 100 : 100), params.get('precision') ?? 6); } catch (e) { setError(`${e.message}；已恢复默认显示设置。`); }
   updateControls();
   try {
     let catalog;

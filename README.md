@@ -4,13 +4,13 @@ A public, read-only PancakeSwap market depth viewer by MMDock.
 
 **[Open the viewer](https://starkweng.github.io/pancake-depth-viewer/)**
 
-Search BNB Chain markets by symbol, token address, or pool address. View the five-column order-book-style price ladder and cumulative AMM liquidity depth of the selected **exact token pair**, aggregated across discovered V2, V3, and Infinity CL pools. Enter a price-range percentage or select Maximum, then choose decimal price precision (0–18 places). Default: ESIM/USDT, Maximum range and eight decimal places (a 0.00000001 base price band). The closest 100 bands stay unmerged, followed by grouped distant bands up to the 500-row limit. Up to 500 rows per side are rendered by merging adjacent bands when necessary; endpoint totals always cover the entire selected range. Hover to inspect a level or enter a price to locate it. The address bar preserves the pair and display settings.
+Search BNB Chain markets by symbol, token address, or pool address. View the five-column order-book-style price ladder and cumulative AMM liquidity depth of the selected **exact token pair**, aggregated across discovered V2, V3, and Infinity CL pools. Enter a price-range percentage or select Maximum, then choose decimal price precision (0–18 places). Default: ESIM/USDT, a ±100% price range and six decimal places (a 0.000001 base price band). The closest 100 bands stay unmerged, followed by grouped distant bands up to the 500-row limit. Up to 500 rows per side are rendered by merging adjacent bands when necessary; endpoint totals always cover the entire selected range. Hover to inspect a level or enter a price to locate it. The address bar preserves the pair and display settings.
 
 ## 新手怎么用
 
 1. 点“切换代币”，输入名称。`ESIM / USDT` 表示用 USDT 买卖 ESIM。
 2. 输入“价格上下范围”。例如 10%，直接看参考价上下 10% 内的买入、卖出总金额；也可点“最大”看现价的 0.5～2 倍范围。
-3. 默认 ESIM/USDT、最大范围、8 位小数。4 位小数表示每档价格相差 0.0001，2 位就是 0.01。档数自动计算，最多每侧 500 行；最近的 100 档保留，其余合并，范围总额保持完整。
+3. 默认 ESIM/USDT、上下 100%、6 位小数。4 位小数表示每档价格相差 0.0001，2 位就是 0.01。档数自动计算，最多每侧 500 行；最近的 100 档保留，其余合并，范围总额保持完整。
 4. 卖盘红色在上，买盘绿色在下，卖盘从高到低排列，最下面最接近现价；买盘从高到低排列，最上面最接近现价。表格显示价格、币量、累计币量、价值 U、累计价值 U；U 表示 USDT，非 USDT 市场显示实际计价币。输入“定位价格”后点“跳转”，滚动并高亮包含该价格的行。点击一行查看完整数字。输入的定位价格会单独成为一档，总金额保持不变。
 5. 点“查看数据明细”了解哪些池子计入，点“怎么看这些数据？”查看解释。
 
