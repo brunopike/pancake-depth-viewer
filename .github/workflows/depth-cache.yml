@@ -1,0 +1,48 @@
+name: Refresh shared ESIM depth
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '*/5 * * * *'
+permissions:
+  contents: write
+concurrency:
+  group: shared-esim-depth
+  cancel-in-progress: false
+jobs:
+  snapshot:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Check private Alchemy configuration
+        id: config
+        env:
+          ALCHEMY_API_KEY: ${{ secrets.ALCHEMY_API_KEY }}
+        run: |
+          if [ -n "$ALCHEMY_API_KEY" ]; then
+            echo 'configured=true' >> "$GITHUB_OUTPUT"
+          else
+            echo 'configured=false' >> "$GITHUB_OUTPUT"
+            echo 'Alchemy is not configured; the existing snapshot is preserved.'
+          fi
+      - uses: actions/checkout@v4
+        if: steps.config.outputs.configured == 'true'
+      - uses: actions/setup-node@v4
+        if: steps.config.outputs.configured == 'true'
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci --no-audit --no-fund
+        if: steps.config.outputs.configured == 'true'
+      - run: node scripts/sync-published-catalog.mjs
+        if: steps.config.outputs.configured == 'true'
+      - name: Read with Alchemy and validate every supported pool
+        if: steps.config.outputs.configured == 'true'
+        env:
+          ALCHEMY_API_KEY: ${{ secrets.ALCHEMY_API_KEY }}
+        run: node scripts/snapshot.mjs
+      - name: Publish public data only
+        if: steps.config.outputs.configured == 'true'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+        run: node scripts/publish-snapshot.mjs

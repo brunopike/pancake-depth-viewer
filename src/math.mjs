@@ -36,36 +36,42 @@ export function sqrtAtPrice(pool, baseId, price) {
 
 // Token deltas integrate the AMM curve; quantities are display estimates, not executable quotes.
 // Raw chain state and liquidityNet use BigInt. Floating-point conversion occurs only for chart amounts.
-export function cumulative(pool, baseId, targetPrice, side) {
+export function cumulative(pool, baseId, targetPrice, side, fromPrice) {
   const direct = pool.token0.id.toLowerCase() === baseId.toLowerCase();
   const current = priceOf(pool, baseId);
   if ((side === 'ask' && targetPrice <= current) || (side === 'bid' && targetPrice >= current)) return { quantity: 0, quote: 0 };
+  let startPrice = fromPrice == null ? current : side === 'ask' ? Math.max(current, fromPrice) : Math.min(current, fromPrice);
+  if (targetPrice === startPrice) return { quantity: 0, quote: 0 };
   if (pool.kind === 'v2') {
     const x = direct ? pool.reserve0 / 10 ** pool.token0.decimals : pool.reserve1 / 10 ** pool.token1.decimals;
     const y = direct ? pool.reserve1 / 10 ** pool.token1.decimals : pool.reserve0 / 10 ** pool.token0.decimals;
     const k = x * y;
-    return { quantity: Math.abs(x - Math.sqrt(k / targetPrice)), quote: Math.abs(y - Math.sqrt(k * targetPrice)) };
+    return { quantity: Math.abs(Math.sqrt(k / startPrice) - Math.sqrt(k / targetPrice)), quote: Math.abs(Math.sqrt(k * startPrice) - Math.sqrt(k * targetPrice)) };
   }
   // CL has finite protocol price bounds; a zero/infinite request stops at that bound.
   const bounds = [priceAtTick(pool, baseId, MIN_TICK), priceAtTick(pool, baseId, MAX_TICK)].sort((a, b) => a - b);
   targetPrice = Math.max(bounds[0], Math.min(bounds[1], targetPrice));
+  startPrice = Math.max(bounds[0], Math.min(bounds[1], startPrice));
+  if (targetPrice === startPrice) return { quantity: 0, quote: 0 };
   const target = sqrtAtPrice(pool, baseId, targetPrice);
+  const start = sqrtAtPrice(pool, baseId, startPrice);
   const targetTick = 2 * Math.log(target) / LOG_TICK;
   if (pool.minTick != null && (targetTick < pool.minTick - 1e-6 || targetTick > pool.maxTick + 1e-6)) throw new Error('目标价格超出已读取 tick 范围，请刷新');
   const up = target > Number(pool.sqrtPriceX96) / Q96;
-  let s = Number(pool.sqrtPriceX96) / Q96, L = BigInt(pool.liquidity), a0 = 0, a1 = 0;
+  let s = start, L = BigInt(pool.liquidity), a0 = 0, a1 = 0;
   const ticks = pool.ticks.filter(t => up ? t.index > pool.tick : t.index <= pool.tick)
     .sort((a, b) => up ? a.index - b.index : b.index - a.index);
   function segment(to) {
     if (L < 0n) throw new Error('负流动性：池数据不一致');
     if (L > 0n) {
-      a0 += Number(L) * Math.abs(1 / s - 1 / to);
+      a0 += Number(L) * Math.abs(to - s) / (s * to);
       a1 += Number(L) * Math.abs(to - s);
     }
     s = to;
   }
   for (const tick of ticks) {
     const boundary = Math.exp(tick.index * LOG_TICK / 2);
+    if (up ? boundary <= start : boundary >= start) { L += (up ? 1n : -1n) * BigInt(tick.net); continue; }
     if (up ? boundary > target : boundary < target) break;
     segment(boundary);
     L += (up ? 1n : -1n) * BigInt(tick.net);
@@ -131,11 +137,13 @@ export function buildDepth(pools, baseId, input) {
     let previousQ = 0, previousV = 0;
     const rows = bands.prices.map((boundary, i) => {
       let q = 0, v = 0;
-      for (const pool of pools) { const value = cumulative(pool, baseId, boundary, name); q += value.quantity; v += value.quote; }
+      // Integrate this band directly. Subtracting two large cumulative quantities
+      // can erase a tiny token amount at extreme prices while its quote value remains huge.
+      for (const pool of pools) { const value = cumulative(pool, baseId, boundary, name, i ? bands.prices[i - 1] : undefined); q += value.quantity; v += value.quote; }
       const row = { level: i + 1, price: boundary, offset: (boundary / price - 1) * 10000,
-        quantity: Math.max(0, q - previousQ), quote: Math.max(0, v - previousV), cumulativeQuantity: q, cumulativeQuote: v,
+        quantity: q, quote: v, cumulativeQuantity: previousQ + q, cumulativeQuote: previousV + v,
         endpoint: i === bands.prices.length - 1 };
-      previousQ = q; previousV = v; return row;
+      previousQ = row.cumulativeQuantity; previousV = row.cumulativeQuote; return row;
     });
     return { rows, grouped: bands.grouped, logScale: bands.logScale };
   };

@@ -1,5 +1,6 @@
 import { loadPools } from './chain.mjs';
 import { buildDepth, settings } from './math.mjs';
+import { readBrowserCache, readSharedCache, saveBrowserCache } from './browser-cache.mjs';
 const $ = id => document.getElementById(id);
 const escape = value => String(value ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const number = (n, digits = 2) => !Number.isFinite(Number(n)) ? '无有限上限' : Number(n) !== 0 && Math.abs(n) < 10 ** -digits
@@ -8,12 +9,13 @@ const compact = n => {
   n = Number(n);
   if (!Number.isFinite(n)) return '无有限上限';
   if (n !== 0 && Math.abs(n) < 0.000001) return '＜0.000001';
+  if (Math.abs(n) >= 1e12) return n.toExponential(3);
   if (Math.abs(n) >= 100000000) return `${number(n / 100000000)}亿`;
   if (Math.abs(n) >= 10000) return `${number(n / 10000)}万`;
   return number(n, Math.abs(n) < 1 ? 6 : 2);
 };
-const price = n => Number.isFinite(n) ? Number(n).toLocaleString('en-US', { maximumSignificantDigits: 9 }) : '无价格上限';
-const bandPrice = n => n === 0 || !Number.isFinite(n) ? price(n) : n < state.config.step ? `＜${state.config.step.toFixed(state.config.precision)}` : Number(n).toLocaleString('en-US', { minimumFractionDigits: state.config.precision, maximumFractionDigits: state.config.precision });
+const price = n => Number.isFinite(n) ? n !== 0 && (Math.abs(n) >= 1e12 || Math.abs(n) < 1e-10) ? n.toExponential(3) : Number(n).toLocaleString('en-US', { maximumSignificantDigits: 9 }) : '无价格上限';
+const bandPrice = n => n === 0 || !Number.isFinite(n) || Math.abs(n) >= 1e12 ? price(n) : n < state.config.step ? `＜${state.config.step.toFixed(state.config.precision)}` : Number(n).toLocaleString('en-US', { minimumFractionDigits: state.config.precision, maximumFractionDigits: state.config.precision });
 const time = n => new Date(n).toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai', hour12: false });
 const protocolName = { v2: 'V2', v3: 'V3', infinityCl: 'Infinity CL', infinityBin: 'Infinity Bin', stable: 'StableSwap', infinityStable: 'Infinity Stable' };
 const state = { catalog: null, markets: [], market: null, config: settings('max', 8), live: null, depth: null, request: 0, hover: null, busy: false };
@@ -92,6 +94,7 @@ function updateControls() {
 }
 
 async function selectMarket(market) {
+  clearDepth();
   state.market = market;
   $('pair-name').textContent = `${market.base.symbol} / ${market.quote.symbol}`;
   $('quote-unit').textContent = `${market.quote.symbol} / ${market.base.symbol}`;
@@ -105,33 +108,64 @@ async function selectMarket(market) {
 async function refresh() {
   if (!state.market) return;
   const request = ++state.request, market = state.market, config = { ...state.config };
-  clearDepth(); setError(''); state.busy = true; $('refresh').disabled = true; $('export').disabled = true;
+  setError(''); state.busy = true; $('refresh').disabled = true;
   $('status').textContent = `正在从链上读取 ${market.pools.length} 个池子的数据…`;
+  let displayed = false, previous;
+  const usable = live => live?.pools.length && (live.range === Infinity || live.range === config.range) && Date.now() - live.timestamp < 86400000;
+  const show = (live, updating = false) => {
+    if (request !== state.request || !usable(live)) return false;
+    const depth = buildDepth(live.pools, market.base.id, config);
+    state.live = live; state.depth = depth; state.hover = null;
+    render(); $('export').disabled = false; $('jump-button').disabled = false;
+    $('status').textContent = `${time(live.timestamp)} · 合并 ${live.pools.length}/${market.pools.length} 个池子${live.failed.length ? ` · ${live.failed.length} 个未计入` : ''}${updating ? ' · 正在更新…' : ''}`;
+    setError(Date.now() - live.timestamp > 180000 ? '显示的是较早的数据，正在检查更新。' : '');
+    displayed = true; return true;
+  };
   try {
-    const live = await loadPools(market.pools, market.base.id, config.range, (done, total) => {
-      if (request === state.request) $('status').textContent = `正在读取池子 ${done} / ${total}…`;
-    });
+    previous = state.live || readBrowserCache(market);
+    if (usable(previous)) show(previous, true);
+    else { previous = null; clearDepth(); }
+    const sharedPromise = readSharedCache(market);
+    if (!previous) {
+      const seed = await readSharedCache(market, true);
+      if (usable(seed)) { previous = seed; show(seed, true); }
+    }
+    const shared = await sharedPromise;
+    if (usable(shared) && (!previous || shared.blockNumber > previous.blockNumber)) {
+      previous = shared; show(shared, true); saveBrowserCache(market, shared);
+    }
     if (request !== state.request) return;
-    state.live = live;
+    const range = previous?.range === Infinity ? Infinity : config.range;
+    const live = await loadPools(market.pools, market.base.id, range, (done, total) => {
+      if (request === state.request) $('status').textContent = `${displayed ? `显示 ${time(state.live.timestamp)} · ` : ''}正在更新池子 ${done} / ${total}…`;
+    }, { previous });
+    if (request !== state.request) return;
+    live.source = '公共节点';
     if (!live.pools.length) {
+      if (displayed) throw new Error('暂时未读到新数据');
+      state.live = live;
       setError('这个代币暂时没有可用数据。点击“查看数据明细”了解原因，或换个代币再试。');
       $('status').textContent = '这次没有读到可用数据';
       ['bids', 'asks'].forEach(id => $(id).innerHTML = '<div class="empty">暂时没有可用数据</div>');
       $('chart-empty').textContent = '暂时没有可用数据';
       return;
     }
-    state.depth = buildDepth(live.pools, market.base.id, config);
-    render();
-    const age = Date.now() - live.timestamp;
-    $('status').textContent = `${time(live.timestamp)} · 合并 ${live.pools.length}/${market.pools.length} 个池子${live.failed.length ? ` · ${live.failed.length} 个未计入` : ''}`;
-    if (age > 180000) setError('当前数据已超过 3 分钟，可能有变化，请点击“刷新数据”。');
+    // A transient partial update must not replace a complete cached snapshot.
+    if (previous && live.pools.length < previous.pools.length) throw new Error('部分池子暂时无法更新');
+    show(live); saveBrowserCache(market, live);
+    if (Date.now() - live.timestamp > 180000) setError('当前数据已超过 3 分钟，可能有变化，请点击“刷新数据”。');
   } catch (e) {
     if (request !== state.request) return;
     const technical = e.shortMessage || e.message || '读取失败';
-    setError(plainError(technical), technical);
-    $('status').textContent = '这次没有读到可用数据';
-    ['bids', 'asks'].forEach(id => $(id).innerHTML = '<div class="empty">暂时没有可用数据</div>');
-    $('chart-empty').textContent = '暂时没有可用数据';
+    if (displayed) {
+      setError('暂时没能更新，继续显示上次数据。', technical);
+      $('status').textContent = `${time(state.live.timestamp)} · 合并 ${state.live.pools.length}/${market.pools.length} 个池子 · 更新失败`;
+    } else {
+      setError(plainError(technical), technical);
+      $('status').textContent = '这次没有读到可用数据';
+      ['bids', 'asks'].forEach(id => $(id).innerHTML = '<div class="empty">暂时没有可用数据</div>');
+      $('chart-empty').textContent = '暂时没有可用数据';
+    }
   } finally {
     if (request === state.request) { state.busy = false; $('refresh').disabled = false; $('export').disabled = !state.depth; $('jump-button').disabled = !state.depth; }
   }
@@ -139,14 +173,16 @@ async function refresh() {
 function render() {
   const d = state.depth;
   $('mark-price').textContent = price(d.price); $('book-price').textContent = price(d.price);
-  $('ask-total').textContent = d.unbounded ? '无有限上限' : `${compact(d.asks.at(-1).cumulativeQuote)} ${state.market.quote.symbol}`;
+  $('ask-total-label').textContent = state.config.maximum ? '卖盘币量（估算）' : '买到上限需花';
+  $('bid-total-label').textContent = state.config.maximum ? '买盘资金（估算）' : '卖到下限可得';
+  $('ask-total').textContent = state.config.maximum ? `${compact(d.asks.at(-1).cumulativeQuantity)} ${state.market.base.symbol}` : `${compact(d.asks.at(-1).cumulativeQuote)} ${state.market.quote.symbol}`;
   $('bid-total').textContent = `${compact(d.bids.at(-1).cumulativeQuote)} ${state.market.quote.symbol}`;
   const maximum = Math.max(...[...d.bids, ...d.asks].map(r => Number.isFinite(r.cumulativeQuote) ? r.cumulativeQuote : 0), 1e-20);
   $('levels-summary').textContent = `卖盘 ${d.asks.length} 行 · 买盘 ${d.bids.length} 行${d.grouped ? ' · 相邻档已合并' : ''}`;
   $('range-result').hidden = false;
-  $('range-result').textContent = (d.grouped ? '相邻档已合并，总金额不变。' : '') + (d.unbounded ? '买入无有限上限；卖出显示价格接近 0 的理论总额。' : '');
+  $('range-result').textContent = (d.grouped ? '相邻档已合并，总金额不变。' : '') + (state.config.maximum ? '表格金额是推到该价格的理论花费或所得，极远价格不代表现有资金。' : '');
   $('range-result').hidden = !$('range-result').textContent;
-  $('ask-range-note').textContent = `至 ${price(d.high)} ${state.market.quote.symbol}`;
+  $('ask-range-note').textContent = state.config.maximum ? `最远价格 ${price(d.high)} · 理论买入花费见末行` : `至 ${price(d.high)} ${state.market.quote.symbol}`;
   $('bid-range-note').textContent = `至 ${price(d.low)} ${state.market.quote.symbol}`;
 
   for (const [id, rows, side] of [['bids', d.bids, 'bid'], ['asks', d.asks, 'ask']]) {
@@ -234,7 +270,7 @@ function coverage() {
   $('detail-title').textContent = '哪些池子算进来了？';
   if (!state.market) return;
   const live = state.live;
-  $('detail-body').innerHTML = `<p>“池子”是 PancakeSwap 里用于买卖两种币的一组资金。这里把成功读取的池子合在一起看。</p><p>${escape(state.market.base.symbol)} / ${escape(state.market.quote.symbol)}：已找到 ${state.market.pools.length} 个池子。${live ? `图中已计入 ${live.pools.length} 个，未计入 ${live.failed.length} 个。<br>数据时间：${time(live.timestamp)}（北京时间）；链上记录编号（区块）：${live.blockNumber}。` : '还没有读取完链上数据。'}<br>只合并买卖同样两种币的池子。其他币种、其他链和其他交易所的资金另算。</p>` + state.market.pools.map(p => {
+  $('detail-body').innerHTML = `<p>“池子”是 PancakeSwap 里用于买卖两种币的一组资金。这里把成功读取的池子合在一起看。</p><p>${escape(state.market.base.symbol)} / ${escape(state.market.quote.symbol)}：已找到 ${state.market.pools.length} 个池子。${live ? `图中已计入 ${live.pools.length} 个，未计入 ${live.failed.length} 个。<br>数据时间：${time(live.timestamp)}（北京时间）；链上记录编号（区块）：${live.blockNumber}；读取来源：${live.source === 'Alchemy' ? 'Alchemy 后台' : '公共节点'}。` : '还没有读取完链上数据。'}<br>只合并买卖同样两种币的池子。其他币种、其他链和其他交易所的资金另算。</p>` + state.market.pools.map(p => {
     const ready = live?.pools.find(x => x.id === p.id && x.protocol === p.protocol), failure = live?.failed.find(x => x.id === p.id && x.protocol === p.protocol);
     const special = ready?.hook && !/^0x0{40}$/i.test(ready.hook) ? ' · 这个池子有额外交易规则，本页估算未考虑这些规则' : '';
     return `<div class="detail-pool"><strong>${escape(protocolName[p.protocol] || p.protocol)} · 列表费率 ${Number(p.feeTier) / 10000}%</strong><span class="badge ${ready ? '' : 'failed'}">${ready ? '已加进图里' : failure ? '未加进图里' : '还在读取'}</span><p>列表中的池内资金估值：$${compact(p.tvlUSD)}${ready ? ` · ${ready.kind === 'cl' ? `已读取 ${ready.ticks.length} 个价格分界点` : '已读取两种币的余额'}${special}${ready.dynamicFee ? ' · 手续费会变动' : ''}` : ''}${failure ? `<br>${escape(plainError(failure.error))}` : ''}</p>${failure ? `<details><summary>查看技术信息</summary><p>${escape(failure.error)}</p></details>` : ''}<a class="address" href="https://pancakeswap.finance/liquidity/pool/bsc/${escape(p.protocol)}/${escape(p.id)}" target="_blank" rel="noopener">池子地址：${escape(p.id)} ↗</a></div>`;
@@ -243,7 +279,7 @@ function coverage() {
 }
 function methodology() {
   $('detail-title').textContent = '怎么看这些数据？';
-  $('detail-body').innerHTML = `<h3>先选币种，再看金额</h3><p>例如 ESIM / USDT，表示用 USDT 买卖 ESIM。价格 0.06 表示 1 个 ESIM 对应 0.06 USDT。绿色是买盘，红色是卖盘。这里的“深度”，就是选定价格范围里的买卖数量和金额，按池内资金估算。</p><h3>一行表格是什么意思？</h3><p>每一行是一小段价格区间。“这一档数量”和“这一档金额”只看这一段；“合计金额”是从第 1 档一直加到当前这一档。大数字用万、亿简写，点击一行能看具体数字。曲线越高，表示累计金额越多。</p><h3>输入百分比，直接看总金额</h3><p>输入 10%，就看参考价上下 10% 内的买入、卖出总金额。例如参考价 1 USDT，就是看 0.9 到 1.1 USDT。“最大”会读取已计入池子的全部价格数据。有 V2 池时，买入没有固定最高价，金额也没有有限上限；卖出总金额是接近价格 0 时的理论值，不能在价格 0 实际成交。</p><h3>小数位数怎么设置？</h3><p>4 位小数表示每档价格相差 0.0001；2 位小数就是 0.01。档数自动计算。档位太多时，每行会合并相邻档，最多显示 500 行；整个范围的总金额不会减少。范围的最后一档可能只是一小段，以实际边界价格计算。小数位数只改变表格的细分程度，不改变范围内的总金额。</p><h3>池子是什么？为什么只显示部分数据？</h3><p>池子是用于买卖两种币的一组资金。同样两种币可以有多个池子，本页合并成功读取的池子。参考价格取这些池子中，官方列表资金估值最大的那个。读不到的池子、还未支持的池子类型不会加进图里，可点“查看数据明细”了解原因。当前只看 BNB 链上的 PancakeSwap。ESIM / USDT 与 ESIM / BNB 分开显示；同名但地址不同的代币也分开显示。</p><h3>数据从哪里来？多久更新？</h3><p>代币和池子列表来自 PancakeSwap 官方数据接口，后台每小时尝试更新。列表更新时间：${state.catalog ? time(state.catalog.fetchedAt) + '（北京时间）' : '暂时未知'}。${state.catalog?.complete ? '这次已读取完接口提供的列表，但不保证链上所有池子都在里面。' : '列表还未收集完整，有些池子可能尚未收录。'}买卖金额由浏览器读取链上数据后计算，点击“刷新数据”或勾选“每分钟刷新”可更新。池子列表中的美元估值和图里的买卖金额是不同指标，更新时间也可能不同。</p><h3>金额是估算值</h3><p>这些数值按池子的资金计算，未计入手续费、网络费用、代币转账税费，以及某些池子的额外交易规则。实际买卖金额以交易时的报价为准。</p><details><summary>查看详细算法与技术来源</summary><p>V2 使用实际储备量的恒定乘积曲线；V3 与 Infinity CL 使用当前价格、活跃流动性、tick bitmap 和初始化 tick 的 liquidityNet，按价格区间积分。一次刷新固定同一区块。原始状态及流动性变化使用 BigInt，显示积分使用浮点数。Infinity Bin / StableSwap 目前只列入列表与明细，不计入曲线。</p><p>百分比模式的边界 = 参考价 ×（1 ± 百分比 / 100），价格下限最低为 0。精度为 n 位小数时，基础价格档距为 10⁻ⁿ；相邻档合并后仍按实际边界积分，最后一档抵达原始范围边界。最大模式读取合约全 tick bitmap，校验区间两端流动性归零，以最外围初始化 tick 为 CL 价格边界；V2 理论价格范围为 0 到无穷，单独显示无有限上限。极大跨度用压缩价格轴展示，无限端点不画入曲线。各池从自身现价积分到共同价格边界；各池现价不同，第一档可能包含已有池间价差。这里只合并同一对代币地址的直接池，未模拟多跳路由或真实成交。</p><p><a href="https://developer.pancakeswap.finance/apis/subgraph" target="_blank" rel="noopener">PancakeSwap 开发文档 ↗</a><br><a href="https://github.com/pancakeswap/pancakeswap-ai" target="_blank" rel="noopener">官方数据接口使用示例 ↗</a><br><a href="https://github.com/pancakeswap/infinity-core" target="_blank" rel="noopener">Infinity CL 合约与计算方法 ↗</a></p></details>`;
+  $('detail-body').innerHTML = `<h3>先选币种，再看金额</h3><p>例如 ESIM / USDT，表示用 USDT 买卖 ESIM。价格 0.06 表示 1 个 ESIM 对应 0.06 USDT。绿色是买盘，红色是卖盘。这里的“深度”，就是选定价格范围里的买卖数量和金额，按池内资金估算。</p><h3>一行表格是什么意思？</h3><p>每一行是一小段价格区间。“币量”和“价值 U”只看这一段；“累计币量”和“累计价值 U”是从第 1 档加到当前这一档。点击一行能看完整数字。曲线越高，表示累计金额越多。</p><h3>输入百分比，直接看总金额</h3><p>输入 10%，就看参考价上下 10% 内的买入、卖出总金额。例如参考价 1 USDT，就是看 0.9 到 1.1 USDT。“最大”看已计入池子的全部范围，顶部显示可买到的卖盘币量，以及卖出可得到的买盘资金。表格金额表示推到各档价格的理论花费或所得；极远价格可能产生极大的理论花费，不是池子里现有的钱。V2 没有固定最高价，最低价格 0 也不能实际成交。</p><h3>小数位数怎么设置？</h3><p>4 位小数表示每档价格相差 0.0001；2 位小数就是 0.01。档数自动计算。档位太多时，每行会合并相邻档，最多显示 500 行；整个范围的总金额不会减少。范围的最后一档可能只是一小段，以实际边界价格计算。小数位数只改变表格的细分程度，不改变范围内的总金额。</p><h3>池子是什么？为什么只显示部分数据？</h3><p>池子是用于买卖两种币的一组资金。同样两种币可以有多个池子，本页合并成功读取的池子。参考价格取这些池子中，官方列表资金估值最大的那个。读不到的池子、还未支持的池子类型不会加进图里，可点“查看数据明细”了解原因。当前只看 BNB 链上的 PancakeSwap。ESIM / USDT 与 ESIM / BNB 分开显示；同名但地址不同的代币也分开显示。</p><h3>数据从哪里来？多久更新？</h3><p>代币和池子列表来自 PancakeSwap 官方数据接口，后台每小时尝试更新。列表更新时间：${state.catalog ? time(state.catalog.fetchedAt) + '（北京时间）' : '暂时未知'}。${state.catalog?.complete ? '这次已读取完接口提供的列表，但不保证链上所有池子都在里面。' : '列表还未收集完整，有些池子可能尚未收录。'}打开时先显示有时间标记的缓存，再检查链上更新；流动性未改变的档位直接复用。ESIM/USDT 后台配置 Alchemy 后，每 5 分钟尝试更新共享数据，实际时间以页面显示为准。点击“刷新数据”或勾选“每分钟刷新”也可更新。池子列表中的美元估值和图里的买卖金额是不同指标，更新时间也可能不同。</p><h3>金额是估算值</h3><p>这些数值按池子的资金计算，未计入手续费、网络费用、代币转账税费，以及某些池子的额外交易规则。实际买卖金额以交易时的报价为准。</p><details><summary>查看详细算法与技术来源</summary><p>V2 使用实际储备量的恒定乘积曲线；V3 与 Infinity CL 使用当前价格、活跃流动性、tick bitmap 和初始化 tick 的 liquidityNet，按价格区间积分。一次刷新固定同一区块。原始状态及流动性变化使用 BigInt，显示积分使用浮点数。Infinity Bin / StableSwap 目前只列入列表与明细，不计入曲线。</p><p>百分比模式的边界 = 参考价 ×（1 ± 百分比 / 100），价格下限最低为 0。精度为 n 位小数时，基础价格档距为 10⁻ⁿ；相邻档合并后仍按实际边界积分，最后一档抵达原始范围边界。最大模式读取合约全 tick bitmap，校验区间两端流动性归零，以最外围初始化 tick 为 CL 价格边界；V2 理论价格范围为 0 到无穷，单独显示无有限上限。极大跨度用压缩价格轴展示，无限端点不画入曲线。各池从自身现价积分到共同价格边界；各池现价不同，第一档可能包含已有池间价差。这里只合并同一对代币地址的直接池，未模拟多跳路由或真实成交。</p><p><a href="https://developer.pancakeswap.finance/apis/subgraph" target="_blank" rel="noopener">PancakeSwap 开发文档 ↗</a><br><a href="https://github.com/pancakeswap/pancakeswap-ai" target="_blank" rel="noopener">官方数据接口使用示例 ↗</a><br><a href="https://github.com/pancakeswap/infinity-core" target="_blank" rel="noopener">Infinity CL 合约与计算方法 ↗</a></p></details>`;
   $('detail-dialog').showModal();
 }
 
@@ -255,7 +291,12 @@ $('settings-form').addEventListener('submit', e => { e.preventDefault(); try {
   const previous = state.config;
   state.config = settings($('maximum').getAttribute('aria-pressed') === 'true' ? 'max' : $('percent').value, $('precision').value);
   updateControls(); updateURL();
-  if (state.depth && state.live && previous.percent === state.config.percent) { state.depth = buildDepth(state.live.pools, state.market.base.id, state.config); setError(''); render(); }
+  if (state.depth && state.live && (previous.percent === state.config.percent || state.live.range === Infinity)) {
+    // Display changes invalidate an in-flight refresh with the old range/precision.
+    if (state.busy) { ++state.request; state.busy = false; $('refresh').disabled = false; }
+    state.depth = buildDepth(state.live.pools, state.market.base.id, state.config); render();
+    $('status').textContent = `${time(state.live.timestamp)} · 合并 ${state.live.pools.length}/${state.market.pools.length} 个池子`;
+  }
   else refresh();
 } catch (e) { setError(e.message); } });
 document.querySelectorAll('[data-percent]').forEach(b => b.addEventListener('click', () => { $('maximum').setAttribute('aria-pressed', 'false'); $('percent').disabled = false; $('percent').value = b.dataset.percent; $('settings-form').requestSubmit(); }));

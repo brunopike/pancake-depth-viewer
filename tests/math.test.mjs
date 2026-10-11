@@ -132,3 +132,15 @@ test('Inverse maximum CL and mixed-pool maximum conserve endpoint currency amoun
   near(mixed.asks.at(-1).cumulativeQuantity, 1000 + direct.asks.at(-1).cumulativeQuantity);
   assert.ok([...mixed.bids, ...mixed.asks].every(r => !Number.isNaN(r.quote)));
 });
+
+test('Extreme-price bands preserve tiny token quantities despite enormous quote values', () => {
+  const p = {kind:'cl', protocol:'v3', id:'0x01', token0:{id:'base',decimals:18},token1:{id:'quote',decimals:18},
+    sqrtPriceX96:2n**96n, tick:0,liquidity:10n**18n,spacing:1,tvlUSD:'1',fullRange:true,
+    minTick:MIN_TICK,maxTick:MAX_TICK,ticks:[{index:MIN_TICK,net:10n**18n},{index:MAX_TICK,net:-(10n**18n)}]};
+  const depth=buildDepth([p],'base',settings('max',8));
+  const last=depth.asks.at(-1);
+  assert.ok(last.quantity>0 && last.quantity<1e-12);
+  assert.ok(last.quote>1e12);
+  const sum=depth.asks.reduce((v,r)=>v+r.quantity,0);
+  near(sum,cumulative(p,'base',depth.high,'ask').quantity);
+});
