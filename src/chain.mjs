@@ -66,6 +66,7 @@ async function readPool(meta, baseId, reference, range, blockNumber) {
   }
   if (!Number.isInteger(pool.spacing) || pool.spacing < 1) throw new Error('无效 tick spacing');
   const p = reference || priceOf(pool, baseId);
+  pool.rangeReference = p;
   const a = sqrtAtPrice(pool, baseId, p * (1 - range)), b = sqrtAtPrice(pool, baseId, p * (1 + range));
   const targetTicks = [Math.floor(2 * Math.log(a) / Math.log(1.0001)), Math.ceil(2 * Math.log(b) / Math.log(1.0001)), pool.tick];
   const lo = Math.max(-887272, Math.min(...targetTicks) - pool.spacing), hi = Math.min(887272, Math.max(...targetTicks) + pool.spacing);
@@ -112,7 +113,7 @@ export async function loadPools(metas, baseId, range, progress = () => {}) {
   if (dominant) {
     const center = priceOf(dominant, baseId);
     for (let i = 0; i < pools.length; i++) {
-      if (pools[i].kind !== 'cl' || Math.abs(priceOf(pools[i], baseId) / center - 1) < 1e-12) continue;
+      if (pools[i].kind !== 'cl' || Math.abs(pools[i].rangeReference / center - 1) < 1e-12) continue;
       try { pools[i] = await readPool(pools[i], baseId, center, range, blockNumber); }
       catch (e) { failed.push({ ...pools[i], error: e.message }); pools[i] = null; }
     }
