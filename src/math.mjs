@@ -118,22 +118,24 @@ function boundaries(center, endpoint, config, sign) {
   if (infinite) rows.push(Infinity);
   return { prices: rows, grouped, logScale };
 }
-export function buildDepth(pools, baseId, input) {
+export function buildDepth(pools, baseId, input, options = {}) {
   const config = settings(input.percent, input.precision);
   if (!pools.length) throw new Error('没有可计算深度的池');
   const dominant = [...pools].sort((a, b) => Number(b.tvlUSD) - Number(a.tvlUSD))[0];
   const price = priceOf(dominant, baseId);
   if (!Number.isFinite(price) || price <= 0) throw new Error('池现价无效');
   let low = Math.max(0, price * (1 - config.range)), high = price * (1 + config.range);
-  if (config.maximum) {
-    if (pools.some(p => p.kind === 'cl' && !p.fullRange)) throw new Error('最大范围需要读取全部价格数据，请刷新。');
-    const limits = pools.flatMap(p => p.kind === 'v2' ? [0, Infinity]
-      : p.ticks.map(t => priceAtTick(p, baseId, t.index)));
-    low = price; high = price;
-    for (const p of limits) { low = Math.min(low, p); high = Math.max(high, p); }
-  }
+  // Maximum is a useful viewing window, independent of the full-range chain cache.
+  if (config.maximum) { low = price * .5; high = price * 2; }
   const side = (name, sign, endpoint) => {
     const bands = boundaries(price, endpoint, config, sign);
+    const focus = options.focusPrice;
+    if (Number.isFinite(focus) && (sign > 0 ? focus > price && focus <= endpoint : focus < price && focus >= endpoint)
+      && !bands.prices.includes(focus)) {
+      // Keep the endpoint and nearest 100 bands; replace one distant display boundary.
+      if (bands.prices.length >= 500) bands.prices.splice(bands.prices.length - 2, 1);
+      bands.prices.push(focus); bands.prices.sort((a, b) => sign * (a - b));
+    }
     let previousQ = 0, previousV = 0;
     const rows = bands.prices.map((boundary, i) => {
       let q = 0, v = 0;
@@ -142,7 +144,7 @@ export function buildDepth(pools, baseId, input) {
       for (const pool of pools) { const value = cumulative(pool, baseId, boundary, name, i ? bands.prices[i - 1] : undefined); q += value.quantity; v += value.quote; }
       const row = { level: i + 1, price: boundary, offset: (boundary / price - 1) * 10000,
         quantity: q, quote: v, cumulativeQuantity: previousQ + q, cumulativeQuote: previousV + v,
-        endpoint: i === bands.prices.length - 1 };
+        focus: boundary === options.focusPrice, endpoint: i === bands.prices.length - 1 };
       previousQ = row.cumulativeQuantity; previousV = row.cumulativeQuote; return row;
     });
     return { rows, grouped: bands.grouped, logScale: bands.logScale };

@@ -18,7 +18,7 @@ const price = n => Number.isFinite(n) ? n !== 0 && (Math.abs(n) >= 1e12 || Math.
 const bandPrice = n => n === 0 || !Number.isFinite(n) || Math.abs(n) >= 1e12 ? price(n) : n < state.config.step ? `＜${state.config.step.toFixed(state.config.precision)}` : Number(n).toLocaleString('en-US', { minimumFractionDigits: state.config.precision, maximumFractionDigits: state.config.precision });
 const time = n => new Date(n).toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai', hour12: false });
 const protocolName = { v2: 'V2', v3: 'V3', infinityCl: 'Infinity CL', infinityBin: 'Infinity Bin', stable: 'StableSwap', infinityStable: 'Infinity Stable' };
-const state = { catalog: null, markets: [], market: null, config: settings('max', 8), live: null, depth: null, request: 0, hover: null, busy: false };
+const state = { catalog: null, markets: [], market: null, config: settings('max', 8), live: null, depth: null, request: 0, hover: null, focusPrice: null, busy: false };
 let plot;
 
 function pairMarket(p) {
@@ -63,7 +63,7 @@ function setError(message, technical = '') {
     ? `<details><summary>查看技术信息</summary><p>${escape(technical)}</p></details>` : '');
 }
 function clearDepth() {
-  state.depth = null; state.live = null; state.hover = null;
+  state.depth = null; state.live = null; state.hover = null; state.focusPrice = null;
   $('range-result').hidden = true; $('jump-button').disabled = true; $('jump-status').textContent = '';
   ['mark-price', 'book-price', 'ask-total', 'bid-total'].forEach(id => $(id).textContent = '—');
   ['bids', 'asks'].forEach(id => $(id).innerHTML = '<div class="empty">正在读取池子里的资金…</div>');
@@ -78,14 +78,14 @@ function updateURL() {
   history.replaceState(null, '', url);
 }
 function updateControls() {
-  const c = state.config, range = c.maximum ? '最大范围' : `上下 ${number(c.percent, 4)}%`;
+  const c = state.config, range = c.maximum ? '最大：现价 0.5～2 倍' : `上下 ${number(c.percent, 4)}%`;
   $('percent').disabled = c.maximum;
   if (!c.maximum) $('percent').value = c.percent;
   $('precision').value = c.precision;
   $('maximum').setAttribute('aria-pressed', String(c.maximum));
   $('maximum').classList.toggle('active', c.maximum);
   $('range-label').textContent = range;
-  $('settings-hint').textContent = `${c.maximum ? '最大 = 已计入池子的全部范围' : `${number(c.percent, 4)}% = 价格上下 ${number(c.percent, 4)}%`}；${c.precision} 位小数 = 每档 ${c.step.toFixed(c.precision)}。`;
+  $('settings-hint').textContent = `${c.maximum ? '最大 = 现价 0.5～2 倍' : `${number(c.percent, 4)}% = 价格上下 ${number(c.percent, 4)}%`}；${c.precision} 位小数 = 每档 ${c.step.toFixed(c.precision)}。`;
   $('ask-range-note').textContent = c.maximum ? '全部上涨范围' : `价格上涨 ${number(c.percent, 4)}% 内`;
   $('bid-range-note').textContent = c.maximum ? '全部下跌范围' : `价格下跌 ${number(Math.min(c.percent, 100), 4)}% 内`;
   document.querySelectorAll('[data-percent]').forEach(b => b.classList.toggle('active', !c.maximum && Number(b.dataset.percent) === c.percent));
@@ -114,7 +114,7 @@ async function refresh() {
   const usable = live => live?.pools.length && (live.range === Infinity || live.range === config.range) && Date.now() - live.timestamp < 86400000;
   const show = (live, updating = false) => {
     if (request !== state.request || !usable(live)) return false;
-    const depth = buildDepth(live.pools, market.base.id, config);
+    const depth = buildDepth(live.pools, market.base.id, config, { focusPrice: state.focusPrice });
     state.live = live; state.depth = depth; state.hover = null;
     render(); $('jump-button').disabled = false;
     $('status').textContent = `${time(live.timestamp)} · 合并 ${live.pools.length}/${market.pools.length} 个池子${live.failed.length ? ` · ${live.failed.length} 个未计入` : ''}${updating ? ' · 正在更新…' : ''}`;
@@ -173,23 +173,33 @@ async function refresh() {
 function render() {
   const d = state.depth;
   $('mark-price').textContent = price(d.price); $('book-price').textContent = price(d.price);
-  $('ask-total-label').textContent = state.config.maximum ? '卖盘币量（估算）' : '买到上限需花';
-  $('bid-total-label').textContent = state.config.maximum ? '买盘资金（估算）' : '卖到下限可得';
-  $('ask-total').textContent = state.config.maximum ? `${compact(d.asks.at(-1).cumulativeQuantity)} ${state.market.base.symbol}` : `${compact(d.asks.at(-1).cumulativeQuote)} ${state.market.quote.symbol}`;
+  $('ask-total-label').textContent = '买到上限需花';
+  $('bid-total-label').textContent = '卖到下限可得';
+  $('ask-total').textContent = `${compact(d.asks.at(-1).cumulativeQuote)} ${state.market.quote.symbol}`;
   $('bid-total').textContent = `${compact(d.bids.at(-1).cumulativeQuote)} ${state.market.quote.symbol}`;
   const maximum = Math.max(...[...d.bids, ...d.asks].map(r => Number.isFinite(r.cumulativeQuote) ? r.cumulativeQuote : 0), 1e-20);
   $('levels-summary').textContent = `卖盘 ${d.asks.length} 行 · 买盘 ${d.bids.length} 行${d.grouped ? ' · 相邻档已合并' : ''}`;
   $('range-result').hidden = false;
-  $('range-result').textContent = (d.grouped ? '相邻档已合并，总金额不变。' : '') + (state.config.maximum ? '表格金额是推到该价格的理论花费或所得，极远价格不代表现有资金。' : '');
+  $('range-result').textContent = d.grouped ? '相邻档已合并，总金额不变。' : '';
   $('range-result').hidden = !$('range-result').textContent;
-  $('ask-range-note').textContent = state.config.maximum ? `最远价格 ${price(d.high)} · 理论买入花费见末行` : `至 ${price(d.high)} ${state.market.quote.symbol}`;
+  $('ask-range-note').textContent = `至 ${price(d.high)} ${state.market.quote.symbol}`;
   $('bid-range-note').textContent = `至 ${price(d.low)} ${state.market.quote.symbol}`;
 
   for (const [id, rows, side] of [['bids', d.bids, 'bid'], ['asks', d.asks, 'ask']]) {
-    $(id).innerHTML = rows.map((r, i) => `<button class="book-row ${side}" data-side="${side}" data-index="${i}" style="--fill:${(Number.isFinite(r.cumulativeQuote) ? r.cumulativeQuote / maximum * 100 : 100)}%;--side:var(--${side === 'bid' ? 'green' : 'red'})" aria-label="${side === 'bid' ? '买盘' : '卖盘'}第 ${r.level} 档，价格 ${price(r.price)}，币量 ${compact(r.quantity)}，累计币量 ${compact(r.cumulativeQuantity)}，价值 ${compact(r.quote)}，合计金额 ${compact(r.cumulativeQuote)}"><span title="实际边界价格 ${r.price}">${r.endpoint ? price(r.price) : bandPrice(r.price)}</span><span>${compact(r.quantity)}</span><span>${compact(r.cumulativeQuantity)}</span><span>${compact(r.quote)}</span><span>${compact(r.cumulativeQuote)}</span></button>`).join('');
+    const displayedRows = rows.map((r, i) => ({ r, i }));
+    if (side === 'ask') displayedRows.reverse();
+    $(id).innerHTML = displayedRows.map(({ r, i }) => `<button class="book-row ${side}" data-side="${side}" data-index="${i}" style="--fill:${(Number.isFinite(r.cumulativeQuote) ? r.cumulativeQuote / maximum * 100 : 100)}%;--side:var(--${side === 'bid' ? 'green' : 'red'})" aria-label="${side === 'bid' ? '买盘' : '卖盘'}第 ${r.level} 档，价格 ${price(r.price)}，币量 ${compact(r.quantity)}，累计币量 ${compact(r.cumulativeQuantity)}，价值 ${compact(r.quote)}，合计金额 ${compact(r.cumulativeQuote)}"><span title="实际边界价格 ${r.price}">${r.endpoint || r.focus ? price(r.price) : bandPrice(r.price)}</span><span>${compact(r.quantity)}</span><span>${compact(r.cumulativeQuantity)}</span><span>${compact(r.quote)}</span><span>${compact(r.cumulativeQuote)}</span></button>`).join('');
   }
+  $('asks').scrollTop = $('asks').scrollHeight;
+  $('bids').scrollTop = 0;
   $('chart-empty').style.display = 'none';
   $('inspection').innerHTML = '<span class="eyebrow">价格明细</span><p>点表格查看完整数字。</p>';
+  if (state.focusPrice != null) {
+    const p = state.focusPrice, side = p < d.price ? 'bid' : 'ask';
+    const index = (side === 'bid' ? d.bids : d.asks).findIndex(r => r.price === p);
+    if (index >= 0) { inspect(side, index, true); $('jump-status').textContent = `已定位 ${price(p)}。`; }
+    else { state.focusPrice = null; $('jump-status').textContent = ''; }
+  }
   draw();
 }
 function inspect(side, index, locate = false) {
@@ -279,7 +289,7 @@ function coverage() {
 }
 function methodology() {
   $('detail-title').textContent = '怎么看这些数据？';
-  $('detail-body').innerHTML = `<h3>先选币种，再看金额</h3><p>例如 ESIM / USDT，表示用 USDT 买卖 ESIM。价格 0.06 表示 1 个 ESIM 对应 0.06 USDT。绿色是买盘，红色是卖盘。这里的“深度”，就是选定价格范围里的买卖数量和金额，按池内资金估算。</p><h3>一行表格是什么意思？</h3><p>每一行是一小段价格区间。“币量”和“价值 U”只看这一段；“累计币量”和“累计价值 U”是从第 1 档加到当前这一档。点击一行能看完整数字。曲线越高，表示累计金额越多。</p><h3>输入百分比，直接看总金额</h3><p>输入 10%，就看参考价上下 10% 内的买入、卖出总金额。例如参考价 1 USDT，就是看 0.9 到 1.1 USDT。“最大”看已计入池子的全部范围，顶部显示可买到的卖盘币量，以及卖出可得到的买盘资金。表格金额表示推到各档价格的理论花费或所得；极远价格可能产生极大的理论花费，不是池子里现有的钱。V2 没有固定最高价，最低价格 0 也不能实际成交。</p><h3>小数位数怎么设置？</h3><p>4 位小数表示每档价格相差 0.0001；2 位小数就是 0.01。档数自动计算。档位太多时，每行会合并相邻档，最多显示 500 行；整个范围的总金额不会减少。范围的最后一档可能只是一小段，以实际边界价格计算。小数位数只改变表格的细分程度，不改变范围内的总金额。</p><h3>池子是什么？为什么只显示部分数据？</h3><p>池子是用于买卖两种币的一组资金。同样两种币可以有多个池子，本页合并成功读取的池子。参考价格取这些池子中，官方列表资金估值最大的那个。读不到的池子、还未支持的池子类型不会加进图里，可点“查看数据明细”了解原因。当前只看 BNB 链上的 PancakeSwap。ESIM / USDT 与 ESIM / BNB 分开显示；同名但地址不同的代币也分开显示。</p><h3>数据从哪里来？多久更新？</h3><p>代币和池子列表来自 PancakeSwap 官方数据接口，后台每小时尝试更新。列表更新时间：${state.catalog ? time(state.catalog.fetchedAt) + '（北京时间）' : '暂时未知'}。${state.catalog?.complete ? '这次已读取完接口提供的列表，但不保证链上所有池子都在里面。' : '列表还未收集完整，有些池子可能尚未收录。'}打开时先显示有时间标记的缓存，再检查链上更新；流动性未改变的档位直接复用。ESIM/USDT 后台配置 Alchemy 后，每 5 分钟尝试更新共享数据，实际时间以页面显示为准。点击“刷新数据”或勾选“每分钟刷新”也可更新。池子列表中的美元估值和图里的买卖金额是不同指标，更新时间也可能不同。</p><h3>金额是估算值</h3><p>这些数值按池子的资金计算，未计入手续费、网络费用、代币转账税费，以及某些池子的额外交易规则。实际买卖金额以交易时的报价为准。</p><details><summary>查看详细算法与技术来源</summary><p>V2 使用实际储备量的恒定乘积曲线；V3 与 Infinity CL 使用当前价格、活跃流动性、tick bitmap 和初始化 tick 的 liquidityNet，按价格区间积分。一次刷新固定同一区块。原始状态及流动性变化使用 BigInt，显示积分使用浮点数。Infinity Bin / StableSwap 目前只列入列表与明细，不计入曲线。</p><p>百分比模式的边界 = 参考价 ×（1 ± 百分比 / 100），价格下限最低为 0。精度为 n 位小数时，基础价格档距为 10⁻ⁿ；相邻档合并后仍按实际边界积分，最后一档抵达原始范围边界。最大模式读取合约全 tick bitmap，校验区间两端流动性归零，以最外围初始化 tick 为 CL 价格边界；V2 理论价格范围为 0 到无穷，单独显示无有限上限。极大跨度用压缩价格轴展示，无限端点不画入曲线。各池从自身现价积分到共同价格边界；各池现价不同，第一档可能包含已有池间价差。这里只合并同一对代币地址的直接池，未模拟多跳路由或真实成交。</p><p><a href="https://developer.pancakeswap.finance/apis/subgraph" target="_blank" rel="noopener">PancakeSwap 开发文档 ↗</a><br><a href="https://github.com/pancakeswap/pancakeswap-ai" target="_blank" rel="noopener">官方数据接口使用示例 ↗</a><br><a href="https://github.com/pancakeswap/infinity-core" target="_blank" rel="noopener">Infinity CL 合约与计算方法 ↗</a></p></details>`;
+  $('detail-body').innerHTML = `<h3>先选币种，再看金额</h3><p>例如 ESIM / USDT，表示用 USDT 买卖 ESIM。价格 0.06 表示 1 个 ESIM 对应 0.06 USDT。绿色是买盘，红色是卖盘。这里的“深度”，就是选定价格范围里的买卖数量和金额，按池内资金估算。</p><h3>一行表格是什么意思？</h3><p>每一行是一小段价格区间。“币量”和“价值 U”只看这一段；“累计币量”和“累计价值 U”是从最接近现价的档位加到当前这一档。点击一行能看完整数字。曲线越高，表示累计金额越多。</p><h3>输入百分比，直接看总金额</h3><p>输入 10%，就看参考价上下 10% 内的买入、卖出总金额。例如参考价 1 USDT，就是看 0.9 到 1.1 USDT。“最大”看现价的 0.5～2 倍。例如现价 0.06，就是看 0.03～0.12。顶部显示买到上限需花多少，以及卖到下限能得到多少。表格金额是推到对应价格的估算花费或所得。</p><h3>小数位数怎么设置？</h3><p>4 位小数表示每档价格相差 0.0001；2 位小数就是 0.01。档数自动计算。档位太多时，每行会合并相邻档，最多显示 500 行；整个范围的总金额不会减少。范围的最后一档可能只是一小段，以实际边界价格计算。小数位数只改变表格的细分程度，不改变范围内的总金额。</p><h3>池子是什么？为什么只显示部分数据？</h3><p>池子是用于买卖两种币的一组资金。同样两种币可以有多个池子，本页合并成功读取的池子。参考价格取这些池子中，官方列表资金估值最大的那个。读不到的池子、还未支持的池子类型不会加进图里，可点“查看数据明细”了解原因。当前只看 BNB 链上的 PancakeSwap。ESIM / USDT 与 ESIM / BNB 分开显示；同名但地址不同的代币也分开显示。</p><h3>数据从哪里来？多久更新？</h3><p>代币和池子列表来自 PancakeSwap 官方数据接口，后台每小时尝试更新。列表更新时间：${state.catalog ? time(state.catalog.fetchedAt) + '（北京时间）' : '暂时未知'}。${state.catalog?.complete ? '这次已读取完接口提供的列表，但不保证链上所有池子都在里面。' : '列表还未收集完整，有些池子可能尚未收录。'}打开时先显示有时间标记的缓存，再检查链上更新；流动性未改变的档位直接复用。ESIM/USDT 后台配置 Alchemy 后，每 5 分钟尝试更新共享数据，实际时间以页面显示为准。点击“刷新数据”或勾选“每分钟刷新”也可更新。池子列表中的美元估值和图里的买卖金额是不同指标，更新时间也可能不同。</p><h3>金额是估算值</h3><p>这些数值按池子的资金计算，未计入手续费、网络费用、代币转账税费，以及某些池子的额外交易规则。实际买卖金额以交易时的报价为准。</p><details><summary>查看详细算法与技术来源</summary><p>V2 使用实际储备量的恒定乘积曲线；V3 与 Infinity CL 使用当前价格、活跃流动性、tick bitmap 和初始化 tick 的 liquidityNet，按价格区间积分。一次刷新固定同一区块。原始状态及流动性变化使用 BigInt，显示积分使用浮点数。Infinity Bin / StableSwap 目前只列入列表与明细，不计入曲线。</p><p>百分比模式的边界 = 参考价 ×（1 ± 百分比 / 100），价格下限最低为 0。精度为 n 位小数时，基础价格档距为 10⁻ⁿ；相邻档合并后仍按实际边界积分，最后一档抵达原始范围边界。最大显示范围为现价的 0.5～2 倍。后台全量缓存读取合约全部 tick bitmap 并校验两端流动性归零；显示范围独立于缓存读取范围。各池从自身现价积分到共同价格边界；各池现价不同，第一档可能包含已有池间价差。这里只合并同一对代币地址的直接池，未模拟多跳路由或真实成交。</p><p><a href="https://developer.pancakeswap.finance/apis/subgraph" target="_blank" rel="noopener">PancakeSwap 开发文档 ↗</a><br><a href="https://github.com/pancakeswap/pancakeswap-ai" target="_blank" rel="noopener">官方数据接口使用示例 ↗</a><br><a href="https://github.com/pancakeswap/infinity-core" target="_blank" rel="noopener">Infinity CL 合约与计算方法 ↗</a></p></details>`;
   $('detail-dialog').showModal();
 }
 
@@ -294,7 +304,7 @@ $('settings-form').addEventListener('submit', e => { e.preventDefault(); try {
   if (state.depth && state.live && (previous.percent === state.config.percent || state.live.range === Infinity)) {
     // Display changes invalidate an in-flight refresh with the old range/precision.
     if (state.busy) { ++state.request; state.busy = false; $('refresh').disabled = false; }
-    state.depth = buildDepth(state.live.pools, state.market.base.id, state.config); render();
+    state.depth = buildDepth(state.live.pools, state.market.base.id, state.config, { focusPrice: state.focusPrice }); render();
     $('status').textContent = `${time(state.live.timestamp)} · 合并 ${state.live.pools.length}/${state.market.pools.length} 个池子`;
   }
   else refresh();
@@ -327,13 +337,13 @@ $('jump-form').addEventListener('submit', e => {
   const value = $('jump-price').value, p = Number(value), d = state.depth;
   if (!value || !Number.isFinite(p) || p < 0) { $('jump-status').textContent = '请输入有效价格。'; return; }
   if (p < d.low || p > d.high) { $('jump-status').textContent = '超出当前范围，请扩大范围或选“最大”。'; return; }
-  const side = p < d.price ? 'bid' : 'ask', rows = side === 'bid' ? d.bids : d.asks;
-  let index = rows.findIndex(r => side === 'bid' ? r.price <= p : r.price >= p);
-  if (index < 0) index = rows.length - 1;
-  inspect(side, index, true);
-  const button = document.querySelector(`.book-row[data-side="${side}"][data-index="${index}"]`);
-  button?.focus({ preventScroll: true });
-  $('jump-status').textContent = `已定位 ${price(p)} 所在行。`;
+  if (p === d.price) { $('jump-status').textContent = '这个价格就是池子现价。'; return; }
+  state.focusPrice = p;
+  state.depth = buildDepth(state.live.pools, state.market.base.id, state.config, { focusPrice: p });
+  render();
+  const side = p < state.depth.price ? 'bid' : 'ask';
+  const index = (side === 'bid' ? state.depth.bids : state.depth.asks).findIndex(r => r.price === p);
+  document.querySelector(`.book-row[data-side="${side}"][data-index="${index}"]`)?.focus({ preventScroll: true });
 });
 $('chart').addEventListener('pointermove', e => chartPointer(e));
 $('chart').addEventListener('click', e => chartPointer(e, true));

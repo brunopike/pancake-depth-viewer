@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { priceOf, cumulative, buildDepth, settings, tickRange, MIN_TICK, MAX_TICK } from '../src/math.mjs';
+import { priceOf, cumulative, buildDepth, settings, tickRange, priceAtTick, MIN_TICK, MAX_TICK } from '../src/math.mjs';
 const token = (id, decimals = 18) => ({ id, decimals });
 const a = token('a'), b = token('b');
 const near = (x, y, tolerance = 1e-8) => assert.ok(Math.abs(x - y) <= Math.max(1, Math.abs(y)) * tolerance, `${x} != ${y}`);
@@ -88,24 +88,30 @@ test('Decimal bands align to prices and the partial final band keeps the endpoin
   near(out.asks[0].price, 1.24); near(out.asks.at(-1).price, 1.24634);
   near(out.bids[0].price, 1.23); near(out.bids.at(-1).price, 1.22166);
 });
-test('Maximum CL crosses distant empty gaps and exhausts all liquidity', () => {
+test('The capped CL window crosses empty gaps within its bounds', () => {
   const L = cl.liquidity;
   const pool = { ...cl, fullRange: true, minTick: -887272, maxTick: 887272,
     ticks: [{ index: -200, net: L }, { index: 200, net: -L }, { index: 1000, net: L }, { index: 1200, net: -L }] };
   const out = buildDepth([pool], 'a', { percent: 'max', precision: 4 });
-  near(out.asks.at(-1).price, 1.0001 ** 1200);
+  near(out.asks.at(-1).price, 2); near(out.bids.at(-1).price, .5);
   near(out.asks.at(-1).cumulativeQuote, 1000 * (1.0001 ** 100 - 1 + 1.0001 ** 600 - 1.0001 ** 500));
   near(out.bids.at(-1).cumulativeQuote, 1000 * (1 - 1.0001 ** -100));
   assert.ok(Number.isFinite(out.asks.at(-1).cumulativeQuote));
-  assert.throws(() => buildDepth([{ ...pool, fullRange: false }], 'a', { percent: 'max', precision: 4 }), /全部/);
+  near(out.low, .5); near(out.high, 2);
 });
-test('V2 maximum represents asymptotes without inventing a finite cap', () => {
-  const out = buildDepth([v2], 'a', { percent: 'max', precision: 4 });
-  assert.equal(out.asks.at(-1).price, Infinity); assert.equal(out.asks.at(-1).cumulativeQuote, Infinity);
-  near(out.asks.at(-1).cumulativeQuantity, 1000);
-  assert.equal(out.bids.at(-1).price, 0); near(out.bids.at(-1).cumulativeQuote, 4000);
-  assert.equal(out.bids.at(-1).cumulativeQuantity, Infinity);
-  assert.ok(out.bids.every(r => !Number.isNaN(r.quote) && !Number.isNaN(r.quantity)));
+test('V2 theoretical endpoints remain asymptotic, independently of the display cap', () => {
+  const ask = cumulative(v2, 'a', Infinity, 'ask'), bid = cumulative(v2, 'a', 0, 'bid');
+  assert.equal(ask.quote, Infinity); near(ask.quantity, 1000);
+  near(bid.quote, 4000); assert.equal(bid.quantity, Infinity);
+});
+test('Maximum display is exactly half to twice the current price with finite V2 totals', () => {
+  const out = buildDepth([v2], 'a', settings('max', 8));
+  near(out.low, 2); near(out.high, 8);
+  near(out.asks.at(-1).cumulativeQuantity, 1000 - Math.sqrt(4e6 / 8));
+  near(out.asks.at(-1).cumulativeQuote, Math.sqrt(4e6 * 8) - 4000);
+  near(out.bids.at(-1).cumulativeQuantity, Math.sqrt(4e6 / 2) - 1000);
+  near(out.bids.at(-1).cumulativeQuote, 4000 - Math.sqrt(4e6 * 2));
+  assert.ok([...out.bids, ...out.asks].every(r => Number.isFinite(r.quantity) && Number.isFinite(r.quote)));
 });
 test('At 100 percent the lower price is zero and the sell total is the V2 quote reserve', () => {
   const out = buildDepth([v2], 'a', { percent: 100, precision: 2 });
@@ -128,8 +134,8 @@ test('Inverse maximum CL and mixed-pool maximum conserve endpoint currency amoun
   near(direct.asks.at(-1).cumulativeQuantity, inverse.bids.at(-1).cumulativeQuote);
   near(direct.asks.at(-1).cumulativeQuote, inverse.bids.at(-1).cumulativeQuantity);
   const mixed = buildDepth([pool, v2], 'a', { percent: 'max', precision: 6 });
-  near(mixed.bids.at(-1).cumulativeQuote, 4000 + direct.bids.at(-1).cumulativeQuote);
-  near(mixed.asks.at(-1).cumulativeQuantity, 1000 + direct.asks.at(-1).cumulativeQuantity);
+  near(mixed.bids.at(-1).cumulativeQuote, 4000 - Math.sqrt(4e6 * .5) + direct.bids.at(-1).cumulativeQuote);
+  near(mixed.asks.at(-1).cumulativeQuantity, direct.asks.at(-1).cumulativeQuantity);
   assert.ok([...mixed.bids, ...mixed.asks].every(r => !Number.isNaN(r.quote)));
 });
 
@@ -137,10 +143,28 @@ test('Extreme-price bands preserve tiny token quantities despite enormous quote 
   const p = {kind:'cl', protocol:'v3', id:'0x01', token0:{id:'base',decimals:18},token1:{id:'quote',decimals:18},
     sqrtPriceX96:2n**96n, tick:0,liquidity:10n**18n,spacing:1,tvlUSD:'1',fullRange:true,
     minTick:MIN_TICK,maxTick:MAX_TICK,ticks:[{index:MIN_TICK,net:10n**18n},{index:MAX_TICK,net:-(10n**18n)}]};
-  const depth=buildDepth([p],'base',settings('max',8));
-  const last=depth.asks.at(-1);
-  assert.ok(last.quantity>0 && last.quantity<1e-12);
-  assert.ok(last.quote>1e12);
-  const sum=depth.asks.reduce((v,r)=>v+r.quantity,0);
-  near(sum,cumulative(p,'base',depth.high,'ask').quantity);
+  const high = priceAtTick(p, 'base', MAX_TICK);
+  const last = cumulative(p, 'base', high, 'ask', 1e36);
+  assert.ok(last.quantity > 0 && last.quantity < 1e-12);
+  assert.ok(last.quote > 1e12);
+});
+
+test('Price focus creates an exact band without changing endpoint totals or exceeding 500 rows', () => {
+  const before = buildDepth([v2], 'a', settings('max', 8));
+  const out = buildDepth([v2], 'a', settings('max', 8), { focusPrice: 3.7 });
+  const target = out.bids.find(r => r.price === 3.7);
+  assert.ok(target); assert.ok(out.bids.length <= 500);
+  near(target.cumulativeQuantity, Math.sqrt(4e6 / 3.7) - 1000);
+  near(target.cumulativeQuote, 4000 - Math.sqrt(4e6 * 3.7));
+  near(out.bids.at(-1).cumulativeQuote, before.bids.at(-1).cumulativeQuote);
+  near(out.bids.at(-1).cumulativeQuantity, before.bids.at(-1).cumulativeQuantity);
+  near(out.high, before.high); near(out.low, before.low);
+  assert.ok(out.bids.every((r,i) => !i || r.price < out.bids[i-1].price));
+});
+test('Ask focus preserves a finite exact price in a grouped band', () => {
+  const out = buildDepth([v2], 'a', settings('max', 8), { focusPrice: 4.123456 });
+  const row = out.asks.find(r => r.price === 4.123456);
+  assert.ok(row); assert.ok(out.asks.length <= 500);
+  near(row.cumulativeQuantity, 1000 - Math.sqrt(4e6 / row.price));
+  near(row.cumulativeQuote, Math.sqrt(4e6 * row.price) - 4000);
 });

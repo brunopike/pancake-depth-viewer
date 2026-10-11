@@ -9,12 +9,12 @@ Search BNB Chain markets by symbol, token address, or pool address. View the fiv
 ## 新手怎么用
 
 1. 点“切换代币”，输入名称。`ESIM / USDT` 表示用 USDT 买卖 ESIM。
-2. 输入“价格上下范围”。例如 10%，直接看参考价上下 10% 内的买入、卖出总金额；也可点“最大”看已计入池子的全部范围。
+2. 输入“价格上下范围”。例如 10%，直接看参考价上下 10% 内的买入、卖出总金额；也可点“最大”看现价的 0.5～2 倍范围。
 3. 默认 ESIM/USDT、最大范围、8 位小数。4 位小数表示每档价格相差 0.0001，2 位就是 0.01。档数自动计算，最多每侧 500 行；最近的 100 档保留，其余合并，范围总额保持完整。
-4. 卖盘红色在上，买盘绿色在下，两侧从最接近现价的档位开始。表格显示价格、币量、累计币量、价值 U、累计价值 U；U 表示 USDT，非 USDT 市场显示实际计价币。输入“定位价格”后点“跳转”，滚动并高亮包含该价格的行。点击一行查看完整数字。
+4. 卖盘红色在上，买盘绿色在下，卖盘从高到低排列，最下面最接近现价；买盘从高到低排列，最上面最接近现价。表格显示价格、币量、累计币量、价值 U、累计价值 U；U 表示 USDT，非 USDT 市场显示实际计价币。输入“定位价格”后点“跳转”，滚动并高亮包含该价格的行。点击一行查看完整数字。输入的定位价格会单独成为一档，总金额保持不变。
 5. 点“查看数据明细”了解哪些池子计入，点“怎么看这些数据？”查看解释。
 
-“池子”是用于买卖两种币的一组资金。页面金额根据池内资金估算，未计入交易费用等影响；实际买卖金额以交易时的报价为准。最大范围的顶部显示卖盘币量和买盘资金。表格金额是推到各档价格的理论花费或所得，不是池子余额；极远价格可能产生极大的理论花费。大数字用“万”“亿”或科学计数显示。
+“池子”是用于买卖两种币的一组资金。页面金额根据池内资金估算，未计入交易费用等影响；实际买卖金额以交易时的报价为准。顶部显示买到上限的估算花费、卖到下限的估算所得。表格金额对应各档价格，未扣费用。大数字用“万”“亿”或科学计数显示。
 
 ## Data and coverage
 
@@ -28,7 +28,7 @@ Search BNB Chain markets by symbol, token address, or pool address. View the fiv
 
 The reference price is taken from the successfully read pool with the largest indexed TVL. Percentage endpoints use `reference × (1 ± percent / 100)` with a lower floor of zero. Decimal price bands align to multiples of `10^(-precision)`; the last partial band reaches the exact percentage endpoint. Row grouping changes presentation, not endpoint totals. Each pool is integrated from its own current price to that common boundary, with liquidity changes applied at initialized ticks. When pool prices differ, the first level includes each pool's available increment to the common boundary.
 
-Maximum reads all CL bitmap words between protocol minimum and maximum ticks, validates that active liquidity returns to zero at both ends, and takes the outer initialized ticks as finite CL endpoints. Read failures and excessive tick counts remain explicit exclusions. V2 has no finite upper price or buy-quote total: the maximum buy quantity tends to the base reserve, while the maximum sell-quote amount tends to the quote reserve as price approaches zero and input quantity tends to infinity. These asymptotes are theoretical, not executable at the endpoints. Infinite endpoints are included in totals/table but omitted from the chart; very wide price axes are compressed. Legacy `levels`/`bps` URLs preserve their old percentage (`levels*bps/100`), while new links use `range` and `precision`.
+Maximum displays prices from 0.5 to 2 times the current reference price. This finite viewing window is separate from full-range chain caching, which reads all CL bitmap words and validates that active liquidity returns to zero at both ends. The underlying V2 curve still has theoretical asymptotes; these do not define the default viewing window. Price focus inserts the exact requested boundary into the selected range, integrating it directly and preserving endpoint totals and the 500-row limit. Legacy `levels`/`bps` URLs preserve their old percentage (`levels*bps/100`), while new links use `range` and `precision`.
 
 For a constant-liquidity CL interval, the absolute token deltas are `L × |1/s₀ − 1/s₁|` and `L × |s₁ − s₀|`, where `s` is the square-root raw token price. Decimals are applied separately. A V2 endpoint uses `x' = √(k/P)` and `y' = √(kP)`. Each displayed band is integrated directly, then added to cumulative totals. This avoids subtracting huge cumulative values and losing a tiny remaining token quantity.
 
@@ -67,4 +67,4 @@ The worker uses `https://bnb-mainnet.g.alchemy.com/v2/<private-key>` on the serv
 
 ## Validation
 
-`npm test` checks constant-product conservation, inverse token order, mixed token decimals, CL interval deltas, upward/downward tick crossing, empty-liquidity intervals, common price aggregation, grouping invariance, decimal-band alignment, exact percentage endpoints, distant CL gaps in maximum mode, V2 asymptotes, extreme-price band precision, incremental position discovery, zero-net initialized ticks, reorg/log failure fallback and snapshot identity/completeness. An independent 70-digit Decimal position-interval check is also used for the ESIM maximum totals. Publication and browser checks are recorded separately; a passing build alone does not establish API/RPC availability.
+`npm test` checks constant-product conservation, inverse token order, mixed token decimals, CL interval deltas, upward/downward tick crossing, empty-liquidity intervals, common price aggregation, grouping invariance, decimal-band alignment, exact percentage endpoints, distant CL gaps in maximum mode, V2 asymptotes, the finite maximum window, exact price focus and extreme-price band precision, incremental position discovery, zero-net initialized ticks, reorg/log failure fallback and snapshot identity/completeness. An independent 70-digit Decimal position-interval check is also used for the ESIM maximum totals. Publication and browser checks are recorded separately; a passing build alone does not establish API/RPC availability.
