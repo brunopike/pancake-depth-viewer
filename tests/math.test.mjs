@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { priceOf, cumulative, buildDepth, settings } from '../src/math.mjs';
+import { priceOf, cumulative, buildDepth, settings, tickRange, MIN_TICK, MAX_TICK } from '../src/math.mjs';
 const token = (id, decimals = 18) => ({ id, decimals });
 const a = token('a'), b = token('b');
 const near = (x, y, tolerance = 1e-8) => assert.ok(Math.abs(x - y) <= Math.max(1, Math.abs(y)) * tolerance, `${x} != ${y}`);
@@ -51,23 +51,84 @@ test('Empty segment can cross into another initialized liquidity interval', () =
   near(out.quote, 1000 * (Math.sqrt(1.04) - 1.0001 ** 50));
 });
 test('Grouping preserves total depth for equal outer boundaries', () => {
-  const one = buildDepth([cl, v2], 'a', { levels: 100, bps: 10 });
-  const two = buildDepth([cl, v2], 'a', { levels: 200, bps: 5 });
+  const one = buildDepth([cl, v2], 'a', { percent: 10, precision: 3 });
+  const two = buildDepth([cl, v2], 'a', { percent: 10, precision: 4 });
   for (const side of ['asks', 'bids']) {
     near(one[side].at(-1).cumulativeQuote, two[side].at(-1).cumulativeQuote);
     near(one[side].reduce((s, r) => s + r.quote, 0), one[side].at(-1).cumulativeQuote);
-    assert.equal(one[side].length, 100);
+    assert.ok(one[side].length > 20);
     assert.ok(one[side].every(r => r.quantity >= 0 && r.quote >= 0));
   }
 });
 test('Aggregate uses common absolute price boundaries across pools', () => {
   const secondary = { ...v2, reserve1: 4200e18, tvlUSD: '5000' };
-  const result = buildDepth([v2, secondary], 'a', { levels: 100, bps: 10 });
+  const result = buildDepth([v2, secondary], 'a', { percent: 10, precision: 2 });
   near(result.price, 4);
   near(result.asks.at(-1).cumulativeQuote, cumulative(v2, 'a', 4.4, 'ask').quote + cumulative(secondary, 'a', 4.4, 'ask').quote);
 });
 test('Invalid limits, range gaps and negative liquidity fail explicitly', () => {
-  for (const args of [[0, 10], [501, 1], [100, NaN], [100, 100], [20, 0]]) assert.throws(() => settings(...args));
+  for (const args of [[0, 4], [-1, 4], [NaN, 4], [10, 19], [10, -1], [10, 1.5], [10, '']]) assert.throws(() => settings(...args));
   assert.throws(() => cumulative({ ...cl, minTick: -100, maxTick: 100 }, 'a', 1.1, 'ask'), /tick/);
   assert.throws(() => cumulative({ ...cl, liquidity: -1n }, 'a', 1.1, 'ask'), /负流动性/);
+});
+
+test('Percentage and precision remain independent; grouped rows keep exact totals', () => {
+  const small = buildDepth([v2], 'a', { percent: 25, precision: 2 });
+  const grouped = buildDepth([v2], 'a', { percent: 25, precision: 8 });
+  near(small.asks.at(-1).price, 5); near(small.bids.at(-1).price, 3);
+  near(grouped.asks.at(-1).cumulativeQuote, 4000 * (Math.sqrt(1.25) - 1));
+  near(grouped.bids.at(-1).cumulativeQuote, 4000 * (1 - Math.sqrt(.75)));
+  assert.ok(grouped.asks.length <= 500);
+  near(grouped.asks.reduce((s, r) => s + r.quote, 0), small.asks.at(-1).cumulativeQuote);
+  assert.ok(grouped.asks.every((r, i, rows) => !i || r.price > rows[i - 1].price));
+});
+test('Decimal bands align to prices and the partial final band keeps the endpoint', () => {
+  const pool = { ...v2, reserve1: 1234e18 };
+  const out = buildDepth([pool], 'a', { percent: 1, precision: 2 });
+  near(out.asks[0].price, 1.24); near(out.asks.at(-1).price, 1.24634);
+  near(out.bids[0].price, 1.23); near(out.bids.at(-1).price, 1.22166);
+});
+test('Maximum CL crosses distant empty gaps and exhausts all liquidity', () => {
+  const L = cl.liquidity;
+  const pool = { ...cl, fullRange: true, minTick: -887272, maxTick: 887272,
+    ticks: [{ index: -200, net: L }, { index: 200, net: -L }, { index: 1000, net: L }, { index: 1200, net: -L }] };
+  const out = buildDepth([pool], 'a', { percent: 'max', precision: 4 });
+  near(out.asks.at(-1).price, 1.0001 ** 1200);
+  near(out.asks.at(-1).cumulativeQuote, 1000 * (1.0001 ** 100 - 1 + 1.0001 ** 600 - 1.0001 ** 500));
+  near(out.bids.at(-1).cumulativeQuote, 1000 * (1 - 1.0001 ** -100));
+  assert.ok(Number.isFinite(out.asks.at(-1).cumulativeQuote));
+  assert.throws(() => buildDepth([{ ...pool, fullRange: false }], 'a', { percent: 'max', precision: 4 }), /全部/);
+});
+test('V2 maximum represents asymptotes without inventing a finite cap', () => {
+  const out = buildDepth([v2], 'a', { percent: 'max', precision: 4 });
+  assert.equal(out.asks.at(-1).price, Infinity); assert.equal(out.asks.at(-1).cumulativeQuote, Infinity);
+  near(out.asks.at(-1).cumulativeQuantity, 1000);
+  assert.equal(out.bids.at(-1).price, 0); near(out.bids.at(-1).cumulativeQuote, 4000);
+  assert.equal(out.bids.at(-1).cumulativeQuantity, Infinity);
+  assert.ok(out.bids.every(r => !Number.isNaN(r.quote) && !Number.isNaN(r.quantity)));
+});
+test('At 100 percent the lower price is zero and the sell total is the V2 quote reserve', () => {
+  const out = buildDepth([v2], 'a', { percent: 100, precision: 2 });
+  near(out.asks.at(-1).price, 8); near(out.bids.at(-1).price, 0);
+  near(out.bids.at(-1).cumulativeQuote, 4000); assert.equal(out.bids.at(-1).cumulativeQuantity, Infinity);
+});
+
+test('Full and zero-lower-bound bitmap ranges stay within protocol bounds in both token orders', () => {
+  const pool = { ...cl, spacing: 20 };
+  assert.deepEqual(tickRange(pool, 'a', 1, Infinity), [MIN_TICK, MAX_TICK]);
+  const direct = tickRange(pool, 'a', 1, 1), inverse = tickRange(pool, 'b', 1, 1);
+  assert.equal(direct[0], MIN_TICK); assert.equal(inverse[1], MAX_TICK);
+  assert.ok(direct[1] > 6900 && inverse[0] < -6900);
+});
+test('Inverse maximum CL and mixed-pool maximum conserve endpoint currency amounts', () => {
+  const pool = { ...cl, fullRange: true, minTick: MIN_TICK, maxTick: MAX_TICK,
+    ticks: [{ index: -200, net: cl.liquidity }, { index: 200, net: -cl.liquidity }] };
+  const direct = buildDepth([pool], 'a', { percent: 'max', precision: 6 });
+  const inverse = buildDepth([pool], 'b', { percent: 'max', precision: 6 });
+  near(direct.asks.at(-1).cumulativeQuantity, inverse.bids.at(-1).cumulativeQuote);
+  near(direct.asks.at(-1).cumulativeQuote, inverse.bids.at(-1).cumulativeQuantity);
+  const mixed = buildDepth([pool, v2], 'a', { percent: 'max', precision: 6 });
+  near(mixed.bids.at(-1).cumulativeQuote, 4000 + direct.bids.at(-1).cumulativeQuote);
+  near(mixed.asks.at(-1).cumulativeQuantity, 1000 + direct.asks.at(-1).cumulativeQuantity);
+  assert.ok([...mixed.bids, ...mixed.asks].every(r => !Number.isNaN(r.quote)));
 });

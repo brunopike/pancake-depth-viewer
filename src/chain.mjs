@@ -1,8 +1,8 @@
 import { createPublicClient, http, fallback, parseAbi } from 'viem';
 import { bsc } from 'viem/chains';
-import { priceOf, sqrtAtPrice } from './math.mjs';
+import { priceOf, tickRange } from './math.mjs';
 
-export const RPCS = ['https://bsc-rpc.publicnode.com', 'https://bsc-dataseed.bnbchain.org', 'https://bsc-dataseed1.binance.org'];
+export const RPCS = ['https://bsc-mainnet.public.blastapi.io', 'https://bsc-rpc.publicnode.com', 'https://bsc-dataseed.bnbchain.org', 'https://bsc-dataseed1.binance.org'];
 export const client = createPublicClient({ chain: bsc, transport: fallback(RPCS.map(u => http(u, { timeout: 16000, retryCount: 1 }))),
   batch: { multicall: true } });
 const CL_MANAGER = '0xa0FfB9c1CE1Fe56963B0321B32E7A0302114058b';
@@ -22,13 +22,19 @@ const clabi = parseAbi([
   'function getPoolTickInfo(bytes32,int24) view returns ((uint128 liquidityGross,int128 liquidityNet,uint256 feeGrowthOutside0X128,uint256 feeGrowthOutside1X128))'
 ]);
 const call = (address, abi, functionName, args = []) => ({ address, abi, functionName, args });
-async function batch(contracts, blockNumber) {
+async function batch(contracts, blockNumber, chunkSize = 80) {
   const out = [];
-  for (let i = 0; i < contracts.length; i += 80) {
-    const result = await client.multicall({ contracts: contracts.slice(i, i + 80), blockNumber, batchSize: 0, allowFailure: true });
-    for (const r of result) {
-      if (r.status !== 'success') throw new Error('RPC 合约读取失败，请重试或缩小范围');
-      out.push(r.result);
+  for (let i = 0; i < contracts.length; i += chunkSize * 3) {
+    const chunks = [];
+    for (let j = i; j < Math.min(i + chunkSize * 3, contracts.length); j += chunkSize) chunks.push(contracts.slice(j, j + chunkSize));
+    const results = await Promise.all(chunks.map(chunk => client.multicall({ contracts: chunk, blockNumber, batchSize: 0, allowFailure: true })));
+    for (let n = 0; n < results.length; n++) for (let j = 0; j < results[n].length; j++) {
+      const r = results[n][j];
+      if (r.status === 'success') { out.push(r.result); continue; }
+      // Public RPCs can return per-call multicall failures under a large read load.
+      // Retry the exact failed call independently, still at the same pinned block.
+      try { out.push(await client.readContract({ ...chunks[n][j], blockNumber })); }
+      catch (e) { throw new Error(`RPC 合约读取失败：${(e.shortMessage || e.message) + (e.details ? ': ' + e.details : '')}`); }
     }
   }
   return out;
@@ -67,14 +73,12 @@ async function readPool(meta, baseId, reference, range, blockNumber) {
   if (!Number.isInteger(pool.spacing) || pool.spacing < 1) throw new Error('无效 tick spacing');
   const p = reference || priceOf(pool, baseId);
   pool.rangeReference = p;
-  const a = sqrtAtPrice(pool, baseId, p * (1 - range)), b = sqrtAtPrice(pool, baseId, p * (1 + range));
-  const targetTicks = [Math.floor(2 * Math.log(a) / Math.log(1.0001)), Math.ceil(2 * Math.log(b) / Math.log(1.0001)), pool.tick];
-  const lo = Math.max(-887272, Math.min(...targetTicks) - pool.spacing), hi = Math.min(887272, Math.max(...targetTicks) + pool.spacing);
+  const [lo, hi] = tickRange(pool, baseId, p, range);
+  pool.fullRange = range === Infinity;
   pool.minTick = lo; pool.maxTick = hi;
   const first = Math.floor(Math.floor(lo / pool.spacing) / 256), last = Math.floor(Math.floor(hi / pool.spacing) / 256);
-  if (last - first > 500) throw new Error('tick 范围过大，请降低档数或 bps');
   const words = Array.from({ length: last - first + 1 }, (_, i) => first + i);
-  const bitmaps = await batch(words.map(w => call(address, abi, infinity ? 'getPoolBitmapInfo' : 'tickBitmap', [...prefix, w])), blockNumber);
+  const bitmaps = await batch(words.map(w => call(address, abi, infinity ? 'getPoolBitmapInfo' : 'tickBitmap', [...prefix, w])), blockNumber, 512);
   const indices = [];
   bitmaps.forEach((bitmap, i) => {
     for (let bit = 0; bit < 256; bit++) {
@@ -83,9 +87,14 @@ async function readPool(meta, baseId, reference, range, blockNumber) {
       if (tick >= lo && tick <= hi) indices.push(tick);
     }
   });
-  if (indices.length > 15000) throw new Error('初始化 tick 数过多，请缩小范围');
+  if (indices.length > 15000) throw new Error('初始化 tick 数过多，请选择较小百分比');
   const tickData = await batch(indices.map(t => call(address, abi, infinity ? 'getPoolTickInfo' : 'ticks', [...prefix, t])), blockNumber);
   pool.ticks = indices.map((index, i) => ({ index, net: infinity ? tickData[i].liquidityNet : tickData[i][1] }));
+  if (pool.fullRange) {
+    let left = BigInt(pool.liquidity), right = left;
+    for (const t of pool.ticks) { if (t.index <= pool.tick) left -= t.net; else right += t.net; }
+    if (left !== 0n || right !== 0n) throw new Error('全部价格数据校验失败，池子未计入');
+  }
   return pool;
 }
 
@@ -113,7 +122,7 @@ export async function loadPools(metas, baseId, range, progress = () => {}) {
   if (dominant) {
     const center = priceOf(dominant, baseId);
     for (let i = 0; i < pools.length; i++) {
-      if (pools[i].kind !== 'cl' || Math.abs(pools[i].rangeReference / center - 1) < 1e-12) continue;
+      if (range === Infinity || pools[i].kind !== 'cl' || Math.abs(pools[i].rangeReference / center - 1) < 1e-12) continue;
       try { pools[i] = await readPool(pools[i], baseId, center, range, blockNumber); }
       catch (e) { failed.push({ ...pools[i], error: e.message }); pools[i] = null; }
     }
