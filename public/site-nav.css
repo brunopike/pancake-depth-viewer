@@ -13,3 +13,10 @@
 .page-heading{flex-wrap:wrap;gap:18px}
 @media(max-width:760px){.header-actions{width:100%;gap:16px}.site-nav{max-width:100%;overflow-x:auto}.site-nav a,.site-nav .site-nav-current{flex:1;padding:12px 13px}.site-nav .site-nav-current::after{right:13px;left:13px}.page-actions .site-nav{flex-basis:100%}}
 @media(max-width:380px){.site-nav{gap:0}.site-nav a,.site-nav .site-nav-current{padding:12px 10px;font-size:14px}}
+
+/* A separate sibling can stay sticky for the full page, beyond the title header. */
+:root{--site-navigation-height:64px}
+.sticky-navigation{position:sticky;top:0;z-index:40;min-height:var(--site-navigation-height);display:flex;align-items:center;background:var(--bg,#0b1017);margin-bottom:14px;box-shadow:0 10px 14px -12px #000c}
+.sticky-navigation .site-nav{width:100%;justify-content:flex-end}
+.sticky-navigation~.tabs{top:var(--site-navigation-height)}
+@media(max-width:760px){.sticky-navigation .site-nav{justify-content:space-between}.sticky-navigation .site-nav a,.sticky-navigation .site-nav-current{font-size:13px;padding:12px 8px}.sticky-navigation .site-nav-current::after{right:8px;left:8px}.report-header .header-actions{width:auto;margin-left:auto}}

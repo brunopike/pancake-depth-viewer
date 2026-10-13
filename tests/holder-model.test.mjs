@@ -38,3 +38,19 @@ test('confirmed contract labels apply to old snapshots, search, filters and char
  assert.equal(groupHolders(rows,{}).find(g=>g.id==='frequency').balance,'200');
  for(const r of rows){const tags=rowTags(r,{});assert.equal(tags.length,1);assert.match(tags[0].evidence,/用户确认/);assert.equal(rowTags({...r,tags},{}).length,1);}
 });
+
+test('named custom label filters deduplicate options and combine with automatic tags', async()=>{
+ const {customLabelOptions}=await import('../src/holder-model.mjs');
+ const c='0x'+'3'.repeat(40),d='0x'+'4'.repeat(40);
+ const manual={[a]:{text:'做市 A',kind:'own'},[b]:{text:'做市 A',kind:'lp'},[c]:{text:'标签: "B"',kind:'custom'}};
+ const options=customLabelOptions(manual);assert.equal(options.length,2);assert.equal(options.find(x=>x.text==='做市 A').count,2);
+ const report={rows:[row(a,'10'),row(b,'20'),row(c,'30'),row(d,'40',[{kind:'received',text:'做市 A'}])]};
+ assert.deepEqual(selectHolders(report,{filter:['label:做市 A']},manual).rows.map(x=>x.address),[a,b]);
+ assert.deepEqual(selectHolders(report,{filter:['label:做市 A','received']},manual).rows.map(x=>x.address),[a,b,d]);
+ assert.equal(selectHolders(report,{filter:['label:标签: "B"']},manual).rows[0].address,c);
+ assert.equal(selectHolders(report,{filter:['all']},manual).total,4);
+ const renamed={...manual,[a]:{...manual[a],text:'做市新标签'}};
+ assert.equal(selectHolders(report,{filter:['label:做市 A']},renamed).total,1);
+ delete renamed[b];assert.equal(selectHolders(report,{filter:['label:做市 A']},renamed).total,0);
+ assert.ok(!customLabelOptions(renamed).some(x=>x.text==='做市 A'));
+});

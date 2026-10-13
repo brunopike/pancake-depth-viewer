@@ -1,17 +1,24 @@
 import {readSnapshot} from './snapshot-client.mjs';
 import {holderCharts} from './holder-charts.mjs';
-import {TAG_KEY,TAG_KINDS,validateManual,readManual,rowTags,selectHolders,changePercent} from './holder-model.mjs';
+import {TAG_KEY,TAG_KINDS,validateManual,readManual,rowTags,selectHolders,changePercent,customLabelOptions} from './holder-model.mjs';
 const $=id=>document.getElementById(id),escape=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const number=(n,d=2)=>Number(n).toLocaleString('zh-CN',{minimumFractionDigits:d,maximumFractionDigits:d});
 const units=s=>Number(BigInt(s))/1e18,quantity=s=>s==null?'暂缺':number(units(s),2),short=a=>a.slice(0,8)+'…'+a.slice(-6);
 const compact=s=>{const n=units(s);return n>=1e8?number(n/1e8)+'亿':n>=1e4?number(n/1e4)+'万':number(n,2);};
 const date=s=>new Date(s*1000).toLocaleString('zh-CN',{timeZone:'Asia/Shanghai',hour12:false,month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'});
 let report,manual={},page=0,pageSize=100,chartMode='groups',busy=false,pending=null,returnFocus=null,cohort=null,excludeOwn=false;
+const mobileExpanded = new Set();
 const cohortNames={'held':'持币 · 未见卖出','sold-held':'卖出后仍持币','sold-zero':'卖出后零持仓','zero':'零持仓 · 未见卖出'};
 try{manual=readManual(localStorage.getItem(TAG_KEY));}catch{}
 function validate(r){if(r?.version!==1||r.token!=='0x7765a659c5b0cfbfd9fbc2ef2298b75a598f2d2d'||!Array.isArray(r.rows)||!r.block)throw new Error('持仓数据格式有误。');return r;}
-const selectedFilters=()=>[...$('filter').querySelectorAll('input:checked')].map(input=>input.value);
-function updateFilters(){const checked=[...$('filter').querySelectorAll('input:checked')];$('filter-label').textContent=checked.length?checked.length===1?checked[0].parentElement.textContent:`已选 ${checked.length} 项`:'全部标签';page=0;if(checked.some(input=>input.value==='cleared'))$('include-zero').checked=true;render();}
+const filterInputs=()=>[...$('filter').querySelectorAll('input[type=checkbox]')];
+const selectedFilters=()=>{const inputs=filterInputs(),checked=inputs.filter(input=>input.checked);return checked.length===inputs.length&&checked.length?['all']:checked.map(input=>input.value);};
+function renderCustomFilters(){
+ const inputs=filterInputs(),checked=new Set(inputs.filter(input=>input.checked).map(input=>input.value)),all=inputs.length>0&&checked.size===inputs.length;
+ const labels=customLabelOptions(manual);
+ $('custom-label-filters').innerHTML=labels.length?`<p class="custom-label-heading">已添加标签</p>${labels.map(label=>`<label><input type="checkbox" value="${escape(label.value)}" data-label="${escape(label.text)}"${all||checked.has(label.value)?' checked':''}><span>${escape(label.text)}</span><small>${label.count} 个地址</small></label>`).join('')}`:'';
+}
+function updateFilters(){const inputs=filterInputs(),checked=inputs.filter(input=>input.checked);$('filter-label').textContent=checked.length===inputs.length&&checked.length?'全部标签（已全选）':checked.length?checked.length===1?checked[0].dataset.label||checked[0].parentElement.textContent.trim():`已选 ${checked.length} 项`:'不限标签';page=0;if(checked.some(input=>input.value==='cleared'))$('include-zero').checked=true;render();}
 function pair(stats,key){return `<span class="buy">买 ${key==='Count'?number(stats.buyCount,0):quantity(stats.buyAmount)}</span><span class="sell">卖 ${key==='Count'?number(stats.sellCount,0):quantity(stats.sellAmount)}</span>`;}
 function drawChart(rows){
  const model=holderCharts(rows,manual),{total,count,groups,top}=model;
@@ -41,7 +48,7 @@ function render(){
   const pct=changePercent(r.balance,r.priorBalance),change=r.change24h,positive=change!==null&&BigInt(change)>0n;
   const tags=rowTags(r,manual);
   const delta=change===null?'暂缺':`${positive?'+':''}${quantity(change)}`;
-  return `<tr><th scope="row"><span class="rank">${page*pageSize+i+1}</span><a href="https://bscscan.com/address/${r.address}" target="_blank" rel="noopener noreferrer" title="${r.address}">${short(r.address)} ↗</a><small><button class="tag-edit-button" data-tag="${r.address}">${manual[r.address]?'编辑标记':'标记'}</button></small></th><td>${tags.length?tags.map(t=>`<span class="tag" data-kind="${escape(t.kind)}" title="${escape(t.evidence)}">${t.manual?'✎ ':''}${escape(t.text)}</span>`).join(''):'<span class="tag">待识别</span>'}${tags.length?`<details class="tag-evidence"><summary>依据</summary>${tags.map(t=>`<p><strong>${escape(t.text)}</strong>：${escape(t.evidence)}</p>`).join('')}</details>`:''}</td><td>${quantity(r.balance)}</td><td>${number(units(r.balance)*report.price)}</td><td>${number(Number(BigInt(r.balance))/Number(BigInt(report.totalSupply))*100,4)}%</td><td class="${change===null||BigInt(change)===0n?'':positive?'buy':'sell'}">${delta}<small>${pct===null?'历史余额暂缺':pct==='new'?'新增持仓':`${Number(pct)>0?'+':''}${number(pct,2)}%`}</small></td><td>${pair(r.day,'Count')}</td><td>${pair(r.day,'Amount')}</td><td>${pair(r.history,'Count')}</td><td>${pair(r.history,'Amount')}</td></tr>`;
+  return `<tr data-mobile-expanded="${mobileExpanded.has(r.address)}"><th scope="row"><span class="rank">${page*pageSize+i+1}</span><a href="https://bscscan.com/address/${r.address}" target="_blank" rel="noopener noreferrer" title="${r.address}">${short(r.address)} ↗</a><small><button class="tag-edit-button" data-tag="${r.address}">${manual[r.address]?'编辑标签':'加标签'}</button></small></th><td>${tags.length?tags.map(t=>`<span class="tag" data-kind="${escape(t.kind)}" title="${escape(t.evidence)}">${t.manual?'✎ ':''}${escape(t.text)}</span>`).join(''):'<span class="tag">待识别</span>'}${tags.length?`<details class="tag-evidence"><summary>依据</summary>${tags.map(t=>`<p><strong>${escape(t.text)}</strong>：${escape(t.evidence)}</p>`).join('')}</details>`:''}</td><td data-mobile-label="持仓 · ESIM">${quantity(r.balance)}</td><td data-mobile-label="参考价值 · USDT">${number(units(r.balance)*report.price)}</td><td data-mobile-label="占总供应量">${number(Number(BigInt(r.balance))/Number(BigInt(report.totalSupply))*100,4)}%</td><td data-mobile-label="24h 持仓变化 · ESIM" class="${change===null||BigInt(change)===0n?'':positive?'buy':'sell'}">${delta}<small>${pct===null?'历史余额暂缺':pct==='new'?'新增持仓':`${Number(pct)>0?'+':''}${number(pct,2)}%`}</small></td><td data-mobile-label="24h 买卖次数">${pair(r.day,'Count')}</td><td data-mobile-label="24h 买卖币量 · ESIM">${pair(r.day,'Amount')}</td><td data-mobile-label="累计买卖次数">${pair(r.history,'Count')}</td><td data-mobile-label="累计买卖币量 · ESIM">${pair(r.history,'Amount')}</td><td class="mobile-holder-details"><button type="button" class="mobile-holder-toggle" data-mobile-toggle="${escape(r.address)}" aria-expanded="${mobileExpanded.has(r.address)}">${mobileExpanded.has(r.address)?'收起买卖数据':'展开买卖数据'}</button><p class="mobile-full-address">${escape(r.address)}</p></td></tr>`;
  }).join('')||'<tr><td colspan="10" class="empty">没有符合条件的地址。可切换标签，或显示零持仓地址。</td></tr>';
  $('row-count').textContent=`${number(selected.total,0)} 个地址`;$('page').textContent=`${selected.total?page+1:0} / ${Math.ceil(selected.total/pageSize)}`;$('prev').disabled=page===0;$('next').disabled=(page+1)*pageSize>=selected.total;
  $('coverage').innerHTML=`<p>名单来源：<a href="${escape(report.coverage.source)}" target="_blank" rel="noopener noreferrer">OKLink 前 ${report.coverage.seedTop} 名</a>（${escape(report.coverage.seedAt.slice(0,10))}），并补入已知领币、交易、交互地址和新增 ESIM 转账地址。本表是已索引地址排名，不是全链完整持有人名单。余额、24h 变化来自固定区块的链上读取。</p>`;
@@ -56,16 +63,29 @@ function stageTag(remove=false){
  const address=$('tag-address').value.trim().toLowerCase();
  const value=validateManual({address,kind:$('tag-kind').value,text:$('tag-text').value});
  pending={value,remove};$('tag-edit').hidden=true;$('tag-confirm').hidden=false;$('tag-back').hidden=false;$('tag-remove').hidden=true;$('tag-submit').textContent=remove?'确认删除':'确认保存';
- $('tag-confirm').innerHTML=`<p>请核对要${remove?'删除':'保存'}的标记：</p><code>${escape(address)}</code><p>分类：${escape(TAG_KINDS[value.kind])}</p><p>标签：<strong>${escape(value.text)}</strong></p><p>仅保存在当前浏览器。</p>`;$('tag-submit').focus();
+ $('tag-confirm').innerHTML=`<p>请核对要${remove?'删除':'保存'}的标签：</p><code>${escape(address)}</code><p>分类：${escape(TAG_KINDS[value.kind])}</p><p>标签：<strong>${escape(value.text)}</strong></p><p>仅保存在当前浏览器。</p>`;$('tag-submit').focus();
 }
-$('tag-form').addEventListener('submit',e=>{e.preventDefault();$('tag-error').textContent='';try{if(!pending){stageTag();return;}const next={...manual};if(pending.remove)delete next[pending.value.address];else next[pending.value.address]=pending.value;localStorage.setItem(TAG_KEY,JSON.stringify(next));manual=next;const included=report?.rows.some(r=>r.address===pending.value.address);closeTag();render();$('status').textContent=included?'手动标记已保存到当前浏览器。':'标记已保存；该地址尚未进入当前索引名单。';}catch(e){$('tag-error').textContent=e.name==='QuotaExceededError'?'浏览器存储空间不足，标签未保存。':e.message;}});
+$('tag-form').addEventListener('submit',e=>{e.preventDefault();$('tag-error').textContent='';try{if(!pending){stageTag();return;}const next={...manual};if(pending.remove)delete next[pending.value.address];else next[pending.value.address]=pending.value;localStorage.setItem(TAG_KEY,JSON.stringify(next));manual=next;const included=report?.rows.some(r=>r.address===pending.value.address),removed=pending.remove;closeTag();renderCustomFilters();updateFilters();$('status').textContent=removed?'标签已删除。':included?'标签已保存到当前浏览器。':'标签已保存；该地址尚未进入当前索引名单。';}catch(e){$('tag-error').textContent=e.name==='QuotaExceededError'?'浏览器存储空间不足，标签未保存。':e.message;}});
 $('tag-remove').addEventListener('click',()=>{try{stageTag(true);}catch(e){$('tag-error').textContent=e.message;}});$('tag-cancel').addEventListener('click',closeTag);$('tag-back').addEventListener('click',()=>{pending=null;$('tag-edit').hidden=false;$('tag-confirm').hidden=true;$('tag-back').hidden=true;$('tag-remove').hidden=!manual[$('tag-address').value.toLowerCase()];$('tag-submit').textContent='下一步：核对';});
-$('add-tag').addEventListener('click',()=>openTag());$('rows').addEventListener('click',e=>{const button=e.target.closest('[data-tag]');if(button)openTag(button.dataset.tag);});
-$('search').addEventListener('input',()=>{page=0;render();});$('filter').addEventListener('change',updateFilters);$('clear-filters').addEventListener('click',()=>{for(const input of $('filter').querySelectorAll('input'))input.checked=false;updateFilters();});document.addEventListener('click',e=>{if(!$('tag-filter').contains(e.target))$('tag-filter').open=false;});$('tag-filter').addEventListener('keydown',e=>{if(e.key==='Escape'){$('tag-filter').open=false;$('filter-summary').focus();e.preventDefault();}});$('include-zero').addEventListener('change',()=>{page=0;render();});$('page-size').addEventListener('change',()=>{pageSize=Number($('page-size').value);page=0;render();});$('prev').addEventListener('click',()=>{page--;render();});$('next').addEventListener('click',()=>{page++;render();});
+$('add-tag').addEventListener('click',()=>openTag());$('rows').addEventListener('click',e=>{
+ const toggle=e.target.closest('[data-mobile-toggle]');
+ if(toggle){const address=toggle.dataset.mobileToggle,open=!mobileExpanded.has(address);if(open)mobileExpanded.add(address);else mobileExpanded.delete(address);toggle.closest('tr').dataset.mobileExpanded=String(open);toggle.setAttribute('aria-expanded',String(open));toggle.textContent=open?'收起买卖数据':'展开买卖数据';return;}
+ const button=e.target.closest('[data-tag]');if(button)openTag(button.dataset.tag);
+});
+
+function renderLabelManager(){
+ const labels=Object.values(manual).sort((a,b)=>a.text.localeCompare(b.text,'zh-CN')||a.address.localeCompare(b.address));
+ $('label-manager-list').innerHTML=labels.length?labels.map(label=>`<article class="managed-label"><div><strong>${escape(label.text)}</strong><small>${escape(TAG_KINDS[label.kind])}</small><code>${escape(label.address)}</code></div><div class="managed-label-actions"><button type="button" data-edit-label="${escape(label.address)}">编辑</button><button type="button" data-delete-label="${escape(label.address)}">删除</button></div></article>`).join(''):'<p class="empty">还没有添加标签。可点“添加标签”给地址添加。</p>';
+}
+$('manage-tags').addEventListener('click',()=>{renderLabelManager();$('label-manager').showModal();});
+$('label-manager-close').addEventListener('click',()=>$('label-manager').close());
+$('label-manager-add').addEventListener('click',()=>{$('label-manager').close();openTag();});
+$('label-manager-list').addEventListener('click',e=>{const button=e.target.closest('[data-edit-label],[data-delete-label]');if(!button)return;const address=button.dataset.editLabel||button.dataset.deleteLabel;$('label-manager').close();openTag(address);if(button.dataset.deleteLabel)stageTag(true);});
+$('search').addEventListener('input',()=>{page=0;render();});$('filter').addEventListener('change',updateFilters);$('close-filters').addEventListener('click',()=>{$('tag-filter').open=false;$('filter-summary').focus();});$('select-all-filters').addEventListener('click',()=>{for(const input of filterInputs())input.checked=true;updateFilters();});$('clear-filters').addEventListener('click',()=>{for(const input of $('filter').querySelectorAll('input'))input.checked=false;updateFilters();});document.addEventListener('click',e=>{if(!$('tag-filter').contains(e.target))$('tag-filter').open=false;});$('tag-filter').addEventListener('keydown',e=>{if(e.key==='Escape'){$('tag-filter').open=false;$('filter-summary').focus();e.preventDefault();}});$('include-zero').addEventListener('change',()=>{page=0;render();});$('page-size').addEventListener('change',()=>{pageSize=Number($('page-size').value);page=0;render();});$('prev').addEventListener('click',()=>{page--;render();});$('next').addEventListener('click',()=>{page++;render();});
 for(const b of document.querySelectorAll('[data-columns]'))b.addEventListener('click',()=>{$('rows').closest('table').dataset.columns=b.dataset.columns;for(const t of document.querySelectorAll('[data-columns]'))t.setAttribute('aria-pressed',String(t===b));});
 $('reset-view').addEventListener('click',()=>{cohort=null;excludeOwn=false;$('search').value='';$('include-zero').checked=false;for(const input of $('filter').querySelectorAll('input'))input.checked=false;updateFilters();});
 for(const b of document.querySelectorAll('[data-chart]'))b.addEventListener('click',()=>{chartMode=b.dataset.chart;for(const t of document.querySelectorAll('[data-chart]'))t.setAttribute('aria-pressed',String(t===b));render();});
-window.addEventListener('storage',e=>{if(e.key===TAG_KEY){manual=readManual(e.newValue);render();}});
+window.addEventListener('storage',e=>{if(e.key===TAG_KEY){manual=readManual(e.newValue);renderCustomFilters();updateFilters();if($('label-manager').open)renderLabelManager();}});
 async function refresh(){
  if(busy)return;busy=true;$('refresh').disabled=true;$('refresh').textContent='正在刷新…';$('status').textContent='正在读取最新持仓…';
  try{const result=await readSnapshot('holders',{current:report});report=validate(result.data);render();
@@ -75,6 +95,7 @@ async function refresh(){
  }catch(e){$('status').textContent=e.message;$('status').className='notice';if(!report)$('rows').innerHTML='<tr><td colspan="10" class="empty">暂时无法读取持仓，请点击刷新重试。</td></tr>';}
  finally{busy=false;$('refresh').disabled=false;$('refresh').textContent='刷新数据';}
 }
+renderCustomFilters();
 const query=new URLSearchParams(location.search);
 $('search').value=(query.get('search')||'').slice(0,64);
 cohort=Object.hasOwn(cohortNames,query.get('cohort'))?query.get('cohort'):null;

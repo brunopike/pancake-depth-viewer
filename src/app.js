@@ -403,7 +403,7 @@ function renderInterval() {
     const rows = [['total', '全池', ''], ['own', '我方', 'own-color'], ['external', '外部', 'external-color']];
     const cells = (side, key) => ['quantity', 'quote'].map(field => `<td>${data[side][key] ? number(data[side][key][field], 4) : '—'}</td>`).join('');
     result.innerHTML = `<p class="interval-range" title="${data.low} ～ ${data.high}">${price(data.low)} ～ ${price(data.high)} ${quote}<span>参考价 ${price(data.reference)}</span></p>`
-      + `<div class="interval-table-scroll"><table class="interval-table"><thead><tr><th rowspan="2" scope="col">来源</th><th colspan="2" scope="colgroup" class="bid-color">买盘</th><th colspan="2" scope="colgroup" class="ask-color">卖盘</th></tr><tr><th scope="col">币量（${base}）</th><th scope="col">金额（${quote}）</th><th scope="col">币量（${base}）</th><th scope="col">金额（${quote}）</th></tr></thead><tbody>`
+      + `<div class="interval-table-scroll"><table class="interval-table"><thead><tr><th rowspan="2" scope="col">来源</th><th colspan="2" scope="colgroup" class="bid-color interval-buy">买盘区间</th><th colspan="2" scope="colgroup" class="ask-color interval-sell">卖盘区间</th></tr><tr><th scope="col">币量（${base}）</th><th scope="col">金额（${quote}）</th><th scope="col">币量（${base}）</th><th scope="col">金额（${quote}）</th></tr></thead><tbody>`
       + rows.map(([key, label, color]) => `<tr class="${color}"><th scope="row">${label}</th>${cells('bid', key)}${cells('ask', key)}</tr>`).join('') + '</tbody></table></div>'
       + `<p class="interval-note">买盘金额为卖币可换回的 ${quote}；卖盘金额为买币需支付的 ${quote}。未含费用${pending ? ' · LP 归属待核对' : ''}。</p>`
       + `<p class="interval-note">${time(state.live.timestamp)} · ${state.live.pools.length} 个池 · 区块 ${state.live.blockNumber}</p>`;

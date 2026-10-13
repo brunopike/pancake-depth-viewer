@@ -8,10 +8,14 @@ export function validateManual(value){
  return {address:value.address,kind:value.kind,text:value.text.trim(),updatedAt:new Date().toISOString()};
 }
 export function readManual(raw){try{const v=JSON.parse(raw||'{}');if(!v||typeof v!=='object'||Array.isArray(v))return {};const out={};for(const [a,r]of Object.entries(v).slice(0,2000)){try{out[a]=validateManual({...r,address:a});}catch{}}return out;}catch{return {};}}
+export function customLabelOptions(manual){
+ const counts=new Map();for(const label of Object.values(manual))counts.set(label.text,(counts.get(label.text)||0)+1);
+ return [...counts].sort(([a],[b])=>a.localeCompare(b,'zh-CN')).map(([text,count])=>({text,count,value:`label:${text}`}));
+}
 export function rowTags(row,manual){
  const known=CONFIRMED_HOLDER_LABELS[row.address];
  const tags=known?[{id:`known-${known.kind}`,text:known.label,kind:known.kind,evidence:known.source},...row.tags.filter(t=>!t.id?.startsWith('known-')&&!['frequency','arbitrage'].includes(t.kind))]:[...row.tags];
- const custom=manual[row.address];if(custom)tags.unshift({id:'manual',text:custom.text,kind:custom.kind,evidence:'当前浏览器手动标记',manual:true});return tags.some(t=>['own','lp'].includes(t.kind))?tags.filter(t=>!['frequency','arbitrage'].includes(t.kind)):tags;
+ const custom=manual[row.address];if(custom)tags.unshift({id:'manual',text:custom.text,kind:custom.kind,evidence:'当前浏览器添加的标签',manual:true});return tags.some(t=>['own','lp'].includes(t.kind))?tags.filter(t=>!['frequency','arbitrage'].includes(t.kind)):tags;
 }
 export function category(row,manual){const tags=rowTags(row,manual),m=tags.find(t=>t.manual);if(m&&['lp','own','exchange','contract','frequency','arbitrage'].includes(m.kind))return m.kind==='arbitrage'?'frequency':m.kind;
  for(const key of ['lp','own','exchange','dex','received','frequency','arbitrage','contract'])if(tags.some(t=>t.kind===key))return key==='arbitrage'?'frequency':key;return 'other';}
@@ -24,7 +28,7 @@ export function selectHolders(report,{search='',filter='all',cohort=null,exclude
  const q=search.trim().toLowerCase(),filters=Array.isArray(filter)?filter:[filter];
  const rows=report.rows.filter(r=>{
   const tags=rowTags(r,manual);
-  return (!excludeOwn||!tags.some(t=>['own','lp'].includes(t.kind)))&&(includeZero||BigInt(r.balance)>0n)&&(!cohort||recipientState(r,manual)===cohort)&&(!q||r.address.includes(q)||tags.some(t=>t.text.toLowerCase().includes(q)))&&(!filters.length||filters.includes('all')||filters.some(f=>f==='manual'&&manual[r.address]||f==='own'&&tags.some(t=>['own','lp'].includes(t.kind))||tags.some(t=>t.id===f||t.kind===f)));
+  return (!excludeOwn||!tags.some(t=>['own','lp'].includes(t.kind)))&&(includeZero||BigInt(r.balance)>0n)&&(!cohort||recipientState(r,manual)===cohort)&&(!q||r.address.includes(q)||tags.some(t=>t.text.toLowerCase().includes(q)))&&(!filters.length||filters.includes('all')||filters.some(f=>f==='manual'&&manual[r.address]||f.startsWith('label:')&&manual[r.address]?.text===f.slice(6)||f==='own'&&tags.some(t=>['own','lp'].includes(t.kind))||tags.some(t=>t.id===f||t.kind===f)));
  });
  const current=Math.min(Math.max(0,page),Math.max(0,Math.ceil(rows.length/pageSize)-1));return{all:rows,total:rows.length,page:current,rows:rows.slice(current*pageSize,(current+1)*pageSize)};
 }
