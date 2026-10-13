@@ -76,10 +76,12 @@ test('A slower older RPC result cannot replace a newer displayed snapshot', asyn
   assert.equal(a.read('state.depth.price'), 4);
 });
 
-test('Returning to the page refreshes immediately when automatic refresh is enabled', async () => {
+test('Returning to the page catches up only when the refresh interval has elapsed', async () => {
   const a = app(); a.elements.get('auto').checked = true;
   const resume = a.listeners.get('document:visibilitychange');
   assert.equal(typeof resume, 'function');
+  resume(); await settle(); assert.equal(a.pending.length, 0);
+  a.read('state.nextRefreshAt = Date.now() - 1');
   resume(); await settle();
   assert.equal(a.read('state.busy'), true);
   await a.finish();

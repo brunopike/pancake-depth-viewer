@@ -516,7 +516,7 @@ $('refresh-minutes').addEventListener('change', applyRefreshInterval);
 $('refresh-minutes').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); applyRefreshInterval(); } });
 setInterval(() => { if ($('auto').checked && !state.busy && !document.hidden && Date.now() >= state.nextRefreshAt) refresh(); }, 1000);
 document.addEventListener('visibilitychange', () => {
-  if (!document.hidden && $('auto').checked && !state.busy) refresh();
+  if (!document.hidden && $('auto').checked && !state.busy && Date.now() >= state.nextRefreshAt) refresh();
 });
 $('auto').addEventListener('change', () => {
   if ($('auto').checked && !state.busy && !document.hidden) refresh();
