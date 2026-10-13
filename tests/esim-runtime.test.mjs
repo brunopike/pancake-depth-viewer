@@ -1,0 +1,54 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { makeRpc } from '../server/esim/rpc.mjs';
+import { refreshState, nativeFlow } from '../server/esim/collector.mjs';
+import handler, { allowedOrigin } from '../api/esim.js';
+import { windowMetrics, SOURCE } from '../server/esim/metrics.mjs';
+
+test('paid RPC has a hard request cap and reordered batch responses stay correctly mapped', async () => {
+  let requests = 0;
+  const t = makeRpc({ endpoint: 'https://example.invalid/rpc', budget: 1, fetch: async (_, options) => {
+    requests++;
+    return { ok: true, json: async () => JSON.parse(options.body).map(c => ({ id: c.id, result: c.params[0] })).reverse() };
+  } });
+  assert.deepEqual(await t.batch([['a', [7]], ['b', [8]]]), [7, 8]);
+  await assert.rejects(t.rpc('c', []), /QUERY_LIMIT/);
+  assert.equal(requests, 1);
+});
+test('transport failures never return upstream URL or raw errors', async () => {
+  const t = makeRpc({ endpoint: 'https://example.invalid/private-path', fetch: async () => { throw new Error('https://example.invalid/private-path'); } });
+  await assert.rejects(t.rpc('eth_chainId', []), e => e.message === 'RPC_UNAVAILABLE');
+});
+test('checkpoint mismatch rejects update and preserves state', async () => {
+  const state = { block: 1, blockHash: 'old', trades: [{ value: '100' }] }, before = structuredClone(state);
+  await assert.rejects(refreshState(state, { batch: async () => ['0x38', { hash: 'reorg' }, { number: '0x10' }] }), /CHAIN_OR_CHECKPOINT_CHANGED/);
+  assert.deepEqual(state, before);
+});
+test('API rejects unapproved origins and arbitrary paid RPC input before loading any data', async () => {
+  assert.equal(allowedOrigin('https://evil.example', 'pancake-depth-viewer.vercel.app'), null);
+  assert.equal(allowedOrigin('https://starkweng.github.io', 'pancake-depth-viewer.vercel.app'), 'https://starkweng.github.io');
+  for (const [req, expected] of [
+    [{ method: 'POST', headers: { origin: 'https://evil.example' } }, 403],
+    [{ method: 'POST', headers: {}, body: { method: 'eth_getLogs' } }, 400],
+    [{ method: 'POST', headers: {}, query: { address: '0x123' } }, 400],
+    [{ method: 'DELETE', headers: {} }, 405],
+  ]) {
+    const res = { setHeader() {}, status(n) { this.code = n; return this; }, json() {} };
+    await handler(req, res); assert.equal(res.code, expected);
+  }
+});
+test('BNB window balances reconcile beginning + net inflow = ending', () => {
+  const state = { origin: 0, cutoff: 40, balance: '60', nativeComplete: true, trades: [], distributions: [], firstRecipient: {},
+    calls: [{ timestamp: 10, from: 'a', value: '100' }, { timestamp: 30, from: 'b', value: '20' }],
+    native: [{ timestamp: 10, side: 'direct', value: '100' }, { timestamp: 20, side: 'out', value: '60' }, { timestamp: 30, side: 'direct', value: '20' }] };
+  const b = windowMetrics(state, 15, 25).bnb;
+  assert.equal(b.balance_start_wei, '100'); assert.equal(b.balance_end_wei, '40');
+  assert.equal(BigInt(b.balance_start_wei) + BigInt(b.net_inflow_wei), BigInt(b.balance_end_wei));
+});
+test('native selfdestruct and creation transfers are counted, delegatecall and self-transfers are not', () => {
+  const a = '0x' + '1'.repeat(40);
+  assert.deepEqual(nativeFlow({ type: 'suicide', action: { address: a, refundAddress: SOURCE, balance: '0x10' }, traceAddress: [0] }), { from: a, to: SOURCE, value: '16', side: 'internal' });
+  assert.equal(nativeFlow({ type: 'create', action: { from: SOURCE, value: '0x10' }, result: { address: a }, traceAddress: [0] }).side, 'out');
+  assert.equal(nativeFlow({ type: 'call', action: { from: a, to: SOURCE, value: '0x10', callType: 'delegatecall' }, traceAddress: [0] }), null);
+  assert.equal(nativeFlow({ type: 'call', action: { from: SOURCE, to: SOURCE, value: '0x10' }, traceAddress: [0] }), null);
+});

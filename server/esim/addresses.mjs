@@ -1,0 +1,60 @@
+import { beijingDayStart, beijingDate } from './metrics.mjs';
+import { readFile } from 'node:fs/promises';
+const tags = JSON.parse(await readFile(new URL('./address-tags.json', import.meta.url)));
+const lp = new Set(tags.lpAddresses);
+export const OWN_EXECUTOR = tags.ownExecutor;
+function ownProgramAddresses(state) { return new Set(state.trades.filter(t => t.executor === OWN_EXECUTOR).map(t => t.initiator).filter(Boolean)); }
+export function addressRanking(state, start, end, mode = 'initiator') {
+  const rows = new Map(), ownProgram = ownProgramAddresses(state); let missingSold = 0n;
+  for (const t of state.trades) {
+    if (t.timestamp < start || t.timestamp >= end) continue;
+    const address = mode === 'initiator' ? t.initiator : t.address;
+    if (!address) { if (t.side === 'sell') missingSold += BigInt(t.amount_wei); continue; }
+    if (!rows.has(address)) rows.set(address, { address, sold: 0n, bought: 0n, sells: new Set(), buys: new Set(), txs: new Set(), days: new Map(), first: t.timestamp, last: t.timestamp });
+    const r = rows.get(address), day = beijingDate(t.timestamp);
+    r[t.side === 'sell' ? 'sold' : 'bought'] += BigInt(t.amount_wei);
+    r[t.side === 'sell' ? 'sells' : 'buys'].add(t.tx); r.txs.add(t.tx);
+    if (!r.days.has(day)) r.days.set(day, new Set()); r.days.get(day).add(t.tx);
+    r.first = Math.min(r.first, t.timestamp); r.last = Math.max(r.last, t.timestamp);
+  }
+  return { missingSold: missingSold.toString(), rows: [...rows.values()].filter(r => r.sold > 0n).map(r => {
+    const peakDailyTrades = Math.max(...[...r.days.values()].map(s => s.size));
+    return { address: r.address, sold: r.sold.toString(), bought: r.bought.toString(), netSold: (r.sold - r.bought).toString(),
+      sellCount: r.sells.size, buyCount: r.buys.size, trades: r.txs.size, peakDailyTrades,
+      highFrequency: peakDailyTrades >= 100, own: lp.has(r.address) || ownProgram.has(r.address) || r.address === OWN_EXECUTOR,
+      ownType: lp.has(r.address) ? 'LP' : ownProgram.has(r.address) || r.address === OWN_EXECUTOR ? '刷量' : null,
+      received: !!state.firstRecipient[r.address] && state.firstRecipient[r.address].timestamp < end,
+      first: r.first, last: r.last };
+  }).sort((a, b) => BigInt(a.sold) > BigInt(b.sold) ? -1 : BigInt(a.sold) < BigInt(b.sold) ? 1 : a.address.localeCompare(b.address)) };
+}
+export function buildAddressReport(state, now = Date.now() / 1000) {
+  const day = beijingDayStart(now), windows = {};
+  for (const [key, start, end] of [['today', day, now], ['yesterday', day - 86400, day], ['history', state.origin, now]]) {
+    windows[key] = { start, end: Math.min(end, state.cutoff), available: state.cutoff > start,
+      initiator: addressRanking(state, start, end, 'initiator'), funding: addressRanking(state, start, end, 'funding') };
+  }
+  return { version: 1, generatedAt: now, cutoff: state.cutoff, block: state.block, blockHash: state.blockHash,
+    ownProgramCount: ownProgramAddresses(state).size, ownExecutor: OWN_EXECUTOR, highFrequencyThreshold: 100, windows };
+}
+export function knownTradingAddresses(state) {
+  return new Set(state.trades.flatMap(t => [t.address, t.initiator]).filter(a => /^0x[0-9a-f]{40}$/.test(a || '')));
+}
+export function addressOptions(q = {}) {
+  const result = { period: q.period || 'today', mode: q.mode || 'initiator', filter: q.filter || 'all', sort: q.sort || 'sold', page: Number(q.page || 0), search: (q.search || '').toLowerCase() };
+  if (!['today','yesterday','history'].includes(result.period) || !['initiator','funding'].includes(result.mode) || !['all','own','received','other','frequency'].includes(result.filter) || !['sold','netSold','trades'].includes(result.sort) || !Number.isInteger(result.page) || result.page < 0 || result.page > 100000 || typeof q.search !== 'undefined' && (typeof q.search !== 'string' || q.search.length > 42)) throw new Error('INVALID_ADDRESS_FILTER');
+  return result;
+}
+export function buildAddressPage(state, options, now = Date.now() / 1000) {
+  const o = addressOptions(options), day = beijingDayStart(now);
+  const start = o.period === 'today' ? day : o.period === 'yesterday' ? day - 86400 : state.origin;
+  const end = Math.min(o.period === 'yesterday' ? day : now, state.cutoff);
+  const data = addressRanking(state, start, end, o.mode);
+  const rows = data.rows.filter(r => (!o.search || r.address.includes(o.search)) && (o.filter === 'all' || o.filter === 'own' && r.own || o.filter === 'received' && r.received || o.filter === 'other' && !r.own && !r.received || o.filter === 'frequency' && r.highFrequency)).sort((a,b) => {
+    const x=BigInt(a[o.sort]), y=BigInt(b[o.sort]); return x===y ? a.address.localeCompare(b.address) : x>y ? -1:1;
+  });
+  const page = Math.min(o.page, Math.max(0, Math.ceil(rows.length / 25) - 1));
+  return { version:1, cutoff:state.cutoff, block:state.block, blockHash:state.blockHash, generatedAt:now,
+    ownProgramCount:ownProgramAddresses(state).size, ownExecutor:OWN_EXECUTOR, highFrequencyThreshold:100,
+    window:{start,end,available:end>start}, population:data.rows.length, missingSold:data.missingSold,
+    total:rows.length, page, pageSize:25, options:o, rows:rows.slice(page*25,(page+1)*25) };
+}

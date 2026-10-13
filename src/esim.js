@@ -1,0 +1,109 @@
+const $ = id => document.getElementById(id);
+const names = { source_recipients: '曾领币地址', other_wallet_candidates: '其他钱包', remaining_unattributed: '未归因交易', all_pools: '合计' };
+const groups = Object.keys(names);
+const fmt = new Intl.NumberFormat('zh-CN', { maximumFractionDigits: 2 });
+const integer = n => new Intl.NumberFormat('zh-CN').format(n ?? 0);
+const date = s => new Date(s * 1000).toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: false });
+const escape = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const amount = (wei, scale = 10000, decimals = 2) => {
+  if (wei == null) return '待核验';
+  const n = BigInt(wei), d = BigInt(scale) * 10n ** 18n, f = 10n ** BigInt(decimals);
+  const rounded = ((n < 0n ? -n : n) * f + d / 2n) / d;
+  return `${n < 0n ? '−' : ''}${new Intl.NumberFormat('zh-CN', { minimumFractionDigits: decimals, maximumFractionDigits: decimals }).format(Number(rounded) / Number(f))}`;
+};
+const net = wei => { if (wei == null) return '待核验'; const n = BigInt(wei); return `<strong class="${n > 0n ? 'sell' : 'buy'}">${n > 0n ? '卖出' : n < 0n ? '买入' : '持平'} ${amount(n < 0n ? -n : n)}</strong>`; };
+const metric = (label, value, unit = '', sub = '', cls = '') => `<div class="metric ${cls}"><span>${label}</span><strong>${value}${unit ? `<em>${unit}</em>` : ''}</strong><small>${sub}</small></div>`;
+const addresses = (g, side) => `${g[side + '_addresses_lower_bound'] ? '≥' : ''}${integer(g[side + '_addresses'])}`;
+let report, active = 'today', busy = false, endpoint = null;
+
+function tradeTable(w) {
+  return `<section class="card"><div class="section-heading"><h3>谁在买卖</h3><span>万 ESIM</span></div><div class="table-scroll"><table class="trade-table"><thead><tr><th>地址类别</th><th>卖出量</th><th>买入量</th><th>净数额</th></tr></thead><tbody>${groups.map(key => {
+    const g = w.groups[key];
+    return `<tr class="${key === 'all_pools' ? 'total' : ''}"><th>${names[key]}${key === 'other_wallet_candidates' ? '<small class="group-note">包含我方钱包</small>' : ''}</th>${[['sell', 'sold_wei'], ['buy', 'bought_wei']].map(([side, field]) => `<td><strong>${amount(g[field])}</strong><small>${addresses(g, side)} 地址 · ${integer(g[side + '_txs'])} 笔</small></td>`).join('')}<td>${net(g.net_sold_wei)}</td></tr>`;
+  }).join('')}</tbody></table></div><p class="note">≥ 表示已识别地址下限。</p></section>`;
+}
+function chart(hours) {
+  const values = hours.filter(h => h.available).map(h => Math.abs(Number(h.net_sold_wei) / 1e18));
+  const max = Math.max(...values, 1);
+  return `<details class="card disclosure" open><summary>逐小时净买卖<span>北京时间</span></summary><div class="detail-body"><div class="chart-scroll"><div class="chart" style="--bars:${hours.length}">${hours.map(h => {
+    const value = Number(h.net_sold_wei) / 1e18, label = `${date(h.start)} · ${h.available ? (value > 0 ? '卖出 ' : '买入 ') + amount(h.net_sold_wei.replace('-', '')) + ' 万 ESIM' : '尚无数据'}`;
+    return `<button class="bar-col" type="button" data-detail="${escape(label)}" aria-label="${escape(label)}"><span class="plot">${h.available ? `<i class="bar ${value >= 0 ? 'positive' : 'negative'}" style="height:${Math.max(value ? 1 : 0, Math.abs(value) / max * 72)}px"></i>` : '<i class="missing-bar"></i>'}</span><span class="hour">${new Date((h.start + 28800) * 1000).getUTCHours().toString().padStart(2, '0')}</span></button>`;
+  }).join('')}</div></div><p class="chart-readout muted">橙色：净卖出　蓝色：净买入 · 点击看数值</p></div></details>`;
+}
+function operations(w) {
+  const b = w.bnb, d = w.distribution, i = w.interaction;
+  return `<details class="card disclosure" open><summary>分发与合约交互<span>地址 · 数量 · BNB</span></summary><div class="detail-body"><div class="ops-grid">${metric('分发数量', amount(d.total_wei), '万 ESIM', integer(d.transactions) + ' 笔')}${metric('接收分发地址', integer(d.recipients), '', '首次接收 ' + integer(d.new_recipients))}${metric('成功交互地址', integer(i.successful_addresses), '', integer(i.successful_calls) + ' 次成功调用')}${metric('BNB 直接入金', amount(b.direct_inflow_wei, 1, 3), 'BNB', integer(b.direct_inflow_addresses) + ' 地址')}</div><table class="cumulative-summary"><thead><tr><th>BNB 收支</th><th>金额（BNB）</th></tr></thead><tbody>${[['直接流入', b.direct_inflow_wei], ['内部流入', b.internal_inflow_wei], ['全量支出', b.outflow_wei], ['净流入', b.net_inflow_wei], ['期初余额', b.balance_start_wei], ['期末余额', b.balance_end_wei]].map(([name, value]) => `<tr><th>${name}</th><td>${amount(value, 1, 3)}</td></tr>`).join('')}</tbody></table></div></details>`;
+}
+function panel(key, w) {
+  const title = key === 'today' ? '今日' : '昨日 · 24 小时';
+  const heading = `<div class="period-heading"><h2>${title}</h2><p>${date(w.start)} — ${w.available ? date(key === 'today' ? w.availableThrough : w.end) : '等待更新'}<span>北京时间</span></p></div>`;
+  if (!w.available) return heading + '<div class="empty">这个时段还没有更新的数据，请点击“刷新数据”。</div>';
+  const g = w.groups.all_pools, b = w.bnb, d = w.distribution;
+  return heading + `<div class="hero-grid">${metric('BNB 入金', amount(b.direct_inflow_wei, 1, 3), 'BNB', `${integer(b.direct_inflow_addresses)} 地址 · ${integer(b.direct_inflow_txs)} 笔`)}${metric('分发收币', amount(d.total_wei), '万 ESIM', `${integer(d.recipients)} 地址 · ${integer(d.transactions)} 笔`)}${metric('卖出总量', amount(g.sold_wei), '万 ESIM', integer(g.sell_txs) + ' 笔', 'sell')}${metric('买入总量', amount(g.bought_wei), '万 ESIM', integer(g.buy_txs) + ' 笔', 'buy')}${metric('净数额', net(g.net_sold_wei), '万 ESIM')}${metric('卖出地址', addresses(g, 'sell'), '', `曾领币 ${addresses(w.groups.source_recipients, 'sell')} 个`)}</div>${tradeTable(w)}${chart(report.hourly[key])}${operations(w)}`;
+}
+function render(r) {
+  report = r;
+  const naturalDay = Math.floor((Date.now() / 1000 + 28800) / 86400);
+  const reportDay = Math.floor((r.windows.today.start + 28800) / 86400);
+  $('tab-today').textContent = reportDay === naturalDay ? '今日' : `${date(r.windows.today.start).slice(0, 10)}（保存）`;
+  $('tab-yesterday').textContent = reportDay === naturalDay ? '昨日 · 24 小时' : `${date(r.windows.yesterday.start).slice(0, 10)} · 24 小时`;
+  $('cutoff').textContent = `数据截至 ${date(r.cutoff)} · 北京时间`;
+  $('origin').textContent = `${date(r.origin)} 起`;
+  const w = r.windows.history, g = w.groups.source_recipients;
+  $('cumulative').innerHTML = metric('累计交互地址', integer(w.interaction.successful_addresses)) + metric('累计收币地址', integer(w.distribution.recipients)) + metric('曾领币卖出地址', addresses(g, 'sell')) + metric('累计直接入金', amount(w.bnb.direct_inflow_wei, 1, 3), 'BNB') + metric('累积分发', amount(w.distribution.total_wei), '万 ESIM') + metric('曾领币累计卖出', amount(g.sold_wei), '万 ESIM');
+  for (const key of ['today', 'yesterday']) $('panel-' + key).innerHTML = panel(key, r.windows[key]);
+  $('panel-history').innerHTML = `<div class="period-heading"><h2>历史累计</h2><p>${date(r.origin)} — ${date(r.cutoff)}</p></div>${tradeTable(w)}${operations(w)}<section class="card"><div class="section-heading"><h3>每日历史</h3><span>万 ESIM · 北京时间</span></div><div class="table-scroll"><table class="history-table"><thead><tr><th>日期</th><th>BNB 入金</th><th>合约交互</th><th>分发</th><th>卖出</th><th>买入</th><th>净数额</th></tr></thead><tbody>${r.history.map(d => `<tr data-date="${d.date}"><th><button type="button" class="day-button" data-day="${d.date}" aria-expanded="false" aria-controls="day-${d.date}">${d.date} ＋</button><small>${d.partialFirstDay ? '09:59:50 起' : d.end - d.start < 86400 ? '截至 ' + date(d.end).slice(-5) : '完整自然日'}</small></th><td>${amount(d.bnb.direct_inflow_wei, 1, 3)}<small>${integer(d.bnb.direct_inflow_addresses)} 地址 · ${integer(d.bnb.direct_inflow_txs)} 笔</small></td><td>${integer(d.interaction.successful_calls)}<small>${integer(d.interaction.successful_addresses)} 地址</small></td><td>${amount(d.distribution.total_wei)}<small>${integer(d.distribution.recipients)} 地址 · ${integer(d.distribution.transactions)} 笔</small></td><td>${amount(d.groups.all_pools.sold_wei)}<small>${addresses(d.groups.all_pools, 'sell')} 地址</small></td><td>${amount(d.groups.all_pools.bought_wei)}<small>${addresses(d.groups.all_pools, 'buy')} 地址</small></td><td>${net(d.groups.all_pools.net_sold_wei)}</td></tr><tr class="day-detail" id="day-${d.date}" hidden><td colspan="7"><div>${tradeTable(d)}${operations(d)}</div></td></tr>`).join('')}</tbody></table></div></section>`;
+  $('coverage').textContent = `覆盖 ${r.coverage?.poolCount ?? '—'} 个已核验 ESIM 池，不含 CEX。区块 ${integer(r.block)}。`;
+  $('top-addresses').innerHTML = `<div class="top-table"><h4>曾领币地址 · 累计卖出前三</h4><table class="trade-table"><thead><tr><th>地址</th><th>领取（万）</th><th>卖出（万）</th><th>余额（万）</th></tr></thead><tbody>${r.top.map(a => `<tr><th><a href="https://bscscan.com/address/${escape(a.address)}" target="_blank" rel="noopener noreferrer">${a.address.slice(0, 10)}…${a.address.slice(-6)} ↗</a></th><td>${amount(a.received_wei)}</td><td>${amount(a.sold_wei)}</td><td>${amount(a.balance_wei)}</td></tr>`).join('')}</tbody></table></div>`;
+  document.querySelectorAll('[data-day]').forEach(button => button.addEventListener('click', () => {
+    const row = $('day-' + button.dataset.day), opened = button.getAttribute('aria-expanded') === 'true';
+    button.setAttribute('aria-expanded', String(!opened)); row.hidden = opened; button.textContent = button.dataset.day + (opened ? ' ＋' : ' −');
+  }));
+  document.querySelectorAll('.bar-col').forEach(button => {
+    const show = () => { button.closest('.detail-body').querySelector('.chart-readout').textContent = button.dataset.detail; };
+    button.addEventListener('click', show); button.addEventListener('focus', show); button.addEventListener('mouseenter', show);
+  });
+  selectTab(active);
+}
+function selectTab(key, focus = false) {
+  active = key;
+  for (const k of ['today', 'yesterday', 'history']) { const tab = $('tab-' + k); tab.setAttribute('aria-selected', String(k === key)); tab.tabIndex = k === key ? 0 : -1; $('panel-' + k).hidden = k !== key; }
+  if (focus) $('tab-' + key).focus();
+}
+const tabs = ['today', 'yesterday', 'history'];
+tabs.forEach((key, i) => { $('tab-' + key).addEventListener('click', () => selectTab(key)); $('tab-' + key).addEventListener('keydown', e => {
+  const j = e.key === 'ArrowRight' ? (i + 1) % 3 : e.key === 'ArrowLeft' ? (i + 2) % 3 : e.key === 'Home' ? 0 : e.key === 'End' ? 2 : null;
+  if (j !== null) { e.preventDefault(); selectTab(tabs[j], true); }
+}); });
+async function json(url, options = {}) {
+  const response = await fetch(url, { cache: 'no-store', ...options });
+  let body; try { body = await response.json(); } catch { throw new Error('数据暂时无法读取，请稍后重试。'); }
+  if (!response.ok) throw new Error(body.message || '查询暂时不可用，保留上次数据。');
+  return body;
+}
+async function refresh() {
+  if (busy) return;
+  busy = true; $('refresh').disabled = true; $('refresh').textContent = '正在查询…';
+  $('status').textContent = '正在查询新增交易，完成后会更新截止时间。'; $('status').className = 'working';
+  try {
+    if (!endpoint) throw new Error('实时查询接口尚未连接，当前显示已核验的历史记录。');
+    const result = await json(endpoint, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}', signal: AbortSignal.timeout(260000) });
+    if (!result.report) throw new Error('查询未返回完整数据，保留上次记录。');
+    render(result.report);
+    $('status').textContent = result.catchingUp ? '已更新一段数据；正在补齐较长时间的间隔，请再次刷新。' : `已更新至 ${date(result.report.cutoff)}。`;
+    $('status').className = result.catchingUp ? 'notice' : 'success';
+  } catch (e) { $('status').textContent = e.name === 'TimeoutError' ? '本次查询超时，保留上次数据。请稍后重试。' : e.message; $('status').className = 'notice'; }
+  finally { busy = false; $('refresh').disabled = false; $('refresh').textContent = '↻ 刷新数据'; }
+}
+$('refresh').addEventListener('click', refresh);
+try {
+  const config = await json('./data/esim-config.json');
+  endpoint = config.apiOrigin ? new URL('/api/esim', config.apiOrigin).href : location.hostname.endsWith('.vercel.app') || location.hostname === '127.0.0.1' ? './api/esim' : null;
+  const r = await json('./data/esim-report.json'); render(r);
+  $('status').textContent = `已读取核验记录。点击“刷新数据”查询新增交易。`;
+  if (Date.now() / 1000 - r.cutoff > 900) { $('status').textContent = '当前是已保存的数据，点击“刷新数据”查询最新。'; $('status').className = 'notice'; }
+  if (endpoint) try {
+    const saved = await json(endpoint, { signal: AbortSignal.timeout(25000) });
+    if (saved.report && !busy) render(saved.report);
+  } catch { /* Keep the visible saved report; manual refresh reports errors. */ }
+} catch { $('status').textContent = '数据暂时无法读取，请稍后刷新。'; $('status').className = 'notice'; }

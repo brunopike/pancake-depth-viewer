@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ESIM · 链上报告</title><meta name="description" content="ESIM 今日、昨日与历史链上数据：BNB 入金、分发、买卖分类。北京时间。">
+<link rel="stylesheet" href="./esim.css"></head><body><main>
+<header><div><p class="eyebrow">ESIM ON-CHAIN</p><h1>ESIM · 链上报告</h1><p class="cutoff" id="cutoff">正在读取数据…</p></div>
+<div class="header-actions"><a href="./esim-addresses.html">卖出地址 ↗</a><a href="./index.html" class="back-link">买卖深度 ↗</a><button class="refresh" id="refresh" type="button">↻ 刷新数据</button></div></header>
+<div id="status" role="status" aria-live="polite">正在读取已核验记录…</div>
+<section class="cumulative" aria-label="累计关键数据"><div class="cum-caption"><strong>累计概览</strong><span id="origin"></span></div><div class="cum-grid" id="cumulative"></div></section>
+<nav class="tabs" role="tablist" aria-label="报告时段">
+<button id="tab-today" role="tab" aria-selected="true" aria-controls="panel-today" type="button">今日</button>
+<button id="tab-yesterday" role="tab" aria-selected="false" aria-controls="panel-yesterday" tabindex="-1" type="button">昨日 · 24 小时</button>
+<button id="tab-history" role="tab" aria-selected="false" aria-controls="panel-history" tabindex="-1" type="button">历史累计</button></nav>
+<section id="panel-today" role="tabpanel" aria-labelledby="tab-today" tabindex="0"></section>
+<section id="panel-yesterday" role="tabpanel" aria-labelledby="tab-yesterday" tabindex="0" hidden></section>
+<section id="panel-history" role="tabpanel" aria-labelledby="tab-history" tabindex="0" hidden></section>
+<footer><details class="card disclosure"><summary>统计口径与关键地址</summary><div class="detail-body method">
+<p id="coverage"></p><p>曾领币：交易前已从分发合约收币。其他钱包包含我方钱包；复杂跨池交易保留未归因。地址数独立去重，不能跨日相加。</p>
+<p>净数额 = 卖出 − 买入。统计的是池子实际换币数量；一次交易里的买、卖分别保留。普通转账不算卖出。</p>
+<p>时段均按北京时间，含起点、不含终点。今日从 00:00 开始；昨日是上一个完整自然日。</p>
+<p>分发合约：<a href="https://bscscan.com/address/0x67b97c3845438f264965ca154ba13051c6c73416" target="_blank" rel="noopener noreferrer">0x67b97c38…c73416 ↗</a></p>
+<div id="top-addresses"></div></div></details></footer>
+<noscript><p>请开启 JavaScript 查看报告与刷新数据。</p></noscript>
+</main><script type="module" src="./esim.js"></script></body></html>

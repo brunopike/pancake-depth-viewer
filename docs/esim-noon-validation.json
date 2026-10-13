@@ -1,0 +1,448 @@
+{
+  "block": 127335020,
+  "blockHash": "0x465a4a8a2d58f75461d0dc8eb8ec160779f116f288b707460f57e1dc37869c13",
+  "passed": 73,
+  "total": 73,
+  "checks": [
+    {
+      "name": "cumulative successful addresses",
+      "actual": 5332,
+      "expected": 5332,
+      "pass": true
+    },
+    {
+      "name": "cumulative recipients",
+      "actual": 3732,
+      "expected": 3732,
+      "pass": true
+    },
+    {
+      "name": "cumulative successful calls",
+      "actual": 30922,
+      "expected": 30922,
+      "pass": true
+    },
+    {
+      "name": "cumulative distribution transactions",
+      "actual": 12789,
+      "expected": 12789,
+      "pass": true
+    },
+    {
+      "name": "cumulative BNB",
+      "actual": "2244.857",
+      "expected": "2244.857",
+      "pass": true
+    },
+    {
+      "name": "cumulative distribution",
+      "actual": "2201.54",
+      "expected": "2201.54",
+      "pass": true
+    },
+    {
+      "name": "today BNB",
+      "actual": "43.694",
+      "expected": "43.694",
+      "pass": true
+    },
+    {
+      "name": "today distribution",
+      "actual": "303.59",
+      "expected": "303.59",
+      "pass": true
+    },
+    {
+      "name": "today calls",
+      "actual": 3658,
+      "expected": 3658,
+      "pass": true
+    },
+    {
+      "name": "today callers",
+      "actual": 2500,
+      "expected": 2500,
+      "pass": true
+    },
+    {
+      "name": "today first recipients",
+      "actual": 804,
+      "expected": 804,
+      "pass": true
+    },
+    {
+      "name": "today recipients",
+      "actual": 2286,
+      "expected": 2286,
+      "pass": true
+    },
+    {
+      "name": "today distribution txs",
+      "actual": 2465,
+      "expected": 2465,
+      "pass": true
+    },
+    {
+      "name": "today direct BNB txs",
+      "actual": 152,
+      "expected": 152,
+      "pass": true
+    },
+    {
+      "name": "yesterday BNB",
+      "actual": "573.025",
+      "expected": "573.025",
+      "pass": true
+    },
+    {
+      "name": "yesterday distribution",
+      "actual": "864.72",
+      "expected": "864.72",
+      "pass": true
+    },
+    {
+      "name": "yesterday calls",
+      "actual": 10010,
+      "expected": 10010,
+      "pass": true
+    },
+    {
+      "name": "yesterday callers",
+      "actual": 4320,
+      "expected": 4320,
+      "pass": true
+    },
+    {
+      "name": "history source_recipients sold_wei",
+      "actual": "1065.72",
+      "expected": "1065.72",
+      "pass": true
+    },
+    {
+      "name": "history source_recipients bought_wei",
+      "actual": "28.46",
+      "expected": "28.46",
+      "pass": true
+    },
+    {
+      "name": "history source_recipients net_sold_wei",
+      "actual": "10372608573479280118531507",
+      "expected": "10372608573479280118531507",
+      "pass": true
+    },
+    {
+      "name": "history source_recipients sell_addresses",
+      "actual": 2105,
+      "expected": 2105,
+      "pass": true
+    },
+    {
+      "name": "history source_recipients sell_txs",
+      "actual": 5355,
+      "expected": 5355,
+      "pass": true
+    },
+    {
+      "name": "history source_recipients buy_addresses",
+      "actual": 110,
+      "expected": 110,
+      "pass": true
+    },
+    {
+      "name": "history source_recipients buy_txs",
+      "actual": 159,
+      "expected": 159,
+      "pass": true
+    },
+    {
+      "name": "history other_wallet_candidates sold_wei",
+      "actual": "481.27",
+      "expected": "481.27",
+      "pass": true
+    },
+    {
+      "name": "history other_wallet_candidates bought_wei",
+      "actual": "1028.94",
+      "expected": "1028.94",
+      "pass": true
+    },
+    {
+      "name": "history other_wallet_candidates net_sold_wei",
+      "actual": "-5476676661766522570623680",
+      "expected": "-5476676661766522570623680",
+      "pass": true
+    },
+    {
+      "name": "history other_wallet_candidates sell_addresses",
+      "actual": 576,
+      "expected": 576,
+      "pass": true
+    },
+    {
+      "name": "history other_wallet_candidates sell_txs",
+      "actual": 4875,
+      "expected": 4875,
+      "pass": true
+    },
+    {
+      "name": "history other_wallet_candidates buy_addresses",
+      "actual": 303,
+      "expected": 303,
+      "pass": true
+    },
+    {
+      "name": "history other_wallet_candidates buy_txs",
+      "actual": 5322,
+      "expected": 5322,
+      "pass": true
+    },
+    {
+      "name": "history remaining_unattributed sold_wei",
+      "actual": "3012.11",
+      "expected": "3012.11",
+      "pass": true
+    },
+    {
+      "name": "history remaining_unattributed bought_wei",
+      "actual": "3141.86",
+      "expected": "3141.86",
+      "pass": true
+    },
+    {
+      "name": "history remaining_unattributed net_sold_wei",
+      "actual": "-1297485232991392346850476",
+      "expected": "-1297485232991392346850476",
+      "pass": true
+    },
+    {
+      "name": "history remaining_unattributed sell_addresses",
+      "actual": 23,
+      "expected": 23,
+      "pass": true
+    },
+    {
+      "name": "history remaining_unattributed sell_txs",
+      "actual": 41641,
+      "expected": 41641,
+      "pass": true
+    },
+    {
+      "name": "history remaining_unattributed buy_addresses",
+      "actual": 8,
+      "expected": 8,
+      "pass": true
+    },
+    {
+      "name": "history remaining_unattributed buy_txs",
+      "actual": 43532,
+      "expected": 43532,
+      "pass": true
+    },
+    {
+      "name": "history all_pools sold_wei",
+      "actual": "4559.10",
+      "expected": "4559.10",
+      "pass": true
+    },
+    {
+      "name": "history all_pools bought_wei",
+      "actual": "4199.25",
+      "expected": "4199.25",
+      "pass": true
+    },
+    {
+      "name": "history all_pools net_sold_wei",
+      "actual": "3598446678721365201057351",
+      "expected": "3598446678721365201057351",
+      "pass": true
+    },
+    {
+      "name": "history all_pools sell_addresses",
+      "actual": 2627,
+      "expected": 2627,
+      "pass": true
+    },
+    {
+      "name": "history all_pools sell_txs",
+      "actual": 51869,
+      "expected": 51869,
+      "pass": true
+    },
+    {
+      "name": "history all_pools buy_addresses",
+      "actual": 410,
+      "expected": 410,
+      "pass": true
+    },
+    {
+      "name": "history all_pools buy_txs",
+      "actual": 49013,
+      "expected": 49013,
+      "pass": true
+    },
+    {
+      "name": "today source_recipients sold_wei",
+      "actual": "113.02",
+      "expected": "113.02",
+      "pass": true
+    },
+    {
+      "name": "today source_recipients bought_wei",
+      "actual": "5.31",
+      "expected": "5.31",
+      "pass": true
+    },
+    {
+      "name": "today source_recipients net_sold_wei",
+      "actual": "1077181603657279851389418",
+      "expected": "1077181603657279851389418",
+      "pass": true
+    },
+    {
+      "name": "today source_recipients sell_addresses",
+      "actual": 857,
+      "expected": 857,
+      "pass": true
+    },
+    {
+      "name": "today source_recipients sell_txs",
+      "actual": 911,
+      "expected": 911,
+      "pass": true
+    },
+    {
+      "name": "today source_recipients buy_addresses",
+      "actual": 33,
+      "expected": 33,
+      "pass": true
+    },
+    {
+      "name": "today source_recipients buy_txs",
+      "actual": 39,
+      "expected": 39,
+      "pass": true
+    },
+    {
+      "name": "today other_wallet_candidates sold_wei",
+      "actual": "20.07",
+      "expected": "20.07",
+      "pass": true
+    },
+    {
+      "name": "today other_wallet_candidates bought_wei",
+      "actual": "123.21",
+      "expected": "123.21",
+      "pass": true
+    },
+    {
+      "name": "today other_wallet_candidates net_sold_wei",
+      "actual": "-1031421361079240473745387",
+      "expected": "-1031421361079240473745387",
+      "pass": true
+    },
+    {
+      "name": "today other_wallet_candidates sell_addresses",
+      "actual": 39,
+      "expected": 39,
+      "pass": true
+    },
+    {
+      "name": "today other_wallet_candidates sell_txs",
+      "actual": 85,
+      "expected": 85,
+      "pass": true
+    },
+    {
+      "name": "today other_wallet_candidates buy_addresses",
+      "actual": 15,
+      "expected": 15,
+      "pass": true
+    },
+    {
+      "name": "today other_wallet_candidates buy_txs",
+      "actual": 179,
+      "expected": 179,
+      "pass": true
+    },
+    {
+      "name": "today remaining_unattributed sold_wei",
+      "actual": "433.97",
+      "expected": "433.97",
+      "pass": true
+    },
+    {
+      "name": "today remaining_unattributed bought_wei",
+      "actual": "438.67",
+      "expected": "438.67",
+      "pass": true
+    },
+    {
+      "name": "today remaining_unattributed net_sold_wei",
+      "actual": "-46980720965255820946623",
+      "expected": "-46980720965255820946623",
+      "pass": true
+    },
+    {
+      "name": "today remaining_unattributed sell_addresses",
+      "actual": 4,
+      "expected": 4,
+      "pass": true
+    },
+    {
+      "name": "today remaining_unattributed sell_txs",
+      "actual": 5415,
+      "expected": 5415,
+      "pass": true
+    },
+    {
+      "name": "today remaining_unattributed buy_addresses",
+      "actual": 3,
+      "expected": 3,
+      "pass": true
+    },
+    {
+      "name": "today remaining_unattributed buy_txs",
+      "actual": 5275,
+      "expected": 5275,
+      "pass": true
+    },
+    {
+      "name": "today all_pools sold_wei",
+      "actual": "567.06",
+      "expected": "567.06",
+      "pass": true
+    },
+    {
+      "name": "today all_pools bought_wei",
+      "actual": "567.18",
+      "expected": "567.18",
+      "pass": true
+    },
+    {
+      "name": "today all_pools net_sold_wei",
+      "actual": "-1220478387216443302592",
+      "expected": "-1220478387216443302592",
+      "pass": true
+    },
+    {
+      "name": "today all_pools sell_addresses",
+      "actual": 900,
+      "expected": 900,
+      "pass": true
+    },
+    {
+      "name": "today all_pools sell_txs",
+      "actual": 6411,
+      "expected": 6411,
+      "pass": true
+    },
+    {
+      "name": "today all_pools buy_txs",
+      "actual": 5493,
+      "expected": 5493,
+      "pass": true
+    }
+  ],
+  "sourceReport": "ESIM_20261013_1200_交互报告 (1).html",
+  "sourceSha256": "49634c25e4216ef29ca6e56995259ee9ad398a028b10923a98082c993d12ab88"
+}
