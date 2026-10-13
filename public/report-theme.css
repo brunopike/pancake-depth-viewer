@@ -30,3 +30,8 @@ th,td,.detail-body{border-color:var(--line)}thead th,tr.total{background:#15202c
 .address-search input,.address-search select{background:#0c121b;color:var(--text);border-color:#314052;border-radius:4px}
 .tag{background:#263340;color:#a0afbd}.tag.own{background:#9fc5e91a;color:#9fc5e9}.tag.received{background:#69c7a71a;color:#69c7a7}.tag.frequency{background:#b49ada1a;color:#b49ada}
 @media print{body{background:#0b1017;print-color-adjust:exact}}
+
+/* Match the depth viewer container without changing each report's internal layout. */
+@media screen{main,main.holder-main{max-width:2560px;padding-inline:36px}}
+@media screen and (max-width:1100px){main,main.holder-main{padding-inline:22px}}
+@media screen and (max-width:600px){main,main.holder-main{padding-inline:16px}}
