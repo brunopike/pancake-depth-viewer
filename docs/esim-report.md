@@ -1,6 +1,6 @@
 # ESIM 链上报告
 
-统一入口为 `https://starkweng.github.io/esim-onchain/`，默认显示链上报告，`?view=addresses` 显示卖出地址，`?view=depth` 显示买卖深度，`?view=holders` 显示持币地址。四个视图复用原仓库页面、数据和 API；配色统一为深色，卖出红色、买入绿色、选中金色。导航为横向标签栏，当前页金色下划线且不可点击；刷新按钮沿用深度页样式。当前页导航为禁用按钮，其余入口在新标签页打开。原 `pancake-depth-viewer/` 与 `onchain-report/` 继续可用。Alchemy Key 只配置在 GitHub Actions Secret 和 Vercel 的 Production 环境变量 `ALCHEMY_API_KEY`，不要放进网页、URL 或前端构建变量。
+统一入口为 `https://starkweng.github.io/esim-onchain/`，默认显示链上深度，`?view=report` 显示合约报告，`?view=addresses` 显示卖出地址，`?view=depth` 显示链上深度，`?view=holders` 显示持币地址。四个视图复用原仓库页面、数据和 API；配色统一为深色，卖出红色、买入绿色、选中金色。导航为横向标签栏，当前页金色下划线且不可点击；刷新按钮沿用深度页样式。当前页导航为禁用按钮；合约报告、卖出监控、持币地址之间在当前标签页切换，链上深度与这三个页面之间打开新标签页。原 `pancake-depth-viewer/` 与 `onchain-report/` 继续可用。Alchemy Key 只配置在 GitHub Actions Secret 和 Vercel 的 Production 环境变量 `ALCHEMY_API_KEY`，不要放进网页、URL 或前端构建变量。
 
 ## 统计口径
 

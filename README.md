@@ -2,7 +2,7 @@
 
 A public, read-only PancakeSwap market depth viewer by MMDock.
 
-**[买卖深度](https://starkweng.github.io/esim-onchain/?view=depth) · [合约报告](https://starkweng.github.io/esim-onchain/) · [卖出监控](https://starkweng.github.io/esim-onchain/?view=addresses) · [持币地址](https://starkweng.github.io/esim-onchain/?view=holders)**
+**[链上深度](https://starkweng.github.io/esim-onchain/) · [合约报告](https://starkweng.github.io/esim-onchain/?view=report) · [卖出监控](https://starkweng.github.io/esim-onchain/?view=addresses) · [持币地址](https://starkweng.github.io/esim-onchain/?view=holders)**
 
 Search configured BNB Chain pairs by symbol, token address, or pool address. View the order-book-style price ladder with own / external breakdowns for each amount column and cumulative AMM liquidity depth of the selected **exact token pair**, aggregated across discovered V2, V3, and Infinity CL pools. Enter a price-range percentage or select Maximum, then choose decimal price precision (0–18 places). Default: ESIM/USDT, a ±50% price range and four decimal places (a 0.0001 base price band). The closest 100 bands stay unmerged, followed by grouped distant bands up to the 500-row limit. Up to 500 rows per side are rendered by merging adjacent bands when necessary; endpoint totals always cover the entire selected range. Hover to inspect a level or enter a price to locate it. The address bar preserves the pair and display settings.
 
