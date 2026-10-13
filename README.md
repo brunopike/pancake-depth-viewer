@@ -10,11 +10,12 @@ Search BNB Chain markets by symbol, token address, or pool address. View the ord
 
 1. 点“切换代币”，输入名称。`ESIM / USDT` 表示用 USDT 买卖 ESIM。
 2. 顶部显示全池的两种币：卖盘是 ESIM 数量，买盘是用于买入的 USDT 数量。统计全部价格范围中的交易资金，不随图表范围变化，未含 CL 未领取的手续费。
-3. 输入“目标价格估算”后点“算一算”。高于现价：看预计需付多少 USDT、买到多少 ESIM。低于现价：看需卖出多少 ESIM、预计换回多少 USDT。目标价不受图表显示范围限制；没有流动性的池子会提示。
-4. 订单簿和曲线的价格范围分别设置，默认都为上下 50%，修改一边不影响另一边，也不用重新读链。输入“订单簿上下范围”控制表格；曲线上方单独设置曲线范围；“☑ 百分比”和“☑ 最大”标出当前选择。例如 10%，看参考价上下 10% 内的买卖数量和金额；也可点“最大”看现价的 0.5～2 倍范围。
+3. 在右侧曲线和价格明细下方，输入“目标价格估算”后点“算一算”。高于现价：看预计需付多少 USDT、买到多少 ESIM。低于现价：看需卖出多少 ESIM、预计换回多少 USDT。目标价不受图表显示范围限制；没有流动性的池子会提示。
+4. 订单簿和曲线的价格范围、小数精度分别设置，默认都为上下 50%、4 位小数，修改一边不影响另一边，也不用重新读链。输入“订单簿上下范围”控制表格；曲线上方单独设置范围和小数位数，悬停或点击后，下方明细直接显示曲线这一档的数量和累计值；“☑ 百分比”和“☑ 最大”标出当前选择。例如 10%，看参考价上下 10% 内的买卖数量和金额；也可点“最大”看现价的 0.5～2 倍范围。
 5. 默认 ESIM/USDT、上下 50%、4 位小数。4 位小数表示每档价格相差 0.0001，2 位就是 0.01。档数自动计算，最多每侧 500 行；最近的 100 档保留，其余合并，范围总额保持完整。
 6. 卖盘红色在上，买盘绿色在下，卖盘从高到低排列，最下面最接近现价；买盘从高到低排列，最上面最接近现价。表格保留价格、币量、累计币量、价值 U、累计价值 U 五列；四个金额列默认用“我方 / 外部”并排显示，蓝色是我方、金色是外部，两数相加是全池；点“全池合计”只看总量，切换保留当前滚动位置，不重新读链。U 表示 USDT，非 USDT 市场显示实际计价币。输入“定位价格”后点“跳转”，滚动并高亮包含该价格的行。点击一行查看完整数字。输入的定位价格会单独成为一档，总金额保持不变。
-7. 点“查看数据明细”了解哪些池子计入，点“怎么看这些数据？”查看解释。
+7. 自动刷新默认 10 分钟，可输入 1–1440 分钟；修改间隔或手动点击“刷新数据”都会从当前时刻重新计时。打开页面仍立即更新。
+8. 点“查看数据明细”了解哪些池子计入，点“怎么看这些数据？”查看解释。
 
 “池子”是用于买卖两种币的一组资金。页面金额根据当前池内资金估算，未计入交易费用等影响；实际买卖金额以交易时的报价为准。大数字用“万”“亿”或科学计数显示。
 
@@ -31,8 +32,8 @@ V2 按固定区块的 `balanceOf / totalSupply` 分配储备和深度；V3 枚�
 ## Data and coverage
 
 - **Discovery:** the official PancakeSwap Explorer API, `/api/cached/pools/list`, paginated with `after` / `endCursor`. All listed BNB Chain protocols are queried, including unsupported depth models. Zero-TVL pools are omitted, and TVL-descending pagination stops when it reaches zero. The catalog records start/end timestamps, page count, and completion status. A safety ceiling of 4,000 pages is explicitly reported as incomplete when reached. An exhausted positive-TVL API catalog is not proof of exhaustive on-chain discovery.
-- **Depth:** the browser reads public BNB Chain RPC endpoints; the optional private Alchemy worker publishes validated ESIM/USDT chain-state snapshots. All pool state, bitmaps, and ticks in a refresh are pinned to one block. Blast public BSC RPC is tried first: older pinned-block contract reads were runtime-verified; other public nodes are fallbacks and may reject historical state. Bitmap reads use bounded chunks of 512 calls, with at most three chunks and three pools in parallel. Failed multicall items are retried individually at the same block. V2 reads actual reserves; V3 and Infinity CL read current price, liquidity, all bitmap words and initialized ticks, enabling whole-pool inventory and arbitrary target-price estimates. Token identity and Infinity PoolKey are checked on-chain. A first full scan of another market can take longer than a narrow-range scan.
-- **Refresh:** first paint uses a timestamped browser/shared/seed cache while a chain refresh runs. Full-range snapshots reuse unchanged initialized ticks, find changed boundaries from Mint/Burn or ModifyLiquidity events and reread those boundaries. Cache identity, canonical block hash and complete-range liquidity are validated; log failures/reorgs trigger a full scan, with a mandatory full scan every six hours. Reads use a block 12 blocks behind the latest head and recheck its hash before publishing. An active Alchemy worker reads and publishes ESIM/USDT state every 60 minutes. Each bounded session hands off to the next before the hosted runner limit, with an hourly schedule as recovery. GitHub Actions scheduling and runner availability remain best effort. The catalog and Pages publication have a separate hourly schedule. Code-only deployments retain a newer published catalog when available, rather than replacing it with the repository seed. The app exposes the actual catalog time; opening the page, the default 60-second update and manual refresh read live chain state. Automatic reads skip hidden tabs and overlap; returning to the tab refreshes immediately. Changing display settings no longer cancels pending chain reads, and an older RPC result cannot overwrite newer displayed data. GitHub Pages requires no user API key or wallet.
+- **Depth:** the browser reads public BNB Chain RPC endpoints; the optional private Alchemy worker publishes validated snapshots only for explicitly configured token pairs (ESIM/USDT by default). All pool state, bitmaps, and ticks in a refresh are pinned to one block. Blast public BSC RPC is tried first: older pinned-block contract reads were runtime-verified; other public nodes are fallbacks and may reject historical state. Bitmap reads use bounded chunks of 512 calls, with at most three chunks and three pools in parallel. Failed multicall items are retried individually at the same block. V2 reads actual reserves; V3 and Infinity CL read current price, liquidity, all bitmap words and initialized ticks, enabling whole-pool inventory and arbitrary target-price estimates. Token identity and Infinity PoolKey are checked on-chain. A first full scan of another market can take longer than a narrow-range scan.
+- **Refresh:** first paint uses a timestamped browser/shared/seed cache while a chain refresh runs. Full-range snapshots reuse unchanged initialized ticks, find changed boundaries from Mint/Burn or ModifyLiquidity events and reread those boundaries. Cache identity, canonical block hash and complete-range liquidity are validated; log failures/reorgs trigger a full scan, with a mandatory full scan every six hours. Reads use a block 12 blocks behind the latest head and recheck its hash before publishing. An active Alchemy worker reads only configured pairs every 60 minutes. Fresh snapshots skip duplicate paid reads during handoff or recovery. Each bounded session hands off to the next before the hosted runner limit, with an hourly schedule as recovery. GitHub Actions scheduling and runner availability remain best effort. Automatic whole-market catalog crawling is disabled; the existing directory remains searchable. The catalog command is manual only, and Pages publishes on code/config changes or manual dispatch. Code-only deployments retain a newer published catalog when available, rather than replacing it with the repository seed. The app exposes the actual catalog time; opening the page, the configurable update (10 minutes by default) and manual refresh read live chain state. Automatic reads skip hidden tabs and overlap; returning to the tab refreshes immediately. Changing display settings no longer cancels pending chain reads, and an older RPC result cannot overwrite newer displayed data. GitHub Pages requires no user API key or wallet.
 - **Scope:** direct pools for the same two token contract addresses. Different quote currencies, multihop routes, other exchanges and other chains are separate markets. Same-symbol tokens are not merged.
 - **Partial coverage:** unsupported Infinity Bin / StableSwap models and failed RPC reads remain visible in the pool details and are excluded from totals. Nothing is replaced with demo liquidity.
 
@@ -56,7 +57,6 @@ Requires Node.js 22+ and Python 3 for the simple preview server.
 
 ```sh
 npm ci
-npm run catalog
 npm test
 npm run build
 npm run serve
@@ -64,13 +64,24 @@ npm run serve
 
 Open `http://127.0.0.1:4316`. The project uses vanilla HTML/CSS/JS, Canvas, viem and esbuild. The public app has no wallet SDK, order execution or database. Private Alchemy credentials are used only by the Actions worker and never included in the browser bundle.
 
+## 后台币种设置
+
+[打开后台币种配置](https://github.com/starkweng/pancake-depth-viewer/edit/main/public/data/background-markets.json)（需要仓库编辑权限）。默认只选 ESIM / USDT。
+
+- `name`：显示名称；`base`：要看的币地址；`quote`：计价币地址。
+- `enabled: true`：每 60 分钟更新；改为 `false`：停止这个币对。`markets` 留空表示全部停止。
+- 增加币对时在 `markets` 里添加一项，填两种币的合约地址。只能读取已收录、可计算的同币对池子，填错不会退回全市场抓取。
+- 保存后，运行中的后台在下一轮读取新配置；网页会随这次保存重新发布。普通访客不能修改付费后台的选择。
+
+全市场目录不再自动抓取；仅在明确需要时手动执行 `npm run catalog` 更新目录。钱包归属查询仍只核对既有两个我方地址。
+
 ## Optional Alchemy refresh
 
 1. In this repository, open **Settings → Secrets and variables → Actions → New repository secret**.
 2. Name: `ALCHEMY_API_KEY`. Paste the API Key of an existing Alchemy app that supports BNB Mainnet, then save it. Do not put the key in code, URLs, issues or chat.
-3. In **Actions → Refresh shared ESIM depth**, click **Run workflow**. Keep `session_minutes` at its default 330. The running worker should publish `esim-usdt.json` on the `depth-cache` branch with `source: Alchemy` and every supported pool included. It then waits for the next hourly read; an in-progress job is expected. Sessions hand off using a repository-scoped ephemeral GitHub token with `actions: write`, and `contents: write` publishes only the public snapshot. No extra long-lived credential is created.
+3. In **Actions → Refresh selected market depth**, click **Run workflow**. Keep `session_minutes` at its default 330. The running worker should publish `esim-usdt.json` on the `depth-cache` branch with `source: Alchemy` and every supported pool included. It then waits for the next hourly read; an in-progress job is expected. Sessions hand off using a repository-scoped ephemeral GitHub token with `actions: write`, and `contents: write` publishes only the public snapshot. No extra long-lived credential is created.
 
-The worker uses `https://bnb-mainnet.g.alchemy.com/v2/<private-key>` on the server. Only public chain state is published. Missing credentials, failed reads or invalid snapshots preserve the previous snapshot. The page always shows the actual chain timestamp; failed reads preserve the last validated snapshot. The hourly shared cache does not provide real-time streaming. Pages open in a browser read live public RPC independently of the background cache. Other pairs refresh through public RPC. This setup uses the existing account and does not change plans or spending limits.
+The worker uses `https://bnb-mainnet.g.alchemy.com/v2/<private-key>` on the server. Only public chain state is published. Missing credentials, failed reads or invalid snapshots preserve the previous snapshot. The page always shows the actual chain timestamp; failed reads preserve the last validated snapshot. The hourly shared cache does not provide real-time streaming. Pages open in a browser read live public RPC independently of the background cache. Pairs outside the background selection refresh through public RPC only when viewed. This setup uses the existing account and does not change plans or spending limits.
 
 To stop the background service, disable the workflow and cancel its active run. A disabled workflow or a repository that is no longer public cannot hand off to another session. Standard public-repository runners are used; private repositories are blocked to avoid an unplanned runner bill.
 

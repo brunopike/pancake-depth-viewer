@@ -1,4 +1,4 @@
-name: Refresh shared ESIM depth
+name: Refresh selected market depth
 on:
   workflow_dispatch:
     inputs:

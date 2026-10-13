@@ -1,4 +1,6 @@
-import { defaultPair, parseSnapshot, serializeSnapshot, latestSharedURL } from './snapshot.mjs';
+import config from '../public/data/background-markets.json';
+import { configuredMarkets, snapshotName } from './background-markets.mjs';
+import { parseSnapshot, serializeSnapshot, latestSharedURL } from './snapshot.mjs';
 const key = market => `pancake-depth:v1:${market.key}`;
 export function readBrowserCache(market) {
   try { return parseSnapshot(localStorage.getItem(key(market)), market.pools, market.base.id, market.quote.id); } catch { return null; }
@@ -10,10 +12,11 @@ export function saveBrowserCache(market, live) {
   } catch { /* Browsing and live refresh still work when storage is unavailable or full. */ }
 }
 export async function readSharedCache(market, seed = false) {
-  if (!defaultPair(market.base.id, market.quote.id)) return null;
+  if (!configuredMarkets(config).some(m => m.base === market.base.id.toLowerCase() && m.quote === market.quote.id.toLowerCase())) return null;
   try {
     const signal = AbortSignal.timeout(6000);
-    const url = seed ? './data/esim-usdt.json' : await latestSharedURL(signal);
+    const filename = snapshotName(market.base.id, market.quote.id);
+    const url = seed ? `./data/${filename}` : await latestSharedURL(signal, filename);
     const response = await fetch(url, { cache: 'no-store', signal });
     if (!response.ok) return null;
     return parseSnapshot(await response.text(), market.pools, market.base.id, market.quote.id);

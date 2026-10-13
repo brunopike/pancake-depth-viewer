@@ -4,7 +4,8 @@ export const DEFAULT_QUOTE = '0x55d398326f99059ff775485246999027b3197955';
 export const SHARED_URL = 'https://raw.githubusercontent.com/starkweng/pancake-depth-viewer/depth-cache/esim-usdt.json';
 const CACHE_REF_URL = 'https://api.github.com/repos/starkweng/pancake-depth-viewer/git/ref/heads/depth-cache';
 let sharedRevision = null, revisionCheckedAt = 0;
-export async function latestSharedURL(signal) {
+export async function latestSharedURL(signal, filename = 'esim-usdt.json') {
+  if (!/^(esim-usdt|0x[0-9a-f]{40}-0x[0-9a-f]{40})\.json$/.test(filename)) throw new Error('Invalid snapshot name');
   if (Date.now() - revisionCheckedAt >= 60000) {
     revisionCheckedAt = Date.now();
     try {
@@ -13,7 +14,8 @@ export async function latestSharedURL(signal) {
       if (/^[0-9a-f]{40}$/i.test(ref?.object?.sha)) sharedRevision = ref.object.sha;
     } catch { /* The branch URL remains a fallback if the public ref API is unavailable. */ }
   }
-  return sharedRevision ? SHARED_URL.replace('/depth-cache/', `/${sharedRevision}/`) : SHARED_URL;
+  const url = SHARED_URL.replace('esim-usdt.json', filename);
+  return sharedRevision ? url.replace('/depth-cache/', `/${sharedRevision}/`) : url;
 }
 const address = s => typeof s === 'string' && /^0x[0-9a-f]{40}$/i.test(s);
 const poolKey = p => `${p.protocol}:${p.id.toLowerCase()}`;

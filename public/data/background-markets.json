@@ -1,0 +1,10 @@
+{
+  "markets": [
+    {
+      "name": "ESIM / USDT",
+      "enabled": true,
+      "base": "0x7765a659c5b0cfbfd9fbc2ef2298b75a598f2d2d",
+      "quote": "0x55d398326f99059ff775485246999027b3197955"
+    }
+  ]
+}

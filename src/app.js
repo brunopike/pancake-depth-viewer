@@ -19,7 +19,7 @@ const price = n => Number.isFinite(n) ? n !== 0 && (Math.abs(n) >= 1e12 || Math.
 const bandPrice = n => n === 0 || !Number.isFinite(n) || Math.abs(n) >= 1e12 ? price(n) : n < state.config.step ? `＜${state.config.step.toFixed(state.config.precision)}` : Number(n).toLocaleString('en-US', { minimumFractionDigits: state.config.precision, maximumFractionDigits: state.config.precision });
 const time = n => new Date(n).toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai', hour12: false });
 const protocolName = { v2: 'V2', v3: 'V3', infinityCl: 'Infinity CL', infinityBin: 'Infinity Bin', stable: 'StableSwap', infinityStable: 'Infinity Stable' };
-const state = { catalog: null, markets: [], market: null, config: settings(50, 4), bookView: 'split', chartPercent: 50, chartDepth: null, chartHover: null, live: null, depth: null, request: 0, hover: null, focusPrice: null, targetPrice: null, busy: false };
+const state = { catalog: null, markets: [], market: null, config: settings(50, 4), bookView: 'split', chartPercent: 50, chartPrecision: 4, inspection: null, chartDepth: null, chartHover: null, live: null, depth: null, request: 0, hover: null, focusPrice: null, targetPrice: null, refreshMinutes: 10, nextRefreshAt: Date.now() + 600000, busy: false };
 let plot;
 
 function pairMarket(p) {
@@ -65,7 +65,7 @@ function setError(message, technical = '') {
 }
 function clearDepth() {
   state.depth = null; state.live = null; state.hover = null; state.focusPrice = null;
-  state.chartDepth = null; state.chartHover = null;
+  state.chartDepth = null; state.chartHover = null; state.inspection = null;
   state.targetPrice = null; $('target-price').value = ''; $('target-result').hidden = true; $('target-button').disabled = true;
   $('ask-range-note').textContent = ''; $('bid-range-note').textContent = '';
   $('range-result').hidden = true; $('jump-button').disabled = true; $('jump-status').textContent = '';
@@ -81,7 +81,9 @@ function updateURL() {
   url.searchParams.delete('levels'); url.searchParams.delete('bps');
   url.searchParams.set('range', state.config.percent); url.searchParams.set('precision', state.config.precision);
   url.searchParams.set('chartRange', state.chartPercent);
+  url.searchParams.set('chartPrecision', state.chartPrecision);
   url.searchParams.set('view', state.bookView);
+  url.searchParams.set('refreshMinutes', state.refreshMinutes);
   history.replaceState(null, '', url);
 }
 function updateControls() {
@@ -111,6 +113,7 @@ function updateBookView() {
 
 function updateChartControls() {
   const max = state.chartPercent === 'max';
+  $('chart-precision').value = state.chartPrecision;
   $('chart-percent').disabled = max;
   if (!max) $('chart-percent').value = state.chartPercent;
   $('chart-maximum').setAttribute('aria-pressed', String(max));
@@ -123,8 +126,16 @@ function updateChartControls() {
 }
 function rebuildChart() {
   if (!state.depth) return;
-  state.chartDepth = buildDepth(state.live.pools, state.market.base.id, settings(state.chartPercent, state.config.precision));
-  state.chartHover = null; $('chart-tip').hidden = true; draw();
+  state.chartDepth = buildDepth(state.live.pools, state.market.base.id, settings(state.chartPercent, state.chartPrecision));
+  state.chartHover = null; $('chart-tip').hidden = true;
+  if (state.inspection?.source === 'chart') {
+    const selectedPrice = state.inspection.price;
+    const side = selectedPrice < state.chartDepth.price ? 'bid' : 'ask';
+    const row = chartRowAtPrice(selectedPrice, side);
+    if (row) { renderInspection(side, row, 'chart'); state.chartHover = { side, row }; }
+    else { state.inspection = null; resetInspection(); }
+  }
+  draw();
 }
 
 async function selectMarket(market) {
@@ -143,6 +154,7 @@ async function selectMarket(market) {
 }
 async function refresh() {
   if (!state.market) return;
+  resetRefreshClock();
   const request = ++state.request, market = state.market;
   setError(''); state.busy = true; $('refresh').disabled = true;
   $('status').textContent = `正在从链上读取 ${market.pools.length} 个池子的数据…`;
@@ -249,11 +261,11 @@ function render({ preserveChart = false } = {}) {
   $('asks').scrollTop = $('asks').scrollHeight;
   $('bids').scrollTop = 0;
   $('chart-empty').style.display = 'none';
-  $('inspection').innerHTML = '<span class="eyebrow">价格明细</span><p>点表格查看完整数字。</p>';
+  if (state.inspection?.source !== 'chart') { state.inspection = null; resetInspection(); }
   if (state.focusPrice != null) {
     const p = state.focusPrice, side = p < d.price ? 'bid' : 'ask';
     const index = (side === 'bid' ? d.bids : d.asks).findIndex(r => r.price === p);
-    if (index >= 0) { inspect(side, index, true); $('jump-status').textContent = `已定位 ${price(p)}。`; }
+    if (index >= 0) { inspect(side, index, true, state.inspection?.source !== 'chart'); $('jump-status').textContent = `已定位 ${price(p)}。`; }
     else { state.focusPrice = null; $('jump-status').textContent = ''; }
   }
   if (!preserveChart) rebuildChart();
@@ -273,16 +285,31 @@ function renderTarget() {
     result.innerHTML = `<span class="${estimate.side === 'ask' ? 'ask-color' : 'bid-color'}">${direction} ${price(estimate.targetPrice)} ${quote}</span><strong>${estimate.side === 'ask' ? '预计花费' : '预计换回'} ${number(estimate.quote, 2)} ${quote}</strong><span>${estimate.side === 'ask' ? '预计买入' : '需卖出'} ${number(estimate.quantity, 2)} ${base}${empty} · 未含费用</span>`;
   } catch (e) { result.className = 'target-result target-error'; result.textContent = e.message; }
 }
-function inspect(side, index, locate = false) {
+const displayPrice = (value, precision) => Number.isFinite(value)
+  ? Number(value).toLocaleString('en-US', { minimumFractionDigits: precision, maximumFractionDigits: precision }) : price(value);
+function resetInspection() {
+  $('inspection').innerHTML = '<span class="eyebrow">价格明细</span><p>点曲线或表格查看数据。</p>';
+}
+function renderInspection(side, row, source) {
+  state.inspection = { source, side, price: row.price };
+  const precision = source === 'chart' ? state.chartPrecision : state.config.precision;
+  const color = side === 'bid' ? 'bid-color' : 'ask-color';
+  const offsetText = Number.isFinite(row.offset) ? `比参考价${row.offset > 0 ? '高' : '低'} ${number(Math.abs(row.offset) / 100, 3)}%` : '没有固定价格上限';
+  $('inspection').innerHTML = `<span class="eyebrow ${color}">${source === 'chart' ? '曲线' : '订单簿'} · ${side === 'bid' ? '买盘' : '卖盘'} · 第 ${row.level} 档 · ${offsetText}</span><div class="inspection-data"><div><span>每个 ${escape(state.market.base.symbol)} 的价格（${escape(state.market.quote.symbol)}）</span><strong title="实际价格 ${row.price}">${displayPrice(row.price, precision)}</strong></div><div><span>币量（${escape(state.market.base.symbol)}）</span><strong>${number(row.quantity, precision)}</strong></div><div><span>累计币量（${escape(state.market.base.symbol)}）</span><strong>${number(row.cumulativeQuantity, precision)}</strong></div><div><span>价值（${escape(state.market.quote.symbol)}）</span><strong>${number(row.quote, precision)}</strong></div><div><span>累计价值（${escape(state.market.quote.symbol)}）</span><strong>${number(row.cumulativeQuote, precision)}</strong></div></div>`;
+  $('inspection').innerHTML += `<div class="inspection-data">${[['我方 LP', row.own], ['外部 LP', row.external]].map(([label, value]) => `<div><span>${label}（${escape(state.market.base.symbol)} / ${escape(state.market.quote.symbol)}）</span><strong>${value ? `${number(value.quantity, precision)} / ${number(value.quote, precision)}` : '待核对'}</strong>${value ? `<span>累计：${number(value.cumulativeQuantity, precision)} / ${number(value.cumulativeQuote, precision)}</span>` : ''}</div>`).join('')}</div>`;
+}
+function chartRowAtPrice(value, side) {
+  const d = state.chartDepth;
+  if (!d || value < d.low || value > d.high) return null;
+  const rows = side === 'bid' ? d.bids : d.asks;
+  return rows.find(row => side === 'bid' ? row.price <= value : row.price >= value) || rows.at(-1);
+}
+function inspect(side, index, locate = false, details = true) {
   if (!state.depth) return;
   const row = (side === 'bid' ? state.depth.bids : state.depth.asks)[index];
   if (!row) return;
   state.hover = { side, index };
-  state.chartHover = null;
-  const color = side === 'bid' ? 'bid-color' : 'ask-color';
-  const offsetText = Number.isFinite(row.offset) ? `比参考价${row.offset > 0 ? '高' : '低'} ${number(Math.abs(row.offset) / 100, 3)}%` : '没有固定价格上限';
-  $('inspection').innerHTML = `<span class="eyebrow ${color}">${side === 'bid' ? '买盘' : '卖盘'} · 第 ${row.level} 档 · ${offsetText}</span><div class="inspection-data"><div><span>每个 ${escape(state.market.base.symbol)} 的价格（${escape(state.market.quote.symbol)}）</span><strong>${price(row.price)}</strong></div><div><span>币量（${escape(state.market.base.symbol)}）</span><strong>${number(row.quantity, 5)}</strong></div><div><span>累计币量（${escape(state.market.base.symbol)}）</span><strong>${number(row.cumulativeQuantity, 5)}</strong></div><div><span>价值（${escape(state.market.quote.symbol)}）</span><strong>${number(row.quote, 5)}</strong></div><div><span>累计价值（${escape(state.market.quote.symbol)}）</span><strong>${number(row.cumulativeQuote, 5)}</strong></div></div>`;
-  $('inspection').innerHTML += `<div class="inspection-data">${[['我方 LP', row.own], ['外部 LP', row.external]].map(([label, value]) => `<div><span>${label}（${escape(state.market.base.symbol)} / ${escape(state.market.quote.symbol)}）</span><strong>${value ? `${number(value.quantity, 5)} / ${number(value.quote, 5)}` : '待核对'}</strong>${value ? `<span>累计：${number(value.cumulativeQuantity, 5)} / ${number(value.cumulativeQuote, 5)}</span>` : ''}</div>`).join('')}</div>`;
+  if (details) { state.chartHover = null; $('chart-tip').hidden = true; renderInspection(side, row, 'book'); }
   document.querySelectorAll('.book-row.selected').forEach(e => e.classList.remove('selected'));
   const button = document.querySelector(`.book-row[data-side="${side}"][data-index="${index}"]`);
   button?.classList.add('selected');
@@ -330,9 +357,9 @@ function draw() {
     for (const r of rows) { ctx.lineTo(x(r.price), previousY); ctx.lineTo(x(r.price), y(r.cumulativeQuote)); previousY = y(r.cumulativeQuote); }
     ctx.strokeStyle = color; ctx.lineWidth = 1.7; ctx.stroke();
   }
-  ctx.fillStyle = '#7e8f9f'; ctx.textAlign = 'left'; ctx.fillText(price(minPrice), left, h - (w < 400 ? 24 : 10));
-  ctx.textAlign = 'right'; ctx.fillText(price(maxPrice), right, h - (w < 400 ? 24 : 10));
-  ctx.fillStyle = '#d9c593'; ctx.textAlign = 'center'; ctx.fillText(price(d.price), x(d.price), h - (w < 400 ? 4 : 10));
+  ctx.fillStyle = '#7e8f9f'; ctx.textAlign = 'left'; ctx.fillText(displayPrice(minPrice, state.chartPrecision), left, h - (w < 400 ? 24 : 10));
+  ctx.textAlign = 'right'; ctx.fillText(displayPrice(maxPrice, state.chartPrecision), right, h - (w < 400 ? 24 : 10));
+  ctx.fillStyle = '#d9c593'; ctx.textAlign = 'center'; ctx.fillText(displayPrice(d.price, state.chartPrecision), x(d.price), h - (w < 400 ? 4 : 10));
   if (state.hover || state.chartHover) {
     const side = state.chartHover?.side || state.hover.side;
     let r = state.chartHover?.row || (side === 'bid' ? state.depth.bids : state.depth.asks)[state.hover.index];
@@ -406,7 +433,8 @@ $('refresh').addEventListener('click', refresh);
 $('chart-settings').addEventListener('submit', e => {
   e.preventDefault();
   try {
-    state.chartPercent = settings($('chart-maximum').getAttribute('aria-pressed') === 'true' ? 'max' : $('chart-percent').value, state.config.precision).percent;
+    const config = settings($('chart-maximum').getAttribute('aria-pressed') === 'true' ? 'max' : $('chart-percent').value, $('chart-precision').value);
+    state.chartPercent = config.percent; state.chartPrecision = config.precision;
     updateChartControls(); updateURL(); rebuildChart(); $('chart-range-error').hidden = true;
   } catch (e) { $('chart-range-error').hidden = false; $('chart-range-error').textContent = e.message; }
 });
@@ -446,6 +474,7 @@ function chartPointer(e, locate = false) {
   let index = rows.findIndex(r => side === 'bid' ? r.price <= p : r.price >= p);
   if (index < 0) index = rows.length - 1;
   const r = rows[index];
+  if (!r) return;
   if (locate) {
     if (r.price < state.depth.low || r.price > state.depth.high) $('jump-status').textContent = '这个价格超出订单簿范围，请扩大订单簿范围。';
     else {
@@ -453,8 +482,9 @@ function chartPointer(e, locate = false) {
       state.depth = buildDepth(state.live.pools, state.market.base.id, state.config, { focusPrice: r.price }); render();
     }
   }
+  renderInspection(side, r, 'chart');
   state.chartHover = { side, row: r }; draw();
-  const tip = $('chart-tip'); tip.hidden = false; tip.innerHTML = `<strong class="${side === 'bid' ? 'bid-color' : 'ask-color'}">${price(r.price)} ${escape(state.market.quote.symbol)}</strong><span>从第 1 档合计 ${number(r.cumulativeQuote, 2)} ${escape(state.market.quote.symbol)}</span>`;
+  const tip = $('chart-tip'); tip.hidden = false; tip.innerHTML = `<strong class="${side === 'bid' ? 'bid-color' : 'ask-color'}">${displayPrice(r.price, state.chartPrecision)} ${escape(state.market.quote.symbol)}</strong><span>从第 1 档合计 ${number(r.cumulativeQuote, state.chartPrecision)} ${escape(state.market.quote.symbol)}</span>`;
   tip.style.left = `${Math.max(0, Math.min(rect.width - 180, px + 12))}px`; tip.style.top = '26px';
 }
 $('jump-form').addEventListener('submit', e => {
@@ -463,7 +493,7 @@ $('jump-form').addEventListener('submit', e => {
   if (!value || !Number.isFinite(p) || p < 0) { $('jump-status').textContent = '请输入有效价格。'; return; }
   if (p < d.low || p > d.high) { $('jump-status').textContent = '超出当前范围，请扩大范围或选“最大”。'; return; }
   if (p === d.price) { $('jump-status').textContent = '这个价格就是池子现价。'; return; }
-  state.focusPrice = p;
+  state.focusPrice = p; state.inspection = null;
   state.depth = buildDepth(state.live.pools, state.market.base.id, state.config, { focusPrice: p });
   render();
   const side = p < state.depth.price ? 'bid' : 'ask';
@@ -472,9 +502,19 @@ $('jump-form').addEventListener('submit', e => {
 });
 $('chart').addEventListener('pointermove', e => chartPointer(e));
 $('chart').addEventListener('click', e => chartPointer(e, true));
-$('chart').addEventListener('pointerleave', () => { $('chart-tip').hidden = true; state.chartHover = null; draw(); });
+$('chart').addEventListener('pointerleave', () => { $('chart-tip').hidden = true; draw(); });
 new ResizeObserver(draw).observe($('chart').parentElement);
-setInterval(() => { if ($('auto').checked && !state.busy && !document.hidden) refresh(); }, 60000);
+function resetRefreshClock() { state.nextRefreshAt = Date.now() + state.refreshMinutes * 60000; }
+function applyRefreshInterval() {
+  const minutes = Number($('refresh-minutes').value);
+  if (!Number.isInteger(minutes) || minutes < 1 || minutes > 1440) {
+    $('refresh-interval-error').hidden = false; $('refresh-interval-error').textContent = '请输入 1–1440 分钟。'; return;
+  }
+  state.refreshMinutes = minutes; resetRefreshClock(); updateURL(); $('refresh-interval-error').hidden = true;
+}
+$('refresh-minutes').addEventListener('change', applyRefreshInterval);
+$('refresh-minutes').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); applyRefreshInterval(); } });
+setInterval(() => { if ($('auto').checked && !state.busy && !document.hidden && Date.now() >= state.nextRefreshAt) refresh(); }, 1000);
 document.addEventListener('visibilitychange', () => {
   if (!document.hidden && $('auto').checked && !state.busy) refresh();
 });
@@ -486,7 +526,10 @@ async function init() {
   $('auto').checked = true;
   const params = new URLSearchParams(location.search);
   try { state.config = settings(params.get('range') || (params.has('levels') && params.has('bps') ? Number(params.get('levels')) * Number(params.get('bps')) / 100 : 50), params.get('precision') ?? 4); } catch (e) { setError(`${e.message}；已恢复默认显示设置。`); }
-  try { state.chartPercent = settings(params.get('chartRange') || state.config.percent, state.config.precision).percent; } catch { state.chartPercent = 50; }
+  try { const config = settings(params.get('chartRange') || state.config.percent, params.get('chartPrecision') ?? 4); state.chartPercent = config.percent; state.chartPrecision = config.precision; } catch { state.chartPercent = 50; state.chartPrecision = 4; }
+  const minutes = Number(params.get('refreshMinutes') ?? 10);
+  state.refreshMinutes = Number.isInteger(minutes) && minutes >= 1 && minutes <= 1440 ? minutes : 10;
+  $('refresh-minutes').value = state.refreshMinutes; resetRefreshClock();
   state.bookView = params.get('view') === 'total' ? 'total' : 'split';
   updateControls();
   try {

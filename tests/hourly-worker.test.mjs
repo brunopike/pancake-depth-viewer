@@ -65,3 +65,11 @@ test('Handoff API failures report status without leaking credentials or response
   const api = handoffAPI({ private: false }, 'active', 403);
   await assert.rejects(() => dispatchNextWorker({ repo: 'owner/viewer', token: 'test-only', fetch: api.fetch }), /^Error: Worker handoff failed \(403\)$/);
 });
+
+test('A worker handoff waits the remaining interval instead of buying a duplicate snapshot', async () => {
+  let clock = 330 * 60000;
+  const refreshed = [];
+  await runHourlyWorker({ sessionMs: 61 * 60000, now: () => clock, sleep: async ms => { clock += ms; },
+    refresh: async () => { refreshed.push(clock); return 360 * 60000; }, handoff: async () => {} });
+  assert.deepEqual(refreshed, [330 * 60000, 360 * 60000]);
+});
