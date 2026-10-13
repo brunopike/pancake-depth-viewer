@@ -2,7 +2,7 @@ import { readFile } from 'node:fs/promises';
 import { encodeFunctionData, decodeFunctionResult, parseAbi } from 'viem';
 import { TOKEN, SOURCE, beijingDate } from './metrics.mjs';
 import { OWN_EXECUTOR } from './addresses.mjs';
-import { TRANSFER, topic, before } from './attribution.mjs';
+import { TRANSFER } from './attribution.mjs';
 export const SEED = JSON.parse(await readFile(new URL('./holder-seed.json', import.meta.url)));
 export const HOLDER_CACHE = 'https://raw.githubusercontent.com/starkweng/pancake-depth-viewer/holder-cache/holders.json';
 const ZERO = '0x0000000000000000000000000000000000000000';
@@ -25,7 +25,8 @@ export async function blockAtOrBefore(rpc, timestamp, head) {
 export async function readHolderBalances(addresses, block, transport) {
   const chunks=[];for(let i=0;i<addresses.length;i+=400)chunks.push(addresses.slice(i,i+400));
   const calls=chunks.map(chunk=>['eth_call',[{to:MULTICALL,data:encodeFunctionData({abi:multiABI,functionName:'aggregate3',args:[chunk.map(balanceCall)]})},block]]);
-  const encoded=await transport.batch(calls);
+  // Encoded multicalls are large; keep HTTP request bodies below provider limits.
+  const encoded=[];for(let i=0;i<calls.length;i+=2)encoded.push(...await transport.batch(calls.slice(i,i+2)));
   return encoded.flatMap((raw,i)=>{
     const values=decodeFunctionResult({abi:multiABI,functionName:'aggregate3',data:raw});
     assert(values.length===chunks[i].length&&values.every(v=>v.success&&/^0x[0-9a-f]{64}$/i.test(v.returnData)),'HOLDER_BALANCE_INCOMPLETE');
