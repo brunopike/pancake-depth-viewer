@@ -1,0 +1,14 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ESIM · 链上报告</title><meta name="description" content="ESIM 链上看板：链上报告、卖出地址与买卖深度。">
+<meta name="theme-color" content="#0b1017">
+<style>html,body{margin:0;height:100%;background:#0b1017}iframe{display:block;width:100%;height:100%;height:100dvh;border:0}noscript{color:#dce4ec;font:16px sans-serif;padding:24px}a{color:#d9c593}</style>
+</head><body><iframe id="page" title="ESIM 链上报告" referrerpolicy="strict-origin-when-cross-origin"></iframe>
+<script>
+const pages={report:['esim.html','链上报告'],addresses:['esim-addresses.html','卖出地址'],depth:['index.html','买卖深度']};
+const requested=new URLSearchParams(location.search).get('view');
+const [file,title]=Object.hasOwn(pages,requested)?pages[requested]:pages.report;
+document.title=`ESIM · ${title}`;
+document.getElementById('page').title=`ESIM ${title}`;
+document.getElementById('page').src=`https://starkweng.github.io/pancake-depth-viewer/${file}?site=esim-onchain`;
+</script><noscript>请开启 JavaScript，或<a href="https://starkweng.github.io/pancake-depth-viewer/esim.html">直接打开链上报告</a>。</noscript></body></html>

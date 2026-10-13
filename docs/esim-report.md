@@ -1,6 +1,6 @@
 # ESIM 链上报告
 
-链上报告入口为 `https://starkweng.github.io/onchain-report/`；该入口嵌入同一仓库的 `/esim.html`，共用数据与 API。原 `https://starkweng.github.io/pancake-depth-viewer/` 继续显示买卖深度，卖出地址为 `/esim-addresses.html`。三个页面顶部导航均在新标签页打开。Alchemy Key 只配置在 GitHub Actions Secret 和 Vercel 的 Production 环境变量 `ALCHEMY_API_KEY`，不要放进网页、URL 或前端构建变量。
+统一入口为 `https://starkweng.github.io/esim-onchain/`，默认显示链上报告，`?view=addresses` 显示卖出地址，`?view=depth` 显示买卖深度。三个视图复用原仓库页面、数据和 API；配色统一为深色，卖出红色、买入绿色、选中金色。当前页导航为禁用按钮，其余入口在新标签页打开。原 `pancake-depth-viewer/` 与 `onchain-report/` 继续可用。Alchemy Key 只配置在 GitHub Actions Secret 和 Vercel 的 Production 环境变量 `ALCHEMY_API_KEY`，不要放进网页、URL 或前端构建变量。
 
 ## 统计口径
 

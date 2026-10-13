@@ -28,7 +28,7 @@ function chart(hours) {
   return `<details class="card disclosure" open><summary>逐小时净买卖<span>北京时间</span></summary><div class="detail-body"><div class="chart-scroll"><div class="chart" style="--bars:${hours.length}">${hours.map(h => {
     const value = Number(h.net_sold_wei) / 1e18, label = `${date(h.start)} · ${h.available ? (value > 0 ? '卖出 ' : '买入 ') + amount(h.net_sold_wei.replace('-', '')) + ' 万 ESIM' : '尚无数据'}`;
     return `<button class="bar-col" type="button" data-detail="${escape(label)}" aria-label="${escape(label)}"><span class="plot">${h.available ? `<i class="bar ${value >= 0 ? 'positive' : 'negative'}" style="height:${Math.max(value ? 1 : 0, Math.abs(value) / max * 72)}px"></i>` : '<i class="missing-bar"></i>'}</span><span class="hour">${new Date((h.start + 28800) * 1000).getUTCHours().toString().padStart(2, '0')}</span></button>`;
-  }).join('')}</div></div><p class="chart-readout muted">橙色：净卖出　蓝色：净买入 · 点击看数值</p></div></details>`;
+  }).join('')}</div></div><p class="chart-readout muted">红色：净卖出　绿色：净买入 · 点击看数值</p></div></details>`;
 }
 function operations(w) {
   const b = w.bnb, d = w.distribution, i = w.interaction;

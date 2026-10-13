@@ -9,7 +9,7 @@ await build({ entryPoints: ['src/app.js'], bundle: true, minify: true, sourcemap
   outfile: 'dist/app.js', target: ['es2022'], format: 'esm', legalComments: 'eof' });
 await copyFile('src/style.css', 'dist/style.css');
 let html = await readFile('index.html', 'utf8');
-for (const file of ['app.js', 'style.css']) {
+for (const file of ['app.js', 'style.css', 'site-nav.css']) {
   const version = createHash('sha256').update(await readFile(`dist/${file}`)).digest('hex').slice(0, 12);
   html = html.replace(`"./${file}"`, `"./${file}?v=${version}"`);
 }
@@ -17,14 +17,14 @@ await writeFile('dist/index.html', html);
 await build({ entryPoints: ['src/esim.js'], bundle: true, minify: true, outfile: 'dist/esim.js', target: ['es2022'], format: 'esm' });
 await copyFile('src/esim.css', 'dist/esim.css');
 let reportHTML = await readFile('esim.html', 'utf8');
-for (const file of ['esim.js', 'esim.css']) {
+for (const file of ['esim.js', 'esim.css', 'report-theme.css', 'site-nav.css']) {
   const version = createHash('sha256').update(await readFile(`dist/${file}`)).digest('hex').slice(0, 12);
   reportHTML = reportHTML.replace(`"./${file}"`, `"./${file}?v=${version}"`);
 }
 await writeFile('dist/esim.html', reportHTML);
 await build({ entryPoints: ['src/esim-addresses.js'], bundle: true, minify: true, outfile: 'dist/esim-addresses.js', target: ['es2022'], format: 'esm' });
 let addressHTML = await readFile('esim-addresses.html', 'utf8');
-for (const file of ['esim-addresses.js', 'esim.css']) {
+for (const file of ['esim-addresses.js', 'esim.css', 'report-theme.css', 'site-nav.css']) {
   const version = createHash('sha256').update(await readFile(`dist/${file}`)).digest('hex').slice(0, 12);
   addressHTML = addressHTML.replace(`"./${file}"`, `"./${file}?v=${version}"`);
 }
