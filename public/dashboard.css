@@ -27,3 +27,19 @@ body.report-page,body.monitor-page,body.holder-page{font-size:16px;line-height:1
 
 .period-heading>a{font-size:13px;white-space:nowrap}.period-heading p{margin-left:auto}@media(max-width:760px){.period-heading>a{display:inline-block;margin-top:6px}}
 .holder-table thead th:nth-child(2){text-align:left}
+
+/* Keep the navigation sticky across the page while sharing the title row. */
+:is(.report-page,.monitor-page,.holder-page) main{display:grid;grid-template-columns:minmax(220px,1fr) auto auto;column-gap:24px}
+:is(.report-page,.monitor-page,.holder-page) main>:not(.report-header):not(.sticky-navigation){grid-column:1/-1;min-width:0}
+:is(.report-page,.monitor-page,.holder-page) .report-header{display:contents}
+:is(.report-page,.monitor-page,.holder-page) .report-header>div:first-child{grid-column:1;grid-row:1;align-self:center;padding-bottom:18px}
+:is(.report-page,.monitor-page,.holder-page) .report-header .header-actions{grid-column:3;grid-row:1;align-self:center;margin:0;padding-bottom:18px}
+:is(.report-page,.monitor-page,.holder-page) .sticky-navigation{grid-column:2;grid-row:1;align-self:center;margin-bottom:18px;min-width:0}
+:is(.report-page,.monitor-page,.holder-page) .sticky-navigation .site-nav{width:auto}
+@media(max-width:1000px){
+ :is(.report-page,.monitor-page,.holder-page) main{grid-template-columns:minmax(0,1fr) auto;column-gap:12px}
+ :is(.report-page,.monitor-page,.holder-page) .sticky-navigation{grid-column:1/-1;grid-row:1;margin-bottom:14px}
+ :is(.report-page,.monitor-page,.holder-page) .report-header>div:first-child{grid-column:1;grid-row:2;min-width:0}
+ :is(.report-page,.monitor-page,.holder-page) .report-header .header-actions{grid-column:2;grid-row:2}
+ :is(.report-page,.monitor-page,.holder-page) .sticky-navigation .site-nav{width:100%}
+}
