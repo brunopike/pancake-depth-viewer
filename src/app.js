@@ -1,3 +1,4 @@
+import { intervalStats } from './interval-stats.mjs';
 import { loadPools } from './chain.mjs';
 import { buildDepth, settings, poolInventory, inventorySplit, estimateTarget, priceAtTick, cumulative, priceOf } from './math.mjs';
 import { lpDetails } from './lp-details.mjs';
@@ -22,6 +23,7 @@ const bandPrice = n => n === 0 || !Number.isFinite(n) || Math.abs(n) >= 1e12 ? p
 const time = n => new Date(n).toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai', hour12: false });
 const protocolName = { v2: 'V2', v3: 'V3', infinityCl: 'Infinity CL', infinityBin: 'Infinity Bin', stable: 'StableSwap', infinityStable: 'Infinity Stable' };
 const state = { catalog: null, markets: [], market: null, config: settings(50, 4), bookView: 'split', chartPercent: 50, chartPrecision: 4, inspection: null, chartDepth: null, chartHover: null, live: null, depth: null, request: 0, hover: null, focusPrice: null, targetPrice: null, refreshMinutes: 10, nextRefreshAt: Date.now() + 600000, busy: false };
+state.intervalPrices = null;
 state.gapPercent = 100; state.gapPrecision = 4; state.gapThreshold = 50; state.gapData = null;
 let plot;
 
@@ -69,6 +71,7 @@ function setError(message, technical = '') {
 function clearDepth() {
   state.depth = null; state.live = null; state.hover = null; state.focusPrice = null;
   state.chartDepth = null; state.chartHover = null; state.inspection = null;
+  state.intervalPrices = null; $('interval-first').value = ''; $('interval-second').value = ''; $('interval-result').hidden = true; $('interval-button').disabled = true;
   state.targetPrice = null; $('target-price').value = ''; $('target-result').hidden = true; $('target-button').disabled = true;
   $('ask-range-note').textContent = ''; $('bid-range-note').textContent = '';
   $('range-result').hidden = true; $('jump-button').disabled = true; $('jump-status').textContent = '';
@@ -162,6 +165,7 @@ async function selectMarket(market) {
   document.querySelectorAll('.cumulative-value-label').forEach(e => e.textContent = `累计价值 ${market.quote.symbol === 'USDT' ? 'U' : market.quote.symbol}`);
   $('book-quote').textContent = market.quote.symbol;
   $('target-unit').textContent = market.quote.symbol;
+  $('interval-price-unit').textContent = market.quote.symbol;
   $('lp-gap-unit').textContent = market.quote.symbol === 'USDT' ? 'U' : market.quote.symbol;
   $('chart-unit').textContent = `竖着看：合计金额（${market.quote.symbol}）`;
   updateURL(); $('market-dialog').close(); await refresh();
@@ -275,6 +279,8 @@ function render({ preserveChart = false } = {}) {
     ['own-ask-note', 'own-bid-note', 'external-ask-note', 'external-bid-note'].forEach(id => $(id).textContent = 'LP 归属待核对');
   }
   renderTarget();
+  $('interval-button').disabled = $('target-button').disabled || state.live.failed.length > 0 || state.live.pools.length !== state.market.pools.length;
+  renderInterval();
   renderGaps();
   const maximum = Math.max(...[...d.bids, ...d.asks].map(r => Number.isFinite(r.cumulativeQuote) ? r.cumulativeQuote : 0), 1e-20);
   $('levels-summary').textContent = `卖盘 ${d.asks.length} 行 · 买盘 ${d.bids.length} 行${d.grouped ? ' · 相邻档已合并' : ''}`;
@@ -382,6 +388,26 @@ function renderTarget() {
     const empty = estimate.emptyPools ? ` · ${estimate.emptyPools} 个池在目标价处无流动性` : '';
     result.innerHTML = `<span class="${estimate.side === 'ask' ? 'ask-color' : 'bid-color'}">${direction} ${price(estimate.targetPrice)} ${quote}</span><strong>${estimate.side === 'ask' ? '预计花费' : '预计换回'} ${number(estimate.quote, 2)} ${quote}</strong><span>${estimate.side === 'ask' ? '预计买入' : '需卖出'} ${number(estimate.quantity, 2)} ${base}${empty} · 未含费用</span>`;
   } catch (e) { result.className = 'target-result target-error'; result.textContent = e.message; }
+}
+function renderInterval() {
+  const result = $('interval-result');
+  result.hidden = state.intervalPrices == null;
+  if (result.hidden) return;
+  result.className = '';
+  try {
+    if (!state.live || !state.depth) throw new Error('数据未就绪，请先刷新。');
+    const data = intervalStats(state.live.pools, state.market.base.id, state.depth.price, ...state.intervalPrices,
+      { expectedPoolCount: state.market.pools.length, failedCount: state.live.failed.length });
+    const base = escape(state.market.base.symbol), quote = escape(state.market.quote.symbol === 'USDT' ? 'U' : state.market.quote.symbol);
+    const pending = !data.bid.own || !data.ask.own;
+    const rows = [['total', '全池', ''], ['own', '我方', 'own-color'], ['external', '外部', 'external-color']];
+    const cells = (side, key) => ['quantity', 'quote'].map(field => `<td>${data[side][key] ? number(data[side][key][field], 4) : '—'}</td>`).join('');
+    result.innerHTML = `<p class="interval-range" title="${data.low} ～ ${data.high}">${price(data.low)} ～ ${price(data.high)} ${quote}<span>参考价 ${price(data.reference)}</span></p>`
+      + `<div class="interval-table-scroll"><table class="interval-table"><thead><tr><th rowspan="2" scope="col">来源</th><th colspan="2" scope="colgroup" class="bid-color">买盘</th><th colspan="2" scope="colgroup" class="ask-color">卖盘</th></tr><tr><th scope="col">币量（${base}）</th><th scope="col">金额（${quote}）</th><th scope="col">币量（${base}）</th><th scope="col">金额（${quote}）</th></tr></thead><tbody>`
+      + rows.map(([key, label, color]) => `<tr class="${color}"><th scope="row">${label}</th>${cells('bid', key)}${cells('ask', key)}</tr>`).join('') + '</tbody></table></div>'
+      + `<p class="interval-note">买盘金额为卖币可换回的 ${quote}；卖盘金额为买币需支付的 ${quote}。未含费用${pending ? ' · LP 归属待核对' : ''}。</p>`
+      + `<p class="interval-note">${time(state.live.timestamp)} · ${state.live.pools.length} 个池 · 区块 ${state.live.blockNumber}</p>`;
+  } catch (error) { result.className = 'interval-error'; result.textContent = error.message; }
 }
 const displayPrice = (value, precision) => Number.isFinite(value)
   ? Number(value).toLocaleString('en-US', { minimumFractionDigits: precision, maximumFractionDigits: precision }) : price(value);
@@ -562,6 +588,12 @@ $('target-form').addEventListener('submit', e => {
   e.preventDefault(); state.targetPrice = $('target-price').value; renderTarget();
 });
 $('target-price').addEventListener('input', () => { state.targetPrice = null; $('target-result').hidden = true; });
+$('interval-form').addEventListener('submit', event => {
+  event.preventDefault(); state.intervalPrices = [$('interval-first').value, $('interval-second').value]; renderInterval();
+});
+for (const id of ['interval-first', 'interval-second']) $(id).addEventListener('input', () => {
+  state.intervalPrices = null; $('interval-result').hidden = true;
+});
 $('lp-gaps-form').addEventListener('submit', e => {
   e.preventDefault();
   try {

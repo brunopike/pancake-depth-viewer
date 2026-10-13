@@ -1,3 +1,4 @@
+import { intervalStats } from '../src/interval-stats.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
@@ -33,7 +34,7 @@ function app(search = '') {
   const context = vm.createContext({ document, window: {}, location: { href: `https://example.test/${search}`, search },
     history: { replaceState(_a, _b, url) { context.location.href = String(url); } }, URL, URLSearchParams, console, devicePixelRatio: 1,
     ResizeObserver: class { observe() {} }, setInterval: callback => timers.push(callback),
-    fetch: () => new Promise(() => {}), buildDepth, settings, poolInventory, ownedInventory, inventorySplit, estimateTarget, priceAtTick, cumulative, priceOf, OWNERS, poolMetadata, lpDetails,
+    fetch: () => new Promise(() => {}), buildDepth, settings, poolInventory, ownedInventory, inventorySplit, estimateTarget, priceAtTick, cumulative, priceOf, intervalStats, OWNERS, poolMetadata, lpDetails,
     readBrowserCache: selected => selected === market ? live() : null, saveBrowserCache() {}, readSharedCache: async () => null,
     loadPools: () => new Promise(resolve => pending.push(resolve)), market });
   vm.runInContext(source, context);
@@ -226,4 +227,22 @@ test('Manual refresh and interval edits restart the full minute countdown', asyn
   a.elements.get('refresh-minutes').value = '0'; a.listeners.get('refresh-minutes:change')();
   assert.equal(a.read('state.refreshMinutes'), 3); assert.equal(a.elements.get('refresh-interval-error').hidden, false);
   assert.equal(app('?refreshMinutes=7').read('state.refreshMinutes'), 7);
+});
+
+
+test('interval statistics reuse the snapshot and update with refresh, but clear on token switch', async () => {
+  const a = app(), reading = a.read('refresh()'); await settle(); await a.finish(live(101n,4)); await reading;
+  a.elements.get('interval-first').value = '2'; a.elements.get('interval-second').value = '8';
+  const depth=a.read('state.depth'), chart=a.read('state.chartDepth');
+  a.listeners.get('interval-form:submit')({preventDefault(){}});
+  assert.equal(a.pending.length,0); assert.equal(a.read('state.depth'),depth); assert.equal(a.read('state.chartDepth'),chart);
+  assert.match(a.elements.get('interval-result').innerHTML,/全池/); assert.match(a.elements.get('interval-result').innerHTML,/买盘/);
+  const before=a.elements.get('interval-result').innerHTML;
+  const refresh=a.read('refresh()'); await settle(); await a.finish(live(102n,5)); await refresh;
+  assert.notEqual(a.elements.get('interval-result').innerHTML,before);
+  assert.equal(a.read('state.intervalPrices[0]'),'2');
+  a.elements.get('interval-first').value = '5'; a.elements.get('interval-second').value='5';
+  a.listeners.get('interval-form:submit')({preventDefault(){}});
+  assert.match(a.elements.get('interval-result').textContent,/不同/);
+  a.read('clearDepth()'); assert.equal(a.elements.get('interval-result').hidden,true); assert.equal(a.elements.get('interval-first').value,'');
 });
