@@ -1,6 +1,7 @@
 import {readSnapshot,newerSnapshot} from './snapshot-client.mjs';
 import {sellerProfile,holderViewURL,displayEsimBalance} from './holder-insights.mjs';
 import {TAG_KEY,readManual} from './holder-model.mjs';
+import {SELLER_GROUPS,matchesSellerGroup,sellerSummaries} from './seller-summary.mjs';
 const $ = id => document.getElementById(id);
 let saved, current, period='today', mode='initiator', filter='all', page=0, endpoint, busy=false, balanceBusy=false, timer, searchTimer, generation=0;
 let holderReport,manual={},lastTradeSource,lastHolderSource;
@@ -18,17 +19,25 @@ const tags=r=>{const p=profile(r),hasCleared=p.tags.some(t=>t.id==='cleared'),ha
 
 function localPage() {
  const o=options(),candidate=datasets.get(datasetKey()),cached=candidate&&candidate.block>=saved.block?candidate:null,w=cached?.window||saved.windows[period],data=cached||w[mode];
- const all=data.rows.filter(r=>{const p=profile(r);return (!o.search||r.address.includes(o.search))&&(filter==='all'||filter==='own'&&p.own||filter==='received'&&p.received||filter==='other'&&!p.own&&!p.received||filter==='frequency'&&p.frequency);}).toSorted((a,b)=>{
+ const all=data.rows.filter(r=>{const p=profile(r);return (!o.search||r.address.includes(o.search))&&matchesSellerGroup(p,filter);}).toSorted((a,b)=>{
   const x=BigInt(a[o.sort]),y=BigInt(b[o.sort]);return x===y?a.address.localeCompare(b.address):x>y?-1:1;
  });
  page=Math.min(page,Math.max(0,Math.ceil(all.length/25)-1));
- return { ...(cached||saved), totals:{sold:all.reduce((n,r)=>n+BigInt(r.sold),0n).toString(),bought:all.reduce((n,r)=>n+BigInt(r.bought),0n).toString(),own:all.filter(r=>profile(r).own).length}, window:w, population:data.rows.length, missingSold:data.missingSold, total:all.length,page,options:o,rows:all.slice(page*25,(page+1)*25) };
+ return { ...(cached||saved), groups:sellerSummaries(data.rows,profile), totals:{sold:all.reduce((n,r)=>n+BigInt(r.sold),0n).toString(),bought:all.reduce((n,r)=>n+BigInt(r.bought),0n).toString(),own:all.filter(r=>profile(r).own).length}, window:w, population:data.rows.length, missingSold:data.missingSold, total:all.length,page,options:o,rows:all.slice(page*25,(page+1)*25) };
 }
 function render(schedule=true) {
  if(!current)return; const w=current.window; page=current.page;
  $('cutoff').textContent=`交易截至 ${date(current.cutoff)} · 北京时间`;
- $('mode-note').textContent=mode==='initiator'?'交易发起地址：谁提交了交易，可能与实际持币人不同。':'出币资金地址：按资金路径识别，包含钱包和合约。';
- $('summary').innerHTML=`<span>卖出地址<strong>${integer(current.total)}</strong><small>当前筛选结果</small></span><span>合计卖出<strong class="sell">${amount(current.totals?.sold)} ESIM</strong><small>${w.available?date(w.start)+' — '+date(w.end):'等待更新'}</small></span><span>合计买入<strong class="buy">${amount(current.totals?.bought)} ESIM</strong><small>同一批卖出地址的买入量</small></span><span>未归入地址的卖出<strong>${amount(current.missingSold)} ESIM</strong><small>复杂资金路径</small></span>`;
+ const funding=mode==='funding';
+ $('mode-current').textContent=funding?'按出币地址':'按操作钱包';
+ $('mode-note').textContent=funding?'按卖出币的来源地址汇总，可能包含合约；买入量按接收币的地址统计，无法确认来源的卖出单列。':'按发起交易的钱包汇总卖出量；通过合约执行时，它可能不是实际转出币的地址。';
+ const category=SELLER_GROUPS.find(group=>group.id===filter).label;
+ $('ranking-title').textContent=`${category}卖出排名 · ${funding?'出币地址':'操作钱包'}`;
+ $('address-column').textContent=`排名 / ${funding?'出币地址':'操作钱包'}`;
+ const groupCard=group=>`<section class="seller-group${filter===group.id?' selected':''}" data-summary-group="${group.id}"><h2>${group.label}${filter===group.id?'<small>当前排名</small>':''}</h2><div class="seller-metrics"><div><span>卖出地址数</span><strong>${w.available?integer(group.count):'—'}</strong></div><div><span>卖出 <small>ESIM</small></span><strong class="sell">${amount(w.available?group.sold:null)}</strong></div><div><span>买入 <small>ESIM</small></span><strong class="buy">${amount(w.available?group.bought:null)}</strong></div><div><span>净卖出 <small>ESIM</small></span><strong class="${BigInt(group.netSold)>=0n?'sell':'buy'}">${amount(w.available?group.netSold:null)}</strong></div></div></section>`;
+ $('summary').innerHTML=`<div class="seller-primary">${current.groups.filter(group=>group.primary).map(groupCard).join('')}</div><div class="seller-secondary">${current.groups.filter(group=>!group.primary).map(groupCard).join('')}</div><p class="seller-scope">${w.available?date(w.start)+' — '+date(w.end)+' · 北京时间':'等待更新'} · 只计本时段有卖出记录的地址；买入为这些地址的买入量。概览为完整时段，搜索只筛选下方排名；分类可能重叠，不能相加。</p>${BigInt(current.missingSold)>0n?`<p class="seller-unattributed">未归因卖出：${amount(current.missingSold)} ESIM · ${funding?'资金路径未能确认，未计入地址分类。':'缺少交易发起地址，未计入地址分类。'}</p>`:''}`;
+ const net=(BigInt(current.totals.sold)-BigInt(current.totals.bought)).toString();
+ $('filter-note').textContent=`当前排名：${category} · ${integer(current.total)} 个地址 · 卖出 ${amount(current.totals.sold)} · 买入 ${amount(current.totals.bought)} · 净卖出 ${amount(net)} ESIM${$('address-search').value.trim()?' · 已按搜索筛选':''}`;
  const naturalDay=Math.floor((Date.now()/1000+28800)/86400),snapshotDay=saved?Math.floor((saved.windows.today.start+28800)/86400):naturalDay;
  for(const [key,label]of [['today','今日·0点到现在'],['yesterday','昨日 · 24 小时'],['history','历史累计']])document.querySelector(`[data-period="${key}"]`).textContent=snapshotDay===naturalDay||key==='history'?label:date(saved.windows[key].start).slice(0,5)+(key==='today'?'（保存）':' · 24 小时');
  $('rows').innerHTML=current.rows.map((r,i)=>{const b=balances.get(r.address),h=holderMap.get(r.address),esim=displayEsimBalance(b,h,holderReport);return `<tr><th><span class="rank">${page*25+i+1}</span><div class="address-link-row"><a href="https://bscscan.com/address/${r.address}" target="_blank" rel="noopener noreferrer" title="${r.address}">${r.address.slice(0,8)}…${r.address.slice(-6)} ↗</a><a class="holding-link" href="${holderViewURL({search:r.address,zero:true})}" target="_top" rel="noopener noreferrer">看持仓 →</a></div><div class="tags">${tags(r)}</div></th><td class="sell">${amount(r.sold)}</td><td class="buy">${amount(r.bought)}</td><td class="${BigInt(r.netSold)>=0n?'sell':'buy'}">${amount(r.netSold)}</td><td>${integer(r.sellCount)} / ${integer(r.buyCount)}<small>单日最多 ${integer(r.peakDailyTrades)} 笔</small></td><td>${amount(esim.balance,2)}<small>${esim.source==='missing'?'余额暂缺':(esim.source==='snapshot'?'快照 ':'查询 ')+date(esim.cutoff)}</small></td><td>${amount(b?.usdt,2)}</td><td>${amount(b?.bnb,6)}</td></tr>`;}).join('')||'<tr><td colspan="8" class="empty">这个条件下暂无卖出地址。</td></tr>';
