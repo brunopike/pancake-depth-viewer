@@ -1,11 +1,11 @@
 <!doctype html>
 <html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>ESIM · 合约报告</title><meta name="description" content="ESIM 链上看板：买卖深度、合约报告、卖出监控与合约地址。">
+<title>ESIM · 合约报告</title><meta name="description" content="ESIM 链上看板：买卖深度、合约报告、卖出监控与持币地址。">
 <meta name="theme-color" content="#0b1017">
 <style>html,body{margin:0;height:100%;background:#0b1017}iframe{display:block;width:100%;height:100%;height:100dvh;border:0}noscript{color:#dce4ec;font:16px sans-serif;padding:24px}a{color:#d9c593}</style>
 </head><body><iframe id="page" title="ESIM 合约报告" referrerpolicy="strict-origin-when-cross-origin"></iframe>
 <script>
-const pages={report:['esim.html','合约报告'],addresses:['esim-addresses.html','卖出监控'],depth:['index.html','买卖深度'],holders:['esim-holders.html','合约地址']};
+const pages={report:['esim.html','合约报告'],addresses:['esim-addresses.html','卖出监控'],depth:['index.html','买卖深度'],holders:['esim-holders.html','持币地址']};
 const requested=new URLSearchParams(location.search).get('view');
 const [file,title]=Object.hasOwn(pages,requested)?pages[requested]:pages.report;
 document.title=`ESIM · ${title}`;

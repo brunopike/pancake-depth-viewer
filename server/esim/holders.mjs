@@ -66,7 +66,7 @@ export function buildHolderReport({state,addresses,balances,priorBalances,contra
     const r=behavior.rows.get(address),prior=priorBalances?.[i]??null,known=seed.labels[address],tags=[];
     if(known)tags.push(label(`known-${known.kind}`,known.label,known.kind,known.source));
     if(address===SOURCE)tags.push(label('own-contract','我方合约','own','用户指定的分发合约'));
-    if(ownLP.has(address))tags.push(label('own-lp','我方 LP','lp','用户指定的三个流动性地址；此表数量为钱包余额，不含 LP 仓位'));
+    if(ownLP.has(address))tags.push(label('own-lp','我方 LP','lp','用户指定的流动性地址；此表数量为钱包余额，不含 LP 仓位'));
     if(r?.ownExecution||address===OWN_EXECUTOR)tags.push(label('own-execution','我方执行','own',`调用用户确认的执行合约 ${OWN_EXECUTOR}`));
     if(pools.has(address)&&!known?.label.includes('LP'))tags.push(label('pool','流动性池','dex','已核对的 ESIM 池合约'));
     const recipient=state.firstRecipient[address];
@@ -77,9 +77,10 @@ export function buildHolderReport({state,addresses,balances,priorBalances,contra
     }
     if(behavior.callers.has(address))tags.push(label('interacted','交互过我方合约','interaction','已核对向我方合约发起的成功调用'));
     const peak=r?Math.max(0,...[...r.days.values()].map(s=>s.size)):0;
-    if(peak>=100)tags.push(label('frequency','高频机器人（疑似）','frequency',`单个北京时间自然日交易至少 ${peak} 笔；频率不能证明机器人身份`));
+    const own=tags.some(t=>['own','lp'].includes(t.kind));
+    if(peak>=100&&!own)tags.push(label('frequency','高频机器人（疑似）','frequency',`单个北京时间自然日交易至少 ${peak} 笔；频率不能证明机器人身份`));
     const roundTrips=r?[...r.roundTrips.values()].filter(s=>s.size===2).length:0;
-    if(roundTrips>=3&&!r?.ownExecution&&!known)tags.push(label('arbitrage','套利机器人（疑似）','arbitrage',`${roundTrips} 笔交易中同时出现 ESIM 买入和卖出；未核实盈利或控制人`));
+    if(roundTrips>=3&&!own&&!known)tags.push(label('arbitrage','套利机器人（疑似）','arbitrage',`${roundTrips} 笔交易中同时出现 ESIM 买入和卖出；未核实盈利或控制人`));
     if(contracts[address]===true&&!tags.some(t=>['dex','contract'].includes(t.kind)))tags.push(label('contract','合约地址','contract','固定区块 eth_getCode 返回非空代码'));
     return {address,balance:balance.toString(),priorBalance:prior,change24h:prior===null?null:(balance-BigInt(prior)).toString(),tags,
       history:packed(r?.history||blankStats()),day:packed(r?.day||blankStats()),peakDailyTrades:peak};
