@@ -54,10 +54,16 @@ export function weakLiquidityRanges(pools, baseId, reference, input = {}, covera
     for (let i = 0; i < prices.length; i++) {
       if (bands.length >= 20000) throw new Error('当前设置超过 20,000 档，请减少小数位数或缩小查询范围。');
       const boundary = prices[i], previous = i ? prices[i - 1] : undefined;
-      let quote = 0;
-      for (const own of curves) if (own.scale) quote += cumulative(own.pool, baseId, boundary, side, previous).quote * own.scale;
+      let quote = 0, quantity = 0;
+      for (const own of curves) if (own.scale) {
+        const amount = cumulative(own.pool, baseId, boundary, side, previous);
+        quote += amount.quote * own.scale;
+        quantity += amount.quantity * own.scale;
+      }
       if (!Number.isFinite(quote) || quote < 0) throw new Error('每档金额暂时无法计算，请刷新数据。');
-      bands.push({ low: Math.min(previous ?? reference, boundary), high: Math.max(previous ?? reference, boundary), side, quote });
+      // A V2 bid at zero has unlimited token input, but finite quote funds.
+      if (Number.isNaN(quantity) || quantity < 0 || (side === 'ask' && !Number.isFinite(quantity))) throw new Error('每档币量暂时无法计算，请刷新数据。');
+      bands.push({ low: Math.min(previous ?? reference, boundary), high: Math.max(previous ?? reference, boundary), side, quote, quantity });
     }
   }
   bands.sort((a, b) => a.low - b.low);
@@ -68,11 +74,12 @@ export function weakLiquidityRanges(pools, baseId, reference, input = {}, covera
     matched++;
     let range = ranges.at(-1);
     if (!range || range.high !== band.low || range.side !== band.side) {
-      range = { low: band.low, high: band.low, side: band.side, minQuote: Infinity, maxQuote: 0, totalQuote: 0, bands: [] };
+      range = { low: band.low, high: band.low, side: band.side, minQuote: Infinity, maxQuote: 0, totalQuote: 0, minQuantity: Infinity, maxQuantity: 0, totalQuantity: 0, bands: [] };
       ranges.push(range);
     }
     range.high = band.high; range.bands.push(band);
     range.minQuote = Math.min(range.minQuote, band.quote); range.maxQuote = Math.max(range.maxQuote, band.quote); range.totalQuote += band.quote;
+    range.minQuantity = Math.min(range.minQuantity, band.quantity); range.maxQuantity = Math.max(range.maxQuantity, band.quantity); range.totalQuantity += band.quantity;
   }
   return { config, low, high, ranges, scanned: bands.length, matched };
 }

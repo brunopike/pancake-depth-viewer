@@ -308,22 +308,37 @@ function render({ preserveChart = false } = {}) {
   if (!preserveChart) rebuildChart();
 }
 
-function gapPrice(value) {
-  const precision = state.gapData.config.precision, units = value * 10 ** precision;
+function gapPrice(value, precision = state.gapData.config.precision) {
+  const units = value * 10 ** precision;
   // Partial edge bands keep their actual boundary, instead of looking zero-width.
   return Math.abs(units - Math.round(units)) > Number.EPSILON * Math.max(1, Math.abs(units)) * 8
     ? price(value) : value.toLocaleString('en-US', { minimumFractionDigits: precision, maximumFractionDigits: precision });
 }
-function renderGapDetail(details, limit = 100) {
-  const range = state.gapData?.ranges[Number(details.dataset.range)];
+function openGapDetail(index) {
+  const range = state.gapData?.ranges[index];
   if (!range) return;
-  const unit = escape(state.market.quote.symbol === 'USDT' ? 'U' : state.market.quote.symbol);
-  const shown = Math.min(limit, range.bands.length);
-  details.dataset.shown = shown;
-  const content = details.querySelector('.gap-detail');
-  content.innerHTML = `<p>区间合计：${number(range.totalQuote, 6)} ${unit} · ${range.bands.length} 档</p><div class="gap-band gap-header"><span>每档价格区间</span><span>我方金额（${unit}）</span></div>`
-    + range.bands.slice(0, shown).map(b => `<div class="gap-band"><span title="${b.low} ～ ${b.high}">${gapPrice(b.low)} ～ ${gapPrice(b.high)}</span><span title="${b.quote}">${number(b.quote, 6)}</span></div>`).join('')
-    + (shown < range.bands.length ? `<button type="button" class="button gap-more">再显示 100 档（剩 ${range.bands.length - shown} 档）</button>` : '');
+  // Keep an open dialog on one snapshot if a background refresh finishes.
+  state.gapDetail = { range, config: state.gapData.config, base: state.market.base.symbol,
+    quote: state.market.quote.symbol === 'USDT' ? 'U' : state.market.quote.symbol, timestamp: state.live.timestamp, shown: 0 };
+  renderGapDetail();
+  $('gap-dialog').showModal();
+  $('gap-dialog-body').scrollTop = 0;
+}
+function renderGapDetail(limit = 100) {
+  const detail = state.gapDetail;
+  if (!detail) return;
+  const { range, config } = detail, sell = range.side === 'ask';
+  const unit = sell ? detail.base : detail.quote;
+  detail.shown = Math.min(limit, range.bands.length);
+  $('gap-dialog-title').textContent = `我方 LP · ${sell ? '卖盘币量' : '买盘资金'}`;
+  $('gap-dialog-summary').textContent = `${gapPrice(range.low, config.precision)} ～ ${gapPrice(range.high, config.precision)} · 合计 ${number(sell ? range.totalQuantity : range.totalQuote, 6)} ${unit}`;
+  $('gap-dialog-meta').textContent = `${time(detail.timestamp)} · 每档价值 ≤ ${number(config.threshold, 6)} ${detail.quote}`;
+  const body = $('gap-dialog-body'), scroll = body.scrollTop;
+  body.innerHTML = `<table class="gap-table"><thead><tr><th>每档价格区间</th><th>我方${sell ? '币量' : '资金'}（${escape(unit)}）</th>${sell ? `<th>对应价值（${escape(detail.quote)}）</th>` : ''}</tr></thead><tbody>`
+    + range.bands.slice(0, detail.shown).map(b => `<tr><td title="${b.low} ～ ${b.high}">${gapPrice(b.low, config.precision)} ～ ${gapPrice(b.high, config.precision)}</td><td>${number(sell ? b.quantity : b.quote, 6)}</td>${sell ? `<td>${number(b.quote, 6)}</td>` : ''}</tr>`).join('') + '</tbody></table>';
+  body.scrollTop = scroll;
+  $('gap-dialog-count').textContent = `已显示 ${detail.shown} / ${range.bands.length} 档`;
+  $('gap-dialog-more').hidden = detail.shown >= range.bands.length;
 }
 function renderGaps() {
   const result = $('lp-gaps-result');
@@ -336,16 +351,17 @@ function renderGaps() {
     state.gapData = data;
     const unit = escape(state.market.quote.symbol === 'USDT' ? 'U' : state.market.quote.symbol);
     $('lp-gaps-count').textContent = `${data.ranges.length} 个区间 · ${data.matched}/${data.scanned} 档`;
-    $('lp-gaps-summary').textContent = `每档 ${data.config.step.toFixed(data.config.precision)} · 我方 ≤ ${number(data.config.threshold, 6)} ${state.market.quote.symbol === 'USDT' ? 'U' : state.market.quote.symbol} · 点击区间看明细`;
+    $('lp-gaps-summary').textContent = `每档 ${data.config.step.toFixed(data.config.precision)} · 每档价值 ≤ ${number(data.config.threshold, 6)} ${state.market.quote.symbol === 'USDT' ? 'U' : state.market.quote.symbol} · 点击区间看明细`;
     $('lp-gaps-meta').textContent = `${time(state.live.timestamp)} · 已核对 ${state.live.pools.length} 个池`;
     $('lp-gaps-summary').title = `查询 ${price(data.low)}～${price(data.high)} ${state.market.quote.symbol} · 已核对 ${state.live.pools.length} 个池 · ${time(state.live.timestamp)}`;
     result.innerHTML = data.ranges.length
-      ? `<div class="gap-row gap-header"><span>价格区间</span><span>档数</span><span>每档我方（${unit}）</span></div>`
-        + data.ranges.map((r, i) => `<details class="gap-range" data-range="${i}"><summary class="gap-row"><span title="${r.low} ～ ${r.high}"><b class="${r.side === 'bid' ? 'bid' : 'ask'}-color">${r.side === 'bid' ? '买盘' : '卖盘'}</b> ${gapPrice(r.low)} ～ ${gapPrice(r.high)}</span><span>${r.bands.length}</span><span title="${r.minQuote} ～ ${r.maxQuote}">${r.minQuote === r.maxQuote ? number(r.minQuote, 6) : `${number(r.minQuote, 6)} ～ ${number(r.maxQuote, 6)}`}</span></summary><div class="gap-detail"></div></details>`).join('')
+      ? `<div class="gap-row gap-header"><span>价格区间</span><span>档数</span><span>每档我方</span></div>`
+        + data.ranges.map((r, i) => {
+          const sell = r.side === 'ask', min = sell ? r.minQuantity : r.minQuote, max = sell ? r.maxQuantity : r.maxQuote;
+          const amountUnit = sell ? escape(state.market.base.symbol) : unit;
+          return `<button type="button" class="gap-row gap-range" data-range="${i}" aria-haspopup="dialog"><span title="${r.low} ～ ${r.high}"><b class="${sell ? 'ask' : 'bid'}-color">${sell ? '卖盘' : '买盘'}</b> ${gapPrice(r.low)} ～ ${gapPrice(r.high)}</span><span>${r.bands.length}</span><span title="${min} ～ ${max} ${amountUnit}">${min === max ? number(min, 6) : `${number(min, 6)} ～ ${number(max, 6)}`} ${amountUnit} <i aria-hidden="true">↗</i></span></button>`;
+        }).join('')
       : '<p class="gap-empty">这个范围内没有符合条件的档位。</p>';
-    result.querySelectorAll('details').forEach(details => details.addEventListener('toggle', () => {
-      if (details.open && !details.dataset.shown) renderGapDetail(details);
-    }));
   } catch (e) {
     $('lp-gaps-summary').textContent = '按每档我方金额筛选，点击区间看明细。';
     $('lp-gaps-summary').title = '';
@@ -555,9 +571,11 @@ $('lp-gaps-form').addEventListener('submit', e => {
   } catch (error) { $('lp-gaps-error').hidden = false; $('lp-gaps-error').textContent = error.message; }
 });
 $('lp-gaps-result').addEventListener('click', event => {
-  const button = event.target.closest('.gap-more');
-  if (button) { const details = button.closest('details'); renderGapDetail(details, Number(details.dataset.shown) + 100); }
+  const button = event.target.closest('[data-range]');
+  if (button) openGapDetail(Number(button.dataset.range));
 });
+$('gap-dialog-more').addEventListener('click', () => renderGapDetail((state.gapDetail?.shown || 0) + 100));
+$('gap-dialog').addEventListener('close', () => { state.gapDetail = null; });
 $('coverage-button').addEventListener('click', coverage);
 $('method-button').addEventListener('click', methodology);
 for (const id of ['bids', 'asks']) {

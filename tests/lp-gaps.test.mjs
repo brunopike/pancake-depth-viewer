@@ -30,7 +30,7 @@ test('threshold equality is included and filtering never rounds small positive a
 });
 
 test('uncompressed per-band amounts agree with the order book including inverse decimals and off-grid reference', () => {
-  for (const pool of [v2, { ...v2, token0: { ...base, decimals: 6 }, reserve0: 1000e6 }]) {
+  for (const pool of [v2, cl(), { ...v2, token0: { ...base, decimals: 6 }, reserve0: 1000e6 }]) {
     for (const id of ['base', 'quote']) {
       const depth = buildDepth([pool], id, { percent: 1, precision: 4 });
       const scan = weakLiquidityRanges([pool], id, depth.price, { percent: 1, precision: 4, threshold: 1e12 });
@@ -38,7 +38,7 @@ test('uncompressed per-band amounts agree with the order book including inverse 
         const rows = depth[side === 'bid' ? 'bids' : 'asks'];
         const bands = scan.ranges.filter(r => r.side === side).flatMap(r => r.bands).sort((a, b) => side === 'bid' ? b.low - a.low : a.high - b.high);
         assert.equal(bands.length, rows.length);
-        rows.forEach((r, i) => near(bands[i].quote, r.own.quote));
+        rows.forEach((r, i) => { near(bands[i].quote, r.own.quote); near(bands[i].quantity, r.own.quantity); });
       }
     }
   }
@@ -73,4 +73,20 @@ test('missing or partial ownership and excessive precision cannot produce mislea
   assert.throws(() => weakLiquidityRanges([cl()], 'base', 1, { precision: 18 }), /20,000/);
   for (const n of ['', null, 0, -1, Infinity, 'max']) assert.throws(() => gapSettings(n), /查询范围/);
   for (const n of ['', null, -1, Infinity]) assert.throws(() => gapSettings(100, 4, n), /金额上限/);
+});
+
+// Independent constant-product check: sell inventory is token units, not quote units.
+test('sell bands conserve base inventory while value filtering and zero-price buy funds stay finite', () => {
+  const result = weakLiquidityRanges([v2], 'base', 4, { percent: 100, precision: 2, threshold: 1e9 });
+  const asks = result.ranges.filter(r => r.side === 'ask');
+  const bids = result.ranges.filter(r => r.side === 'bid');
+  near(asks.reduce((sum, r) => sum + r.totalQuantity, 0), .3 * (1000 - Math.sqrt(4000000 / 8)));
+  near(bids.reduce((sum, r) => sum + r.totalQuote, 0), 1200);
+  for (const r of asks) {
+    near(r.totalQuantity, r.bands.reduce((sum, b) => sum + b.quantity, 0));
+    near(r.minQuantity, Math.min(...r.bands.map(b => b.quantity)));
+    near(r.maxQuantity, Math.max(...r.bands.map(b => b.quantity)));
+  }
+  const weak = weakLiquidityRanges([v2], 'base', 4, { percent: 1, precision: 2, threshold: 1.4 });
+  assert.equal(weak.ranges.filter(r => r.side === 'ask').length, 0, 'token amounts below 1.4 must not bypass the quote-value threshold');
 });
