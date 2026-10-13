@@ -1,17 +1,26 @@
 name: Refresh shared ESIM depth
 on:
   workflow_dispatch:
+    inputs:
+      session_minutes:
+        description: 'Worker session minutes (1–330); subsequent sessions use 330'
+        default: '330'
+        required: false
+        type: string
   schedule:
-    - cron: '*/5 * * * *'
+    - cron: '23 * * * *'
 permissions:
   contents: write
+  actions: write
 concurrency:
   group: shared-esim-depth
   cancel-in-progress: false
 jobs:
   snapshot:
+    # Standard public-repository runners are free; do not start this loop after a privacy change.
+    if: github.event.repository.private == false
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 360
     steps:
       - name: Check private Alchemy configuration
         id: config
@@ -33,16 +42,11 @@ jobs:
           cache: npm
       - run: npm ci --no-audit --no-fund
         if: steps.config.outputs.configured == 'true'
-      - run: node scripts/sync-published-catalog.mjs
-        if: steps.config.outputs.configured == 'true'
-      - name: Read with Alchemy and validate every supported pool
+      - name: Keep the hourly validated snapshot worker running
         if: steps.config.outputs.configured == 'true'
         env:
           ALCHEMY_API_KEY: ${{ secrets.ALCHEMY_API_KEY }}
-        run: node scripts/snapshot.mjs
-      - name: Publish public data only
-        if: steps.config.outputs.configured == 'true'
-        env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_REPOSITORY: ${{ github.repository }}
-        run: node scripts/publish-snapshot.mjs
+          SESSION_MINUTES: ${{ inputs.session_minutes || '330' }}
+        run: node scripts/hourly-worker.mjs

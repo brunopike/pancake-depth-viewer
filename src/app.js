@@ -108,14 +108,14 @@ async function selectMarket(market) {
 }
 async function refresh() {
   if (!state.market) return;
-  const request = ++state.request, market = state.market, config = { ...state.config };
+  const request = ++state.request, market = state.market;
   setError(''); state.busy = true; $('refresh').disabled = true;
   $('status').textContent = `正在从链上读取 ${market.pools.length} 个池子的数据…`;
   let displayed = false, previous;
-  const usable = live => live?.pools.length && (live.range === Infinity || live.range === config.range) && Date.now() - live.timestamp < 86400000;
+  const usable = live => live?.pools.length && (live.range === Infinity || live.range === state.config.range) && Date.now() - live.timestamp < 86400000;
   const show = (live, updating = false) => {
     if (request !== state.request || !usable(live)) return false;
-    const depth = buildDepth(live.pools, market.base.id, config, { focusPrice: state.focusPrice });
+    const depth = buildDepth(live.pools, market.base.id, state.config, { focusPrice: state.focusPrice });
     state.live = live; state.depth = depth; state.hover = null;
     render(); $('jump-button').disabled = false;
     $('status').textContent = `${time(live.timestamp)} · 合并 ${live.pools.length}/${market.pools.length} 个池子${live.failed.length ? ` · ${live.failed.length} 个未计入` : ''}${updating ? ' · 正在更新…' : ''}`;
@@ -152,8 +152,9 @@ async function refresh() {
     }
     // A transient partial update must not replace a complete cached snapshot.
     if (previous && live.pools.length < previous.pools.length) throw new Error('部分池子暂时无法更新');
-    show(live); saveBrowserCache(market, live);
-    if (Date.now() - live.timestamp > 180000) setError('当前数据已超过 3 分钟，可能有变化，请点击“刷新数据”。');
+    const newest = state.live && state.live.blockNumber > live.blockNumber ? state.live : live;
+    show(newest); saveBrowserCache(market, newest);
+    if (Date.now() - newest.timestamp > 180000) setError('当前数据已超过 3 分钟，可能有变化，请点击“刷新数据”。');
   } catch (e) {
     if (request !== state.request) return;
     const technical = e.shortMessage || e.message || '读取失败';
@@ -313,7 +314,7 @@ function coverage() {
 }
 function methodology() {
   $('detail-title').textContent = '怎么看这些数据？';
-  $('detail-body').innerHTML = `<h3>先选币种，再看金额</h3><p>例如 ESIM / USDT，表示用 USDT 买卖 ESIM。价格 0.06 表示 1 个 ESIM 对应 0.06 USDT。绿色是买盘，红色是卖盘。这里的“深度”，就是选定价格范围里的买卖数量和金额，按池内资金估算。</p><h3>一行表格是什么意思？</h3><p>每一行是一小段价格区间。“币量”和“价值 U”只看这一段；“累计币量”和“累计价值 U”是从最接近现价的档位加到当前这一档。点击一行能看完整数字。曲线越高，表示累计金额越多。</p><h3>全池币量和目标价格</h3><p>顶部卖盘显示池内代币，买盘显示用于买入的计价币，统计全部价格范围中的交易资金，未含未领取的手续费。输入目标价格：高于现价时，看买入要付多少；低于现价时，看要卖多少币、可换回多少。某个池子在目标价处没有资金时会提示，不能当成保证成交的报价。目标价估算不受图表范围限制，未模拟外部套利或资金新增。</p><h3>价格上下范围</h3><p>输入 10%，表格和曲线就看参考价上下 10% 内的买卖数量和金额。例如参考价 1 USDT，就是看 0.9 到 1.1 USDT。“最大”看现价的 0.5～2 倍。例如现价 0.06，就是看 0.03～0.12。表格金额是到对应价格的估算花费或所得。</p><h3>小数位数怎么设置？</h3><p>4 位小数表示每档价格相差 0.0001；2 位小数就是 0.01。档数自动计算。档位太多时，每行会合并相邻档，最多显示 500 行；整个范围的总金额不会减少。范围的最后一档可能只是一小段，以实际边界价格计算。小数位数只改变表格的细分程度，不改变范围内的总金额。</p><h3>池子是什么？为什么只显示部分数据？</h3><p>池子是用于买卖两种币的一组资金。同样两种币可以有多个池子，本页合并成功读取的池子。参考价格取这些池子中，官方列表资金估值最大的那个。读不到的池子、还未支持的池子类型不会加进图里，可点“查看数据明细”了解原因。当前只看 BNB 链上的 PancakeSwap。ESIM / USDT 与 ESIM / BNB 分开显示；同名但地址不同的代币也分开显示。</p><h3>数据从哪里来？多久更新？</h3><p>代币和池子列表来自 PancakeSwap 官方数据接口，后台每小时尝试更新。列表更新时间：${state.catalog ? time(state.catalog.fetchedAt) + '（北京时间）' : '暂时未知'}。${state.catalog?.complete ? '这次已读取完接口提供的列表，但不保证链上所有池子都在里面。' : '列表还未收集完整，有些池子可能尚未收录。'}打开时先显示有时间标记的缓存，再检查链上更新；流动性未改变的档位直接复用。ESIM/USDT 后台配置 Alchemy 后，每 5 分钟尝试更新共享数据，实际时间以页面显示为准。点击“刷新数据”或勾选“每分钟刷新”也可更新。池子列表中的美元估值和图里的买卖金额是不同指标，更新时间也可能不同。</p><h3>金额是估算值</h3><p>这些数值按池子的资金计算，未计入手续费、网络费用、代币转账税费，以及某些池子的额外交易规则。实际买卖金额以交易时的报价为准。</p><details><summary>查看详细算法与技术来源</summary><p>V2 使用实际储备量的恒定乘积曲线；V3 与 Infinity CL 使用当前价格、活跃流动性、tick bitmap 和初始化 tick 的 liquidityNet，按价格区间积分。一次刷新固定同一区块。原始状态及流动性变化使用 BigInt，显示积分使用浮点数。Infinity Bin / StableSwap 目前只列入列表与明细，不计入曲线。</p><p>百分比模式的边界 = 参考价 ×（1 ± 百分比 / 100），价格下限最低为 0。精度为 n 位小数时，基础价格档距为 10⁻ⁿ；相邻档合并后仍按实际边界积分，最后一档抵达原始范围边界。最大显示范围为现价的 0.5～2 倍。后台全量缓存读取合约全部 tick bitmap 并校验两端流动性归零；显示范围独立于缓存读取范围。各池从自身现价积分到共同价格边界；各池现价不同，第一档可能包含已有池间价差。这里只合并同一对代币地址的直接池，未模拟多跳路由或真实成交。</p><p><a href="https://developer.pancakeswap.finance/apis/subgraph" target="_blank" rel="noopener">PancakeSwap 开发文档 ↗</a><br><a href="https://github.com/pancakeswap/pancakeswap-ai" target="_blank" rel="noopener">官方数据接口使用示例 ↗</a><br><a href="https://github.com/pancakeswap/infinity-core" target="_blank" rel="noopener">Infinity CL 合约与计算方法 ↗</a></p></details>`;
+  $('detail-body').innerHTML = `<h3>先选币种，再看金额</h3><p>例如 ESIM / USDT，表示用 USDT 买卖 ESIM。价格 0.06 表示 1 个 ESIM 对应 0.06 USDT。绿色是买盘，红色是卖盘。这里的“深度”，就是选定价格范围里的买卖数量和金额，按池内资金估算。</p><h3>一行表格是什么意思？</h3><p>每一行是一小段价格区间。“币量”和“价值 U”只看这一段；“累计币量”和“累计价值 U”是从最接近现价的档位加到当前这一档。点击一行能看完整数字。曲线越高，表示累计金额越多。</p><h3>全池币量和目标价格</h3><p>顶部卖盘显示池内代币，买盘显示用于买入的计价币，统计全部价格范围中的交易资金，未含未领取的手续费。输入目标价格：高于现价时，看买入要付多少；低于现价时，看要卖多少币、可换回多少。某个池子在目标价处没有资金时会提示，不能当成保证成交的报价。目标价估算不受图表范围限制，未模拟外部套利或资金新增。</p><h3>价格上下范围</h3><p>输入 10%，表格和曲线就看参考价上下 10% 内的买卖数量和金额。例如参考价 1 USDT，就是看 0.9 到 1.1 USDT。“最大”看现价的 0.5～2 倍。例如现价 0.06，就是看 0.03～0.12。表格金额是到对应价格的估算花费或所得。</p><h3>小数位数怎么设置？</h3><p>4 位小数表示每档价格相差 0.0001；2 位小数就是 0.01。档数自动计算。档位太多时，每行会合并相邻档，最多显示 500 行；整个范围的总金额不会减少。范围的最后一档可能只是一小段，以实际边界价格计算。小数位数只改变表格的细分程度，不改变范围内的总金额。</p><h3>池子是什么？为什么只显示部分数据？</h3><p>池子是用于买卖两种币的一组资金。同样两种币可以有多个池子，本页合并成功读取的池子。参考价格取这些池子中，官方列表资金估值最大的那个。读不到的池子、还未支持的池子类型不会加进图里，可点“查看数据明细”了解原因。当前只看 BNB 链上的 PancakeSwap。ESIM / USDT 与 ESIM / BNB 分开显示；同名但地址不同的代币也分开显示。</p><h3>数据从哪里来？多久更新？</h3><p>代币和池子列表来自 PancakeSwap 官方数据接口，后台每小时尝试更新。列表更新时间：${state.catalog ? time(state.catalog.fetchedAt) + '（北京时间）' : '暂时未知'}。${state.catalog?.complete ? '这次已读取完接口提供的列表，但不保证链上所有池子都在里面。' : '列表还未收集完整，有些池子可能尚未收录。'}打开时先显示有时间标记的缓存，再检查链上更新；流动性未改变的档位直接复用。打开页面立即读取链上数据，默认每分钟自动更新；回到页面也会立即检查更新。也可点“刷新数据”。ESIM/USDT 后台每 60 分钟更新共享数据，即使网页关闭也会运行；实际时间以页面显示为准。池子列表中的美元估值和图里的买卖金额是不同指标，更新时间也可能不同。</p><h3>金额是估算值</h3><p>这些数值按池子的资金计算，未计入手续费、网络费用、代币转账税费，以及某些池子的额外交易规则。实际买卖金额以交易时的报价为准。</p><details><summary>查看详细算法与技术来源</summary><p>V2 使用实际储备量的恒定乘积曲线；V3 与 Infinity CL 使用当前价格、活跃流动性、tick bitmap 和初始化 tick 的 liquidityNet，按价格区间积分。一次刷新固定同一区块。原始状态及流动性变化使用 BigInt，显示积分使用浮点数。Infinity Bin / StableSwap 目前只列入列表与明细，不计入曲线。</p><p>百分比模式的边界 = 参考价 ×（1 ± 百分比 / 100），价格下限最低为 0。精度为 n 位小数时，基础价格档距为 10⁻ⁿ；相邻档合并后仍按实际边界积分，最后一档抵达原始范围边界。最大显示范围为现价的 0.5～2 倍。后台全量缓存读取合约全部 tick bitmap 并校验两端流动性归零；显示范围独立于缓存读取范围。各池从自身现价积分到共同价格边界；各池现价不同，第一档可能包含已有池间价差。这里只合并同一对代币地址的直接池，未模拟多跳路由或真实成交。</p><p><a href="https://developer.pancakeswap.finance/apis/subgraph" target="_blank" rel="noopener">PancakeSwap 开发文档 ↗</a><br><a href="https://github.com/pancakeswap/pancakeswap-ai" target="_blank" rel="noopener">官方数据接口使用示例 ↗</a><br><a href="https://github.com/pancakeswap/infinity-core" target="_blank" rel="noopener">Infinity CL 合约与计算方法 ↗</a></p></details>`;
   $('detail-dialog').showModal();
 }
 
@@ -326,12 +327,11 @@ $('settings-form').addEventListener('submit', e => { e.preventDefault(); try {
   state.config = settings($('maximum').getAttribute('aria-pressed') === 'true' ? 'max' : $('percent').value, $('precision').value);
   updateControls(); updateURL();
   if (state.depth && state.live && (previous.percent === state.config.percent || state.live.range === Infinity)) {
-    // Display changes invalidate an in-flight refresh with the old range/precision.
-    if (state.busy) { ++state.request; state.busy = false; $('refresh').disabled = false; }
+    // Display controls do not cancel full-range reads. Completion uses the current controls.
     state.depth = buildDepth(state.live.pools, state.market.base.id, state.config, { focusPrice: state.focusPrice }); render();
-    $('status').textContent = `${time(state.live.timestamp)} · 合并 ${state.live.pools.length}/${state.market.pools.length} 个池子`;
+    $('status').textContent = `${time(state.live.timestamp)} · 合并 ${state.live.pools.length}/${state.market.pools.length} 个池子${state.busy ? ' · 正在更新…' : ''}`;
   }
-  else refresh();
+  else if (!state.busy) refresh();
 } catch (e) { setError(e.message); } });
 document.querySelectorAll('[data-percent]').forEach(b => b.addEventListener('click', () => { $('maximum').setAttribute('aria-pressed', 'false'); $('percent').disabled = false; $('percent').value = b.dataset.percent; $('settings-form').requestSubmit(); }));
 $('maximum').addEventListener('click', () => { $('maximum').setAttribute('aria-pressed', String($('maximum').getAttribute('aria-pressed') !== 'true')); $('settings-form').requestSubmit(); });
@@ -378,8 +378,15 @@ $('chart').addEventListener('click', e => chartPointer(e, true));
 $('chart').addEventListener('pointerleave', () => { $('chart-tip').hidden = true; });
 new ResizeObserver(draw).observe($('chart').parentElement);
 setInterval(() => { if ($('auto').checked && !state.busy && !document.hidden) refresh(); }, 60000);
+document.addEventListener('visibilitychange', () => {
+  if (!document.hidden && $('auto').checked && !state.busy) refresh();
+});
+$('auto').addEventListener('change', () => {
+  if ($('auto').checked && !state.busy && !document.hidden) refresh();
+});
 
 async function init() {
+  $('auto').checked = true;
   const params = new URLSearchParams(location.search);
   try { state.config = settings(params.get('range') || (params.has('levels') && params.has('bps') ? Number(params.get('levels')) * Number(params.get('bps')) / 100 : 50), params.get('precision') ?? 4); } catch (e) { setError(`${e.message}；已恢复默认显示设置。`); }
   updateControls();
