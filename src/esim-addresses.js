@@ -33,9 +33,13 @@ async function json(path,options={}){
  try{body=await response.json();}catch{throw new Error('接口暂时不可用，请稍后再试。');}
  if(!response.ok)throw new Error(body.message||'查询失败，保留已显示的数据。');return body;
 }
+async function loadSaved(){
+ try{return await json('https://raw.githubusercontent.com/starkweng/pancake-depth-viewer/esim-cache/addresses.json',{signal:AbortSignal.timeout(15000)});}
+ catch{return json('./data/esim-addresses.json');}
+}
 async function loadPage(){
  const seq=++generation;clearTimeout(timer);if(saved){current=localPage();render(false);}
- if(endpoint)try{const result=await json(url(),{signal:AbortSignal.timeout(25000)});if(seq!==generation)return;current=result.report;render();}catch{if(seq!==generation)return;try{saved??=await json('./data/esim-addresses.json');current=localPage();render();}catch{$('status').textContent='地址数据暂时无法读取，请稍后重试。';}}
+ if(endpoint)try{const result=await json(url(),{signal:AbortSignal.timeout(25000)});if(seq!==generation)return;current=result.report;render();}catch{if(seq!==generation)return;try{saved??=await loadSaved();current=localPage();render();}catch{$('status').textContent='地址数据暂时无法读取，请稍后重试。';}}
 }
 async function fetchBalances(manual=false){
  if(balanceBusy||!endpoint||!current)return;
@@ -63,5 +67,5 @@ $('refresh').addEventListener('click',async()=>{
  finally{busy=false;$('refresh').disabled=false;}
 });
 try{const config=await json('./data/esim-config.json');endpoint=config.apiOrigin?new URL('/api/esim',config.apiOrigin).href:location.hostname.endsWith('.vercel.app')||location.hostname==='127.0.0.1'?'./api/esim':null;
- if(!endpoint)saved=await json('./data/esim-addresses.json');$('status').textContent='按卖出量排名。点击地址可在 BscScan 查看。';await loadPage();
+ if(!endpoint)saved=await loadSaved();$('status').textContent=endpoint?'按卖出量排名。点击地址可在 BscScan 查看。':'已读取后台保存的排名；实时查询与余额接口待连接。';await loadPage();
 }catch{$('status').textContent='地址数据暂时无法读取，请稍后重试。';}

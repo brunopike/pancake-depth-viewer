@@ -106,4 +106,9 @@ try {
     const saved = await json(endpoint, { signal: AbortSignal.timeout(25000) });
     if (saved.report && !busy) render(saved.report);
   } catch { /* Keep the visible saved report; manual refresh reports errors. */ }
+  else try {
+    const saved = await json('https://raw.githubusercontent.com/starkweng/pancake-depth-viewer/esim-cache/report.json', { signal: AbortSignal.timeout(15000) });
+    if (saved.block >= r.block) render(saved);
+    $('status').textContent = '已读取后台保存的数据；实时查询接口待连接。';
+  } catch { /* Keep the bundled verified report. */ }
 } catch { $('status').textContent = '数据暂时无法读取，请稍后刷新。'; $('status').className = 'notice'; }
