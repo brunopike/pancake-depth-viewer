@@ -46,20 +46,21 @@ body.report-page,body.monitor-page,body.holder-page{font-size:16px;line-height:1
 .monitor-page .column-sort[aria-pressed=true]{background:#d9c59320;border-color:#d9c59380;color:var(--accent)}
 .monitor-page .count-sorts{justify-content:flex-end}
 
-/* Keep the navigation sticky across the page while sharing the title row. */
-:is(.report-page,.monitor-page,.holder-page) main{display:grid;grid-template-columns:minmax(220px,1fr) auto auto;column-gap:24px}
-:is(.report-page,.monitor-page,.holder-page) main>:not(.report-header):not(.sticky-navigation){grid-column:1/-1;min-width:0}
+/* Keep the complete header and period controls together while scrolling. */
+:is(.report-page,.monitor-page,.holder-page) .report-top{position:sticky;top:0;z-index:40;display:grid;grid-template-columns:minmax(220px,1fr) auto auto;gap:12px 24px;align-items:center;padding:16px 0;margin-bottom:20px;border-bottom:1px solid var(--line);background:var(--bg);box-shadow:0 10px 14px -12px #000c}
 :is(.report-page,.monitor-page,.holder-page) .report-header{display:contents}
-:is(.report-page,.monitor-page,.holder-page) .report-header>div:first-child{grid-column:1;grid-row:1;align-self:center;padding-bottom:18px}
-:is(.report-page,.monitor-page,.holder-page) .report-header .header-actions{grid-column:3;grid-row:1;align-self:center;margin:0;padding-bottom:18px}
-:is(.report-page,.monitor-page,.holder-page) .sticky-navigation{grid-column:2;grid-row:1;align-self:center;margin-bottom:18px;min-width:0}
-:is(.report-page,.monitor-page,.holder-page) .sticky-navigation .site-nav{width:auto}
+:is(.report-page,.monitor-page,.holder-page) .report-header>div:first-child{grid-column:1;grid-row:1;min-width:0}
+:is(.report-page,.monitor-page,.holder-page) .report-header .header-actions{grid-column:3;grid-row:1;margin:0}
+:is(.report-page,.monitor-page,.holder-page) .report-top .sticky-navigation{position:static;grid-column:2;grid-row:1;margin:0;min-width:0;min-height:0;box-shadow:none}
+.report-top .sticky-navigation .site-nav{width:auto}
+.report-top>.tabs{grid-column:1/-1;position:static;margin:0;padding:12px 0 0;border-bottom:0}
 @media(max-width:1000px){
- :is(.report-page,.monitor-page,.holder-page) main{grid-template-columns:minmax(0,1fr) auto;column-gap:12px}
- :is(.report-page,.monitor-page,.holder-page) .sticky-navigation{grid-column:1/-1;grid-row:1;margin-bottom:14px}
- :is(.report-page,.monitor-page,.holder-page) .report-header>div:first-child{grid-column:1;grid-row:2;min-width:0}
+ :is(.report-page,.monitor-page,.holder-page) .report-top{grid-template-columns:minmax(0,1fr) auto;gap:12px;padding:12px 0}
+ :is(.report-page,.monitor-page,.holder-page) .report-top .sticky-navigation{grid-column:1/-1;grid-row:1}
+ :is(.report-page,.monitor-page,.holder-page) .report-header>div:first-child{grid-column:1;grid-row:2}
  :is(.report-page,.monitor-page,.holder-page) .report-header .header-actions{grid-column:2;grid-row:2}
- :is(.report-page,.monitor-page,.holder-page) .sticky-navigation .site-nav{width:100%}
+ .report-top .sticky-navigation .site-nav{width:100%}
+ .report-top>.tabs{grid-row:3;padding-top:0}
 }
 .monitor-page .attribution-options{flex-shrink:0}
 .monitor-page .attribution-options>summary{cursor:pointer;padding:9px 12px;border:1px solid var(--line);border-radius:8px;color:var(--muted);background:var(--surface)}

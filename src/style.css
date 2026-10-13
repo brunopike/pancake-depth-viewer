@@ -95,6 +95,13 @@
 
 .price-tools{margin-bottom:22px;padding-bottom:16px;border-bottom:1px solid var(--line)}.price-tools .target-form{margin:0;padding-top:0;border-top:0}.price-tools .price-interval{margin-top:16px;padding-top:14px}.price-tools .price-interval .section-heading{margin-bottom:10px}.price-tools .interval-note{margin-bottom:0}
 
+/* Put LP attribution alongside the selected price's totals when space allows. */
+.inspection-layout{display:flex;flex-wrap:wrap;align-items:flex-start;gap:22px 32px;margin-top:13px}
+.inspection-layout .inspection-data{display:grid;margin-top:0;min-width:0;gap:16px 20px}
+.inspection-main{flex:1 1 590px;grid-template-columns:repeat(auto-fit,minmax(110px,1fr))}
+.inspection-lps{flex:1 1 360px;grid-template-columns:repeat(2,minmax(0,1fr))}
+.inspection-layout .inspection-data>div{min-width:0}
+
 /* The two desktop columns scroll separately; each book keeps its own ten-row viewport. */
 @media(min-width:1251px){
   main{height:100dvh;display:flex;flex-direction:column}

@@ -2,15 +2,18 @@
 <html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>ESIM · 合约报告</title><meta name="description" content="ESIM 今日、昨日与历史链上数据，以及当前持仓、领币后的卖出与持币状态。">
 <link rel="stylesheet" href="./esim.css"><link rel="stylesheet" href="./report-theme.css"><link rel="stylesheet" href="./site-nav.css"><link rel="stylesheet" href="./dashboard.css"></head><body class="report-page"><main>
+<div class="report-top">
 <div class="sticky-navigation"><nav class="site-nav" aria-label="网站导航"><a href="https://starkweng.github.io/esim-onchain/" target="_blank" rel="noopener noreferrer" title="在新标签页打开">链上深度</a><button class="site-nav-current" type="button" aria-current="page" disabled title="当前页面">合约报告</button><a href="https://starkweng.github.io/esim-onchain/?view=addresses" target="_top" rel="noopener noreferrer" title="切换页面">卖出监控</a><a href="https://starkweng.github.io/esim-onchain/?view=holders" target="_top" rel="noopener noreferrer" title="切换页面">持币地址</a></nav></div>
 <header class="report-header"><div><p class="eyebrow">ESIM ON-CHAIN</p><h1>ESIM · 合约报告</h1><p class="cutoff" id="cutoff">正在读取数据…</p></div>
 <div class="header-actions"><button class="refresh" id="refresh" type="button">刷新数据</button></div></header>
-
-<div id="status" role="status" aria-live="polite">正在读取已核验记录…</div>
 <nav class="tabs" role="tablist" aria-label="报告时段">
 <button id="tab-today" role="tab" aria-selected="true" aria-controls="panel-today" type="button">今日·0点到现在</button>
 <button id="tab-yesterday" role="tab" aria-selected="false" aria-controls="panel-yesterday" tabindex="-1" type="button">昨日 · 24 小时</button>
 <button id="tab-history" role="tab" aria-selected="false" aria-controls="panel-history" tabindex="-1" type="button">历史累计</button></nav>
+</div>
+
+<div id="status" role="status" aria-live="polite">正在读取已核验记录…</div>
+
 <section id="cumulative-overview" class="cumulative" aria-label="累计概览"></section>
 <section id="holdings-bridge" class="card holdings-bridge" aria-label="当前持仓与领币状态"><p class="empty">正在读取持仓摘要…</p></section>
 <section id="panel-today" role="tabpanel" aria-labelledby="tab-today" tabindex="0"></section>
