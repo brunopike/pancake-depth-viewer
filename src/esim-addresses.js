@@ -27,7 +27,7 @@ function localPage() {
 }
 function render(schedule=true) {
  if(!current)return; const w=current.window; page=current.page;
- $('cutoff').textContent=`交易截至 ${date(current.cutoff)} · 北京时间`;
+ $('cutoff').textContent=`交易数据截至 ${date(current.cutoff)}${holderReport?' · 持仓快照截至 '+date(holderReport.cutoff):''} · 北京时间`;
  const funding=mode==='funding';
  $('mode-current').textContent=funding?'按出币地址':'按操作钱包';
  $('mode-note').textContent=funding?'按卖出币的来源地址汇总，可能包含合约；买入量按接收币的地址统计，无法确认来源的卖出单列。':'按发起交易的钱包汇总卖出量；通过合约执行时，它可能不是实际转出币的地址。';
@@ -84,7 +84,7 @@ $('refresh').addEventListener('click',async()=>{
  try{
   const trading=async()=>{if(endpoint){const result=await json(requestedURL,{method:'POST',headers:{'Content-Type':'application/json'},body:'{}',signal:AbortSignal.timeout(260000)});datasets.set(requestedKey,newerSnapshot(datasets.get(requestedKey),result.report));return;}saved=await loadSaved();};
   await Promise.all([trading(),loadHolders()]);current=localPage();render();
-  const partial=lastTradeSource==='retained'||lastHolderSource==='retained';$('status').textContent=`${partial?'部分更新未完成，保留上次数据':'已刷新'} · 交易 ${date(current.cutoff)}${holderReport?' · 持仓 '+date(holderReport.cutoff):''}${endpoint?'':' · 后台每小时更新'}`;$('status').className=partial?'notice':'success';
+  const partial=lastTradeSource==='retained'||lastHolderSource==='retained';$('status').textContent=partial?'部分更新未完成，显示上次数据。':'刷新完成。';$('status').className=partial?'notice':'success';
  }catch(e){$('status').textContent=e.name==='TimeoutError'?'更新超时，保留上次数据。':e.message;$('status').className='notice';}
  finally{busy=false;$('refresh').disabled=false;$('refresh').textContent='刷新数据';}
 });
@@ -95,4 +95,4 @@ if(['all','own','received','other','frequency'].includes(query.get('filter')))fi
 if(['initiator','funding'].includes(query.get('mode')))mode=query.get('mode');
 $('address-search').value=(query.get('search')||'').slice(0,42);
 try{const config=await json('./data/esim-config.json');endpoint=config.apiOrigin?new URL('/api/esim',config.apiOrigin).href:location.hostname.endsWith('.vercel.app')?'./api/esim':null;}catch{endpoint=null;}
-try{await Promise.all([loadSaved().then(data=>{saved=data;}),loadHolders()]);await loadPage();$('status').textContent=`交易 ${date(current.cutoff)}${holderReport?' · 持仓 '+date(holderReport.cutoff):''} · ${endpoint?'可实时查询':'后台每小时更新'}`;}catch{$('status').textContent='地址数据暂时无法读取，请点击刷新重试。';$('status').className='notice';}
+try{await Promise.all([loadSaved().then(data=>{saved=data;}),loadHolders()]);await loadPage();$('status').textContent=endpoint?'数据已读取，可手动刷新。':'后台约每小时同步；刷新按钮读取最新可用快照。';}catch{$('status').textContent='地址数据暂时无法读取，请点击刷新重试。';$('status').className='notice';}

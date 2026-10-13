@@ -86,3 +86,10 @@ body.report-page,body.monitor-page,body.holder-page{font-size:16px;line-height:1
 .seller-unattributed{color:var(--accent)}
 @media(max-width:1700px){.seller-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:760px){.seller-primary,.seller-secondary{grid-template-columns:1fr}.seller-group{padding:16px}.seller-metrics strong,.seller-secondary .seller-metrics strong{font-size:18px}.monitor-page #filter-note{overflow-wrap:anywhere}}
+
+/* Routine data freshness belongs below the monitor ranking, without a banner. */
+.monitor-page .refresh-meta{padding:14px 0 18px;color:var(--muted);font-size:12px;line-height:1.8}
+.monitor-page .refresh-meta #cutoff{margin:0;font-size:12px;color:var(--muted)}
+.monitor-page .refresh-meta #status{margin:4px 0;padding:0;min-height:0;border:0;border-radius:0;background:none;box-shadow:none;color:var(--muted);font-size:12px!important}
+.monitor-page .refresh-meta #status.notice{color:var(--accent)}
+.monitor-page .refresh-meta #balance-status{margin:0;padding:0;font-size:12px}
