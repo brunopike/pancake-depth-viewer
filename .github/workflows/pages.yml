@@ -3,6 +3,9 @@ on:
   push:
     branches: [main]
   workflow_dispatch:
+  workflow_run:
+    workflows: [Refresh ESIM report, Refresh ESIM holders]
+    types: [completed]
 permissions:
   contents: read
   pages: write
@@ -12,6 +15,7 @@ concurrency:
   cancel-in-progress: false
 jobs:
   build:
+    if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-latest
     timeout-minutes: 45
     steps:
@@ -22,8 +26,19 @@ jobs:
           cache: npm
       - run: npm ci --no-audit --no-fund
       - run: npm test
-      - run: npm run catalog
+      - if: github.event_name != 'workflow_run'
+        run: npm run catalog
       - run: npm run build
+      - uses: actions/checkout@v4
+        with:
+          ref: esim-cache
+          path: .goodway/pages-report
+      - uses: actions/checkout@v4
+        with:
+          ref: holder-cache
+          path: .goodway/pages-holders
+      - name: Include verified ESIM snapshots on the website
+        run: node scripts/esim/stage-snapshots.mjs
       - uses: actions/upload-pages-artifact@v3
         with:
           path: dist

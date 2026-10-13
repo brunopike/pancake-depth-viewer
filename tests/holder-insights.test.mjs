@@ -29,10 +29,16 @@ test('drill-through carries an explicit holder filter, address and zero-holder s
 test('snapshot refresh cache-busts only fixed sources, falls back and never regresses or invents data',async()=>{
  const data={version:1,block:4,cutoff:4,token:'0x7765a659c5b0cfbfd9fbc2ef2298b75a598f2d2d',rows:[]};let calls=[];
  const fetch=async(u,o)=>{calls.push([u,o]);if(calls.length===1)throw Error('offline');return{ok:true,json:async()=>data};};
- assert.equal((await readSnapshot('holders',{fetch})).source,'bundled');assert(calls.every(([u,o])=>u.includes('?t=')&&o.cache==='no-store'));
+ assert.equal((await readSnapshot('holders',{fetch})).source,'background');assert(calls.every(([u,o])=>u.includes('?t=')&&o.cache==='no-store'));
  const current={...data,block:6};assert.equal((await readSnapshot('holders',{current,fetch:async()=>({ok:true,json:async()=>data})})).data,current);
  assert.equal((await readSnapshot('holders',{current,fetch:async()=>{throw Error('offline')}})).source,'retained');
  await assert.rejects(readSnapshot('holders',{fetch:async()=>({ok:true,json:async()=>({...data,token:'other'})})}),/无法读取/);
+});
+test('published snapshots are read from the website first; external-host failure falls back to bundled data',async()=>{
+ const data={version:1,block:10,cutoff:10,token:'0x7765a659c5b0cfbfd9fbc2ef2298b75a598f2d2d',rows:[]};const calls=[];
+ const fetch=async u=>{calls.push(u);return {ok:true,json:async()=>data};};
+ assert.equal((await readSnapshot('holders',{fetch})).source,'published');assert.equal(calls.length,1);assert(calls[0].startsWith('./data/current-esim-holders.json?'));
+ let i=0;assert.equal((await readSnapshot('holders',{fetch:async()=>{if(++i<3)throw Error('blocked');return {ok:true,json:async()=>data};}})).source,'bundled');
 });
 test('current receipt and historical robot labels cannot change the prior trading window filters',()=>{
  const r=row(9,10,[tag('received'),tag('frequency')]);
