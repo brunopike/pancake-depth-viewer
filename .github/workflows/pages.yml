@@ -9,7 +9,7 @@ on:
         type: boolean
         default: false
   workflow_run:
-    workflows: [Refresh ESIM report, Refresh ESIM holders]
+    workflows: [Refresh ESIM report, Refresh ESIM holders, Refresh ESIM claim flow]
     types: [completed]
 permissions:
   contents: read

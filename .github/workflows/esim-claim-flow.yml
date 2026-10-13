@@ -1,0 +1,36 @@
+name: Refresh ESIM claim flow
+on:
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: esim-claim-flow-checkpoint
+  cancel-in-progress: false
+jobs:
+  backfill:
+    if: github.event.repository.private == false
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci --no-audit --no-fund
+      - uses: actions/cache@v4
+        with:
+          path: .goodway/claim-flow/rpc-cache
+          key: esim-claim-flow-rpc-v1-${{ github.run_id }}
+          restore-keys: esim-claim-flow-rpc-v1-
+      - name: Read only ESIM transfers and reconcile proposed sales
+        env:
+          ALCHEMY_API_KEY: ${{ secrets.ALCHEMY_API_KEY }}
+          ESIM_REMOTE_START: 'true'
+          ESIM_RPC_BUDGET: '600'
+        run: node scripts/esim/claim-flow-refresh.mjs
+      - name: Publish verified provenance without overwriting the core checkpoint
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+        run: node scripts/esim/claim-flow-publish.mjs

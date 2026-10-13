@@ -45,7 +45,12 @@ async function main(){
  const refresh=async kind=>{
   if(kind==='report')try{await command('refresh');}finally{
    let checkpoint=false;try{await access('.goodway/esim-monitor/state.json.gz');checkpoint=true;}catch{}
-   if(checkpoint)await command('publish');
+   if(checkpoint){
+    await command('publish');
+    // Provenance has an independent failure boundary; verified trade totals survive.
+    try{await command('claim-flow-refresh');await command('claim-flow-publish');}
+    catch{console.error('ESIM claim flow update failed; last verified provenance preserved.');}
+   }
   }
   else{await command('holders-refresh');await command('holders-publish');}
  };

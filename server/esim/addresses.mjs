@@ -9,6 +9,12 @@ export const OWN_EXECUTOR = tags.ownExecutor;
 function ownProgramAddresses(state) { return new Set(state.trades.filter(t => t.executor === OWN_EXECUTOR).map(t => t.initiator).filter(Boolean)); }
 export function addressRanking(state, start, end, mode = 'initiator') {
   const rows = new Map(), ownProgram = ownProgramAddresses(state); let missingSold = 0n;
+  const firstSales = new Map();
+  const relaySales = new Map();
+  for (const t of state.claimFlow?.sales || []) if (BigInt(t.relay_wei)>0n)
+    relaySales.set(t.address,Math.min(relaySales.get(t.address)??Infinity,t.timestamp));
+  for (const t of state.trades) if (t.group === 'source_recipients' && t.side === 'sell' && t.address)
+    firstSales.set(t.address, Math.min(firstSales.get(t.address) ?? Infinity, t.timestamp));
   for (const t of state.trades) {
     if (t.timestamp < start || t.timestamp >= end) continue;
     const address = mode === 'initiator' ? t.initiator : t.address;
@@ -28,6 +34,11 @@ export function addressRanking(state, start, end, mode = 'initiator') {
       highFrequency: !own&&(peakDailyTrades >= 100||['frequency','arbitrage'].includes(knownLabels[r.address]?.kind)), own,
       ownType: lp.has(r.address) ? 'LP' : ownProgram.has(r.address) || r.address === OWN_EXECUTOR ? '刷量' : own?'关联':null,
       received: !!state.firstRecipient[r.address] && state.firstRecipient[r.address].timestamp < end,
+      firstReceived: state.firstRecipient[r.address]?.timestamp ?? null,
+      firstReceivedSale: firstSales.get(r.address) ?? null,
+      receivedSold: (firstSales.get(r.address) ?? Infinity) < end,
+      firstRelaySale: relaySales.get(r.address) ?? null,
+      relaySold: (relaySales.get(r.address) ?? Infinity) < end,
       first: r.first, last: r.last };
   }).sort((a, b) => BigInt(a.sold) > BigInt(b.sold) ? -1 : BigInt(a.sold) < BigInt(b.sold) ? 1 : a.address.localeCompare(b.address)) };
 }
