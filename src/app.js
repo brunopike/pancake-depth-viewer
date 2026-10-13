@@ -1,3 +1,4 @@
+import { POOL_SCOPES, validPoolScope, scopedSnapshot } from './pool-scope.mjs';
 import { intervalStats } from './interval-stats.mjs';
 import { loadPools } from './chain.mjs';
 import { buildDepth, settings, poolInventory, inventorySplit, estimateTarget, priceAtTick, cumulative, priceOf } from './math.mjs';
@@ -22,7 +23,7 @@ const price = n => Number.isFinite(n) ? n !== 0 && (Math.abs(n) >= 1e12 || Math.
 const bandPrice = n => n === 0 || !Number.isFinite(n) || Math.abs(n) >= 1e12 ? price(n) : n < state.config.step ? `＜${state.config.step.toFixed(state.config.precision)}` : Number(n).toLocaleString('en-US', { minimumFractionDigits: state.config.precision, maximumFractionDigits: state.config.precision });
 const time = n => new Date(n).toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai', hour12: false });
 const protocolName = { v2: 'V2', v3: 'V3', infinityCl: 'Infinity CL', infinityBin: 'Infinity Bin', stable: 'StableSwap', infinityStable: 'Infinity Stable' };
-const state = { catalog: null, markets: [], market: null, config: settings(50, 4), bookView: 'split', chartPercent: 50, chartPrecision: 4, inspection: null, chartDepth: null, chartHover: null, live: null, depth: null, request: 0, hover: null, focusPrice: null, targetPrice: null, refreshMinutes: 10, nextRefreshAt: Date.now() + 600000, busy: false };
+const state = { catalog: null, markets: [], market: null, config: settings(50, 4), bookView: 'split', chartPercent: 50, chartPrecision: 4, inspection: null, chartDepth: null, chartHover: null, live: null, selection: null, poolScope: 'all', depth: null, request: 0, hover: null, focusPrice: null, targetPrice: null, refreshMinutes: 10, nextRefreshAt: Date.now() + 600000, busy: false };
 state.intervalPrices = null;
 state.gapPercent = 100; state.gapPrecision = 4; state.gapThreshold = 50; state.gapData = null;
 let plot;
@@ -68,14 +69,14 @@ function setError(message, technical = '') {
   $('error').innerHTML = escape(message || '') + (technical && technical !== message
     ? `<details><summary>查看技术信息</summary><p>${escape(technical)}</p></details>` : '');
 }
-function clearDepth() {
-  state.depth = null; state.live = null; state.hover = null; state.focusPrice = null;
+function clearDepth({ retainLive = false } = {}) {
+  state.depth = null; if (!retainLive) { state.live = null; state.selection = null; } state.hover = null; state.focusPrice = null;
   state.chartDepth = null; state.chartHover = null; state.inspection = null;
-  state.intervalPrices = null; $('interval-first').value = ''; $('interval-second').value = ''; $('interval-result').hidden = true; $('interval-button').disabled = true;
-  state.targetPrice = null; $('target-price').value = ''; $('target-result').hidden = true; $('target-button').disabled = true;
+  if (!retainLive) { state.intervalPrices = null; $('interval-first').value = ''; $('interval-second').value = ''; } $('interval-result').hidden = true; $('interval-button').disabled = true;
+  if (!retainLive) { state.targetPrice = null; $('target-price').value = ''; } $('target-result').hidden = true; $('target-button').disabled = true;
   $('ask-range-note').textContent = ''; $('bid-range-note').textContent = '';
   $('range-result').hidden = true; $('jump-button').disabled = true; $('jump-status').textContent = '';
-  ['mark-price', 'book-price', 'ask-total', 'bid-total', 'own-ask-total', 'own-bid-total', 'external-ask-total', 'external-bid-total'].forEach(id => $(id).textContent = '—');
+  ['mark-price', 'book-price', 'ask-total', 'bid-total', 'own-ask-total', 'own-bid-total', 'external-ask-total', 'external-bid-total'].forEach(id => { $(id).textContent = '—'; $(id).title = ''; });
   ['bids', 'asks'].forEach(id => $(id).innerHTML = '<div class="empty">正在读取池子里的资金…</div>');
   $('lp-status').textContent = 'LP 归属待核对';
   ['own-ask-note', 'own-bid-note', 'external-ask-note', 'external-bid-note'].forEach(id => $(id).textContent = 'LP 归属待核对');
@@ -97,6 +98,7 @@ function updateURL() {
   url.searchParams.set('chartPrecision', state.chartPrecision);
   url.searchParams.set('view', state.bookView);
   url.searchParams.set('refreshMinutes', state.refreshMinutes);
+  url.searchParams.set('pools', state.poolScope);
   url.searchParams.set('gapPercent', state.gapPercent);
   url.searchParams.set('gapPrecision', state.gapPrecision);
   url.searchParams.set('gapThreshold', state.gapThreshold);
@@ -142,7 +144,7 @@ function updateChartControls() {
 }
 function rebuildChart() {
   if (!state.depth) return;
-  state.chartDepth = buildDepth(state.live.pools, state.market.base.id, settings(state.chartPercent, state.chartPrecision));
+  state.chartDepth = buildDepth(state.selection.pools, state.market.base.id, settings(state.chartPercent, state.chartPrecision));
   state.chartHover = null; $('chart-tip').hidden = true;
   if (state.inspection?.source === 'chart') {
     const selectedPrice = state.inspection.price;
@@ -154,9 +156,47 @@ function rebuildChart() {
   draw();
 }
 
+
+function updateScopeControls() {
+  const totalLabel = state.poolScope === 'all' ? '全池' : `${state.poolScope.toUpperCase()} 池`;
+  $('inventory-total-scope-label').textContent = state.poolScope === 'all' ? '全池' : `${state.poolScope.toUpperCase()} 池合计`;
+  $('ask-total-label').textContent = `${totalLabel} LP 卖盘总量`;
+  $('bid-total-label').textContent = `${totalLabel} LP 买盘总量`;
+
+  const all = scopedSnapshot(state.live, state.market?.pools || []);
+  for (const button of document.querySelectorAll('[data-pool-scope]')) {
+    const scope = button.dataset.poolScope, selected = scope === state.poolScope;
+    const count = scopedSnapshot(state.live, all.available, scope).expectedPoolCount;
+    button.setAttribute('aria-pressed', String(selected));
+    button.classList.toggle('active', selected);
+    button.querySelector('small').textContent = state.market ? `${count} 个` : '—';
+  }
+  $('pool-scope-note').textContent = `${POOL_SCOPES[state.poolScope]} · 全局适用于总量、订单簿、曲线及价格查询`;
+}
+function snapshotStatus(suffix = '') {
+  const view = state.selection;
+  return `${time(state.live.timestamp)} · ${POOL_SCOPES[state.poolScope]} · 合并 ${view.pools.length}/${view.expectedPoolCount} 个池子${view.failed.length ? ` · ${view.failed.length} 个未计入` : ''}${suffix}`;
+}
+function rebuildDepthScope() {
+  state.selection = scopedSnapshot(state.live, state.market.pools, state.poolScope);
+  updateScopeControls();
+  if (!state.selection.pools.length) {
+    clearDepth({ retainLive: true });
+    const message = state.selection.expectedPoolCount ? '所选池暂未读到可计算深度，请刷新数据。' : '当前币对没有所选版本的池子。';
+    $('bids').innerHTML = $('asks').innerHTML = `<div class="empty">${message}</div>`;
+    $('chart-empty').textContent = message; $('lp-gaps-result').textContent = message;
+    $('levels-summary').textContent = '卖盘 0 行 · 买盘 0 行';
+    $('own-ask-note').textContent = $('own-bid-note').textContent = $('external-ask-note').textContent = $('external-bid-note').textContent = message;
+    resetInspection(); return;
+  }
+  state.depth = buildDepth(state.selection.pools, state.market.base.id, state.config, { focusPrice: state.focusPrice });
+  state.hover = null; render(); $('jump-button').disabled = false;
+}
+
 async function selectMarket(market) {
   clearDepth();
   state.market = market;
+  updateScopeControls();
   $('pair-name').textContent = `${market.base.symbol} / ${market.quote.symbol}`;
   $('quote-unit').textContent = `${market.quote.symbol} / ${market.base.symbol}`;
   $('book-units').textContent = `币量：${market.base.symbol} · 金额：${market.quote.symbol === 'USDT' ? 'U（USDT）' : market.quote.symbol} · 我方 + 外部 = 全池`;
@@ -182,10 +222,9 @@ async function refresh() {
     if (request !== state.request || !usable(live)) return false;
     for (const p of [...live.pools, ...live.failed]) if (p.discoveredBy === 'ownedLP'
       && !market.pools.some(m => m.protocol === p.protocol && m.id.toLowerCase() === p.id.toLowerCase())) market.pools.push(poolMetadata(p));
-    const depth = buildDepth(live.pools, market.base.id, state.config, { focusPrice: state.focusPrice });
-    state.live = live; state.depth = depth; state.hover = null;
-    render(); $('jump-button').disabled = false;
-    $('status').textContent = `${time(live.timestamp)} · 合并 ${live.pools.length}/${market.pools.length} 个池子${live.failed.length ? ` · ${live.failed.length} 个未计入` : ''}${updating ? ' · 正在更新…' : ''}`;
+    state.live = live;
+    rebuildDepthScope();
+    $('status').textContent = snapshotStatus(updating ? ' · 正在更新…' : '');
     setError(Date.now() - live.timestamp > 180000 ? '显示的是较早的数据，正在检查更新。' : '');
     displayed = true; return true;
   };
@@ -227,7 +266,7 @@ async function refresh() {
     const technical = e.shortMessage || e.message || '读取失败';
     if (displayed) {
       setError('暂时没能更新，继续显示上次数据。', technical);
-      $('status').textContent = `${time(state.live.timestamp)} · 合并 ${state.live.pools.length}/${market.pools.length} 个池子 · 更新失败`;
+      $('status').textContent = snapshotStatus(' · 更新失败');
     } else {
       setError(plainError(technical), technical);
       $('status').textContent = '这次没有读到可用数据';
@@ -245,13 +284,12 @@ function render({ preserveChart = false } = {}) {
   const d = state.depth;
   updateBookView();
   $('mark-price').textContent = price(d.price); $('book-price').textContent = price(d.price);
-  $('ask-total-label').textContent = '全池 LP 卖盘总量';
-  $('bid-total-label').textContent = '全池 LP 买盘总量';
   try {
-    const inventory = poolInventory(state.live.pools, state.market.base.id);
+    if (!state.selection.complete) throw new Error('池子数据未读完整');
+    const inventory = poolInventory(state.selection.pools, state.market.base.id);
     $('ask-total').textContent = `${compact(inventory.base)} ${state.market.base.symbol}`;
     $('bid-total').textContent = `${compact(inventory.quote)} ${state.market.quote.symbol}`;
-    const coverage = `全价格范围 · ${state.live.pools.length}/${state.market.pools.length} 个池`;
+    const coverage = `全价格范围 · ${POOL_SCOPES[state.poolScope]} · ${state.selection.pools.length}/${state.selection.expectedPoolCount} 个池`;
     $('ask-range-note').textContent = coverage; $('bid-range-note').textContent = coverage;
     $('target-button').disabled = false;
   } catch {
@@ -260,8 +298,8 @@ function render({ preserveChart = false } = {}) {
     $('target-button').disabled = true;
   }
   try {
-    if (state.live.failed.length || state.live.pools.length !== state.market.pools.length) throw new Error('池子数据未读完整');
-    const { own, external } = inventorySplit(state.live.pools, state.market.base.id);
+    if (state.selection.failed.length || state.selection.pools.length !== state.selection.expectedPoolCount) throw new Error('池子数据未读完整');
+    const { own, external } = inventorySplit(state.selection.pools, state.market.base.id);
     $('own-ask-total').textContent = `${compact(own.base)} ${state.market.base.symbol}`;
     $('own-bid-total').textContent = `${compact(own.quote)} ${state.market.quote.symbol}`;
     $('own-ask-total').title = `${number(own.base, 8)} ${state.market.base.symbol}`;
@@ -279,7 +317,7 @@ function render({ preserveChart = false } = {}) {
     ['own-ask-note', 'own-bid-note', 'external-ask-note', 'external-bid-note'].forEach(id => $(id).textContent = 'LP 归属待核对');
   }
   renderTarget();
-  $('interval-button').disabled = $('target-button').disabled || state.live.failed.length > 0 || state.live.pools.length !== state.market.pools.length;
+  $('interval-button').disabled = $('target-button').disabled || state.selection.failed.length > 0 || state.selection.pools.length !== state.selection.expectedPoolCount;
   renderInterval();
   renderGaps();
   const maximum = Math.max(...[...d.bids, ...d.asks].map(r => Number.isFinite(r.cumulativeQuote) ? r.cumulativeQuote : 0), 1e-20);
@@ -287,8 +325,8 @@ function render({ preserveChart = false } = {}) {
   $('range-result').hidden = false;
   $('range-result').textContent = d.grouped ? '相邻档已合并，总金额不变。' : '';
   $('range-result').hidden = !$('range-result').textContent;
-  const ownedPools = state.live.pools.filter(p => p.ownership?.status === 'verified').length;
-  $('lp-status').textContent = d.ownershipVerified ? `LP 归属已核对 · ${ownedPools} 个池` : `LP 归属待核对 · ${ownedPools}/${state.live.pools.length} 个池`;
+  const ownedPools = state.selection.pools.filter(p => p.ownership?.status === 'verified').length;
+  $('lp-status').textContent = d.ownershipVerified ? `LP 归属已核对 · ${ownedPools} 个池` : `LP 归属待核对 · ${ownedPools}/${state.selection.pools.length} 个池`;
 
   const splitCell = (r, field) => state.bookView === 'total'
     ? `<span class="total-value" title="全池 ${number(r[field], 8)}">${compact(r[field])}</span>`
@@ -351,15 +389,15 @@ function renderGaps() {
   state.gapData = null; $('lp-gaps-count').textContent = ''; $('lp-gaps-meta').textContent = '';
   if (!state.depth || !state.live) { result.textContent = '数据未就绪，请先刷新。'; return; }
   try {
-    const data = weakLiquidityRanges(state.live.pools, state.market.base.id, state.depth.price,
+    const data = weakLiquidityRanges(state.selection.pools, state.market.base.id, state.depth.price,
       { percent: state.gapPercent, precision: state.gapPrecision, threshold: state.gapThreshold },
-      { expectedPoolCount: state.market.pools.length, failedCount: state.live.failed.length });
+      { expectedPoolCount: state.selection.expectedPoolCount, failedCount: state.selection.failed.length });
     state.gapData = data;
     const unit = escape(state.market.quote.symbol === 'USDT' ? 'U' : state.market.quote.symbol);
     $('lp-gaps-count').textContent = `${data.ranges.length} 个区间 · ${data.matched}/${data.scanned} 档`;
     $('lp-gaps-summary').textContent = `每档 ${data.config.step.toFixed(data.config.precision)} · 每档价值 ≤ ${number(data.config.threshold, 6)} ${state.market.quote.symbol === 'USDT' ? 'U' : state.market.quote.symbol} · 点击区间看明细`;
-    $('lp-gaps-meta').textContent = `${time(state.live.timestamp)} · 已核对 ${state.live.pools.length} 个池`;
-    $('lp-gaps-summary').title = `查询 ${price(data.low)}～${price(data.high)} ${state.market.quote.symbol} · 已核对 ${state.live.pools.length} 个池 · ${time(state.live.timestamp)}`;
+    $('lp-gaps-meta').textContent = `${time(state.live.timestamp)} · ${POOL_SCOPES[state.poolScope]} · 已核对 ${state.selection.pools.length} 个池`;
+    $('lp-gaps-summary').title = `查询 ${price(data.low)}～${price(data.high)} ${state.market.quote.symbol} · 已核对 ${state.selection.pools.length} 个池 · ${time(state.live.timestamp)}`;
     result.innerHTML = data.ranges.length
       ? `<div class="gap-row gap-header"><span>价格区间</span><span>档数</span><span>每档我方</span></div>`
         + data.ranges.map((r, i) => {
@@ -380,7 +418,8 @@ function renderTarget() {
   result.hidden = state.targetPrice == null;
   if (result.hidden) return;
   try {
-    const estimate = estimateTarget(state.live.pools, state.market.base.id, state.targetPrice, state.depth.price);
+    if (!state.selection?.complete) throw new Error('所选池数据未读完整，暂不能估算目标价。');
+    const estimate = estimateTarget(state.selection.pools, state.market.base.id, state.targetPrice, state.depth.price);
     const base = escape(state.market.base.symbol), quote = escape(state.market.quote.symbol);
     const direction = estimate.side === 'ask' ? '买到' : '卖到';
     result.className = 'target-result';
@@ -396,8 +435,8 @@ function renderInterval() {
   result.className = '';
   try {
     if (!state.live || !state.depth) throw new Error('数据未就绪，请先刷新。');
-    const data = intervalStats(state.live.pools, state.market.base.id, state.depth.price, ...state.intervalPrices,
-      { expectedPoolCount: state.market.pools.length, failedCount: state.live.failed.length });
+    const data = intervalStats(state.selection.pools, state.market.base.id, state.depth.price, ...state.intervalPrices,
+      { expectedPoolCount: state.selection.expectedPoolCount, failedCount: state.selection.failed.length });
     const base = escape(state.market.base.symbol), quote = escape(state.market.quote.symbol === 'USDT' ? 'U' : state.market.quote.symbol);
     const pending = !data.bid.own || !data.ask.own;
     const rows = [['total', '全池', ''], ['own', '我方', 'own-color'], ['external', '外部', 'external-color']];
@@ -406,7 +445,7 @@ function renderInterval() {
       + `<div class="interval-table-scroll"><table class="interval-table"><thead><tr><th rowspan="2" scope="col">来源</th><th colspan="2" scope="colgroup" class="bid-color interval-buy">买盘区间</th><th colspan="2" scope="colgroup" class="ask-color interval-sell">卖盘区间</th></tr><tr><th scope="col">币量（${base}）</th><th scope="col">金额（${quote}）</th><th scope="col">币量（${base}）</th><th scope="col">金额（${quote}）</th></tr></thead><tbody>`
       + rows.map(([key, label, color]) => `<tr class="${color}"><th scope="row">${label}</th>${cells('bid', key)}${cells('ask', key)}</tr>`).join('') + '</tbody></table></div>'
       + `<p class="interval-note">买盘金额为卖币可换回的 ${quote}；卖盘金额为买币需支付的 ${quote}。未含费用${pending ? ' · LP 归属待核对' : ''}。</p>`
-      + `<p class="interval-note">${time(state.live.timestamp)} · ${state.live.pools.length} 个池 · 区块 ${state.live.blockNumber}</p>`;
+      + `<p class="interval-note">${time(state.live.timestamp)} · ${POOL_SCOPES[state.poolScope]} · ${state.selection.pools.length} 个池 · 区块 ${state.live.blockNumber}</p>`;
   } catch (error) { result.className = 'interval-error'; result.textContent = error.message; }
 }
 const displayPrice = (value, precision) => Number.isFinite(value)
@@ -488,7 +527,7 @@ function draw() {
     const side = state.chartHover?.side || state.hover.side;
     let r = state.chartHover?.row || (side === 'bid' ? state.depth.bids : state.depth.asks)[state.hover.index];
     if (!r || r.price < d.low || r.price > d.high || !Number.isFinite(r.price)) return;
-    if (!state.chartHover) r = { ...r, cumulativeQuote: state.live.pools.reduce((sum, pool) => sum + cumulative(pool, state.market.base.id, r.price, side).quote, 0) };
+    if (!state.chartHover) r = { ...r, cumulativeQuote: state.selection.pools.reduce((sum, pool) => sum + cumulative(pool, state.market.base.id, r.price, side).quote, 0) };
     if (!Number.isFinite(r.cumulativeQuote)) return;
     ctx.strokeStyle = '#708394'; ctx.lineWidth = 1; ctx.setLineDash([3, 4]);
     ctx.beginPath(); ctx.moveTo(x(r.price), top); ctx.lineTo(x(r.price), bottom); ctx.stroke(); ctx.setLineDash([]);
@@ -504,10 +543,10 @@ function renderMarkets() {
   $('search-summary').textContent = `找到 ${matches.length} 组买卖币种${matches.length > 200 ? '，先显示前 200 组；输入名称可缩小范围' : ''}。例如 ESIM / USDT 表示用 USDT 买卖 ESIM。列表或我方仓位发现的池子才会计入。`;
 }
 function coverage() {
-  $('detail-title').textContent = '哪些池子算进来了？';
+  $('detail-title').textContent = `${POOL_SCOPES[state.poolScope]} · 数据明细`;
   if (!state.market) return;
-  const live = state.live;
-  $('detail-body').innerHTML = `<p>“池子”是 PancakeSwap 里用于买卖两种币的一组资金。这里把成功读取的池子合在一起看，包括钱包仓位发现的池子。</p><p>${escape(state.market.base.symbol)} / ${escape(state.market.quote.symbol)}：已找到 ${state.market.pools.length} 个池子。${live ? `图中已计入 ${live.pools.length} 个，未计入 ${live.failed.length} 个。<br>数据时间：${time(live.timestamp)}（北京时间）；链上记录编号（区块）：${live.blockNumber}；读取来源：${live.source === 'Alchemy' ? 'Alchemy 后台' : '公共节点'}。` : '还没有读取完链上数据。'}<br>只合并买卖同样两种币的池子。钱包持仓发现的同币对池子也会补入。其他币种、其他链和其他交易所的资金另算。</p>` + state.market.pools.map(p => {
+  const live = state.selection;
+  $('detail-body').innerHTML = `<p>“池子”是 PancakeSwap 里用于买卖两种币的一组资金。这里把成功读取的池子合在一起看，包括钱包仓位发现的池子。</p><p>${escape(state.market.base.symbol)} / ${escape(state.market.quote.symbol)}：当前范围已找到 ${live?.expectedPoolCount ?? scopedSnapshot(null, state.market.pools, state.poolScope).expectedPoolCount} 个池子。${live ? `图中已计入 ${live.pools.length} 个，未计入 ${live.failed.length} 个。<br>数据时间：${time(live.timestamp)}（北京时间）；链上记录编号（区块）：${live.blockNumber}；读取来源：${live.source === 'Alchemy' ? 'Alchemy 后台' : '公共节点'}。` : '还没有读取完链上数据。'}<br>只合并买卖同样两种币的池子。钱包持仓发现的同币对池子也会补入。其他币种、其他链和其他交易所的资金另算。</p>` + (live?.available || state.market.pools).map(p => {
     const ready = live?.pools.find(x => x.id === p.id && x.protocol === p.protocol), failure = live?.failed.find(x => x.id === p.id && x.protocol === p.protocol);
     const special = ready?.hook && !/^0x0{40}$/i.test(ready.hook) ? ' · 这个池子有额外交易规则，本页估算未考虑这些规则' : '';
     let single = '';
@@ -527,12 +566,12 @@ function methodology() {
 
 function ownershipDetails() {
   $('detail-title').textContent = '我方 LP';
-  const pools = state.live?.pools || [], ready = pools.filter(p => p.ownership?.status === 'verified').length;
+  const pools = state.selection?.pools || [], ready = pools.filter(p => p.ownership?.status === 'verified').length;
   const base = escape(state.market?.base.symbol || '币'), quote = escape(state.market?.quote.symbol || 'U');
   const amounts = value => `<div class="lp-amounts"><span>币量<strong class="ask-color">${number(value.base, 4)} ${base}</strong></span><span>资金<strong class="bid-color">${number(value.quote, 4)} ${quote}</strong></span></div>`;
   let wallets;
-  try { if (state.live?.failed.length) throw new Error(); wallets = lpDetails(pools, state.market.base.id); } catch { /* Unknown is never displayed as zero. */ }
-  $('detail-body').innerHTML = `<p>${OWNERS.length} 个我方地址 · ${base} / ${quote} · 不含未领取手续费</p><p>已核对 ${ready}/${pools.length} 个池${state.live ? ` · ${time(state.live.timestamp)} · 区块 ${state.live.blockNumber}` : ''}</p>${OWNERS.map(owner => {
+  try { if (!state.selection?.complete) throw new Error(); wallets = lpDetails(pools, state.market.base.id); } catch { /* Unknown is never displayed as zero. */ }
+  $('detail-body').innerHTML = `<p>${POOL_SCOPES[state.poolScope]} · ${OWNERS.length} 个我方地址 · ${base} / ${quote} · 不含未领取手续费</p><p>已核对 ${ready}/${pools.length} 个池${state.live ? ` · ${time(state.live.timestamp)} · 区块 ${state.live.blockNumber}` : ''}</p>${OWNERS.map(owner => {
     const wallet = wallets?.find(w => w.owner === owner);
     return `<section class="lp-wallet"><a class="address" href="https://bscscan.com/address/${owner}" target="_blank" rel="noopener">${owner} ↗</a>${wallet ? amounts(wallet) : '<p>资金数量待核对</p>'}${wallet?.positions.length ? `<details><summary>${wallet.positions.length} 笔 LP · 查看币量、资金和 Pool ID</summary>${wallet.positions.map(n => {
       const poolLink = `https://pancakeswap.finance/liquidity/pool/bsc/${n.pool.protocol === 'infinityCl' ? '' : n.pool.protocol + '/'}${n.pool.id}`;
@@ -541,6 +580,20 @@ function ownershipDetails() {
   }).join('')}<p>仅统计上述地址直接持有的 LP；挖矿、托管仓位暂未包含。</p>`;
   $('detail-dialog').showModal();
 }
+
+
+for (const button of document.querySelectorAll('[data-pool-scope]')) button.addEventListener('click', () => {
+  if (state.poolScope === button.dataset.poolScope) return;
+  state.poolScope = validPoolScope(button.dataset.poolScope);
+  state.focusPrice = null; state.inspection = null; state.chartHover = null;
+  $('jump-status').textContent = ''; $('gap-dialog').close(); $('detail-dialog').close();
+  updateURL(); updateScopeControls();
+  if (state.live) {
+    setError(Date.now() - state.live.timestamp > 180000 ? '当前数据已超过 3 分钟，可能有变化，请点击“刷新数据”。' : '');
+    try { rebuildDepthScope(); $('status').textContent = snapshotStatus(state.busy ? ' · 正在更新…' : ''); }
+    catch (error) { clearDepth({ retainLive: true }); setError(plainError(error.message), error.message); }
+  }
+});
 
 $('market-button').addEventListener('click', showMarkets);
 $('search').addEventListener('input', renderMarkets);
@@ -552,8 +605,8 @@ $('settings-form').addEventListener('submit', e => { e.preventDefault(); try {
   updateControls(); updateURL();
   if (state.depth && state.live && (previous.percent === state.config.percent || state.live.range === Infinity)) {
     // Display controls do not cancel full-range reads. Completion uses the current controls.
-    state.depth = buildDepth(state.live.pools, state.market.base.id, state.config, { focusPrice: state.focusPrice }); render();
-    $('status').textContent = `${time(state.live.timestamp)} · 合并 ${state.live.pools.length}/${state.market.pools.length} 个池子${state.busy ? ' · 正在更新…' : ''}`;
+    state.depth = buildDepth(state.selection.pools, state.market.base.id, state.config, { focusPrice: state.focusPrice }); render();
+    $('status').textContent = snapshotStatus(state.busy ? ' · 正在更新…' : '');
   }
   else if (!state.busy) refresh();
 } catch (e) { setError(e.message); } });
@@ -629,7 +682,7 @@ function chartPointer(e, locate = false) {
     if (r.price < state.depth.low || r.price > state.depth.high) $('jump-status').textContent = '这个价格超出订单簿范围，请扩大订单簿范围。';
     else {
       state.focusPrice = r.price; $('jump-price').value = r.price;
-      state.depth = buildDepth(state.live.pools, state.market.base.id, state.config, { focusPrice: r.price }); render();
+      state.depth = buildDepth(state.selection.pools, state.market.base.id, state.config, { focusPrice: r.price }); render();
     }
   }
   renderInspection(side, r, 'chart');
@@ -644,7 +697,7 @@ $('jump-form').addEventListener('submit', e => {
   if (p < d.low || p > d.high) { $('jump-status').textContent = '超出当前范围，请扩大范围或选“最大”。'; return; }
   if (p === d.price) { $('jump-status').textContent = '这个价格就是池子现价。'; return; }
   state.focusPrice = p; state.inspection = null;
-  state.depth = buildDepth(state.live.pools, state.market.base.id, state.config, { focusPrice: p });
+  state.depth = buildDepth(state.selection.pools, state.market.base.id, state.config, { focusPrice: p });
   render();
   const side = p < state.depth.price ? 'bid' : 'ask';
   const index = (side === 'bid' ? state.depth.bids : state.depth.asks).findIndex(r => r.price === p);
@@ -681,6 +734,8 @@ async function init() {
   state.refreshMinutes = Number.isInteger(minutes) && minutes >= 1 && minutes <= 1440 ? minutes : 10;
   $('refresh-minutes').value = state.refreshMinutes; resetRefreshClock();
   state.bookView = params.get('view') === 'total' ? 'total' : 'split';
+  state.poolScope = validPoolScope(params.get('pools'));
+  updateScopeControls();
   try {
     const config = gapSettings(params.get('gapPercent') ?? 100, params.get('gapPrecision') ?? 4, params.get('gapThreshold') ?? 50);
     state.gapPercent = config.percent; state.gapPrecision = config.precision; state.gapThreshold = config.threshold;

@@ -1,3 +1,4 @@
+import { POOL_SCOPES, validPoolScope, scopedSnapshot } from '../src/pool-scope.mjs';
 import { intervalStats } from '../src/interval-stats.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
@@ -23,19 +24,21 @@ function app(search = '') {
   for (const match of html.matchAll(/<[^>]*\bid="([^"]+)"[^>]*>/g)) {
     const attributes = new Map([...match[0].matchAll(/([\w-]+)="([^"]*)"/g)].map(m => [m[1], m[2]]));
     elements.set(match[1], { value: attributes.get('value') || '', checked: /\bchecked\b/.test(match[0]), disabled: /\bdisabled\b/.test(match[0]),
+      dataset: Object.fromEntries([...attributes].filter(([key]) => key.startsWith('data-')).map(([key, value]) => [key.slice(5).replace(/-([a-z])/g, (_, c) => c.toUpperCase()), value])), querySelector: () => ({ textContent: '' }),
       textContent: '', innerHTML: '', hidden: false, style: {}, scrollTop: 0, scrollHeight: 1000, close() {}, showModal() {},
       classList: { toggle() {}, add() {}, remove() {} }, parentElement: {},
       getAttribute: key => attributes.get(key), setAttribute: (key, value) => attributes.set(key, value),
       addEventListener: (type, callback) => listeners.set(`${match[1]}:${type}`, callback),
       getBoundingClientRect: () => ({ left: 0, top: 0, width: 800, height: 350 }), getContext: () => canvas });
   }
-  const document = { hidden: false, getElementById: id => elements.get(id), querySelectorAll: () => [], querySelector: () => null,
+  const document = { hidden: false, getElementById: id => elements.get(id), querySelectorAll: selector => selector === '[data-pool-scope]' ? [...elements.values()].filter(element => element.dataset.poolScope) : [], querySelector: () => null,
     addEventListener: (type, callback) => listeners.set(`document:${type}`, callback) };
   const context = vm.createContext({ document, window: {}, location: { href: `https://example.test/${search}`, search },
     history: { replaceState(_a, _b, url) { context.location.href = String(url); } }, URL, URLSearchParams, console, devicePixelRatio: 1,
     ResizeObserver: class { observe() {} }, setInterval: callback => timers.push(callback),
     fetch: () => new Promise(() => {}), buildDepth, settings, poolInventory, ownedInventory, inventorySplit, estimateTarget, priceAtTick, cumulative, priceOf, intervalStats, OWNERS, poolMetadata, lpDetails,
     readBrowserCache: selected => selected === market ? live() : null, saveBrowserCache() {}, readSharedCache: async () => null,
+    POOL_SCOPES, validPoolScope, scopedSnapshot,
     loadPools: () => new Promise(resolve => pending.push(resolve)), market });
   vm.runInContext(source, context);
   vm.runInContext('state.market = market;', context);
@@ -245,4 +248,57 @@ test('interval statistics reuse the snapshot and update with refresh, but clear 
   a.listeners.get('interval-form:submit')({preventDefault(){}});
   assert.match(a.elements.get('interval-result').textContent,/不同/);
   a.read('clearDepth()'); assert.equal(a.elements.get('interval-result').hidden,true); assert.equal(a.elements.get('interval-first').value,'');
+});
+
+const scopePools = () => {
+  const L = 1000n * 10n ** 18n;
+  const shared = {kind:'cl',token0:base,token1:quote,liquidity:L,fullRange:true,minTick:-887272,maxTick:887272};
+  return [
+    {...shared,id:'v3-pool',protocol:'v3',sqrtPriceX96:2n**96n,tick:0,ticks:[{index:-1000,net:L},{index:1000,net:-L}],tvlUSD:'10000'},
+    {...shared,id:'v4-pool',protocol:'infinityCl',sqrtPriceX96:2n**97n,tick:13863,ticks:[{index:10000,net:L},{index:18000,net:-L}],tvlUSD:'5000'}
+  ];
+};
+
+test('Global protocol switches synchronize all calculations without reading again or changing the full cache', () => {
+  const a=app(); a.context.protocolPools=scopePools();
+  a.read('state.market={...market,pools:protocolPools};state.live={...readBrowserCache(market),pools:protocolPools};rebuildDepthScope()');
+  const all=a.read('state.live'),price=a.read('state.depth.price'),inventory=a.elements.get('ask-total').textContent,deadline=a.read('state.nextRefreshAt');
+  a.elements.get('interval-first').value='.95';a.elements.get('interval-second').value='4.1';a.listeners.get('interval-form:submit')({preventDefault(){}});
+  a.elements.get('target-price').value='4.1';a.listeners.get('target-form:submit')({preventDefault(){}});
+  const interval=a.elements.get('interval-result').innerHTML,target=a.elements.get('target-result').innerHTML;
+  a.listeners.get('pool-scope-v4:click')();
+  assert.equal(a.read('state.depth.price'),4); assert.equal(a.read('state.chartDepth.price'),4);
+  assert.equal(a.read('state.selection.expectedPoolCount'),1);
+  assert.notEqual(a.elements.get('ask-total').textContent,inventory);
+  assert.notEqual(a.elements.get('interval-result').innerHTML,interval);
+  assert.notEqual(a.elements.get('target-result').innerHTML,target);
+  assert.equal(a.elements.get('interval-first').value,'.95');assert.equal(a.elements.get('target-price').value,'4.1');
+  assert.equal(a.read('state.live'),all);assert.equal(a.pending.length,0);assert.equal(a.read('state.nextRefreshAt'),deadline);
+  assert.equal(new URL(a.context.location.href).searchParams.get('pools'),'v4');
+  assert.equal(a.elements.get('pool-scope-v4').getAttribute('aria-pressed'),'true');
+  a.listeners.get('pool-scope-v3:click')();assert.equal(a.read('state.chartDepth.price'),1);
+  a.listeners.get('pool-scope-all:click')();
+  assert.equal(a.read('state.depth.price'),price);assert.equal(a.elements.get('ask-total').textContent,inventory);
+  assert.equal(a.elements.get('interval-result').innerHTML,interval);assert.equal(a.elements.get('target-result').innerHTML,target);
+});
+
+test('A protocol switch during a refresh is preserved when the full snapshot finishes', async () => {
+  const a=app();a.context.protocolPools=scopePools();
+  a.read('state.market={...market,pools:protocolPools};state.live={...readBrowserCache(market),pools:protocolPools};rebuildDepthScope()');
+  const reading=a.read('refresh()');await settle();
+  a.listeners.get('pool-scope-v4:click')();assert.equal(a.pending.length,1);
+  await a.finish({...live(105n),pools:scopePools()});await reading;
+  assert.equal(a.read('state.poolScope'),'v4');assert.equal(a.read('state.depth.price'),4);
+  assert.equal(a.read('state.selection.pools.length'),1);assert.equal(a.read('state.live.pools.length'),2);
+  assert.equal(a.read('state.live.blockNumber'),105n);
+});
+
+test('An empty protocol group clears previous values and can switch back without a fetch', async () => {
+  const a=app(),reading=a.read('refresh()');await settle();await a.finish();await reading;
+  a.listeners.get('pool-scope-v4:click')();
+  assert.equal(a.read('state.depth'),null);assert.equal(a.read('state.chartDepth'),null);
+  assert.equal(a.elements.get('ask-total').textContent,'—');assert.equal(a.elements.get('mark-price').textContent,'—');
+  assert.equal(a.elements.get('target-button').disabled,true);assert.equal(a.elements.get('interval-button').disabled,true);
+  assert.match(a.elements.get('chart-empty').textContent,/没有所选版本/);
+  a.listeners.get('pool-scope-all:click')();assert.equal(a.read('state.depth.price'),5);assert.equal(a.pending.length,0);
 });
