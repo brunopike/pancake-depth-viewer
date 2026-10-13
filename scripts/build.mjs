@@ -29,6 +29,13 @@ for (const file of ['esim-addresses.js', 'esim.css', 'report-theme.css', 'site-n
   addressHTML = addressHTML.replace(`"./${file}"`, `"./${file}?v=${version}"`);
 }
 await writeFile('dist/esim-addresses.html', addressHTML);
+await build({entryPoints:['src/esim-holders.js'],bundle:true,minify:true,outfile:'dist/esim-holders.js',target:['es2022'],format:'esm'});
+let holdersHTML=await readFile('esim-holders.html','utf8');
+for(const file of ['esim-holders.js','esim.css','report-theme.css','site-nav.css','holders.css']){
+ const version=createHash('sha256').update(await readFile(`dist/${file}`)).digest('hex').slice(0,12);
+ holdersHTML=holdersHTML.replace(`"./${file}"`,`"./${file}?v=${version}"`);
+}
+await writeFile('dist/esim-holders.html',holdersHTML);
 const catalog = configuredCatalog(JSON.parse(await readFile('public/data/catalog.json', 'utf8')),
   JSON.parse(await readFile('public/data/background-markets.json', 'utf8')));
 const catalogJSON = JSON.stringify(catalog);
