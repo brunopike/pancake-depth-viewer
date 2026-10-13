@@ -14,6 +14,22 @@ const v2 = { id: 'v2', protocol: 'v2', kind: 'v2', token0: base, token1: quote, 
   ownership: { status: 'verified', ownBalance: 3n, totalSupply: 10n } };
 const near = (a, b) => assert.ok(Math.abs(a - b) <= Math.max(1, Math.abs(b)) * 1e-9, `${a} != ${b}`);
 
+test('A spot price within floating-point rounding of a decimal band never creates an empty first level', () => {
+  for (const spot of [5.000000000000001, 4.999999999999999]) {
+    const pool = { ...v2, token0: { ...base, decimals: 0 }, token1: { ...quote, decimals: 0 }, reserve0: 1, reserve1: spot };
+    for (const percent of [.001, 50]) {
+      const d = buildDepth([pool], 'base', { percent, precision: 4 });
+      for (const side of ['asks', 'bids']) {
+        const row = d[side][0];
+        assert.ok(row.quantity > 0 && row.quote > 0);
+        assert.ok(Math.abs(row.own.quantity / row.quantity - .3) < 1e-12);
+        const last = d[side].at(-1), sign = side === 'asks' ? -1 : 1;
+        near((1 + sign * last.cumulativeQuantity) * (spot - sign * last.cumulativeQuote), spot);
+      }
+    }
+  }
+});
+
 test('Each band preserves whole-pool totals and separates concentrated and V2 ownership', () => {
   const split = buildDepth([cl, v2], 'base', { percent: 50, precision: 4 });
   const whole = buildDepth([{ ...cl, ownership: undefined }, { ...v2, ownership: undefined }], 'base', { percent: 50, precision: 4 });

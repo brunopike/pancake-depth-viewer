@@ -147,19 +147,22 @@ function boundaries(center, endpoint, config, sign) {
   const grouped = count > 499;
   const logScale = config.maximum && (displayEnd / center > 100 || displayEnd / center < .01);
   const rows = [];
+  const units = center / config.step, nearest = Math.round(units);
+  // A binary rounding remainder is not a separate price band. Keep the actual
+  // spot for integration, but choose the first decimal boundary as aligned.
+  const grid = Math.abs(units - nearest) <= Number.EPSILON * Math.max(1, Math.abs(units)) * 4 ? nearest : units;
+  const first = sign > 0 ? Math.floor(grid) + 1 : Math.ceil(grid) - 1;
   if (!grouped) {
-    const first = sign > 0 ? Math.floor(center / config.step) + 1 : Math.ceil(center / config.step) - 1;
     for (let i = 0; i < count; i++) {
       const p = Number(((first + sign * i) * config.step).toPrecision(15));
       if (sign > 0 ? p >= displayEnd : p <= displayEnd) break;
-      if (p > 0) rows.push(p);
+      if (p > 0 && (sign > 0 ? p > (rows.at(-1) ?? center) : p < (rows.at(-1) ?? center))) rows.push(p);
     }
   } else {
     // Keep the nearest 100 price bands intact, then merge the distant bands.
-    const first = sign > 0 ? Math.floor(center / config.step) + 1 : Math.ceil(center / config.step) - 1;
     for (let i = 0; i < 100; i++) {
       const p = Number(((first + sign * i) * config.step).toPrecision(15));
-      if (p > 0 && (sign > 0 ? p < displayEnd : p > displayEnd)) rows.push(p);
+      if (p > 0 && (sign > 0 ? p < displayEnd && p > (rows.at(-1) ?? center) : p > displayEnd && p < (rows.at(-1) ?? center))) rows.push(p);
     }
     const start = rows.at(-1) || center, remaining = (infinite ? 499 : 500) - rows.length;
     for (let i = 1; i < remaining; i++) {
