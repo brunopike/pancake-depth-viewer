@@ -3,6 +3,11 @@ on:
   push:
     branches: [main]
   workflow_dispatch:
+    inputs:
+      refresh_data_only:
+        description: 'Refresh verified snapshots without rediscovering the market catalog'
+        type: boolean
+        default: false
   workflow_run:
     workflows: [Refresh ESIM report, Refresh ESIM holders]
     types: [completed]
@@ -26,7 +31,7 @@ jobs:
           cache: npm
       - run: npm ci --no-audit --no-fund
       - run: npm test
-      - if: github.event_name != 'workflow_run'
+      - if: github.event_name != 'workflow_run' && inputs.refresh_data_only != true
         run: npm run catalog
       - run: npm run build
       - uses: actions/checkout@v4

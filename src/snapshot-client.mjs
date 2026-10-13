@@ -8,14 +8,19 @@ export function validSnapshot(kind,data){
 }
 export const newerSnapshot=(current,next)=>current&&next.block<current.block?current:next;
 export async function readSnapshot(kind,{current,fetch:request=globalThis.fetch}={}) {
-  for(const [i,url]of SNAPSHOTS[kind].entries())try{
+  const read=async(i)=>{const url=SNAPSHOTS[kind][i];
     const response=await request(`${url}${url.includes('?')?'&':'?'}t=${Date.now()}`,{cache:'no-store',signal:AbortSignal.timeout(i?8000:15000)});
     if(!response.ok)throw Error('SNAPSHOT_UNAVAILABLE');
     const data=await response.json();
     if(!validSnapshot(kind,data))throw Error('INVALID_SNAPSHOT');
-    if(current&&data.block<current.block)return {data:current,source:'retained'};
     return {data,source:i===0?'published':i===1?'background':'bundled'};
-  }catch{}
+  };
+  // Compare both independently published sources; a successful old website file must not mask a newer checkpoint.
+  const results=await Promise.allSettled([read(0),read(1)]);
+  let selected;
+  for(const result of results)if(result.status==='fulfilled'&&(!selected||result.value.data.block>selected.data.block))selected=result.value;
+  if(!selected)try{selected=await read(2);}catch{}
+  if(selected&&(!current||selected.data.block>=current.block))return selected;
   if(current)return {data:current,source:'retained'};
   throw Error('数据暂时无法读取，请点击刷新重试。');
 }
@@ -23,6 +28,6 @@ export async function readSnapshot(kind,{current,fetch:request=globalThis.fetch}
 export async function readTradingReport({current,live=false,queryLive,fetch}={}){
   const saved=await readSnapshot('report',{current,fetch});
   if(!live||!queryLive)return saved;
-  try{const data=await queryLive();if(!data?.windows||!Number.isFinite(data.block))throw Error('INVALID_REPORT');return {data:newerSnapshot(saved.data,data),source:'live'};}
+  try{const data=await queryLive();if(!data?.windows||!Number.isFinite(data.block))throw Error('INVALID_REPORT');const selected=newerSnapshot(saved.data,data);return {data:selected,source:selected===data?'live':'retained'};}
   catch{return {...saved,source:'retained'};}
 }

@@ -1,9 +1,12 @@
-import { writeFile,mkdir } from 'node:fs/promises';
+import { readFile,writeFile,mkdir } from 'node:fs/promises';
 import { collectHolders,loadHolders } from '../../server/esim/holders.mjs';
-import { loadState } from '../../server/esim/store.mjs';
+import { loadState,parseState } from '../../server/esim/store.mjs';
 import { makeRpc } from '../../server/esim/rpc.mjs';
 try{
- const state=await loadState();let previous;try{previous=await loadHolders();}catch{}
+ let state=await loadState();
+ // The same worker has just verified this checkpoint; do not wait for the raw-file CDN to catch up.
+ try{const local=parseState(await readFile('.goodway/esim-monitor/state.json.gz'));if(local.block>state.block)state=local;}catch{}
+ let previous;try{previous=await loadHolders();}catch{}
  const transport=makeRpc({budget:500,timeoutMs:900000,progress:e=>{if(e.phase!=='rpc'||e.physical%25===0)console.log(JSON.stringify(e));}});
  const result=await collectHolders(state,transport,{previous,progress:e=>console.log(JSON.stringify(e))});
  await mkdir('.goodway/esim-holders',{recursive:true});await writeFile('.goodway/esim-holders/holders.json',JSON.stringify(result));

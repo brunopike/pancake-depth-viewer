@@ -1,4 +1,5 @@
 import {readSnapshot,readTradingReport} from './snapshot-client.mjs';
+import {showSnapshotStatus,refreshButtonLabel} from './snapshot-status.mjs';
 import {holderInsights,holderViewURL} from './holder-insights.mjs';
 import {TAG_KEY,readManual} from './holder-model.mjs';
 const $ = id => document.getElementById(id);
@@ -104,10 +105,9 @@ async function refresh(live=true) {
     if(trades.status==='fulfilled'&&(!report||trades.value.data.block>=report.block))render(trades.value.data);else if(report)holdingsBridge();
     if(!report)throw Error('交易数据暂时无法读取，请重试。');
     const retained=trades.status==='rejected'||trades.value.source==='retained'||holders.status==='rejected'||holders.value.source==='retained';
-    $('status').textContent=`${retained?'部分更新未完成，保留已显示的数据。':'已刷新。'}交易 ${date(report.cutoff)}${holderReport?' · 持仓 '+date(holderReport.cutoff):''}${endpoint?'':' · 后台每小时更新'}`;
-    $('status').className=retained?'notice':'success';
+    showSnapshotStatus($('status'),$('refresh'),[['交易',report],['持仓',holderReport]],{retained});
   }catch(e){$('status').textContent=e.message;$('status').className='notice';}
-  finally{busy=false;$('refresh').disabled=false;$('refresh').textContent='刷新数据';}
+  finally{busy=false;$('refresh').disabled=false;$('refresh').textContent=refreshButtonLabel($('refresh'));}
 }
 $('refresh').addEventListener('click',refresh);
 window.addEventListener('storage',e=>{if(e.key===TAG_KEY){manual=readManual(e.newValue);holdingsBridge();}});

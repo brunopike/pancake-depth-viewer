@@ -1,8 +1,7 @@
 name: Refresh ESIM holders
 on:
   workflow_dispatch:
-  schedule:
-    - cron: '49 * * * *'
+  # Manual recovery; the report worker owns the hourly holder refresh.
 permissions:
   contents: write
 concurrency:

@@ -1,4 +1,5 @@
 import {readSnapshot} from './snapshot-client.mjs';
+import {showSnapshotStatus,refreshButtonLabel} from './snapshot-status.mjs';
 import {holderCharts} from './holder-charts.mjs';
 import {TAG_KEY,TAG_KINDS,validateManual,readManual,rowTags,selectHolders,changePercent,customLabelOptions} from './holder-model.mjs';
 const $=id=>document.getElementById(id),escape=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -89,11 +90,9 @@ window.addEventListener('storage',e=>{if(e.key===TAG_KEY){manual=readManual(e.ne
 async function refresh(){
  if(busy)return;busy=true;$('refresh').disabled=true;$('refresh').textContent='正在刷新…';$('status').textContent='正在读取最新持仓…';
  try{const result=await readSnapshot('holders',{current:report});report=validate(result.data);render();
-  const stale=Date.now()/1000-report.cutoff>7200;
-  $('status').className=stale||result.source==='retained'?'notice':'success';
-  $('status').textContent=`${result.source==='retained'?'更新未完成，保留上次数据':stale?'快照较早':'已刷新'} · ${date(report.cutoff)} · 后台每小时更新 ESIM`;
+  showSnapshotStatus($('status'),$('refresh'),[['持仓',report],['持仓内交易',{cutoff:report.tradeCutoff}]],{retained:result.source==='retained'});
  }catch(e){$('status').textContent=e.message;$('status').className='notice';if(!report)$('rows').innerHTML='<tr><td colspan="10" class="empty">暂时无法读取持仓，请点击刷新重试。</td></tr>';}
- finally{busy=false;$('refresh').disabled=false;$('refresh').textContent='刷新数据';}
+ finally{busy=false;$('refresh').disabled=false;$('refresh').textContent=refreshButtonLabel($('refresh'));}
 }
 renderCustomFilters();
 const query=new URLSearchParams(location.search);

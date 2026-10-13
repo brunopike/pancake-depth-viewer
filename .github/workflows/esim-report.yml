@@ -1,10 +1,18 @@
 name: Refresh ESIM report
 on:
   workflow_dispatch:
+    inputs:
+      session_minutes:
+        description: 'Bounded session minutes (1–300); following sessions use 300'
+        default: '300'
+        required: false
+        type: string
   schedule:
-    - cron: '41 * * * *'
+    # Recovery only; the active worker owns the hourly timer and session handoff.
+    - cron: '41 */6 * * *'
 permissions:
   contents: write
+  actions: write
 concurrency:
   group: esim-report-checkpoint
   cancel-in-progress: false
@@ -12,7 +20,7 @@ jobs:
   refresh:
     if: github.event.repository.private == false
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 360
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -20,18 +28,10 @@ jobs:
           node-version: '22'
           cache: npm
       - run: npm ci --no-audit --no-fund
-      - name: Query only ESIM incremental activity
+      - name: Keep ESIM transactions and holders current every 60 minutes
         env:
           ALCHEMY_API_KEY: ${{ secrets.ALCHEMY_API_KEY }}
-          ESIM_REMOTE_START: 'true'
-          ESIM_RPC_BUDGET: '600'
-        run: node scripts/esim/refresh.mjs
-      - name: Publish verified checkpoint
-        if: always()
-        env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_REPOSITORY: ${{ github.repository }}
-        run: |
-          if [ -f .goodway/esim-monitor/state.json.gz ]; then
-            node scripts/esim/publish.mjs
-          fi
+          SESSION_MINUTES: ${{ inputs.session_minutes || '300' }}
+        run: node scripts/esim/hourly-worker.mjs

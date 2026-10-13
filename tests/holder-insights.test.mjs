@@ -34,10 +34,10 @@ test('snapshot refresh cache-busts only fixed sources, falls back and never regr
  assert.equal((await readSnapshot('holders',{current,fetch:async()=>{throw Error('offline')}})).source,'retained');
  await assert.rejects(readSnapshot('holders',{fetch:async()=>({ok:true,json:async()=>({...data,token:'other'})})}),/无法读取/);
 });
-test('published snapshots are read from the website first; external-host failure falls back to bundled data',async()=>{
+test('published snapshots win equal blocks; external-host failure falls back to bundled data',async()=>{
  const data={version:1,block:10,cutoff:10,token:'0x7765a659c5b0cfbfd9fbc2ef2298b75a598f2d2d',rows:[]};const calls=[];
  const fetch=async u=>{calls.push(u);return {ok:true,json:async()=>data};};
- assert.equal((await readSnapshot('holders',{fetch})).source,'published');assert.equal(calls.length,1);assert(calls[0].startsWith('./data/current-esim-holders.json?'));
+ assert.equal((await readSnapshot('holders',{fetch})).source,'published');assert.equal(calls.length,2);assert(calls[0].startsWith('./data/current-esim-holders.json?'));
  let i=0;assert.equal((await readSnapshot('holders',{fetch:async()=>{if(++i<3)throw Error('blocked');return {ok:true,json:async()=>data};}})).source,'bundled');
 });
 test('current receipt and historical robot labels cannot change the prior trading window filters',()=>{

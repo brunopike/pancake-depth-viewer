@@ -41,7 +41,7 @@ function handoffAPI(metadata = { private: false }, state = 'active', dispatchSta
     requests.push({ url, method: options.method || 'GET', body: options.body && JSON.parse(options.body) });
     const dispatch = url.endsWith('/dispatches');
     return { ok: !dispatch || dispatchStatus === 204, status: dispatch ? dispatchStatus : 200,
-      json: async () => url.endsWith('/depth-cache.yml') ? { state } : metadata };
+      json: async () => url.includes('/actions/workflows/') ? { state } : metadata };
   };
   return { requests, fetch };
 }
@@ -72,4 +72,11 @@ test('A worker handoff waits the remaining interval instead of buying a duplicat
   await runHourlyWorker({ sessionMs: 61 * 60000, now: () => clock, sleep: async ms => { clock += ms; },
     refresh: async () => { refreshed.push(clock); return 360 * 60000; }, handoff: async () => {} });
   assert.deepEqual(refreshed, [330 * 60000, 360 * 60000]);
+});
+test('The ESIM worker hands off to its own bounded session without changing the depth worker',async()=>{
+ const api=handoffAPI();
+ assert.equal(await dispatchNextWorker({repo:'owner/viewer',token:'test-only',workflowId:'esim-report.yml',fetch:api.fetch}),true);
+ assert.match(api.requests.at(-1).url,/esim-report.yml\/dispatches$/);
+ assert.deepEqual(api.requests.at(-1).body,{ref:'main',inputs:{session_minutes:'300'}});
+ await assert.rejects(dispatchNextWorker({repo:'owner/viewer',token:'test-only',workflowId:'unrelated.yml',fetch:api.fetch}),/Invalid worker workflow/);
 });

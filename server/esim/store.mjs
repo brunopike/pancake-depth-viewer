@@ -10,7 +10,7 @@ export function parseState(bytes) {
 export async function loadState({ fetch: request = fetch, includeRemote = true } = {}) {
   const local = parseState(await readFile(new URL('./bootstrap.json.gz', import.meta.url)));
   if (includeRemote) try {
-    const response = await request(CHECKPOINT_URL, { cache: 'no-store', signal: AbortSignal.timeout(15000) });
+    const response = await request(`${CHECKPOINT_URL}?t=${Date.now()}`, { cache: 'no-store', signal: AbortSignal.timeout(15000) });
     if (response.ok) {
       const remote = parseState(Buffer.from(await response.arrayBuffer()));
       if (remote.block > local.block) return remote;
