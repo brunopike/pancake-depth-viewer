@@ -2,7 +2,8 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import vm from 'node:vm';
-import { buildDepth, settings, poolInventory, estimateTarget, priceAtTick, cumulative, priceOf } from '../src/math.mjs';
+import { buildDepth, settings, poolInventory, ownedInventory, inventorySplit, estimateTarget, priceAtTick, cumulative, priceOf } from '../src/math.mjs';
+import { lpDetails } from '../src/lp-details.mjs';
 import { OWNERS, poolMetadata } from '../src/ownership.mjs';
 
 const source = (await readFile(new URL('../src/app.js', import.meta.url), 'utf8')).replace(/^import .*;\n/gm, '');
@@ -21,7 +22,7 @@ function app(search = '') {
   for (const match of html.matchAll(/<[^>]*\bid="([^"]+)"[^>]*>/g)) {
     const attributes = new Map([...match[0].matchAll(/([\w-]+)="([^"]*)"/g)].map(m => [m[1], m[2]]));
     elements.set(match[1], { value: attributes.get('value') || '', checked: /\bchecked\b/.test(match[0]), disabled: /\bdisabled\b/.test(match[0]),
-      textContent: '', innerHTML: '', hidden: false, style: {}, scrollTop: 0, scrollHeight: 1000, close() {},
+      textContent: '', innerHTML: '', hidden: false, style: {}, scrollTop: 0, scrollHeight: 1000, close() {}, showModal() {},
       classList: { toggle() {}, add() {}, remove() {} }, parentElement: {},
       getAttribute: key => attributes.get(key), setAttribute: (key, value) => attributes.set(key, value),
       addEventListener: (type, callback) => listeners.set(`${match[1]}:${type}`, callback),
@@ -32,7 +33,7 @@ function app(search = '') {
   const context = vm.createContext({ document, window: {}, location: { href: `https://example.test/${search}`, search },
     history: { replaceState(_a, _b, url) { context.location.href = String(url); } }, URL, URLSearchParams, console, devicePixelRatio: 1,
     ResizeObserver: class { observe() {} }, setInterval: callback => timers.push(callback),
-    fetch: () => new Promise(() => {}), buildDepth, settings, poolInventory, estimateTarget, priceAtTick, cumulative, priceOf, OWNERS, poolMetadata,
+    fetch: () => new Promise(() => {}), buildDepth, settings, poolInventory, ownedInventory, inventorySplit, estimateTarget, priceAtTick, cumulative, priceOf, OWNERS, poolMetadata, lpDetails,
     readBrowserCache: selected => selected === market ? live() : null, saveBrowserCache() {}, readSharedCache: async () => null,
     loadPools: () => new Promise(resolve => pending.push(resolve)), market });
   vm.runInContext(source, context);

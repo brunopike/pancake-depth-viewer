@@ -124,6 +124,19 @@ export function ownedInventory(pools, baseId) {
   return { base, quote };
 }
 
+export function inventorySplit(pools, baseId) {
+  const total = poolInventory(pools, baseId), own = ownedInventory(pools, baseId);
+  const external = { base: 0, quote: 0 };
+  for (const pool of pools) {
+    const curve = ownedCurve(pool);
+    if (!curve.externalScale) continue;
+    const value = poolInventory([curve.external], baseId);
+    external.base += value.base * curve.externalScale;
+    external.quote += value.quote * curve.externalScale;
+  }
+  return { total, own, external };
+}
+
 // Static price-impact estimate. Quote is paid on a buy and received on a sell.
 export function estimateTarget(pools, baseId, targetPrice, reference) {
   targetPrice = Number(targetPrice);

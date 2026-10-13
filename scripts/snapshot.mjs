@@ -40,7 +40,7 @@ try {
       } catch { /* Missing/invalid public cache needs a fresh selected-pair scan. */ }
       if (!previous) try { previous = parseSnapshot(await readFile(file, 'utf8'), metas, base, quote); } catch {}
       // Worker handoffs and recovery schedules must not buy duplicate hourly reads.
-      if (previous && Date.now() - previous.timestamp < 3600000) {
+      if (previous?.source === 'Alchemy' && Date.now() - previous.timestamp < 3600000) {
         nextRefreshAt = Math.min(nextRefreshAt, previous.timestamp + 3600000);
         console.log(`${name}: snapshot less than 60 minutes old; no paid reads.`); continue;
       }

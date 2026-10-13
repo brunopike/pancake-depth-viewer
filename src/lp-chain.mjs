@@ -144,7 +144,8 @@ export async function loadOwnership(pools, options) {
     Promise.all(v2.map(async pool => {
       try {
         const [totalSupply, ...balances] = await options.read([call(pool.id, v2Abi, 'totalSupply'), ...OWNERS.map(o => call(pool.id, v2Abi, 'balanceOf', [o]))]);
-        pool.ownership = { status: 'verified', ownBalance: balances.reduce((a, b) => a + b, 0n), totalSupply }; validateOwnership(pool);
+        pool.ownership = { status: 'verified', ownBalance: balances.reduce((a, b) => a + b, 0n), totalSupply,
+          shares: OWNERS.map((owner, i) => ({ owner, ownBalance: balances[i] })) }; validateOwnership(pool);
       } catch { pool.ownership = { status: 'unavailable' }; }
     })),
     v3.length ? v3Positions(v3, options) : Promise.resolve(),

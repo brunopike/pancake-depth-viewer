@@ -1,5 +1,6 @@
 import { loadPools } from './chain.mjs';
-import { buildDepth, settings, poolInventory, ownedInventory, estimateTarget, priceAtTick, cumulative, priceOf } from './math.mjs';
+import { buildDepth, settings, poolInventory, inventorySplit, estimateTarget, priceAtTick, cumulative, priceOf } from './math.mjs';
+import { lpDetails } from './lp-details.mjs';
 import { OWNERS, poolMetadata } from './ownership.mjs';
 import { readBrowserCache, readSharedCache, saveBrowserCache } from './browser-cache.mjs';
 import { weakLiquidityRanges, gapSettings } from './lp-gaps.mjs';
@@ -71,10 +72,10 @@ function clearDepth() {
   state.targetPrice = null; $('target-price').value = ''; $('target-result').hidden = true; $('target-button').disabled = true;
   $('ask-range-note').textContent = ''; $('bid-range-note').textContent = '';
   $('range-result').hidden = true; $('jump-button').disabled = true; $('jump-status').textContent = '';
-  ['mark-price', 'book-price', 'ask-total', 'bid-total', 'own-ask-total', 'own-bid-total'].forEach(id => $(id).textContent = '—');
+  ['mark-price', 'book-price', 'ask-total', 'bid-total', 'own-ask-total', 'own-bid-total', 'external-ask-total', 'external-bid-total'].forEach(id => $(id).textContent = '—');
   ['bids', 'asks'].forEach(id => $(id).innerHTML = '<div class="empty">正在读取池子里的资金…</div>');
   $('lp-status').textContent = 'LP 归属待核对';
-  ['own-ask-note', 'own-bid-note'].forEach(id => $(id).textContent = 'LP 归属待核对');
+  ['own-ask-note', 'own-bid-note', 'external-ask-note', 'external-bid-note'].forEach(id => $(id).textContent = 'LP 归属待核对');
   state.gapData = null;
   $('lp-gaps-count').textContent = '';
   $('lp-gaps-error').hidden = true;
@@ -240,8 +241,8 @@ function render({ preserveChart = false } = {}) {
   const d = state.depth;
   updateBookView();
   $('mark-price').textContent = price(d.price); $('book-price').textContent = price(d.price);
-  $('ask-total-label').textContent = '卖盘币量 · 全池';
-  $('bid-total-label').textContent = '买盘资金 · 全池';
+  $('ask-total-label').textContent = '全池 LP 卖盘总量';
+  $('bid-total-label').textContent = '全池 LP 买盘总量';
   try {
     const inventory = poolInventory(state.live.pools, state.market.base.id);
     $('ask-total').textContent = `${compact(inventory.base)} ${state.market.base.symbol}`;
@@ -256,16 +257,22 @@ function render({ preserveChart = false } = {}) {
   }
   try {
     if (state.live.failed.length || state.live.pools.length !== state.market.pools.length) throw new Error('池子数据未读完整');
-    const own = ownedInventory(state.live.pools, state.market.base.id);
+    const { own, external } = inventorySplit(state.live.pools, state.market.base.id);
     $('own-ask-total').textContent = `${compact(own.base)} ${state.market.base.symbol}`;
     $('own-bid-total').textContent = `${compact(own.quote)} ${state.market.quote.symbol}`;
     $('own-ask-total').title = `${number(own.base, 8)} ${state.market.base.symbol}`;
     $('own-bid-total').title = `${number(own.quote, 8)} ${state.market.quote.symbol}`;
-    $('own-ask-note').textContent = '我方 LP 中可卖出的币';
-    $('own-bid-note').textContent = `我方 LP 中可用于买入的 ${state.market.quote.symbol === 'USDT' ? 'U' : state.market.quote.symbol}`;
+    $('own-ask-note').textContent = `${OWNERS.length} 个地址 · 币量`;
+    $('external-ask-total').textContent = `${compact(external.base)} ${state.market.base.symbol}`;
+    $('external-bid-total').textContent = `${compact(external.quote)} ${state.market.quote.symbol}`;
+    $('external-ask-total').title = `${number(external.base, 8)} ${state.market.base.symbol}`;
+    $('external-bid-total').title = `${number(external.quote, 8)} ${state.market.quote.symbol}`;
+    $('external-ask-note').textContent = '其余 LP · 币量';
+    $('external-bid-note').textContent = '其余 LP · 资金';
+    $('own-bid-note').textContent = `${OWNERS.length} 个地址 · 资金`;
   } catch {
-    ['own-ask-total', 'own-bid-total'].forEach(id => { $(id).textContent = '—'; $(id).title = ''; });
-    ['own-ask-note', 'own-bid-note'].forEach(id => $(id).textContent = '我方 LP 数据待核对');
+    ['own-ask-total', 'own-bid-total', 'external-ask-total', 'external-bid-total'].forEach(id => { $(id).textContent = '—'; $(id).title = ''; });
+    ['own-ask-note', 'own-bid-note', 'external-ask-note', 'external-bid-note'].forEach(id => $(id).textContent = 'LP 归属待核对');
   }
   renderTarget();
   renderGaps();
@@ -472,18 +479,24 @@ function coverage() {
 }
 function methodology() {
   $('detail-title').textContent = '怎么看这些数据？';
-  $('detail-body').innerHTML = `<h3>先选币种，再看金额</h3><p>例如 ESIM / USDT，表示用 USDT 买卖 ESIM。价格 0.06 表示 1 个 ESIM 对应 0.06 USDT。绿色是买盘，红色是卖盘。这里的“深度”，就是选定价格范围里的买卖数量和金额，按池内资金估算。</p><h3>一行表格是什么意思？</h3><p>每一行是一小段价格区间。我方 LP 是指定两个地址直接持有的资金，外部 LP 是其余资金，全池是两者之和。各列左边是我方，右边是外部；“累计币量”和“累计价值 U”从最接近现价的档位加到当前这一档。点击一行能看完整数字。曲线越高，表示累计金额越多。</p><h3>全池币量和目标价格</h3><p>顶部卖盘显示池内代币，买盘显示用于买入的计价币，统计全部价格范围中的交易资金，未含未领取的手续费。输入目标价格：高于现价时，看买入要付多少；低于现价时，看要卖多少币、可换回多少。某个池子在目标价处没有资金时会提示，不能当成保证成交的报价。订单簿与曲线的显示范围可分别设置，不影响全池统计和目标价估算。未模拟外部套利或资金新增。</p><h3>价格上下范围</h3><p>输入 10%，表格和曲线就看参考价上下 10% 内的买卖数量和金额。例如参考价 1 USDT，就是看 0.9 到 1.1 USDT。“最大”看现价的 0.5～2 倍。例如现价 0.06，就是看 0.03～0.12。表格金额是到对应价格的估算花费或所得。</p><h3>小数位数怎么设置？</h3><p>4 位小数表示每档价格相差 0.0001；2 位小数就是 0.01。档数自动计算。档位太多时，每行会合并相邻档，最多显示 500 行；整个范围的总金额不会减少。范围的最后一档可能只是一小段，以实际边界价格计算。小数位数只改变表格的细分程度，不改变范围内的总金额。</p><h3>池子是什么？为什么只显示部分数据？</h3><p>池子是用于买卖两种币的一组资金。同样两种币可以有多个池子，本页合并成功读取的池子。参考价格取官方列表资金估值最大的已读取池子。读不到的池子、还未支持的池子类型不会加进图里，可点“查看数据明细”了解原因。当前只看 BNB 链上的 PancakeSwap。ESIM / USDT 与 ESIM / BNB 分开显示；同名但地址不同的代币也分开显示。</p><h3>数据从哪里来？多久更新？</h3><p>只保留后台设置中启用的币对，默认 ESIM/USDT。池子资料来自 PancakeSwap 官方接口及已核对的我方仓位；不扫描全链币种。打开页面先显示缓存并立即更新，默认每 10 分钟刷新，可自行修改或手动刷新。页面关闭后，后台每 60 分钟尝试更新所选币对。实际数据时间以页面显示为准。</p><h3>我方 LP 薄弱区间</h3><p>按每个价格档的我方金额筛选，默认现价上下 100%、4 位小数、每档不超过 50 U。相邻的合格档位合并显示，点开查看每档金额。查询设置独立于订单簿和曲线；金额按未四舍五入的数值比较。顶部我方币量与资金统计全部价格范围。</p><h3>金额是估算值</h3><p>这些数值按池子的资金计算，未计入手续费、网络费用、代币转账税费，以及某些池子的额外交易规则。实际买卖金额以交易时的报价为准。</p><details><summary>查看详细算法与技术来源</summary><p>V2 使用实际储备量的恒定乘积曲线；V3 与 Infinity CL 使用当前价格、活跃流动性、tick bitmap 和初始化 tick 的 liquidityNet，按价格区间积分。一次刷新固定同一区块。原始状态及流动性变化使用 BigInt，显示积分使用浮点数。Infinity Bin / StableSwap 目前只列入列表与明细，不计入曲线。</p><p>百分比模式的边界 = 参考价 ×（1 ± 百分比 / 100），价格下限最低为 0。精度为 n 位小数时，基础价格档距为 10⁻ⁿ；相邻档合并后仍按实际边界积分，最后一档抵达原始范围边界。最大显示范围为现价的 0.5～2 倍。后台全量缓存读取合约全部 tick bitmap 并校验两端流动性归零；显示范围独立于缓存读取范围。各池从自身现价积分到共同价格边界；各池现价不同，第一档可能包含已有池间价差。这里只合并同一对代币地址的直接池，未模拟多跳路由或真实成交。</p><p><a href="https://developer.pancakeswap.finance/apis/subgraph" target="_blank" rel="noopener">PancakeSwap 开发文档 ↗</a><br><a href="https://github.com/pancakeswap/pancakeswap-ai" target="_blank" rel="noopener">官方数据接口使用示例 ↗</a><br><a href="https://github.com/pancakeswap/infinity-core" target="_blank" rel="noopener">Infinity CL 合约与计算方法 ↗</a></p></details>`;
+  $('detail-body').innerHTML = `<h3>先选币种，再看金额</h3><p>例如 ESIM / USDT，表示用 USDT 买卖 ESIM。价格 0.06 表示 1 个 ESIM 对应 0.06 USDT。绿色是买盘，红色是卖盘。这里的“深度”，就是选定价格范围里的买卖数量和金额，按池内资金估算。</p><h3>一行表格是什么意思？</h3><p>每一行是一小段价格区间。我方 LP 是指定 ${OWNERS.length} 个地址直接持有的资金，外部 LP 是其余资金，全池是两者之和。各列左边是我方，右边是外部；“累计币量”和“累计价值 U”从最接近现价的档位加到当前这一档。点击一行能看完整数字。曲线越高，表示累计金额越多。</p><h3>全池币量和目标价格</h3><p>顶部卖盘显示池内代币，买盘显示用于买入的计价币，统计全部价格范围中的交易资金，未含未领取的手续费。输入目标价格：高于现价时，看买入要付多少；低于现价时，看要卖多少币、可换回多少。某个池子在目标价处没有资金时会提示，不能当成保证成交的报价。订单簿与曲线的显示范围可分别设置，不影响全池统计和目标价估算。未模拟外部套利或资金新增。</p><h3>价格上下范围</h3><p>输入 10%，表格和曲线就看参考价上下 10% 内的买卖数量和金额。例如参考价 1 USDT，就是看 0.9 到 1.1 USDT。“最大”看现价的 0.5～2 倍。例如现价 0.06，就是看 0.03～0.12。表格金额是到对应价格的估算花费或所得。</p><h3>小数位数怎么设置？</h3><p>4 位小数表示每档价格相差 0.0001；2 位小数就是 0.01。档数自动计算。档位太多时，每行会合并相邻档，最多显示 500 行；整个范围的总金额不会减少。范围的最后一档可能只是一小段，以实际边界价格计算。小数位数只改变表格的细分程度，不改变范围内的总金额。</p><h3>池子是什么？为什么只显示部分数据？</h3><p>池子是用于买卖两种币的一组资金。同样两种币可以有多个池子，本页合并成功读取的池子。参考价格取官方列表资金估值最大的已读取池子。读不到的池子、还未支持的池子类型不会加进图里，可点“查看数据明细”了解原因。当前只看 BNB 链上的 PancakeSwap。ESIM / USDT 与 ESIM / BNB 分开显示；同名但地址不同的代币也分开显示。</p><h3>数据从哪里来？多久更新？</h3><p>只保留后台设置中启用的币对，默认 ESIM/USDT。池子资料来自 PancakeSwap 官方接口及已核对的我方仓位；不扫描全链币种。打开页面先显示缓存并立即更新，默认每 10 分钟刷新，可自行修改或手动刷新。页面关闭后，后台每 60 分钟尝试更新所选币对。实际数据时间以页面显示为准。</p><h3>我方 LP 薄弱区间</h3><p>按每个价格档的我方金额筛选，默认现价上下 100%、4 位小数、每档不超过 50 U。相邻的合格档位合并显示，点开查看每档金额。查询设置独立于订单簿和曲线；金额按未四舍五入的数值比较。顶部我方币量与资金统计全部价格范围。</p><h3>金额是估算值</h3><p>这些数值按池子的资金计算，未计入手续费、网络费用、代币转账税费，以及某些池子的额外交易规则。实际买卖金额以交易时的报价为准。</p><details><summary>查看详细算法与技术来源</summary><p>V2 使用实际储备量的恒定乘积曲线；V3 与 Infinity CL 使用当前价格、活跃流动性、tick bitmap 和初始化 tick 的 liquidityNet，按价格区间积分。一次刷新固定同一区块。原始状态及流动性变化使用 BigInt，显示积分使用浮点数。Infinity Bin / StableSwap 目前只列入列表与明细，不计入曲线。</p><p>百分比模式的边界 = 参考价 ×（1 ± 百分比 / 100），价格下限最低为 0。精度为 n 位小数时，基础价格档距为 10⁻ⁿ；相邻档合并后仍按实际边界积分，最后一档抵达原始范围边界。最大显示范围为现价的 0.5～2 倍。后台全量缓存读取合约全部 tick bitmap 并校验两端流动性归零；显示范围独立于缓存读取范围。各池从自身现价积分到共同价格边界；各池现价不同，第一档可能包含已有池间价差。这里只合并同一对代币地址的直接池，未模拟多跳路由或真实成交。</p><p><a href="https://developer.pancakeswap.finance/apis/subgraph" target="_blank" rel="noopener">PancakeSwap 开发文档 ↗</a><br><a href="https://github.com/pancakeswap/pancakeswap-ai" target="_blank" rel="noopener">官方数据接口使用示例 ↗</a><br><a href="https://github.com/pancakeswap/infinity-core" target="_blank" rel="noopener">Infinity CL 合约与计算方法 ↗</a></p></details>`;
   $('detail-dialog').showModal();
 }
 
 function ownershipDetails() {
   $('detail-title').textContent = '我方 LP';
   const pools = state.live?.pools || [], ready = pools.filter(p => p.ownership?.status === 'verified').length;
-  const positions = pools.flatMap(p => (p.ownership?.positions || []).filter(n => n.liquidity > 0n).map(n => ({ pool: p, ...n })));
-  $('detail-body').innerHTML = `<p>按下面两个地址当前直接持有的 LP 识别。挖矿、托管仓位暂未包含。</p>${OWNERS.map(address => `<p><a class="address" href="https://bscscan.com/address/${address}" target="_blank" rel="noopener">${address} ↗</a></p>`).join('')}<p>每列左边是我方，右边是外部，两数相加就是全池。已核对 ${ready}/${pools.length} 个池。${state.live ? `区块 ${state.live.blockNumber}，与盘口相同。` : ''}</p><h3>有效仓位</h3>${positions.map(n => {
-    const bounds = [priceAtTick(n.pool, state.market.base.id, n.tickLower), priceAtTick(n.pool, state.market.base.id, n.tickUpper)].sort((a, b) => a - b);
-    return `<div class="detail-pool"><strong>${protocolName[n.pool.protocol]} · ${price(bounds[0])}～${price(bounds[1])} ${escape(state.market.quote.symbol)}</strong><p><a href="https://bscscan.com/nft/${n.manager}/${n.tokenId}" target="_blank" rel="noopener">仓位 #${n.tokenId} ↗</a> · ${n.owner.slice(0, 8)}…${n.owner.slice(-4)}</p></div>`;
-  }).join('') || '<p>暂未读到有效 NFT 仓位。</p>'}`;
+  const base = escape(state.market?.base.symbol || '币'), quote = escape(state.market?.quote.symbol || 'U');
+  const amounts = value => `<div class="lp-amounts"><span>币量<strong class="ask-color">${number(value.base, 4)} ${base}</strong></span><span>资金<strong class="bid-color">${number(value.quote, 4)} ${quote}</strong></span></div>`;
+  let wallets;
+  try { if (state.live?.failed.length) throw new Error(); wallets = lpDetails(pools, state.market.base.id); } catch { /* Unknown is never displayed as zero. */ }
+  $('detail-body').innerHTML = `<p>${OWNERS.length} 个我方地址 · ${base} / ${quote} · 不含未领取手续费</p><p>已核对 ${ready}/${pools.length} 个池${state.live ? ` · ${time(state.live.timestamp)} · 区块 ${state.live.blockNumber}` : ''}</p>${OWNERS.map(owner => {
+    const wallet = wallets?.find(w => w.owner === owner);
+    return `<section class="lp-wallet"><a class="address" href="https://bscscan.com/address/${owner}" target="_blank" rel="noopener">${owner} ↗</a>${wallet ? amounts(wallet) : '<p>资金数量待核对</p>'}${wallet?.positions.length ? `<details><summary>${wallet.positions.length} 笔 LP · 查看币量、资金和 Pool ID</summary>${wallet.positions.map(n => {
+      const poolLink = `https://pancakeswap.finance/liquidity/pool/bsc/${n.pool.protocol === 'infinityCl' ? '' : n.pool.protocol + '/'}${n.pool.id}`;
+      return `<div class="detail-pool"><strong>${protocolName[n.pool.protocol]}${n.tokenId ? ` · 仓位 #${n.tokenId}` : ' · LP 份额'}</strong>${amounts(n)}<p>价格范围：${n.bounds ? `${price(n.bounds[0])}～${price(n.bounds[1])} ${quote}` : '全范围'}</p><p>Pool ID<br><a class="address" href="${escape(poolLink)}" target="_blank" rel="noopener">${escape(n.pool.id)} ↗</a></p>${n.tokenId ? `<a href="https://bscscan.com/nft/${n.manager}/${n.tokenId}" target="_blank" rel="noopener">查看仓位 ↗</a>` : ''}</div>`;
+    }).join('')}</details>` : wallet ? '<p>当前币对没有有效 LP</p>' : ''}</section>`;
+  }).join('')}<p>仅统计上述地址直接持有的 LP；挖矿、托管仓位暂未包含。</p>`;
   $('detail-dialog').showModal();
 }
 

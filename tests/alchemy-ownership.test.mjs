@@ -3,17 +3,19 @@ import assert from 'node:assert/strict';
 import { discoverOwnedInfinity } from '../scripts/alchemy-ownership.mjs';
 import { OWNERS, CL_POSITION_MANAGER } from '../src/ownership.mjs';
 
-test('Alchemy discovery paginates both wallets, restricts the manager and retains empty NFTs', async () => {
+test('Alchemy discovery paginates all three wallets, restricts the manager and retains empty NFTs', async () => {
   const calls = [];
   const fetcher = async url => {
     const parsed = new URL(url); calls.push(parsed);
+    const third = parsed.searchParams.get('owner') === OWNERS[2];
     const first = parsed.searchParams.get('owner') === OWNERS[0], page = parsed.searchParams.get('pageKey');
-    return { ok: true, json: async () => ({ ownedNfts: first ? [{ contract: { address: CL_POSITION_MANAGER }, tokenId: page ? '0x2' : '1', balance: '1' }] : [],
-      totalCount: first ? 2 : 0, pageKey: first && !page ? 'next-page' : null }) };
+    return { ok: true, json: async () => ({ ownedNfts: first ? [{ contract: { address: CL_POSITION_MANAGER }, tokenId: page ? '0x2' : '1', balance: '1' }] : third ? [{ contractAddress: CL_POSITION_MANAGER, tokenId: '1570878', balance: '1' }] : [],
+      totalCount: first ? 2 : third ? 1 : 0, pageKey: first && !page ? 'next-page' : null }) };
   };
   const data = await discoverOwnedInfinity('TEST_ONLY_PLACEHOLDER', fetcher);
-  assert.deepEqual(data.map(n => n.tokenId), ['1', '2']);
-  assert.equal(calls.length, 3);
+  assert.deepEqual(data.map(n => n.tokenId), ['1', '2', '1570878']);
+  assert.equal(data[2].owner, OWNERS[2]);
+  assert.equal(calls.length, 4);
   assert.ok(calls.every(u => u.hostname === 'bnb-mainnet.g.alchemy.com' && u.searchParams.get('contractAddresses[]') === CL_POSITION_MANAGER && u.searchParams.get('withMetadata') === 'false'));
   assert.ok(calls.every(u => !u.searchParams.has('excludeFilters[]')));
 });
