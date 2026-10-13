@@ -44,3 +44,6 @@
 #chart-percent{width:78px}#chart-range-note{color:var(--accent)}#chart-range-error{color:var(--red);width:100%}
 #chart-maximum.active{color:var(--bg);background:var(--accent)}
 @media(max-width:600px){.book-header,.book-scroll{min-width:800px}.book-scroll{height:235px}}
+
+.book-view-controls{display:flex;gap:6px;margin:0 8px 15px}.book-view-controls .active,#chart-custom.active{color:var(--accent);border-color:#6e654e;background:#d9c59313}
+.total-view .book-header small{visibility:hidden}.total-view .book-header,.total-view .book-scroll{min-width:560px}.total-value{color:var(--text)}

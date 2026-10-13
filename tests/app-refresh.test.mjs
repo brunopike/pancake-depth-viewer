@@ -128,6 +128,25 @@ test('Missing ownership displays pending attribution while full-pool prices rema
   assert.equal(a.read('state.depth.price'), 5);
 });
 
+test('Total and split views switch without changing amounts, chart, scroll position or chain reads', async () => {
+  const a = app(), reading = a.read('refresh()'); await settle();
+  const data = live(101n, 5); data.pools[0].ownership = { status: 'verified', ownBalance: 3n, totalSupply: 10n };
+  await a.finish(data); await reading;
+  const depth = a.read('state.depth'), chart = a.read('state.chartDepth');
+  a.elements.get('asks').scrollTop = 177; a.elements.get('bids').scrollTop = 90;
+  a.listeners.get('book-total:click')();
+  assert.equal(a.read('state.depth'), depth); assert.equal(a.read('state.chartDepth'), chart);
+  assert.match(a.elements.get('bids').innerHTML, /class="total-value"/);
+  assert.doesNotMatch(a.elements.get('bids').innerHTML, /class="split-value"/);
+  assert.equal(a.elements.get('book-total').getAttribute('aria-pressed'), 'true');
+  assert.equal(a.elements.get('asks').scrollTop, 177); assert.equal(a.elements.get('bids').scrollTop, 90);
+  a.listeners.get('book-split:click')();
+  assert.match(a.elements.get('bids').innerHTML, /class="split-value"/);
+  assert.equal(a.elements.get('book-split').getAttribute('aria-pressed'), 'true');
+  assert.equal(a.elements.get('asks').scrollTop, 177); assert.equal(a.elements.get('bids').scrollTop, 90);
+  assert.equal(a.pending.length, 0);
+});
+
 test('Chart and book ranges can change independently without a new chain read', async () => {
   const a = app(), reading = a.read('refresh()'); await settle(); await a.finish(); await reading;
   const before = a.elements.get('bids').innerHTML;

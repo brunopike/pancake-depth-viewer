@@ -19,7 +19,7 @@ const price = n => Number.isFinite(n) ? n !== 0 && (Math.abs(n) >= 1e12 || Math.
 const bandPrice = n => n === 0 || !Number.isFinite(n) || Math.abs(n) >= 1e12 ? price(n) : n < state.config.step ? `＜${state.config.step.toFixed(state.config.precision)}` : Number(n).toLocaleString('en-US', { minimumFractionDigits: state.config.precision, maximumFractionDigits: state.config.precision });
 const time = n => new Date(n).toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai', hour12: false });
 const protocolName = { v2: 'V2', v3: 'V3', infinityCl: 'Infinity CL', infinityBin: 'Infinity Bin', stable: 'StableSwap', infinityStable: 'Infinity Stable' };
-const state = { catalog: null, markets: [], market: null, config: settings(50, 4), chartPercent: 50, chartDepth: null, chartHover: null, live: null, depth: null, request: 0, hover: null, focusPrice: null, targetPrice: null, busy: false };
+const state = { catalog: null, markets: [], market: null, config: settings(50, 4), bookView: 'split', chartPercent: 50, chartDepth: null, chartHover: null, live: null, depth: null, request: 0, hover: null, focusPrice: null, targetPrice: null, busy: false };
 let plot;
 
 function pairMarket(p) {
@@ -81,6 +81,7 @@ function updateURL() {
   url.searchParams.delete('levels'); url.searchParams.delete('bps');
   url.searchParams.set('range', state.config.percent); url.searchParams.set('precision', state.config.precision);
   url.searchParams.set('chartRange', state.chartPercent);
+  url.searchParams.set('view', state.bookView);
   history.replaceState(null, '', url);
 }
 function updateControls() {
@@ -96,6 +97,16 @@ function updateControls() {
   $('levels-summary').textContent = '档数按价格精度自动计算';
   $('range-result').hidden = true;
   updateChartControls();
+  updateBookView();
+}
+
+function updateBookView() {
+  const total = state.bookView === 'total';
+  $('depth-section').classList.toggle('total-view', total);
+  for (const [id, active] of [['book-total', total], ['book-split', !total]]) {
+    $(id).setAttribute('aria-pressed', String(active));
+    $(id).classList.toggle('active', active);
+  }
 }
 
 function updateChartControls() {
@@ -104,6 +115,10 @@ function updateChartControls() {
   if (!max) $('chart-percent').value = state.chartPercent;
   $('chart-maximum').setAttribute('aria-pressed', String(max));
   $('chart-maximum').classList.toggle('active', max);
+  $('chart-maximum').textContent = max ? '☑ 最大' : '□ 最大';
+  $('chart-custom').textContent = max ? '□ 百分比' : '☑ 百分比';
+  $('chart-custom').setAttribute('aria-pressed', String(!max));
+  $('chart-custom').classList.toggle('active', !max);
   $('chart-range-note').textContent = max ? '现价 0.5～2 倍' : `上下 ${number(state.chartPercent, 4)}%`;
 }
 function rebuildChart() {
@@ -193,8 +208,9 @@ async function refresh() {
     if (request === state.request) { state.busy = false; $('refresh').disabled = false; $('jump-button').disabled = !state.depth; }
   }
 }
-function render() {
+function render({ preserveChart = false } = {}) {
   const d = state.depth;
+  updateBookView();
   $('mark-price').textContent = price(d.price); $('book-price').textContent = price(d.price);
   $('ask-total-label').textContent = '卖盘币量 · 全池';
   $('bid-total-label').textContent = '买盘资金 · 全池';
@@ -219,7 +235,9 @@ function render() {
   const ownedPools = state.live.pools.filter(p => p.ownership?.status === 'verified').length;
   $('lp-status').textContent = d.ownershipVerified ? `LP 归属已核对 · ${ownedPools} 个池` : `LP 归属待核对 · ${ownedPools}/${state.live.pools.length} 个池`;
 
-  const splitCell = (r, field) => r.own && r.external
+  const splitCell = (r, field) => state.bookView === 'total'
+    ? `<span class="total-value" title="全池 ${number(r[field], 8)}">${compact(r[field])}</span>`
+    : r.own && r.external
     ? `<span class="split-value" title="我方 ${number(r.own[field], 8)} / 外部 ${number(r.external[field], 8)}；全池 ${number(r[field], 8)}"><span class="own-color">${compact(r.own[field])}</span><i>/</i><span class="external-color">${compact(r.external[field])}</span></span>`
     : '<span class="split-value pending">待核对</span>';
 
@@ -238,7 +256,7 @@ function render() {
     if (index >= 0) { inspect(side, index, true); $('jump-status').textContent = `已定位 ${price(p)}。`; }
     else { state.focusPrice = null; $('jump-status').textContent = ''; }
   }
-  rebuildChart();
+  if (!preserveChart) rebuildChart();
 }
 
 function renderTarget() {
@@ -396,6 +414,17 @@ $('chart-maximum').addEventListener('click', () => {
   $('chart-maximum').setAttribute('aria-pressed', String($('chart-maximum').getAttribute('aria-pressed') !== 'true'));
   $('chart-settings').requestSubmit();
 });
+$('chart-custom').addEventListener('click', () => {
+  $('chart-maximum').setAttribute('aria-pressed', 'false');
+  $('chart-settings').requestSubmit();
+});
+for (const [id, view] of [['book-total', 'total'], ['book-split', 'split']]) $(id).addEventListener('click', () => {
+  const scroll = ['asks', 'bids'].map(id => $(id).scrollTop);
+  state.bookView = view;
+  if (state.depth) render({ preserveChart: true }); else updateBookView();
+  ['asks', 'bids'].forEach((id, i) => $(id).scrollTop = scroll[i]);
+  updateURL();
+});
 $('lp-button').addEventListener('click', ownershipDetails);
 $('target-form').addEventListener('submit', e => {
   e.preventDefault(); state.targetPrice = $('target-price').value; renderTarget();
@@ -458,6 +487,7 @@ async function init() {
   const params = new URLSearchParams(location.search);
   try { state.config = settings(params.get('range') || (params.has('levels') && params.has('bps') ? Number(params.get('levels')) * Number(params.get('bps')) / 100 : 50), params.get('precision') ?? 4); } catch (e) { setError(`${e.message}；已恢复默认显示设置。`); }
   try { state.chartPercent = settings(params.get('chartRange') || state.config.percent, state.config.precision).percent; } catch { state.chartPercent = 50; }
+  state.bookView = params.get('view') === 'total' ? 'total' : 'split';
   updateControls();
   try {
     let catalog;
