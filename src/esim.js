@@ -2,7 +2,7 @@ import {readSnapshot,readTradingReport} from './snapshot-client.mjs';
 import {holderInsights,holderViewURL} from './holder-insights.mjs';
 import {TAG_KEY,readManual} from './holder-model.mjs';
 const $ = id => document.getElementById(id);
-const names = { source_recipients: '曾领币地址', other_wallet_candidates: '其他钱包', remaining_unattributed: '未归因交易', all_pools: '合计' };
+const names = { source_recipients: '曾领币地址', other_wallet_candidates: '其他钱包', remaining_unattributed: '合约及待核对交易', all_pools: '合计' };
 const groups = Object.keys(names);
 const fmt = new Intl.NumberFormat('zh-CN', { maximumFractionDigits: 2 });
 const integer = n => new Intl.NumberFormat('zh-CN').format(n ?? 0);
@@ -31,8 +31,9 @@ function holdingsBridge(){
 function tradeTable(w) {
   return `<section class="card"><div class="section-heading"><h3>谁在买卖</h3><span>万 ESIM</span></div><div class="table-scroll"><table class="trade-table"><thead><tr><th>地址类别</th><th>卖出量</th><th>买入量</th><th>净数额</th></tr></thead><tbody>${groups.map(key => {
     const g = w.groups[key];
-    return `<tr class="${key === 'all_pools' ? 'total' : ''}"><th>${names[key]}${key === 'other_wallet_candidates' ? '<small class="group-note">包含我方钱包</small>' : ''}</th>${[['sell', 'sold_wei'], ['buy', 'bought_wei']].map(([side, field]) => `<td><strong>${amount(g[field])}</strong><small>${addresses(g, side)} 地址 · ${integer(g[side + '_txs'])} 笔</small></td>`).join('')}<td>${net(g.net_sold_wei)}</td></tr>`;
-  }).join('')}</tbody></table></div><p class="note">≥ 表示已识别地址下限。</p></section>`;
+    const detail = key === 'remaining_unattributed' ? (w.executionBreakdown || []).map(g => `<tr class="execution-row"><th>${escape(g.label)}${g.examples?.length ? `<details class="execution-evidence"><summary>地址与依据 · ${integer(g.path_addresses)} 个路径地址</summary>${g.examples.map(r => `<p><a href="https://bscscan.com/address/${escape(r.address)}" target="_blank" rel="noopener noreferrer">${escape(r.label)} · ${r.address.slice(0,8)}…${r.address.slice(-6)} ↗</a><small>${r.sourceURL ? `<a href="${escape(r.sourceURL)}" target="_blank" rel="noopener noreferrer">${escape(r.source)}</a>` : escape(r.source)}</small></p>`).join('')}</details>` : ''}</th>${[['sell','sold_wei'],['buy','bought_wei']].map(([side,field]) => `<td><strong>${amount(g[field])}</strong><small>${integer(g[side+'_txs'])} 笔</small></td>`).join('')}<td>${net(g.net_sold_wei)}</td></tr>`).join('') : '';
+    return `<tr class="${key === 'all_pools' ? 'total' : ''}"><th>${names[key]}${key === 'other_wallet_candidates' ? '<small class="group-note">包含我方钱包</small>' : ''}</th>${[['sell', 'sold_wei'], ['buy', 'bought_wei']].map(([side, field]) => `<td><strong>${amount(g[field])}</strong><small>${addresses(g, side)} 地址 · ${integer(g[side + '_txs'])} 笔</small></td>`).join('')}<td>${net(g.net_sold_wei)}</td></tr>${detail}`;
+  }).join('')}</tbody></table></div><p class="note">≥ 表示已识别地址下限。${w.executionBreakdown?.length ? '路由是交易通道，不代表平台自己买卖；高频仅表示交易次数。' : ''}</p></section>`;
 }
 function chart(hours) {
   const values = hours.filter(h => h.available).map(h => Math.abs(Number(h.net_sold_wei) / 1e18));

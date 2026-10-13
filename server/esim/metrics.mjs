@@ -1,3 +1,4 @@
+import {executionBreakdown} from './execution-categories.mjs';
 export const TOKEN = '0x7765a659c5b0cfbfd9fbc2ef2298b75a598f2d2d';
 export const SOURCE = '0x67b97c3845438f264965ca154ba13051c6c73416';
 export const ORIGIN = Date.parse('2026-10-03T09:59:50+08:00') / 1000;
@@ -41,7 +42,7 @@ export function windowMetrics(state, start, end) {
       .reduce((n, r) => n + BigInt(r.value) * (r.side === 'out' ? -1n : 1n), 0n)).toString() : null;
   return {
     start, end, availableThrough: knownTo, complete: state.cutoff >= end,
-    available: knownTo > knownFrom, groups: aggregateTrades(trades),
+    available: knownTo > knownFrom, groups: aggregateTrades(trades), executionBreakdown: executionBreakdown(trades),
     distribution: { total_wei: sum(distributions, 'value'), recipients: recipients.size,
       transactions: distinct(distributions, 'tx'), transfer_events: distributions.length,
       new_recipients: [...recipients].filter(a => state.firstRecipient[a]?.timestamp >= start && state.firstRecipient[a]?.timestamp < end).length },

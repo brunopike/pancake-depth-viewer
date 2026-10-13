@@ -71,3 +71,11 @@ GitHub `Refresh ESIM holders` 每小时仅查询 ESIM（分钟 49，实际执行
 ### 静态快照随网页更新
 
 报告/持仓采集任务完成后，Pages 工作流读取 `esim-cache` 和 `holder-cache` 的核验结果，将报告、地址排名、持仓三份公开 JSON 放入同域 `data/current-esim-*.json`。只发布这三份 JSON，不发布采集状态或凭证；纯数据更新不重新扫描市场目录。网页优先读同域最新文件，外部缓存源及随代码保存的旧数据仅作回退。读取失败或区块较旧时保留已显示的数据。此机制不把 GitHub Pages 的刷新变成付费 RPC 查询。
+
+### 合约与路由分类（2026-10-13）
+
+原 `remaining_unattributed` 资金归因组继续保留，表中按已知执行合约、资金路径、交易发起地址进一步细分：我方相关合约、币安路由、Pancake/OKX 路由、用户确认机器人、高频交易地址及待核对路径。有活动的类别才显示，每条交易币量只计入一个子项；币量、净额使用 BigInt 对账。公共路由不证明平台持有或买卖，高频只表示本时段某个北京时间自然日至少100笔独立交易，不证明机器人身份或盈利。
+
+已核来源保存于 `server/esim/execution-categories.mjs`：BscScan 的 Binance Alpha 2.0/DEX Router 标签、Pancake 官方 Universal Router 部署表、OKX 官方部署表、用户确认地址。每行可展开地址与依据。未知地址不自动扩展我方控制关系。
+
+Pages 从已有核验 checkpoint 生成分类，不新增链上扫描；原三时段 `groups` 必须与保存报告严格一致才发布，不把 checkpoint 或交易/调用明细放进网页。区块127414550三时段金额、净值及交易笔数的独立对账通过。
