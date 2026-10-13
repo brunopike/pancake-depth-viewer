@@ -2,16 +2,16 @@
 
 A public, read-only PancakeSwap market depth viewer by MMDock.
 
-**[链上报告](https://starkweng.github.io/esim-onchain/) · [卖出地址](https://starkweng.github.io/esim-onchain/?view=addresses) · [买卖深度](https://starkweng.github.io/esim-onchain/?view=depth)**
+**[买卖深度](https://starkweng.github.io/esim-onchain/?view=depth) · [合约报告](https://starkweng.github.io/esim-onchain/) · [卖出监控](https://starkweng.github.io/esim-onchain/?view=addresses) · [合约地址](https://starkweng.github.io/esim-onchain/?view=holders)**
 
 Search configured BNB Chain pairs by symbol, token address, or pool address. View the order-book-style price ladder with own / external breakdowns for each amount column and cumulative AMM liquidity depth of the selected **exact token pair**, aggregated across discovered V2, V3, and Infinity CL pools. Enter a price-range percentage or select Maximum, then choose decimal price precision (0–18 places). Default: ESIM/USDT, a ±50% price range and four decimal places (a 0.0001 base price band). The closest 100 bands stay unmerged, followed by grouped distant bands up to the 500-row limit. Up to 500 rows per side are rendered by merging adjacent bands when necessary; endpoint totals always cover the entire selected range. Hover to inspect a level or enter a price to locate it. The address bar preserves the pair and display settings.
 
 ## 新手怎么用
 
 1. 点“切换代币”，输入名称。`ESIM / USDT` 表示用 USDT 买卖 ESIM。
-2. 顶部分为全池、我方、外部三个边框组，分别显示 LP 卖盘总量（ESIM）和 LP 买盘总量（USDT）；我方统计指定的三个地址，外部为其余 LP。统计全部价格范围中的交易资金，不随图表范围变化，未含 CL 未领取的手续费。
+2. 顶部分为全池、我方、外部三个边框组，分别显示 LP 卖盘总量（ESIM）和 LP 买盘总量（USDT）；我方统计指定的四个地址，外部为其余 LP。统计全部价格范围中的交易资金，不随图表范围变化，未含 CL 未领取的手续费。
 3. 在右侧曲线和价格明细下方，输入“目标价格估算”后点“算一算”。高于现价：看预计需付多少 USDT、买到多少 ESIM。低于现价：看需卖出多少 ESIM、预计换回多少 USDT。目标价不受图表显示范围限制；没有流动性的池子会提示。
-4. 订单簿和曲线的价格范围、小数精度分别设置，默认都为上下 50%、4 位小数，修改一边不影响另一边，也不用重新读链。输入“订单簿上下范围”控制表格；曲线上方单独设置范围和小数位数，悬停或点击后，下方明细直接显示曲线这一档的数量和累计值；“☑ 百分比”和“☑ 最大”标出当前选择。例如 10%，看参考价上下 10% 内的买卖数量和金额；也可点“最大”看现价的 0.5～2 倍范围。
+4. 订单簿和曲线的价格范围、小数精度分别设置，默认都为上下 50%、4 位小数，修改一边不影响另一边，也不用重新读链。输入“订单簿上下范围”控制表格；曲线上方单独设置范围和小数位数，悬停或点击后，下方明细直接显示曲线这一档的数量和累计值；“百分比”和“最大”前的高对比勾选框标出当前选择。例如 10%，看参考价上下 10% 内的买卖数量和金额；也可点“最大”看现价的 0.5～2 倍范围。
 5. 默认 ESIM/USDT、上下 50%、4 位小数。4 位小数表示每档价格相差 0.0001，2 位就是 0.01。档数自动计算，最多每侧 500 行；最近的 100 档保留，其余合并，范围总额保持完整。
 6. 卖盘红色在上，买盘绿色在下，卖盘从高到低排列，最下面最接近现价；买盘从高到低排列，最上面最接近现价。表格保留价格、币量、累计币量、价值 U、累计价值 U 五列；四个金额列默认用“我方 / 外部”并排显示，蓝色是我方、金色是外部，两数相加是全池；点“全池合计”只看总量，切换保留当前滚动位置，不重新读链。U 表示 USDT，非 USDT 市场显示实际计价币。输入“定位价格”后点“跳转”，滚动并高亮包含该价格的行。点击一行查看完整数字。输入的定位价格会单独成为一档，总金额保持不变。
 7. 自动刷新默认 10 分钟，可输入 1–1440 分钟；修改间隔或手动点击“刷新数据”都会从当前时刻重新计时。打开页面仍立即更新。
@@ -24,7 +24,7 @@ Search configured BNB Chain pairs by symbol, token address, or pool address. Vie
 
 顶部按全池、我方、外部分组显示卖盘总量（币）与买盘总量（计价币），均为全部价格范围的本金。点“我方地址”可看各地址合计，展开每笔 LP 查看币量、计价币数量、价格范围、Pool ID 和 NFT 链接；与盘口使用同一区块数据，不额外抓取。
 
-我方地址：`0x1DB99241D9E230eDc33996567EC2707c42475fd8`、`0xc40409Aee5B913f14dfD8f967299ddf9dc5009a1`、`0x23dd01612443d15c166aed7b430abdaeef923783`。按这三个地址当前直接持有的 PancakeSwap V2 LP 份额、V3 与 Infinity CL 仓位 NFT 识别；未包含挖矿或第三方托管仓位。转走的仓位归入其余资金，已清空的仓位贡献为零。外部列是全池减去上述直接持有的我方资金，不能用于推断其他地址的实际控制人。
+我方地址：`0x1DB99241D9E230eDc33996567EC2707c42475fd8`、`0xc40409Aee5B913f14dfD8f967299ddf9dc5009a1`、`0x23dd01612443d15c166aed7b430abdaeef923783`、`0xdcDB497A0b2Ab74753f8E40e36071cE7a0aB4930`。按这四个地址当前直接持有的 PancakeSwap V2 LP 份额、V3 与 Infinity CL 仓位 NFT 识别；未包含挖矿或第三方托管仓位。转走的仓位归入其余资金，已清空的仓位贡献为零。外部列是全池减去上述直接持有的我方资金，不能用于推断其他地址的实际控制人。
 
 V2 按固定区块的 `balanceOf / totalSupply` 分配储备和深度；V3 枚举钱包 NFT，核对 `ownerOf` 与工厂池地址；Infinity 使用已核对的 NFT 索引、转入转出日志、`ownerOf` 与钱包 `balanceOf` 对账，再读 PoolKey、价格区间和当前流动性。NFT 所属区块与池子一致。钱包持仓发现的活跃同币对池子即使不在官方列表，也会按完整 PoolKey 核对并补入计算；后续快照保留这些池子。索引丢失或过旧时，后台通过私有 Alchemy NFT API 重建，结果仍需链上对账。公开索引和快照仅含钱包地址及链上数据，不含 Key。
 
@@ -76,7 +76,9 @@ Open `http://127.0.0.1:4316`. The project uses vanilla HTML/CSS/JS, Canvas, viem
 - 增加币对时先把已核对的同币对池资料加入 `public/data/catalog.json`，再在 `markets` 里填两种币的合约地址并启用。缺少池资料会明确报错，不会退回全市场抓取。
 - 保存后，运行中的后台在下一轮读取新配置；网页会随这次保存重新发布。普通访客不能修改付费后台的选择。
 
-目录只发布已启用的币对；`npm run catalog` 仅精简本地目录，不访问 API，也不再保留全链抓取入口。钱包归属查询仍只核对已配置的三个我方地址。
+目录只发布已启用的币对；`npm run catalog` 仅精简本地目录，不访问 API，也不再保留全链抓取入口。钱包归属查询仍只核对已配置的四个我方地址。
+
+页面标题、统一导航、全局刷新和资金概览一起吸顶；订单簿设置随内容滚动。宽屏布局最多扩展至 2560 像素，右侧曲线获得更多空间，价格列保持紧凑。
 
 ## Optional Alchemy refresh
 

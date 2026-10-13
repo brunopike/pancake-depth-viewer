@@ -131,8 +131,8 @@ function updateChartControls() {
   if (!max) $('chart-percent').value = state.chartPercent;
   $('chart-maximum').setAttribute('aria-pressed', String(max));
   $('chart-maximum').classList.toggle('active', max);
-  $('chart-maximum').textContent = max ? '☑ 最大' : '□ 最大';
-  $('chart-custom').textContent = max ? '□ 百分比' : '☑ 百分比';
+  $('chart-maximum').textContent = '最大';
+  $('chart-custom').textContent = '百分比';
   $('chart-custom').setAttribute('aria-pressed', String(!max));
   $('chart-custom').classList.toggle('active', !max);
   $('chart-range-note').textContent = max ? '现价 0.5～2 倍' : `上下 ${number(state.chartPercent, 4)}%`;
