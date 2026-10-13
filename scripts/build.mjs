@@ -2,6 +2,7 @@ import { build } from 'esbuild';
 import { mkdir, cp, copyFile, readFile, writeFile } from 'node:fs/promises';
 import { gzipSync } from 'node:zlib';
 import { createHash } from 'node:crypto';
+import { configuredCatalog } from '../src/background-markets.mjs';
 await mkdir('dist', { recursive: true });
 await cp('public', 'dist', { recursive: true });
 await build({ entryPoints: ['src/app.js'], bundle: true, minify: true, sourcemap: true,
@@ -28,5 +29,9 @@ for (const file of ['esim-addresses.js', 'esim.css']) {
   addressHTML = addressHTML.replace(`"./${file}"`, `"./${file}?v=${version}"`);
 }
 await writeFile('dist/esim-addresses.html', addressHTML);
-await writeFile('dist/data/catalog.json.gz', gzipSync(await readFile('public/data/catalog.json')));
+const catalog = configuredCatalog(JSON.parse(await readFile('public/data/catalog.json', 'utf8')),
+  JSON.parse(await readFile('public/data/background-markets.json', 'utf8')));
+const catalogJSON = JSON.stringify(catalog);
+await writeFile('dist/data/catalog.json', catalogJSON);
+await writeFile('dist/data/catalog.json.gz', gzipSync(catalogJSON));
 console.log('Built dist/');

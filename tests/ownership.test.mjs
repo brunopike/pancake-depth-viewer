@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { buildDepth, poolInventory, priceAtTick, MIN_TICK, MAX_TICK } from '../src/math.mjs';
+import { buildDepth, poolInventory, ownedInventory, priceAtTick, MIN_TICK, MAX_TICK } from '../src/math.mjs';
 import { OWNERS, CL_POSITION_MANAGER, V3_POSITION_MANAGER, ownedCurve, validateOwnership } from '../src/ownership.mjs';
 
 const L = 1000n * 10n ** 18n;
@@ -95,4 +95,18 @@ test('Invalid owners, duplicated NFTs, bad tick boundaries and over-attributed l
   ];
   for (const positions of badPositions) assert.throws(() => validateOwnership({ ...cl, ownership: { status: 'verified', positions } }), /LP/);
   for (const ownBalance of [-1n, 11n]) assert.throws(() => validateOwnership({ ...v2, ownership: { status: 'verified', ownBalance, totalSupply: 10n } }), /LP/);
+});
+
+test('Owned inventory includes distant CL positions and proportional V2 reserves in either token order', () => {
+  const expectedBase = 300 + 250 * (1 - 1 / 1.0001 ** 100) + (1000 / 3) * (1 / 1.0001 ** 500 - 1 / 1.0001 ** 600);
+  const expectedQuote = 300 + 250 * (1 - 1.0001 ** -100);
+  const mine = ownedInventory([cl, v2], 'base');
+  near(mine.base, expectedBase); near(mine.quote, expectedQuote);
+  const inverse = ownedInventory([cl, v2], 'quote');
+  near(inverse.base, expectedQuote); near(inverse.quote, expectedBase);
+  const zeroCL = { ...cl, ownership: { status: 'verified', positions: [] } };
+  const zeroV2 = { ...v2, ownership: { ...v2.ownership, ownBalance: 0n } };
+  assert.deepEqual(ownedInventory([zeroCL, zeroV2], 'base'), { base: 0, quote: 0 });
+  assert.throws(() => ownedInventory([{ ...cl, ownership: undefined }], 'base'), /待核对/);
+  assert.throws(() => ownedInventory([{ ...cl, fullRange: false }], 'base'), /全池数据/);
 });

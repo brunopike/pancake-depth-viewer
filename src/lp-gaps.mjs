@@ -1,5 +1,5 @@
-import { priceAtTick, MIN_TICK, MAX_TICK } from './math.mjs';
-import { validateOwnership } from './ownership.mjs';
+import { cumulative, settings, MIN_TICK, MAX_TICK } from './math.mjs';
+import { ownedCurve } from './ownership.mjs';
 
 export function gapPercent(value = 100) {
   const percent = Number(value);
@@ -9,41 +9,70 @@ export function gapPercent(value = 100) {
   return percent;
 }
 
-// Union actual, positive-liquidity position ranges across this pair. Never infer
-// zero liquidity from rounded order-book cells or from missing pool ownership.
-export function ownLiquidityGaps(pools, baseId, reference, value = 100, coverage = {}) {
-  const percent = gapPercent(value);
+export function gapSettings(percent = 100, precision = 4, threshold = 50) {
+  const config = settings(gapPercent(percent), precision);
+  if (threshold === '' || threshold === null || !Number.isFinite(Number(threshold)) || Number(threshold) < 0) {
+    throw new Error('每档金额上限请输入大于或等于 0 的数字。');
+  }
+  return { ...config, threshold: Number(threshold) };
+}
+
+// Scan exact decimal bands, without the order book's distant-band compression.
+// Limits are explicit: silently merging bands would change a per-band threshold.
+export function weakLiquidityRanges(pools, baseId, reference, input = {}, coverage = {}) {
+  const config = gapSettings(input.percent, input.precision, input.threshold);
   if (!Number.isFinite(reference) || reference <= 0) throw new Error('参考价格未就绪。');
   if (!pools.length || coverage.failedCount > 0 || (coverage.expectedPoolCount ?? pools.length) !== pools.length) {
-    throw new Error('池子数据未读完整，暂不能确认空缺区间。');
+    throw new Error('池子数据未读完整，暂不能确认薄弱区间。');
   }
-  const low = Math.max(0, reference * (1 - percent / 100)), high = reference * (1 + percent / 100);
-  if (!Number.isFinite(high)) throw new Error('查询范围过大，请缩小百分比。');
-  const ranges = [];
-  for (const pool of pools) {
+  const low = Math.max(0, reference * (1 - config.range)), high = reference * (1 + config.range);
+  const count = Math.ceil((high - low) / config.step);
+  if (!Number.isFinite(high) || count > 20000 || high / config.step >= Number.MAX_SAFE_INTEGER) {
+    throw new Error('当前设置超过 20,000 档或精度过细，请减少小数位数或缩小查询范围。');
+  }
+  const curves = pools.map(pool => {
     if (!['v2', 'cl'].includes(pool.kind) || ![pool.token0.id, pool.token1.id].some(id => id.toLowerCase() === baseId.toLowerCase())
       || (pool.kind === 'cl' && (!pool.fullRange || pool.minTick !== MIN_TICK || pool.maxTick !== MAX_TICK))) {
-      throw new Error('池子数据未读完整，暂不能确认空缺区间。');
+      throw new Error('池子数据未读完整，暂不能确认薄弱区间。');
     }
-    if (!validateOwnership(pool)) throw new Error('我方 LP 归属待核对，暂不能确认空缺区间。');
-    if (pool.kind === 'v2') {
-      if (pool.ownership.ownBalance > 0n && pool.reserve0 > 0 && pool.reserve1 > 0) ranges.push({ low, high });
-      continue;
+    const own = ownedCurve(pool);
+    if (!own) throw new Error('我方 LP 归属待核对，暂不能确认薄弱区间。');
+    return own;
+  });
+  const bands = [];
+  for (const [side, sign, end] of [['bid', -1, low], ['ask', 1, high]]) {
+    const units = reference / config.step, nearest = Math.round(units);
+    const grid = Math.abs(units - nearest) <= Number.EPSILON * Math.max(1, Math.abs(units)) * 4 ? nearest : units;
+    const first = sign > 0 ? Math.floor(grid) + 1 : Math.ceil(grid) - 1;
+    const prices = [];
+    for (let i = 0; i < Math.ceil(Math.abs(end - reference) / config.step); i++) {
+      const p = Number(((first + sign * i) * config.step).toPrecision(15));
+      if (sign > 0 ? p >= end : p <= end) break;
+      if (p > 0 && (sign > 0 ? p > (prices.at(-1) ?? reference) : p < (prices.at(-1) ?? reference))) prices.push(p);
     }
-    for (const position of pool.ownership.positions) {
-      if (position.liquidity === 0n) continue;
-      const prices = [position.tickLower, position.tickUpper].map(tick => priceAtTick(pool, baseId, tick)).sort((a, b) => a - b);
-      const start = Math.max(low, prices[0]), end = Math.min(high, prices[1]);
-      if (end > start) ranges.push({ low: start, high: end });
+    if (!prices.length || prices.at(-1) !== end) prices.push(end);
+    for (let i = 0; i < prices.length; i++) {
+      if (bands.length >= 20000) throw new Error('当前设置超过 20,000 档，请减少小数位数或缩小查询范围。');
+      const boundary = prices[i], previous = i ? prices[i - 1] : undefined;
+      let quote = 0;
+      for (const own of curves) if (own.scale) quote += cumulative(own.pool, baseId, boundary, side, previous).quote * own.scale;
+      if (!Number.isFinite(quote) || quote < 0) throw new Error('每档金额暂时无法计算，请刷新数据。');
+      bands.push({ low: Math.min(previous ?? reference, boundary), high: Math.max(previous ?? reference, boundary), side, quote });
     }
   }
-  ranges.sort((a, b) => a.low - b.low || a.high - b.high);
-  const gaps = [];
-  let cursor = low;
-  for (const range of ranges) {
-    if (range.low > cursor) gaps.push({ low: cursor, high: range.low });
-    cursor = Math.max(cursor, range.high);
+  bands.sort((a, b) => a.low - b.low);
+  const ranges = [];
+  let matched = 0;
+  for (const band of bands) {
+    if (band.quote > config.threshold) continue;
+    matched++;
+    let range = ranges.at(-1);
+    if (!range || range.high !== band.low || range.side !== band.side) {
+      range = { low: band.low, high: band.low, side: band.side, minQuote: Infinity, maxQuote: 0, totalQuote: 0, bands: [] };
+      ranges.push(range);
+    }
+    range.high = band.high; range.bands.push(band);
+    range.minQuote = Math.min(range.minQuote, band.quote); range.maxQuote = Math.max(range.maxQuote, band.quote); range.totalQuote += band.quote;
   }
-  if (cursor < high) gaps.push({ low: cursor, high });
-  return { percent, low, high, gaps };
+  return { config, low, high, ranges, scanned: bands.length, matched };
 }

@@ -110,6 +110,20 @@ export function poolInventory(pools, baseId) {
   return { base, quote };
 }
 
+export function ownedInventory(pools, baseId) {
+  requireFullPools(pools);
+  let base = 0, quote = 0;
+  for (const pool of pools) {
+    const own = ownedCurve(pool);
+    if (!own) throw new Error('我方 LP 归属待核对。');
+    if (!own.scale) continue;
+    const inventory = poolInventory([own.pool], baseId);
+    base += inventory.base * own.scale;
+    quote += inventory.quote * own.scale;
+  }
+  return { base, quote };
+}
+
 // Static price-impact estimate. Quote is paid on a buy and received on a sell.
 export function estimateTarget(pools, baseId, targetPrice, reference) {
   targetPrice = Number(targetPrice);

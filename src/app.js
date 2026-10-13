@@ -1,8 +1,8 @@
 import { loadPools } from './chain.mjs';
-import { buildDepth, settings, poolInventory, estimateTarget, priceAtTick, cumulative, priceOf } from './math.mjs';
+import { buildDepth, settings, poolInventory, ownedInventory, estimateTarget, priceAtTick, cumulative, priceOf } from './math.mjs';
 import { OWNERS, poolMetadata } from './ownership.mjs';
 import { readBrowserCache, readSharedCache, saveBrowserCache } from './browser-cache.mjs';
-import { ownLiquidityGaps, gapPercent } from './lp-gaps.mjs';
+import { weakLiquidityRanges, gapSettings } from './lp-gaps.mjs';
 const $ = id => document.getElementById(id);
 const escape = value => String(value ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const number = (n, digits = 2) => !Number.isFinite(Number(n)) ? '无有限上限' : Number(n) !== 0 && Math.abs(n) < 10 ** -digits
@@ -21,7 +21,7 @@ const bandPrice = n => n === 0 || !Number.isFinite(n) || Math.abs(n) >= 1e12 ? p
 const time = n => new Date(n).toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai', hour12: false });
 const protocolName = { v2: 'V2', v3: 'V3', infinityCl: 'Infinity CL', infinityBin: 'Infinity Bin', stable: 'StableSwap', infinityStable: 'Infinity Stable' };
 const state = { catalog: null, markets: [], market: null, config: settings(50, 4), bookView: 'split', chartPercent: 50, chartPrecision: 4, inspection: null, chartDepth: null, chartHover: null, live: null, depth: null, request: 0, hover: null, focusPrice: null, targetPrice: null, refreshMinutes: 10, nextRefreshAt: Date.now() + 600000, busy: false };
-state.gapPercent = 100;
+state.gapPercent = 100; state.gapPrecision = 4; state.gapThreshold = 50; state.gapData = null;
 let plot;
 
 function pairMarket(p) {
@@ -71,12 +71,15 @@ function clearDepth() {
   state.targetPrice = null; $('target-price').value = ''; $('target-result').hidden = true; $('target-button').disabled = true;
   $('ask-range-note').textContent = ''; $('bid-range-note').textContent = '';
   $('range-result').hidden = true; $('jump-button').disabled = true; $('jump-status').textContent = '';
-  ['mark-price', 'book-price', 'ask-total', 'bid-total'].forEach(id => $(id).textContent = '—');
+  ['mark-price', 'book-price', 'ask-total', 'bid-total', 'own-ask-total', 'own-bid-total'].forEach(id => $(id).textContent = '—');
   ['bids', 'asks'].forEach(id => $(id).innerHTML = '<div class="empty">正在读取池子里的资金…</div>');
   $('lp-status').textContent = 'LP 归属待核对';
+  ['own-ask-note', 'own-bid-note'].forEach(id => $(id).textContent = 'LP 归属待核对');
+  state.gapData = null;
   $('lp-gaps-count').textContent = '';
   $('lp-gaps-error').hidden = true;
-  $('lp-gaps-summary').textContent = '按我方 LP 的实际区间查询。';
+  $('lp-gaps-summary').textContent = '按每档我方金额筛选，点击区间看明细。';
+  $('lp-gaps-summary').title = ''; $('lp-gaps-meta').textContent = '';
   $('lp-gaps-result').textContent = '正在读取 LP 数据…';
   $('chart-empty').style.display = 'flex'; $('chart-empty').textContent = '正在读取这个代币的买卖资金…';
   $('chart-tip').hidden = true; draw();
@@ -91,6 +94,8 @@ function updateURL() {
   url.searchParams.set('view', state.bookView);
   url.searchParams.set('refreshMinutes', state.refreshMinutes);
   url.searchParams.set('gapPercent', state.gapPercent);
+  url.searchParams.set('gapPrecision', state.gapPrecision);
+  url.searchParams.set('gapThreshold', state.gapThreshold);
   history.replaceState(null, '', url);
 }
 function updateControls() {
@@ -156,6 +161,7 @@ async function selectMarket(market) {
   document.querySelectorAll('.cumulative-value-label').forEach(e => e.textContent = `累计价值 ${market.quote.symbol === 'USDT' ? 'U' : market.quote.symbol}`);
   $('book-quote').textContent = market.quote.symbol;
   $('target-unit').textContent = market.quote.symbol;
+  $('lp-gap-unit').textContent = market.quote.symbol === 'USDT' ? 'U' : market.quote.symbol;
   $('chart-unit').textContent = `竖着看：合计金额（${market.quote.symbol}）`;
   updateURL(); $('market-dialog').close(); await refresh();
 }
@@ -248,6 +254,19 @@ function render({ preserveChart = false } = {}) {
     $('ask-range-note').textContent = '全池数据未读完整'; $('bid-range-note').textContent = '全池数据未读完整';
     $('target-button').disabled = true;
   }
+  try {
+    if (state.live.failed.length || state.live.pools.length !== state.market.pools.length) throw new Error('池子数据未读完整');
+    const own = ownedInventory(state.live.pools, state.market.base.id);
+    $('own-ask-total').textContent = `${compact(own.base)} ${state.market.base.symbol}`;
+    $('own-bid-total').textContent = `${compact(own.quote)} ${state.market.quote.symbol}`;
+    $('own-ask-total').title = `${number(own.base, 8)} ${state.market.base.symbol}`;
+    $('own-bid-total').title = `${number(own.quote, 8)} ${state.market.quote.symbol}`;
+    $('own-ask-note').textContent = '我方 LP 中可卖出的币';
+    $('own-bid-note').textContent = `我方 LP 中可用于买入的 ${state.market.quote.symbol === 'USDT' ? 'U' : state.market.quote.symbol}`;
+  } catch {
+    ['own-ask-total', 'own-bid-total'].forEach(id => { $(id).textContent = '—'; $(id).title = ''; });
+    ['own-ask-note', 'own-bid-note'].forEach(id => $(id).textContent = '我方 LP 数据待核对');
+  }
   renderTarget();
   renderGaps();
   const maximum = Math.max(...[...d.bids, ...d.asks].map(r => Number.isFinite(r.cumulativeQuote) ? r.cumulativeQuote : 0), 1e-20);
@@ -282,22 +301,47 @@ function render({ preserveChart = false } = {}) {
   if (!preserveChart) rebuildChart();
 }
 
+function gapPrice(value) {
+  const precision = state.gapData.config.precision, units = value * 10 ** precision;
+  // Partial edge bands keep their actual boundary, instead of looking zero-width.
+  return Math.abs(units - Math.round(units)) > Number.EPSILON * Math.max(1, Math.abs(units)) * 8
+    ? price(value) : value.toLocaleString('en-US', { minimumFractionDigits: precision, maximumFractionDigits: precision });
+}
+function renderGapDetail(details, limit = 100) {
+  const range = state.gapData?.ranges[Number(details.dataset.range)];
+  if (!range) return;
+  const unit = escape(state.market.quote.symbol === 'USDT' ? 'U' : state.market.quote.symbol);
+  const shown = Math.min(limit, range.bands.length);
+  details.dataset.shown = shown;
+  const content = details.querySelector('.gap-detail');
+  content.innerHTML = `<p>区间合计：${number(range.totalQuote, 6)} ${unit} · ${range.bands.length} 档</p><div class="gap-band gap-header"><span>每档价格区间</span><span>我方金额（${unit}）</span></div>`
+    + range.bands.slice(0, shown).map(b => `<div class="gap-band"><span title="${b.low} ～ ${b.high}">${gapPrice(b.low)} ～ ${gapPrice(b.high)}</span><span title="${b.quote}">${number(b.quote, 6)}</span></div>`).join('')
+    + (shown < range.bands.length ? `<button type="button" class="button gap-more">再显示 100 档（剩 ${range.bands.length - shown} 档）</button>` : '');
+}
 function renderGaps() {
   const result = $('lp-gaps-result');
-  $('lp-gaps-count').textContent = '';
+  state.gapData = null; $('lp-gaps-count').textContent = ''; $('lp-gaps-meta').textContent = '';
   if (!state.depth || !state.live) { result.textContent = '数据未就绪，请先刷新。'; return; }
   try {
-    const data = ownLiquidityGaps(state.live.pools, state.market.base.id, state.depth.price, state.gapPercent,
+    const data = weakLiquidityRanges(state.live.pools, state.market.base.id, state.depth.price,
+      { percent: state.gapPercent, precision: state.gapPrecision, threshold: state.gapThreshold },
       { expectedPoolCount: state.market.pools.length, failedCount: state.live.failed.length });
-    $('lp-gaps-count').textContent = `${data.gaps.length} 个区间`;
-    $('lp-gaps-summary').textContent = `查询 ${price(data.low)}～${price(data.high)} ${state.market.quote.symbol} · 已核对 ${state.live.pools.length} 个池 · ${time(state.live.timestamp)}`;
-    const relative = value => { const n = (value / state.depth.price - 1) * 100; return `${n > 0 ? '+' : ''}${number(n, 3)}%`; };
-    result.innerHTML = data.gaps.length
-      ? '<div class="gap-row gap-header"><span>我方 LP 为 0 的价格区间</span><span>相对现价</span></div>'
-        + data.gaps.map(g => `<div class="gap-row"><span>${price(g.low)} ～ ${price(g.high)}</span><span>${relative(g.low)} ～ ${relative(g.high)}</span></div>`).join('')
-      : '<p class="gap-empty">这个范围内没有空缺区间。</p>';
+    state.gapData = data;
+    const unit = escape(state.market.quote.symbol === 'USDT' ? 'U' : state.market.quote.symbol);
+    $('lp-gaps-count').textContent = `${data.ranges.length} 个区间 · ${data.matched}/${data.scanned} 档`;
+    $('lp-gaps-summary').textContent = `每档 ${data.config.step.toFixed(data.config.precision)} · 我方 ≤ ${number(data.config.threshold, 6)} ${state.market.quote.symbol === 'USDT' ? 'U' : state.market.quote.symbol} · 点击区间看明细`;
+    $('lp-gaps-meta').textContent = `${time(state.live.timestamp)} · 已核对 ${state.live.pools.length} 个池`;
+    $('lp-gaps-summary').title = `查询 ${price(data.low)}～${price(data.high)} ${state.market.quote.symbol} · 已核对 ${state.live.pools.length} 个池 · ${time(state.live.timestamp)}`;
+    result.innerHTML = data.ranges.length
+      ? `<div class="gap-row gap-header"><span>价格区间</span><span>档数</span><span>每档我方（${unit}）</span></div>`
+        + data.ranges.map((r, i) => `<details class="gap-range" data-range="${i}"><summary class="gap-row"><span title="${r.low} ～ ${r.high}"><b class="${r.side === 'bid' ? 'bid' : 'ask'}-color">${r.side === 'bid' ? '买盘' : '卖盘'}</b> ${gapPrice(r.low)} ～ ${gapPrice(r.high)}</span><span>${r.bands.length}</span><span title="${r.minQuote} ～ ${r.maxQuote}">${r.minQuote === r.maxQuote ? number(r.minQuote, 6) : `${number(r.minQuote, 6)} ～ ${number(r.maxQuote, 6)}`}</span></summary><div class="gap-detail"></div></details>`).join('')
+      : '<p class="gap-empty">这个范围内没有符合条件的档位。</p>';
+    result.querySelectorAll('details').forEach(details => details.addEventListener('toggle', () => {
+      if (details.open && !details.dataset.shown) renderGapDetail(details);
+    }));
   } catch (e) {
-    $('lp-gaps-summary').textContent = '按我方 LP 的实际区间查询。';
+    $('lp-gaps-summary').textContent = '按每档我方金额筛选，点击区间看明细。';
+    $('lp-gaps-summary').title = '';
     result.textContent = e.message;
   }
 }
@@ -428,7 +472,7 @@ function coverage() {
 }
 function methodology() {
   $('detail-title').textContent = '怎么看这些数据？';
-  $('detail-body').innerHTML = `<h3>先选币种，再看金额</h3><p>例如 ESIM / USDT，表示用 USDT 买卖 ESIM。价格 0.06 表示 1 个 ESIM 对应 0.06 USDT。绿色是买盘，红色是卖盘。这里的“深度”，就是选定价格范围里的买卖数量和金额，按池内资金估算。</p><h3>一行表格是什么意思？</h3><p>每一行是一小段价格区间。我方 LP 是指定两个地址直接持有的资金，外部 LP 是其余资金，全池是两者之和。各列左边是我方，右边是外部；“累计币量”和“累计价值 U”从最接近现价的档位加到当前这一档。点击一行能看完整数字。曲线越高，表示累计金额越多。</p><h3>全池币量和目标价格</h3><p>顶部卖盘显示池内代币，买盘显示用于买入的计价币，统计全部价格范围中的交易资金，未含未领取的手续费。输入目标价格：高于现价时，看买入要付多少；低于现价时，看要卖多少币、可换回多少。某个池子在目标价处没有资金时会提示，不能当成保证成交的报价。订单簿与曲线的显示范围可分别设置，不影响全池统计和目标价估算。未模拟外部套利或资金新增。</p><h3>价格上下范围</h3><p>输入 10%，表格和曲线就看参考价上下 10% 内的买卖数量和金额。例如参考价 1 USDT，就是看 0.9 到 1.1 USDT。“最大”看现价的 0.5～2 倍。例如现价 0.06，就是看 0.03～0.12。表格金额是到对应价格的估算花费或所得。</p><h3>小数位数怎么设置？</h3><p>4 位小数表示每档价格相差 0.0001；2 位小数就是 0.01。档数自动计算。档位太多时，每行会合并相邻档，最多显示 500 行；整个范围的总金额不会减少。范围的最后一档可能只是一小段，以实际边界价格计算。小数位数只改变表格的细分程度，不改变范围内的总金额。</p><h3>池子是什么？为什么只显示部分数据？</h3><p>池子是用于买卖两种币的一组资金。同样两种币可以有多个池子，本页合并成功读取的池子。参考价格取官方列表资金估值最大的已读取池子。读不到的池子、还未支持的池子类型不会加进图里，可点“查看数据明细”了解原因。当前只看 BNB 链上的 PancakeSwap。ESIM / USDT 与 ESIM / BNB 分开显示；同名但地址不同的代币也分开显示。</p><h3>数据从哪里来？多久更新？</h3><p>代币和池子列表来自 PancakeSwap 官方数据接口，后台每小时尝试更新。列表更新时间：${state.catalog ? time(state.catalog.fetchedAt) + '（北京时间）' : '暂时未知'}。${state.catalog?.complete ? '这次已读取完接口提供的列表，但不保证链上所有池子都在里面。' : '列表还未收集完整，有些池子可能尚未收录。'}打开时先显示有时间标记的缓存，再检查链上更新；流动性未改变的档位直接复用。打开页面立即读取链上数据，默认每分钟自动更新；回到页面也会立即检查更新。也可点“刷新数据”。ESIM/USDT 后台每 60 分钟更新共享数据，即使网页关闭也会运行；实际时间以页面显示为准。池子列表中的美元估值和图里的买卖金额是不同指标，更新时间也可能不同。</p><h3>金额是估算值</h3><p>这些数值按池子的资金计算，未计入手续费、网络费用、代币转账税费，以及某些池子的额外交易规则。实际买卖金额以交易时的报价为准。</p><details><summary>查看详细算法与技术来源</summary><p>V2 使用实际储备量的恒定乘积曲线；V3 与 Infinity CL 使用当前价格、活跃流动性、tick bitmap 和初始化 tick 的 liquidityNet，按价格区间积分。一次刷新固定同一区块。原始状态及流动性变化使用 BigInt，显示积分使用浮点数。Infinity Bin / StableSwap 目前只列入列表与明细，不计入曲线。</p><p>百分比模式的边界 = 参考价 ×（1 ± 百分比 / 100），价格下限最低为 0。精度为 n 位小数时，基础价格档距为 10⁻ⁿ；相邻档合并后仍按实际边界积分，最后一档抵达原始范围边界。最大显示范围为现价的 0.5～2 倍。后台全量缓存读取合约全部 tick bitmap 并校验两端流动性归零；显示范围独立于缓存读取范围。各池从自身现价积分到共同价格边界；各池现价不同，第一档可能包含已有池间价差。这里只合并同一对代币地址的直接池，未模拟多跳路由或真实成交。</p><p><a href="https://developer.pancakeswap.finance/apis/subgraph" target="_blank" rel="noopener">PancakeSwap 开发文档 ↗</a><br><a href="https://github.com/pancakeswap/pancakeswap-ai" target="_blank" rel="noopener">官方数据接口使用示例 ↗</a><br><a href="https://github.com/pancakeswap/infinity-core" target="_blank" rel="noopener">Infinity CL 合约与计算方法 ↗</a></p></details>`;
+  $('detail-body').innerHTML = `<h3>先选币种，再看金额</h3><p>例如 ESIM / USDT，表示用 USDT 买卖 ESIM。价格 0.06 表示 1 个 ESIM 对应 0.06 USDT。绿色是买盘，红色是卖盘。这里的“深度”，就是选定价格范围里的买卖数量和金额，按池内资金估算。</p><h3>一行表格是什么意思？</h3><p>每一行是一小段价格区间。我方 LP 是指定两个地址直接持有的资金，外部 LP 是其余资金，全池是两者之和。各列左边是我方，右边是外部；“累计币量”和“累计价值 U”从最接近现价的档位加到当前这一档。点击一行能看完整数字。曲线越高，表示累计金额越多。</p><h3>全池币量和目标价格</h3><p>顶部卖盘显示池内代币，买盘显示用于买入的计价币，统计全部价格范围中的交易资金，未含未领取的手续费。输入目标价格：高于现价时，看买入要付多少；低于现价时，看要卖多少币、可换回多少。某个池子在目标价处没有资金时会提示，不能当成保证成交的报价。订单簿与曲线的显示范围可分别设置，不影响全池统计和目标价估算。未模拟外部套利或资金新增。</p><h3>价格上下范围</h3><p>输入 10%，表格和曲线就看参考价上下 10% 内的买卖数量和金额。例如参考价 1 USDT，就是看 0.9 到 1.1 USDT。“最大”看现价的 0.5～2 倍。例如现价 0.06，就是看 0.03～0.12。表格金额是到对应价格的估算花费或所得。</p><h3>小数位数怎么设置？</h3><p>4 位小数表示每档价格相差 0.0001；2 位小数就是 0.01。档数自动计算。档位太多时，每行会合并相邻档，最多显示 500 行；整个范围的总金额不会减少。范围的最后一档可能只是一小段，以实际边界价格计算。小数位数只改变表格的细分程度，不改变范围内的总金额。</p><h3>池子是什么？为什么只显示部分数据？</h3><p>池子是用于买卖两种币的一组资金。同样两种币可以有多个池子，本页合并成功读取的池子。参考价格取官方列表资金估值最大的已读取池子。读不到的池子、还未支持的池子类型不会加进图里，可点“查看数据明细”了解原因。当前只看 BNB 链上的 PancakeSwap。ESIM / USDT 与 ESIM / BNB 分开显示；同名但地址不同的代币也分开显示。</p><h3>数据从哪里来？多久更新？</h3><p>只保留后台设置中启用的币对，默认 ESIM/USDT。池子资料来自 PancakeSwap 官方接口及已核对的我方仓位；不扫描全链币种。打开页面先显示缓存并立即更新，默认每 10 分钟刷新，可自行修改或手动刷新。页面关闭后，后台每 60 分钟尝试更新所选币对。实际数据时间以页面显示为准。</p><h3>我方 LP 薄弱区间</h3><p>按每个价格档的我方金额筛选，默认现价上下 100%、4 位小数、每档不超过 50 U。相邻的合格档位合并显示，点开查看每档金额。查询设置独立于订单簿和曲线；金额按未四舍五入的数值比较。顶部我方币量与资金统计全部价格范围。</p><h3>金额是估算值</h3><p>这些数值按池子的资金计算，未计入手续费、网络费用、代币转账税费，以及某些池子的额外交易规则。实际买卖金额以交易时的报价为准。</p><details><summary>查看详细算法与技术来源</summary><p>V2 使用实际储备量的恒定乘积曲线；V3 与 Infinity CL 使用当前价格、活跃流动性、tick bitmap 和初始化 tick 的 liquidityNet，按价格区间积分。一次刷新固定同一区块。原始状态及流动性变化使用 BigInt，显示积分使用浮点数。Infinity Bin / StableSwap 目前只列入列表与明细，不计入曲线。</p><p>百分比模式的边界 = 参考价 ×（1 ± 百分比 / 100），价格下限最低为 0。精度为 n 位小数时，基础价格档距为 10⁻ⁿ；相邻档合并后仍按实际边界积分，最后一档抵达原始范围边界。最大显示范围为现价的 0.5～2 倍。后台全量缓存读取合约全部 tick bitmap 并校验两端流动性归零；显示范围独立于缓存读取范围。各池从自身现价积分到共同价格边界；各池现价不同，第一档可能包含已有池间价差。这里只合并同一对代币地址的直接池，未模拟多跳路由或真实成交。</p><p><a href="https://developer.pancakeswap.finance/apis/subgraph" target="_blank" rel="noopener">PancakeSwap 开发文档 ↗</a><br><a href="https://github.com/pancakeswap/pancakeswap-ai" target="_blank" rel="noopener">官方数据接口使用示例 ↗</a><br><a href="https://github.com/pancakeswap/infinity-core" target="_blank" rel="noopener">Infinity CL 合约与计算方法 ↗</a></p></details>`;
   $('detail-dialog').showModal();
 }
 
@@ -492,9 +536,14 @@ $('target-price').addEventListener('input', () => { state.targetPrice = null; $(
 $('lp-gaps-form').addEventListener('submit', e => {
   e.preventDefault();
   try {
-    state.gapPercent = gapPercent($('lp-gap-percent').value);
+    const config = gapSettings($('lp-gap-percent').value, $('lp-gap-precision').value, $('lp-gap-threshold').value);
+    state.gapPercent = config.percent; state.gapPrecision = config.precision; state.gapThreshold = config.threshold;
     $('lp-gaps-error').hidden = true; updateURL(); renderGaps();
   } catch (error) { $('lp-gaps-error').hidden = false; $('lp-gaps-error').textContent = error.message; }
+});
+$('lp-gaps-result').addEventListener('click', event => {
+  const button = event.target.closest('.gap-more');
+  if (button) { const details = button.closest('details'); renderGapDetail(details, Number(details.dataset.shown) + 100); }
 });
 $('coverage-button').addEventListener('click', coverage);
 $('method-button').addEventListener('click', methodology);
@@ -569,8 +618,11 @@ async function init() {
   state.refreshMinutes = Number.isInteger(minutes) && minutes >= 1 && minutes <= 1440 ? minutes : 10;
   $('refresh-minutes').value = state.refreshMinutes; resetRefreshClock();
   state.bookView = params.get('view') === 'total' ? 'total' : 'split';
-  try { state.gapPercent = gapPercent(params.get('gapPercent') ?? 100); } catch { state.gapPercent = 100; }
-  $('lp-gap-percent').value = state.gapPercent;
+  try {
+    const config = gapSettings(params.get('gapPercent') ?? 100, params.get('gapPrecision') ?? 4, params.get('gapThreshold') ?? 50);
+    state.gapPercent = config.percent; state.gapPrecision = config.precision; state.gapThreshold = config.threshold;
+  } catch { state.gapPercent = 100; state.gapPrecision = 4; state.gapThreshold = 50; }
+  $('lp-gap-percent').value = state.gapPercent; $('lp-gap-precision').value = state.gapPrecision; $('lp-gap-threshold').value = state.gapThreshold;
   updateControls();
   try {
     let catalog;
@@ -589,7 +641,11 @@ async function init() {
     }
     if (!Array.isArray(catalog.pools) || catalog.chainId !== 56) throw new Error('市场目录格式错误');
     state.catalog = catalog; state.markets = catalogMarkets(catalog.pools);
-    $('catalog-status').textContent = `已收录 ${number(state.markets.length, 0)} 组买卖币种、${number(catalog.pools.length, 0)} 个池子 · 列表更新于 ${time(catalog.fetchedAt)}（北京时间）${catalog.complete ? '' : ' · 列表还未收集完整'}`;
+    $('catalog-status').textContent = `已配置 ${number(state.markets.length, 0)} 组币对 · ${number(catalog.pools.length, 0)} 个池子`;
+    if (!state.markets.length) {
+      $('status').textContent = '尚未启用查看的币对'; $('chart-empty').textContent = '请先在后台币种设置中启用币对';
+      $('lp-gaps-result').textContent = '请先启用币对'; return;
+    }
     const requested = params.has('base') && params.has('quote');
     let market = state.markets.find(m => m.base.id.toLowerCase() === params.get('base')?.toLowerCase() && m.quote.id.toLowerCase() === params.get('quote')?.toLowerCase());
     if (!requested) market = state.markets.find(m => m.base.symbol === 'ESIM' && m.quote.symbol === 'USDT') || state.markets.find(m => m.base.symbol === 'WBNB' && m.quote.symbol === 'USDT') || state.markets[0];

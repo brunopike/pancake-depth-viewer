@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
-import { configuredMarkets, marketPools, snapshotName } from '../src/background-markets.mjs';
+import { configuredMarkets, configuredCatalog, marketPools, snapshotName } from '../src/background-markets.mjs';
 import { DEFAULT_BASE, DEFAULT_QUOTE, latestSharedURL } from '../src/snapshot.mjs';
 const selected = { name: 'ESIM / USDT', enabled: true, base: DEFAULT_BASE, quote: DEFAULT_QUOTE };
 const third = '0x1111111111111111111111111111111111111111';
@@ -23,6 +23,24 @@ test('Invalid and duplicate selections fail closed before RPC work', () => {
   }
   assert.throws(() => configuredMarkets({}));
   assert.throws(() => snapshotName('../key', DEFAULT_QUOTE));
+});
+
+test('Published directories contain only selected pairs and cannot reintroduce unrelated pools', () => {
+  const p = (a, b, id) => ({ id, protocol: 'v3', token0: { id: a }, token1: { id: b } });
+  const source = { chainId: 56, fetchedAt: '2026-10-13T00:00:00Z', pools: [
+    p(DEFAULT_BASE, DEFAULT_QUOTE, 'selected'), p(DEFAULT_QUOTE, DEFAULT_BASE, 'inverse'),
+    p(third, DEFAULT_QUOTE, 'unrelated'), p(DEFAULT_BASE, third, 'other-quote'),
+  ] };
+  const config = { markets: [selected] };
+  const result = configuredCatalog(source, config);
+  assert.deepEqual(result.pools, source.pools.slice(0, 2));
+  assert.equal(result.fetchedAt, source.fetchedAt);
+  assert.equal(result.scope, 'configured-pairs');
+  assert.deepEqual(configuredCatalog(result, config), result);
+  assert.deepEqual(configuredCatalog(source, { markets: [] }).pools, []);
+  assert.deepEqual(configuredCatalog(source, { markets: [{ ...selected, enabled: false }] }).pools, []);
+  assert.throws(() => configuredCatalog({ ...source, pools: source.pools.slice(2) }, config), /可读取池子/);
+  assert.throws(() => configuredCatalog({ ...source, chainId: 1 }, config), /格式错误/);
 });
 
 test('Selected pairs have isolated cache files, retaining the original ESIM URL', async () => {

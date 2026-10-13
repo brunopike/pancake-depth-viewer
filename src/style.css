@@ -59,9 +59,21 @@
 #lp-gap-percent{width:90px}#lp-gaps-error{width:100%}
 .gap-note{font-size:12px;color:var(--muted);line-height:1.8;margin:12px 0}
 .gap-results{max-height:290px;overflow:auto;font-size:14px;color:var(--muted);scrollbar-width:thin;scrollbar-color:#334355 transparent}
-.gap-row{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:12px;padding:10px 0;border-bottom:1px solid var(--line);font-family:var(--mono);color:var(--text);overflow-wrap:anywhere}
+.gap-row{display:grid;grid-template-columns:minmax(0,1.7fr) 42px minmax(0,1fr);gap:12px;padding:10px 0;border-bottom:1px solid var(--line);font-family:var(--mono);color:var(--text);overflow-wrap:anywhere}
 .gap-row>span:last-child{text-align:right;color:var(--accent)}
 .gap-header{position:sticky;top:0;background:var(--bg);font-family:var(--sans);font-size:12px;color:var(--muted)}
 .gap-header>span:last-child{color:var(--muted)}.gap-empty{margin:12px 0}
 @media(max-width:600px){.sticky-summary .marketbar{gap:12px;margin-bottom:12px}.sticky-summary .market-button,.sticky-summary .market-value{min-width:calc(50% - 12px)}.gap-row{font-size:13px;gap:8px}}
 @media(max-height:600px){.sticky-summary{max-height:55vh;overflow:auto}}
+
+.marketbar{flex-wrap:wrap;column-gap:30px;row-gap:16px}
+#lp-gap-precision{width:64px}#lp-gap-threshold{width:82px}
+.gap-results{max-height:430px}.gap-row>span:nth-child(2){text-align:right}
+.gap-range{margin:0}.gap-range>summary{cursor:pointer;font-size:13px;list-style:none;align-items:center}
+.gap-range>summary::-webkit-details-marker{display:none}.gap-range>summary>span:first-child:before{content:'▸ ';color:var(--muted)}
+.gap-range[open]>summary>span:first-child:before{content:'▾ '}.gap-range[open]>summary{background:#192534}
+.gap-range b{font-weight:400}.gap-detail{padding:4px 12px 12px;background:#111a25}
+.gap-detail p{color:var(--muted);font-size:12px;margin:8px 0}
+.gap-band{display:grid;grid-template-columns:minmax(0,1fr) minmax(100px,.6fr);gap:12px;padding:7px 0;font:13px var(--mono);color:var(--text);overflow-wrap:anywhere}
+.gap-band>span:last-child{text-align:right}.gap-band.gap-header{background:#111a25;font:12px var(--sans);color:var(--muted)}
+.gap-more{margin-top:10px}.gap-header{z-index:1}

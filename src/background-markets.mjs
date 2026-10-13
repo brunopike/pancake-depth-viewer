@@ -24,3 +24,14 @@ export function marketPools(catalog, market) {
   if (!pools.some(p => ['v2', 'v3', 'infinityCl'].includes(p.protocol))) throw new Error(`目录没有所选币对的可读取池子：${market.name}`);
   return pools;
 }
+
+// The published directory follows the same allowlist as paid background reads.
+// Missing pairs fail explicitly; they must never trigger a whole-chain crawl.
+export function configuredCatalog(catalog, config) {
+  if (catalog?.chainId !== 56 || !Array.isArray(catalog.pools)) throw new Error('币对目录格式错误。');
+  const markets = configuredMarkets(config);
+  const selected = new Set(markets.flatMap(market => marketPools(catalog, market)));
+  return { source: catalog.source, fetchedAt: catalog.fetchedAt, chainId: 56,
+    scope: 'configured-pairs', complete: catalog.complete,
+    markets, pools: catalog.pools.filter(pool => selected.has(pool)) };
+}
