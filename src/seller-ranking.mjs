@@ -1,6 +1,16 @@
+import {matchesTagFilters} from './holder-model.mjs';
+import {matchesSellerGroup} from './seller-summary.mjs';
+
 export const SELLER_PAGE_SIZE=100;
 export const SELLER_SORT_KEYS=['address','sold','bought','netSold','sellCount','buyCount','trades','esim','usdt','bnb'];
 const balanceKeys=new Set(['esim','usdt','bnb']);
+export function filterSellerRows(rows,{search='',filter='all',tags=[]}={},getProfile=row=>row,manual={}){
+ const q=search.trim().toLowerCase();
+ return rows.filter(row=>{
+  const profile=getProfile(row);
+  return (!q||row.address.includes(q))&&matchesSellerGroup(profile,filter)&&matchesTagFilters(profile.tags||[],tags,manual[row.address]);
+ });
+}
 export function rankSellerRows(rows,key='sold',direction='desc',balance=()=>null){
  if(!SELLER_SORT_KEYS.includes(key))key='sold';
  const sign=direction==='asc'?1:-1;

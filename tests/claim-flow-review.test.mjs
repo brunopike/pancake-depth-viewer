@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { traceClaimFlow, claimFlowWindow } from '../server/esim/claim-flow.mjs';
 import { collectClaimFlow } from '../server/esim/claim-flow-collector.mjs';
 import { TOKEN, SOURCE } from '../server/esim/metrics.mjs';
-import { TRANSFER, topic, eventKey } from '../server/esim/attribution.mjs';
+import { TRANSFER, VAULT, topic, eventKey, signature } from '../server/esim/attribution.mjs';
 
 const edge = (n, from, to, value, tx = `tx${n}`, timestamp = 100) => ({
   id: String(n), tx, order: [n, 0, 0], from, to, value: String(value), timestamp,
@@ -234,4 +234,64 @@ test('missing balanced-cycle logs are rejected against the sale receipt despite 
     'Receipt/Transfer disagreement must prevent publishing the false 100-token estimate',
   );
   assert.deepEqual([...new Set(fixture.receiptRequests)], [fixture.saleTx]);
+});
+
+async function collectFeeRetainingRouter(withLpEvent) {
+  const a = address(1), b = address(2), pool = address(3), router = address(4);
+  const logs = [
+    log(100, 0, SOURCE, b, 20), log(101, 0, b, router, 20), log(102, 0, SOURCE, a, 120),
+    log(103, 0, a, router, 120), log(103, 1, router, pool, 100), log(103, 2, pool, VAULT, 100),
+  ];
+  const saleTx = logs[3].transactionHash, receipts = [];
+  const state = {
+    token: TOKEN, source: SOURCE, block: 103, blockHash: hash(103), cutoff: 1030,
+    pools: { [pool]: {} }, trades: [{ ...sell(saleTx, a, 100, 1030), block: 103 }],
+    distributions: [logs[0], logs[2]].map(row => ({
+      id: eventKey(row), block: Number(BigInt(row.blockNumber)),
+      recipient: row === logs[0] ? b : a, value: BigInt(row.data).toString(),
+    })),
+  };
+  const rpc = async (method, params) => {
+    if (method === 'eth_chainId') return '0x38';
+    if (method === 'eth_getBlockByNumber') {
+      const block = Number(BigInt(params[0]));
+      return { number: hex(block), hash: hash(block), timestamp: hex(block * 10) };
+    }
+    if (method === 'eth_getLogs') {
+      assert.equal(params[0].address, TOKEN);
+      return logs;
+    }
+    if (method === 'eth_getTransactionReceipt') {
+      assert.equal(params[0], saleTx);
+      receipts.push(params[0]);
+      const receiptLogs = logs.slice(3);
+      if (withLpEvent) receiptLogs.push({
+        ...logs[5], address: pool, logIndex: '0x3',
+        topics: [signature('Mint(address,uint256,uint256)'), topic(a)], data: `0x${'0'.repeat(128)}`,
+      });
+      return { transactionHash: saleTx, status: '0x1', blockNumber: '0x67', blockHash: hash(103), logs: receiptLogs };
+    }
+    throw new Error(`Unexpected fixture method: ${method}`);
+  };
+  const checkpoint = await collectClaimFlow(state, {
+    rpc, batch: calls => Promise.all(calls.map(([method, params]) => rpc(method, params))),
+  }, {
+    readBalances: async (addresses, block) => addresses.map(a => a === router ? BigInt(block) === 99n ? '60' : '100' : '0'),
+  });
+  assert.deepEqual(receipts, [saleTx]);
+  return checkpoint.report;
+}
+
+test('a newly reconciled router sale is receipt-verified before the collector publishes its estimate', async () => {
+  const report = await collectFeeRetainingRouter(false);
+  assert.equal(report.totals.sold_wei, '70');
+  assert.equal(report.totals.direct_wei, '60');
+  assert.equal(report.totals.relay_wei, '10');
+  assert.equal(report.totals.unconfirmed_pool_wei, '0');
+});
+
+test('an LP event in that receipt keeps a reconciled router sale pending', async () => {
+  const report = await collectFeeRetainingRouter(true);
+  assert.equal(report.totals.sold_wei, '0');
+  assert.equal(report.totals.unconfirmed_pool_wei, '70');
 });

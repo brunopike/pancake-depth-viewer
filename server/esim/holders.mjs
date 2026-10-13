@@ -67,7 +67,7 @@ export function buildHolderReport({state,addresses,balances,priorBalances,contra
   const rows=addresses.map((address,i)=>{
     const balance=BigInt(balances[i]);assert(balance>=0n,'NEGATIVE_HOLDER_BALANCE');
     const r=behavior.rows.get(address),prior=priorBalances?.[i]??null,known=seed.labels[address],tags=[];
-    if(relaySales.has(address))tags.push(label('received-relay-sold','转手领币后卖出（估算）','sold','已识别的分发币转手路径与卖出成交；混币按余额比例估算，不证明共同控制。'));
+    if(relaySales.has(address))tags.push(label('received-relay-sold','分发币转手卖出（估算）','sold','已识别的分发币转手路径与卖出成交；混币按余额比例估算，不证明共同控制。'));
     if(known)tags.push(label(`known-${known.kind}`,known.label,known.kind,known.source));
     if(address===SOURCE)tags.push(label('own-contract','我方合约','own','用户指定的分发合约'));
     if(ownLP.has(address))tags.push(label('own-lp','我方 LP','lp','用户指定的流动性地址；此表数量为钱包余额，不含 LP 仓位'));

@@ -1,3 +1,5 @@
+import {readClaimFlowSnapshot} from './claim-flow-client.mjs';
+
 export const SNAPSHOTS={
   report:['./data/current-esim-report.json','https://raw.githubusercontent.com/starkweng/pancake-depth-viewer/esim-cache/report.json','./data/esim-report.json'],
   addresses:['./data/current-esim-addresses.json','https://raw.githubusercontent.com/starkweng/pancake-depth-viewer/esim-cache/addresses.json','./data/esim-addresses.json'],
@@ -20,9 +22,9 @@ export async function readSnapshot(kind,{current,fetch:request=globalThis.fetch}
   let selected;
   for(const result of results)if(result.status==='fulfilled'&&(!selected||result.value.data.block>selected.data.block))selected=result.value;
   if(!selected)try{selected=await read(2);}catch{}
-  if(selected&&(!current||selected.data.block>=current.block))return selected;
-  if(current)return {data:current,source:'retained'};
-  throw Error('数据暂时无法读取，请点击刷新重试。');
+  const result=selected&&(!current||selected.data.block>=current.block)?selected:current?{data:current,source:'retained'}:null;
+  if(!result)throw Error('数据暂时无法读取，请点击刷新重试。');
+  return {...result,data:await readClaimFlowSnapshot(kind,result.data,{fetch:request})};
 }
 
 export async function readTradingReport({current,live=false,queryLive,fetch}={}){

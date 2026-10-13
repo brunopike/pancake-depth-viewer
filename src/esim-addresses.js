@@ -2,12 +2,14 @@ import {readSnapshot,newerSnapshot} from './snapshot-client.mjs';
 import {showSnapshotStatus,refreshButtonLabel} from './snapshot-status.mjs';
 import {sellerProfile,holderViewURL,displayEsimBalance} from './holder-insights.mjs';
 import {TAG_KEY,readManual} from './holder-model.mjs';
-import {SELLER_GROUPS,matchesSellerGroup,sellerSummaries} from './seller-summary.mjs';
-import {SELLER_PAGE_SIZE,SELLER_SORT_KEYS,rankSellerRows,sellerPage,balanceBatches} from './seller-ranking.mjs';
+import {createTagFilter} from './tag-filter-control.mjs';
+import {SELLER_GROUPS,sellerSummaries} from './seller-summary.mjs';
+import {SELLER_PAGE_SIZE,SELLER_SORT_KEYS,filterSellerRows,rankSellerRows,sellerPage,balanceBatches} from './seller-ranking.mjs';
 const $ = id => document.getElementById(id);
 let saved, current, period='today', mode='initiator', filter='all', page=0, endpoint, busy=false, balanceBusy=false, timer, searchTimer, generation=0;
 let holderReport,manual={},lastTradeSource,lastHolderSource;
 try{manual=readManual(localStorage.getItem(TAG_KEY));}catch{}
+const tagFilter=createTagFilter({getManual:()=>manual,onChange:()=>{page=0;loadPage();}});
 let holderMap=new Map();
 const escape=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const profile=r=>sellerProfile(r,holderMap.get(r.address),manual);
@@ -15,7 +17,7 @@ const datasets=new Map(),datasetKey=()=>period+':'+mode;
 const balances = new Map(), integer = n => new Intl.NumberFormat('zh-CN').format(n);
 const date = s => new Date(s*1000).toLocaleString('zh-CN',{timeZone:'Asia/Shanghai',hour12:false,month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'});
 const amount = (wei,digits=2) => wei==null?'—':new Intl.NumberFormat('zh-CN',{minimumFractionDigits:digits,maximumFractionDigits:digits}).format(Number(BigInt(wei))/1e18);
-const options = () => ({period,mode,filter,page,sort:$('sort').value,direction:$('sort-direction').value,search:$('address-search').value.trim().toLowerCase()});
+const options = () => ({period,mode,filter,page,tags:tagFilter.selected(),sort:$('sort').value,direction:$('sort-direction').value,search:$('address-search').value.trim().toLowerCase()});
 // Dataset requests supply the full period. Sorting, marks and pagination are local.
 const url = () => endpoint + '?' + new URLSearchParams({view:'addresses',dataset:'1',period,mode,sort:'sold'});
 const balanceValue=(row,key)=>key==='esim'?displayEsimBalance(balances.get(row.address),holderMap.get(row.address),holderReport).balance:balances.get(row.address)?.[key]??null;
@@ -23,7 +25,7 @@ const tags=r=>{const p=profile(r),hasCleared=p.tags.some(t=>t.id==='cleared'),ha
 
 function localPage() {
  const o=options(),candidate=datasets.get(datasetKey()),cached=candidate&&candidate.block>=saved.block?candidate:null,w=cached?.window||saved.windows[period],data=cached||w[mode];
- const all=rankSellerRows(data.rows.filter(r=>{const p=profile(r);return (!o.search||r.address.includes(o.search))&&matchesSellerGroup(p,filter);}),o.sort,o.direction,balanceValue);
+ const all=rankSellerRows(filterSellerRows(data.rows,o,profile,manual),o.sort,o.direction,balanceValue);
  const pagination=sellerPage(all,page);page=pagination.page;
  return { ...(cached||saved), groups:sellerSummaries(data.rows,profile), totals:{sold:all.reduce((n,r)=>n+BigInt(r.sold),0n).toString(),bought:all.reduce((n,r)=>n+BigInt(r.bought),0n).toString(),own:all.filter(r=>profile(r).own).length}, window:w, population:data.rows.length, missingSold:data.missingSold, ...pagination,options:o };
 }
@@ -45,9 +47,9 @@ function render(schedule=true) {
  $('balance-sort-note').hidden=!['esim','usdt','bnb'].includes($('sort').value);
  $('balance-sort-note').textContent=$('sort').value==='esim'?'按已显示的 ESIM 最新余额排序；缺失余额排在末尾。':'按已查询的余额排序；未查询地址排在末尾，不能作为全市场余额排名。';
  const groupCard=group=>`<section class="seller-group${filter===group.id?' selected':''}" data-summary-group="${group.id}"><h2>${group.label}${filter===group.id?'<small>当前排名</small>':''}</h2><div class="seller-metrics"><div><span>卖出地址数</span><strong>${w.available?integer(group.count):'—'}</strong></div><div><span>卖出 <small>ESIM</small></span><strong class="sell">${amount(w.available?group.sold:null)}</strong></div><div><span>买入 <small>ESIM</small></span><strong class="buy">${amount(w.available?group.bought:null)}</strong></div><div><span>净卖出 <small>ESIM</small></span><strong class="${BigInt(group.netSold)>=0n?'sell':'buy'}">${amount(w.available?group.netSold:null)}</strong></div></div></section>`;
- $('summary').innerHTML=`<div class="seller-primary">${current.groups.filter(group=>group.primary).map(groupCard).join('')}</div><div class="seller-secondary">${current.groups.filter(group=>!group.primary).map(groupCard).join('')}</div><p class="seller-scope">${w.available?date(w.start)+' — '+date(w.end)+' · 北京时间':'等待更新'} · 只计本时段有卖出记录的地址；买入为这些地址的买入量。概览为完整时段，搜索只筛选下方排名；分类可能重叠，不能相加。</p>${BigInt(current.missingSold)>0n?`<p class="seller-unattributed">未归因卖出：${amount(current.missingSold)} ESIM · ${funding?'资金路径未能确认，未计入地址分类。':'缺少交易发起地址，未计入地址分类。'}</p>`:''}`;
+ $('summary').innerHTML=`<div class="seller-primary">${current.groups.filter(group=>group.primary).map(groupCard).join('')}</div><div class="seller-secondary">${current.groups.filter(group=>!group.primary).map(groupCard).join('')}</div><p class="seller-scope">${w.available?date(w.start)+' — '+date(w.end)+' · 北京时间':'等待更新'} · 只计本时段有卖出记录的地址；买入为这些地址的买入量。概览为完整时段，标签和搜索只筛选下方排名；分类可能重叠，不能相加。</p>${BigInt(current.missingSold)>0n?`<p class="seller-unattributed">未归因卖出：${amount(current.missingSold)} ESIM · ${funding?'资金路径未能确认，未计入地址分类。':'缺少交易发起地址，未计入地址分类。'}</p>`:''}`;
  const net=(BigInt(current.totals.sold)-BigInt(current.totals.bought)).toString();
- $('filter-note').textContent=`当前排名：${category} · ${integer(current.total)} 个地址 · 卖出 ${amount(current.totals.sold)} · 买入 ${amount(current.totals.bought)} · 净卖出 ${amount(net)} ESIM${$('address-search').value.trim()?' · 已按搜索筛选':''}`;
+ $('filter-note').textContent=`当前排名：${category}${current.options.tags.length&&!current.options.tags.includes('all')?' · 标签：'+$('filter-label').textContent:''} · ${integer(current.total)} 个地址 · 卖出 ${amount(current.totals.sold)} · 买入 ${amount(current.totals.bought)} · 净卖出 ${amount(net)} ESIM${$('address-search').value.trim()?' · 已按搜索筛选':''}`;
  const naturalDay=Math.floor((Date.now()/1000+28800)/86400),snapshotDay=saved?Math.floor((saved.windows.today.start+28800)/86400):naturalDay;
  for(const [key,label]of [['today','今日·0点到现在'],['yesterday','昨日 · 24 小时'],['history','历史累计']])document.querySelector(`[data-period="${key}"]`).textContent=snapshotDay===naturalDay||key==='history'?label:date(saved.windows[key].start).slice(0,5)+(key==='today'?'（保存）':' · 24 小时');
  $('rows').innerHTML=current.rows.map((r,i)=>{const b=balances.get(r.address),h=holderMap.get(r.address),esim=displayEsimBalance(b,h,holderReport);return `<tr><th><span class="rank">${page*SELLER_PAGE_SIZE+i+1}</span><div class="address-link-row"><a href="https://bscscan.com/address/${r.address}" target="_blank" rel="noopener noreferrer" title="${r.address}">${r.address.slice(0,8)}…${r.address.slice(-6)} ↗</a><a class="holding-link" href="${holderViewURL({search:r.address,zero:true})}" target="_top" rel="noopener noreferrer">看持仓 →</a></div><div class="tags">${tags(r)}</div></th><td class="sell">${amount(r.sold)}</td><td class="buy">${amount(r.bought)}</td><td class="${BigInt(r.netSold)>=0n?'sell':'buy'}">${amount(r.netSold)}</td><td>${integer(r.sellCount)} / ${integer(r.buyCount)}<small>单日最多 ${integer(r.peakDailyTrades)} 笔</small></td><td>${amount(esim.balance,2)}<small>${esim.source==='missing'?'余额暂缺':(esim.source==='snapshot'?'快照 ':'查询 ')+date(esim.cutoff)}</small></td><td>${amount(b?.usdt,2)}</td><td>${amount(b?.bnb,6)}</td></tr>`;}).join('')||'<tr><td colspan="8" class="empty">这个条件下暂无卖出地址。</td></tr>';
@@ -103,7 +105,8 @@ $('refresh').addEventListener('click',async()=>{
  }catch(e){$('status').textContent=e.name==='TimeoutError'?'更新超时，保留上次数据。':e.message;$('status').className='notice';}
  finally{busy=false;$('refresh').disabled=false;$('refresh').textContent=refreshButtonLabel($('refresh'));}
 });
-window.addEventListener('storage',e=>{if(e.key===TAG_KEY){manual=readManual(e.newValue);if(saved){current=localPage();render(false);}}});
+window.addEventListener('storage',e=>{if(e.key===TAG_KEY){manual=readManual(e.newValue);tagFilter.refresh();page=0;if(saved){current=localPage();render(false);}}});
+tagFilter.refresh();
 const query=new URLSearchParams(location.search);
 if(['today','yesterday','history'].includes(query.get('period')))period=query.get('period');
 if(['all','own','received','other','frequency'].includes(query.get('filter')))filter=query.get('filter');
@@ -111,5 +114,7 @@ if(['initiator','funding'].includes(query.get('mode')))mode=query.get('mode');
 $('address-search').value=(query.get('search')||'').slice(0,42);
 if(SELLER_SORT_KEYS.includes(query.get('sort')))$('sort').value=query.get('sort');
 if(['asc','desc'].includes(query.get('direction')))$('sort-direction').value=query.get('direction');
+for(const input of $('filter').querySelectorAll('input'))input.checked=(query.get('tags')||'').split(',').includes(input.value);
+tagFilter.refresh();
 try{const config=await json('./data/esim-config.json');endpoint=config.apiOrigin?new URL('/api/esim',config.apiOrigin).href:location.hostname.endsWith('.vercel.app')?'./api/esim':null;}catch{endpoint=null;}
 try{await Promise.all([loadSaved().then(data=>{saved=data;}),loadHolders()]);await loadPage();showSnapshotStatus($('status'),$('refresh'),[['交易',current||saved],['持仓',holderReport]],{retained:lastTradeSource==='retained'||lastHolderSource==='retained'});}catch{$('status').textContent='地址数据暂时无法读取，请点击刷新重试。';$('status').className='notice';}

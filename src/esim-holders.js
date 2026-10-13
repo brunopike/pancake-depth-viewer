@@ -1,7 +1,9 @@
 import {readSnapshot} from './snapshot-client.mjs';
 import {showSnapshotStatus,refreshButtonLabel} from './snapshot-status.mjs';
 import {holderCharts} from './holder-charts.mjs';
-import {TAG_KEY,TAG_KINDS,validateManual,readManual,rowTags,selectHolders,changePercent,customLabelOptions} from './holder-model.mjs';
+import {TAG_KEY,TAG_KINDS,validateManual,readManual,rowTags,selectHolders,changePercent} from './holder-model.mjs';
+import {HOLDER_SORT_KEYS} from './holder-ranking.mjs';
+import {createTagFilter} from './tag-filter-control.mjs';
 const $=id=>document.getElementById(id),escape=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const number=(n,d=2)=>Number(n).toLocaleString('zh-CN',{minimumFractionDigits:d,maximumFractionDigits:d});
 const units=s=>Number(BigInt(s))/1e18,quantity=s=>s==null?'暂缺':number(units(s),2),short=a=>a.slice(0,8)+'…'+a.slice(-6);
@@ -12,14 +14,18 @@ const mobileExpanded = new Set();
 const cohortNames={'held':'持币 · 未见卖出','sold-held':'卖出后仍持币','sold-zero':'卖出后零持仓','zero':'零持仓 · 未见卖出'};
 try{manual=readManual(localStorage.getItem(TAG_KEY));}catch{}
 function validate(r){if(r?.version!==1||r.token!=='0x7765a659c5b0cfbfd9fbc2ef2298b75a598f2d2d'||!Array.isArray(r.rows)||!r.block)throw new Error('持仓数据格式有误。');return r;}
-const filterInputs=()=>[...$('filter').querySelectorAll('input[type=checkbox]')];
-const selectedFilters=()=>{const inputs=filterInputs(),checked=inputs.filter(input=>input.checked);return checked.length===inputs.length&&checked.length?['all']:checked.map(input=>input.value);};
-function renderCustomFilters(){
- const inputs=filterInputs(),checked=new Set(inputs.filter(input=>input.checked).map(input=>input.value)),all=inputs.length>0&&checked.size===inputs.length;
- const labels=customLabelOptions(manual);
- $('custom-label-filters').innerHTML=labels.length?`<p class="custom-label-heading">已添加标签</p>${labels.map(label=>`<label><input type="checkbox" value="${escape(label.value)}" data-label="${escape(label.text)}"${all||checked.has(label.value)?' checked':''}><span>${escape(label.text)}</span><small>${label.count} 个地址</small></label>`).join('')}`:'';
+const tagFilter=createTagFilter({getManual:()=>manual,onChange:()=>{page=0;if($('filter').querySelector('input[value="cleared"]:checked'))$('include-zero').checked=true;render();}});
+const selectedFilters=()=>tagFilter.selected(),renderCustomFilters=()=>tagFilter.refresh(),updateFilters=()=>tagFilter.update();
+function syncSort(){
+ const key=$('sort').value,ascending=$('sort-direction').value==='asc';
+ for(const button of document.querySelectorAll('[data-sort]')){
+  const selected=button.dataset.sort===key;
+  button.setAttribute('aria-pressed',String(selected));button.querySelector('.sort-arrow').textContent=selected?(ascending?'↑':'↓'):'↕';
+  button.setAttribute('aria-label',`${button.dataset.label}，${selected&&ascending?'当前升序，点击降序':selected?'当前降序，点击升序':'点击'+(button.dataset.sort==='address'?'升序':'降序')+'排序'}`);
+ }
+ for(const header of document.querySelectorAll('.holder-table thead th')){const active=header.querySelector('[data-sort][aria-pressed="true"]');header.setAttribute('aria-sort',active?ascending?'ascending':'descending':'none');}
+ $('holder-sort-note').textContent=`当前排序：${$('sort').selectedOptions[0].textContent} · ${ascending?'从小到大':'从大到小'}；按完整筛选结果排序，暂缺数据排在末尾。`;
 }
-function updateFilters(){const inputs=filterInputs(),checked=inputs.filter(input=>input.checked);$('filter-label').textContent=checked.length===inputs.length&&checked.length?'全部标签（已全选）':checked.length?checked.length===1?checked[0].dataset.label||checked[0].parentElement.textContent.trim():`已选 ${checked.length} 项`:'不限标签';page=0;if(checked.some(input=>input.value==='cleared'))$('include-zero').checked=true;render();}
 function pair(stats,key){return `<span class="buy">买 ${key==='Count'?number(stats.buyCount,0):quantity(stats.buyAmount)}</span><span class="sell">卖 ${key==='Count'?number(stats.sellCount,0):quantity(stats.sellAmount)}</span>`;}
 function drawChart(rows){
  const model=holderCharts(rows,manual),{total,count,groups,top}=model;
@@ -40,7 +46,7 @@ function drawChart(rows){
 }
 function render(){
  if(!report)return;
- const selected=selectHolders(report,{search:$('search').value,filter:selectedFilters(),cohort,excludeOwn,includeZero:$('include-zero').checked,page,pageSize},manual);page=selected.page;
+ const selected=selectHolders(report,{search:$('search').value,filter:selectedFilters(),cohort,excludeOwn,includeZero:$('include-zero').checked,page,pageSize,sort:$('sort').value,direction:$('sort-direction').value},manual);page=selected.page;syncSort();
  $('filter-context').hidden=!cohort&&!excludeOwn;$('filter-context').textContent=[cohort?`来自合约报告：${cohortNames[cohort]}`:'',excludeOwn?'仅看非我方地址':''].filter(Boolean).join(' · ');
  $('cutoff').textContent=`余额截至 ${date(report.cutoff)} · 北京时间 · 区块 ${number(report.block,0)}`;
  $('summary').innerHTML=`<div><span>已索引持币地址</span><strong>${number(report.coverage.holding,0)}</strong><small>含大户名单及已知活跃地址</small></div><div><span>已覆盖总供应量</span><strong>${number(Number(BigInt(report.coverage.balance))/Number(BigInt(report.totalSupply))*100)}%</strong><small>全部供应量 ${compact(report.totalSupply)} ESIM</small></div><div><span>ESIM 参考价格</span><strong>${number(report.price,6)} U</strong><small>Pancake ESIM / USDT</small></div><div><span>24h 对比时点</span><strong>${report.priorCutoff?date(report.priorCutoff):'暂缺'}</strong><small>连续 24 小时的持仓变化</small></div>`;
@@ -82,7 +88,10 @@ $('manage-tags').addEventListener('click',()=>{renderLabelManager();$('label-man
 $('label-manager-close').addEventListener('click',()=>$('label-manager').close());
 $('label-manager-add').addEventListener('click',()=>{$('label-manager').close();openTag();});
 $('label-manager-list').addEventListener('click',e=>{const button=e.target.closest('[data-edit-label],[data-delete-label]');if(!button)return;const address=button.dataset.editLabel||button.dataset.deleteLabel;$('label-manager').close();openTag(address);if(button.dataset.deleteLabel)stageTag(true);});
-$('search').addEventListener('input',()=>{page=0;render();});$('filter').addEventListener('change',updateFilters);$('close-filters').addEventListener('click',()=>{$('tag-filter').open=false;$('filter-summary').focus();});$('select-all-filters').addEventListener('click',()=>{for(const input of filterInputs())input.checked=true;updateFilters();});$('clear-filters').addEventListener('click',()=>{for(const input of $('filter').querySelectorAll('input'))input.checked=false;updateFilters();});document.addEventListener('click',e=>{if(!$('tag-filter').contains(e.target))$('tag-filter').open=false;});$('tag-filter').addEventListener('keydown',e=>{if(e.key==='Escape'){$('tag-filter').open=false;$('filter-summary').focus();e.preventDefault();}});$('include-zero').addEventListener('change',()=>{page=0;render();});$('page-size').addEventListener('change',()=>{pageSize=Number($('page-size').value);page=0;render();});$('prev').addEventListener('click',()=>{page--;render();});$('next').addEventListener('click',()=>{page++;render();});
+$('search').addEventListener('input',()=>{page=0;render();});$('include-zero').addEventListener('change',()=>{page=0;render();});
+$('sort').addEventListener('change',()=>{page=0;render();});$('sort-direction').addEventListener('change',()=>{page=0;render();});
+for(const button of document.querySelectorAll('[data-sort]'))button.addEventListener('click',()=>{const key=button.dataset.sort;$('sort-direction').value=$('sort').value===key?$('sort-direction').value==='desc'?'asc':'desc':key==='address'?'asc':'desc';$('sort').value=key;page=0;render();});
+$('page-size').addEventListener('change',()=>{pageSize=Number($('page-size').value);page=0;render();});$('prev').addEventListener('click',()=>{page--;render();});$('next').addEventListener('click',()=>{page++;render();});
 for(const b of document.querySelectorAll('[data-columns]'))b.addEventListener('click',()=>{$('rows').closest('table').dataset.columns=b.dataset.columns;for(const t of document.querySelectorAll('[data-columns]'))t.setAttribute('aria-pressed',String(t===b));});
 $('reset-view').addEventListener('click',()=>{cohort=null;excludeOwn=false;$('search').value='';$('include-zero').checked=false;for(const input of $('filter').querySelectorAll('input'))input.checked=false;updateFilters();});
 for(const b of document.querySelectorAll('[data-chart]'))b.addEventListener('click',()=>{chartMode=b.dataset.chart;for(const t of document.querySelectorAll('[data-chart]'))t.setAttribute('aria-pressed',String(t===b));render();});
@@ -97,6 +106,8 @@ async function refresh(){
 renderCustomFilters();
 const query=new URLSearchParams(location.search);
 $('search').value=(query.get('search')||'').slice(0,64);
+if(HOLDER_SORT_KEYS.includes(query.get('sort')))$('sort').value=query.get('sort');
+if(['asc','desc'].includes(query.get('direction')))$('sort-direction').value=query.get('direction');
 cohort=Object.hasOwn(cohortNames,query.get('cohort'))?query.get('cohort'):null;
 excludeOwn=query.get('scope')==='external';
 if(query.get('chart')==='top'){chartMode='top';for(const b of document.querySelectorAll('[data-chart]'))b.setAttribute('aria-pressed',String(b.dataset.chart==='top'));}

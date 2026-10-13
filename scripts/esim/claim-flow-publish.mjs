@@ -19,8 +19,11 @@ for(const [path,content,encoding]of [['claim-flow-state.json.gz',bytes.toString(
 for(let attempt=0;attempt<3;attempt++){
  try{
   const ref=await api('git/ref/heads/esim-cache');if(!ref)throw Error('CORE_CHECKPOINT_MISSING');
-  const old=await api(`contents/claim-flow.json?ref=${ref.object.sha}`);
-  if(old?.content){const saved=JSON.parse(Buffer.from(old.content,'base64').toString());if(saved.throughBlock>checkpoint.throughBlock||saved.throughBlock===checkpoint.throughBlock&&(saved.modelRevision??1)>=(report.modelRevision??1)){console.log('Claim flow already current.');break;}}
+  // GitHub's JSON contents envelope omits file content above 1 MiB. Read raw
+  // JSON at the pinned branch SHA so concurrent jobs cannot downgrade it.
+  const response=await fetch(`${root}/contents/claim-flow.json?ref=${ref.object.sha}`,{headers:{...headers,Accept:'application/vnd.github.raw+json'},signal:AbortSignal.timeout(60000)});
+  if(response.status!==404&&!response.ok)throw Error('PUBLICATION_READ_FAILED');
+  if(response.ok){const saved=await response.json();if(saved.throughBlock>checkpoint.throughBlock||saved.throughBlock===checkpoint.throughBlock&&(saved.modelRevision??1)>=(report.modelRevision??1)){console.log('Claim flow already current.');break;}}
   const prior=await api(`git/commits/${ref.object.sha}`),tree=await api('git/trees',{base_tree:prior.tree.sha,tree:entries});
   const commit=await api('git/commits',{message:`Verified proportional ESIM claim flow at block ${checkpoint.throughBlock}`,tree:tree.sha,parents:[ref.object.sha]});
   await api('git/refs/heads/esim-cache',{sha:commit.sha,force:false},'PATCH');

@@ -37,10 +37,17 @@ export function sellerProfile(row, holder, manual = {}) {
   const frequency=!own&&(row.highFrequency||confirmedRobot);
   // Period filters retain receipt status at the end of that trading window.
   const received=!!row.received;
-  const visible=tags.filter(t=>(!own||!['frequency','arbitrage'].includes(t.kind))&&(!['frequency','arbitrage'].includes(t.kind)||frequency))
-    .map(t=>t.kind==='received'&&!received?{...t,text:'当前领过币'}:t);
-  if(own&&!visible.some(t=>['own','lp'].includes(t.kind)))visible.unshift({kind:'own',text:row.ownType==='LP'?'我方 LP':'我方执行'});
+  const visible=tags.filter(t=>!['received-sold','received-relay-sold','cleared','received-zero'].includes(t.id)&&(!own||!['frequency','arbitrage'].includes(t.kind))&&(!['frequency','arbitrage'].includes(t.kind)||frequency))
+    .map(t=>t.kind==='received'&&!received?{...t,id:'current-received',kind:'current-received',text:'当前领过币'}:t);
+  if(own&&!visible.some(t=>['own','lp'].includes(t.kind)))visible.unshift({kind:row.ownType==='LP'?'lp':'own',text:row.ownType==='LP'?'我方 LP':'我方执行'});
   if(received&&!visible.some(t=>t.kind==='received'))visible.push({kind:'received',text:'领过币'});
+  if(row.receivedSold===true){
+    visible.push({id:'received-sold',kind:'sold',text:'领币后卖出',evidence:'本时段截止前，已确认先领取再卖出；不推断卖出的是哪批币'});
+    if(holder?.balance!=null&&BigInt(holder.balance)===0n)visible.push({id:'cleared',kind:'cleared',text:'领币后卖出 · 当前清仓',evidence:'本时段截止前已确认领币后卖出；最新持仓快照余额为 0，余额归零也可能包含转账'});
+  }else if(holder?.balance!=null&&BigInt(holder.balance)===0n&&tags.some(t=>['cleared','received-zero'].includes(t.id))){
+    visible.push({id:'current-zero',kind:'current-zero',text:'当前零持仓',evidence:'最新持仓快照余额为 0；未确认在本时段截止前领币后卖出'});
+  }
+  if(row.relaySold===true)visible.push({id:'received-relay-sold',kind:'sold',text:'分发币转手卖出（估算）',evidence:'本时段截止前的转账来源追踪与卖出记录估算；不证明卖出的是同一批币或地址同属一人'});
   if(frequency&&!visible.some(t=>['frequency','arbitrage'].includes(t.kind)))visible.push({kind:'frequency',text:'高频交易（疑似）'});
   return {own,frequency,received,tags:visible,balance:holder?.balance??null};
 }
