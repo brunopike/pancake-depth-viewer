@@ -2,6 +2,7 @@ import {readSnapshot,newerSnapshot} from './snapshot-client.mjs';
 import {sellerProfile,holderViewURL,displayEsimBalance} from './holder-insights.mjs';
 import {TAG_KEY,readManual} from './holder-model.mjs';
 import {SELLER_GROUPS,matchesSellerGroup,sellerSummaries} from './seller-summary.mjs';
+import {SELLER_PAGE_SIZE,SELLER_SORT_KEYS,rankSellerRows,sellerPage,balanceBatches} from './seller-ranking.mjs';
 const $ = id => document.getElementById(id);
 let saved, current, period='today', mode='initiator', filter='all', page=0, endpoint, busy=false, balanceBusy=false, timer, searchTimer, generation=0;
 let holderReport,manual={},lastTradeSource,lastHolderSource;
@@ -13,17 +14,17 @@ const datasets=new Map(),datasetKey=()=>period+':'+mode;
 const balances = new Map(), integer = n => new Intl.NumberFormat('zh-CN').format(n);
 const date = s => new Date(s*1000).toLocaleString('zh-CN',{timeZone:'Asia/Shanghai',hour12:false,month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'});
 const amount = (wei,digits=2) => wei==null?'—':new Intl.NumberFormat('zh-CN',{minimumFractionDigits:digits,maximumFractionDigits:digits}).format(Number(BigInt(wei))/1e18);
-const options = () => ({period,mode,filter,page,sort:$('sort').value,search:$('address-search').value.trim().toLowerCase()});
-const url = () => endpoint + '?' + new URLSearchParams({view:'addresses',dataset:'1',...options()});
+const options = () => ({period,mode,filter,page,sort:$('sort').value,direction:$('sort-direction').value,search:$('address-search').value.trim().toLowerCase()});
+// Dataset requests supply the full period. Sorting, marks and pagination are local.
+const url = () => endpoint + '?' + new URLSearchParams({view:'addresses',dataset:'1',period,mode,sort:'sold'});
+const balanceValue=(row,key)=>key==='esim'?displayEsimBalance(balances.get(row.address),holderMap.get(row.address),holderReport).balance:balances.get(row.address)?.[key]??null;
 const tags=r=>{const p=profile(r),hasCleared=p.tags.some(t=>t.id==='cleared'),hasSold=p.tags.some(t=>t.id==='received-sold'),visible=p.tags.filter(t=>!(t.kind==='received'&&(hasCleared||hasSold))&&!(t.id==='received-sold'&&hasCleared));return visible.length?visible.map(t=>`<span class="tag" data-kind="${escape(t.kind)}" title="${escape(t.evidence||'已核对交易分类')}">${escape(t.text)}</span>`).join(''):'<span class="tag">其他交易</span>';};
 
 function localPage() {
  const o=options(),candidate=datasets.get(datasetKey()),cached=candidate&&candidate.block>=saved.block?candidate:null,w=cached?.window||saved.windows[period],data=cached||w[mode];
- const all=data.rows.filter(r=>{const p=profile(r);return (!o.search||r.address.includes(o.search))&&matchesSellerGroup(p,filter);}).toSorted((a,b)=>{
-  const x=BigInt(a[o.sort]),y=BigInt(b[o.sort]);return x===y?a.address.localeCompare(b.address):x>y?-1:1;
- });
- page=Math.min(page,Math.max(0,Math.ceil(all.length/25)-1));
- return { ...(cached||saved), groups:sellerSummaries(data.rows,profile), totals:{sold:all.reduce((n,r)=>n+BigInt(r.sold),0n).toString(),bought:all.reduce((n,r)=>n+BigInt(r.bought),0n).toString(),own:all.filter(r=>profile(r).own).length}, window:w, population:data.rows.length, missingSold:data.missingSold, total:all.length,page,options:o,rows:all.slice(page*25,(page+1)*25) };
+ const all=rankSellerRows(data.rows.filter(r=>{const p=profile(r);return (!o.search||r.address.includes(o.search))&&matchesSellerGroup(p,filter);}),o.sort,o.direction,balanceValue);
+ const pagination=sellerPage(all,page);page=pagination.page;
+ return { ...(cached||saved), groups:sellerSummaries(data.rows,profile), totals:{sold:all.reduce((n,r)=>n+BigInt(r.sold),0n).toString(),bought:all.reduce((n,r)=>n+BigInt(r.bought),0n).toString(),own:all.filter(r=>profile(r).own).length}, window:w, population:data.rows.length, missingSold:data.missingSold, ...pagination,options:o };
 }
 function render(schedule=true) {
  if(!current)return; const w=current.window; page=current.page;
@@ -33,21 +34,30 @@ function render(schedule=true) {
  $('mode-note').textContent=funding?'按卖出币的来源地址汇总，可能包含合约；买入量按接收币的地址统计，无法确认来源的卖出单列。':'按发起交易的钱包汇总卖出量；通过合约执行时，它可能不是实际转出币的地址。';
  const category=SELLER_GROUPS.find(group=>group.id===filter).label;
  $('ranking-title').textContent=`${category}卖出排名 · ${funding?'出币地址':'操作钱包'}`;
- $('address-column').textContent=`排名 / ${funding?'出币地址':'操作钱包'}`;
+ $('address-column-label').textContent=`排名 / ${funding?'出币地址':'操作钱包'}`;
+ for(const button of document.querySelectorAll('[data-sort]')){
+  const selected=button.dataset.sort===$('sort').value,ascending=$('sort-direction').value==='asc';
+  button.setAttribute('aria-pressed',String(selected));button.querySelector('.sort-arrow').textContent=selected?(ascending?'↑':'↓'):'↕';
+  button.setAttribute('aria-label',`${button.dataset.label}，${selected&&ascending?'当前升序，点击降序':selected?'当前降序，点击升序':'点击'+(button.dataset.sort==='address'?'升序':'降序')+'排序'}`);
+ }
+ for(const header of document.querySelectorAll('.address-table thead th')){const active=header.querySelector('[data-sort][aria-pressed="true"]');header.setAttribute('aria-sort',active?$('sort-direction').value==='asc'?'ascending':'descending':'none');}
+ $('balance-sort-note').hidden=!['esim','usdt','bnb'].includes($('sort').value);
+ $('balance-sort-note').textContent=$('sort').value==='esim'?'按已显示的 ESIM 最新余额排序；缺失余额排在末尾。':'按已查询的余额排序；未查询地址排在末尾，不能作为全市场余额排名。';
  const groupCard=group=>`<section class="seller-group${filter===group.id?' selected':''}" data-summary-group="${group.id}"><h2>${group.label}${filter===group.id?'<small>当前排名</small>':''}</h2><div class="seller-metrics"><div><span>卖出地址数</span><strong>${w.available?integer(group.count):'—'}</strong></div><div><span>卖出 <small>ESIM</small></span><strong class="sell">${amount(w.available?group.sold:null)}</strong></div><div><span>买入 <small>ESIM</small></span><strong class="buy">${amount(w.available?group.bought:null)}</strong></div><div><span>净卖出 <small>ESIM</small></span><strong class="${BigInt(group.netSold)>=0n?'sell':'buy'}">${amount(w.available?group.netSold:null)}</strong></div></div></section>`;
  $('summary').innerHTML=`<div class="seller-primary">${current.groups.filter(group=>group.primary).map(groupCard).join('')}</div><div class="seller-secondary">${current.groups.filter(group=>!group.primary).map(groupCard).join('')}</div><p class="seller-scope">${w.available?date(w.start)+' — '+date(w.end)+' · 北京时间':'等待更新'} · 只计本时段有卖出记录的地址；买入为这些地址的买入量。概览为完整时段，搜索只筛选下方排名；分类可能重叠，不能相加。</p>${BigInt(current.missingSold)>0n?`<p class="seller-unattributed">未归因卖出：${amount(current.missingSold)} ESIM · ${funding?'资金路径未能确认，未计入地址分类。':'缺少交易发起地址，未计入地址分类。'}</p>`:''}`;
  const net=(BigInt(current.totals.sold)-BigInt(current.totals.bought)).toString();
  $('filter-note').textContent=`当前排名：${category} · ${integer(current.total)} 个地址 · 卖出 ${amount(current.totals.sold)} · 买入 ${amount(current.totals.bought)} · 净卖出 ${amount(net)} ESIM${$('address-search').value.trim()?' · 已按搜索筛选':''}`;
  const naturalDay=Math.floor((Date.now()/1000+28800)/86400),snapshotDay=saved?Math.floor((saved.windows.today.start+28800)/86400):naturalDay;
  for(const [key,label]of [['today','今日·0点到现在'],['yesterday','昨日 · 24 小时'],['history','历史累计']])document.querySelector(`[data-period="${key}"]`).textContent=snapshotDay===naturalDay||key==='history'?label:date(saved.windows[key].start).slice(0,5)+(key==='today'?'（保存）':' · 24 小时');
- $('rows').innerHTML=current.rows.map((r,i)=>{const b=balances.get(r.address),h=holderMap.get(r.address),esim=displayEsimBalance(b,h,holderReport);return `<tr><th><span class="rank">${page*25+i+1}</span><div class="address-link-row"><a href="https://bscscan.com/address/${r.address}" target="_blank" rel="noopener noreferrer" title="${r.address}">${r.address.slice(0,8)}…${r.address.slice(-6)} ↗</a><a class="holding-link" href="${holderViewURL({search:r.address,zero:true})}" target="_top" rel="noopener noreferrer">看持仓 →</a></div><div class="tags">${tags(r)}</div></th><td class="sell">${amount(r.sold)}</td><td class="buy">${amount(r.bought)}</td><td class="${BigInt(r.netSold)>=0n?'sell':'buy'}">${amount(r.netSold)}</td><td>${integer(r.sellCount)} / ${integer(r.buyCount)}<small>单日最多 ${integer(r.peakDailyTrades)} 笔</small></td><td>${amount(esim.balance,2)}<small>${esim.source==='missing'?'余额暂缺':(esim.source==='snapshot'?'快照 ':'查询 ')+date(esim.cutoff)}</small></td><td>${amount(b?.usdt,2)}</td><td>${amount(b?.bnb,6)}</td></tr>`;}).join('')||'<tr><td colspan="8" class="empty">这个条件下暂无卖出地址。</td></tr>';
- $('row-count').textContent=`${integer(current.total)} 个地址`; $('page').textContent=`${current.total?page+1:0} / ${Math.ceil(current.total/25)}`;
- $('prev').disabled=page===0; $('next').disabled=(page+1)*25>=current.total; $('balances').disabled=balanceBusy||!current.total||!endpoint;
+ $('rows').innerHTML=current.rows.map((r,i)=>{const b=balances.get(r.address),h=holderMap.get(r.address),esim=displayEsimBalance(b,h,holderReport);return `<tr><th><span class="rank">${page*SELLER_PAGE_SIZE+i+1}</span><div class="address-link-row"><a href="https://bscscan.com/address/${r.address}" target="_blank" rel="noopener noreferrer" title="${r.address}">${r.address.slice(0,8)}…${r.address.slice(-6)} ↗</a><a class="holding-link" href="${holderViewURL({search:r.address,zero:true})}" target="_top" rel="noopener noreferrer">看持仓 →</a></div><div class="tags">${tags(r)}</div></th><td class="sell">${amount(r.sold)}</td><td class="buy">${amount(r.bought)}</td><td class="${BigInt(r.netSold)>=0n?'sell':'buy'}">${amount(r.netSold)}</td><td>${integer(r.sellCount)} / ${integer(r.buyCount)}<small>单日最多 ${integer(r.peakDailyTrades)} 笔</small></td><td>${amount(esim.balance,2)}<small>${esim.source==='missing'?'余额暂缺':(esim.source==='snapshot'?'快照 ':'查询 ')+date(esim.cutoff)}</small></td><td>${amount(b?.usdt,2)}</td><td>${amount(b?.bnb,6)}</td></tr>`;}).join('')||'<tr><td colspan="8" class="empty">这个条件下暂无卖出地址。</td></tr>';
+ const start=current.total?page*SELLER_PAGE_SIZE+1:0,end=page*SELLER_PAGE_SIZE+current.rows.length;
+ $('row-count').textContent=`${integer(start)}–${integer(end)} / ${integer(current.total)} 个地址 · 每页 ${SELLER_PAGE_SIZE} 条`; $('page').textContent=`${current.total?page+1:0} / ${current.pages}`;
+ $('prev').disabled=page===0; $('next').disabled=(page+1)*SELLER_PAGE_SIZE>=current.total; $('balances').disabled=balanceBusy||!current.total||!endpoint;
  for(const group of ['period','mode','filter'])for(const b of document.querySelectorAll(`[data-${group}]`))b.setAttribute(group==='period'?'aria-selected':'aria-pressed',String(b.dataset[group]===({period,mode,filter})[group]));
  $('own-rule').innerHTML=`我方刷量：调用指定执行合约 <a href="https://bscscan.com/address/${current.ownExecutor}" target="_blank" rel="noopener noreferrer">${current.ownExecutor.slice(0,10)}…${current.ownExecutor.slice(-6)} ↗</a> 的发起钱包。我方 LP：用户确认的四个流动性地址。`;
  const times=current.rows.map(r=>balances.get(r.address)?.timestamp).filter(Boolean);
  $('balance-status').textContent=times.length?`余额截至 ${date(Math.min(...times))}${Math.min(...times)!==Math.max(...times)?' — '+date(Math.max(...times)):''} · 北京时间`:holderReport?`ESIM 快照 ${date(holderReport.cutoff)}；USDT / BNB 余额${endpoint?'仅查询当前页':'暂缺'}。`:'余额暂缺，点击刷新重试。';
- if(schedule&&endpoint){clearTimeout(timer);timer=setTimeout(()=>fetchBalances(),400);}
+ if(schedule&&endpoint&&!['esim','usdt','bnb'].includes($('sort').value)){clearTimeout(timer);timer=setTimeout(()=>fetchBalances(),400);}
 }
 async function json(path,options={}){
  const response=await fetch(path,{cache:'no-store',...options});let body;
@@ -67,17 +77,21 @@ async function fetchBalances(manual=false){
  if(balanceBusy||!endpoint||!current)return;
  const addresses=current.rows.filter(r=>manual||!balances.has(r.address)||Date.now()-balances.get(r.address).checkedAt>60000).map(r=>r.address);
  if(!addresses.length)return;const requested=current.rows.map(r=>r.address).join(',');balanceBusy=true;$('balances').disabled=true;$('balance-status').textContent='正在查询本页余额…';
- try{const result=await json(endpoint,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'balances',addresses}),signal:AbortSignal.timeout(55000)});
-  for(const[address,value]of Object.entries(result.balances||{}))balances.set(address,value);render(false);
+ try{const batches=balanceBatches(addresses);for(const [i,batch]of batches.entries()){
+   $('balance-status').textContent=`正在查询本页余额… ${i+1} / ${batches.length}`;
+   const result=await json(endpoint,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'balances',addresses:batch}),signal:AbortSignal.timeout(55000)});
+   for(const[address,value]of Object.entries(result.balances||{}))balances.set(address,value);
+  }current=localPage();render(false);
  }catch(e){$('balance-status').textContent=e.name==='TimeoutError'?'余额查询超时，请稍后重试。':e.message;}
- finally{balanceBusy=false;$('balances').disabled=!endpoint||!current.rows.length;if(current.rows.map(r=>r.address).join(',')!==requested){clearTimeout(timer);timer=setTimeout(()=>fetchBalances(),400);}}
+ finally{balanceBusy=false;$('balances').disabled=!endpoint||!current.rows.length;if(!['esim','usdt','bnb'].includes($('sort').value)&&current.rows.map(r=>r.address).join(',')!==requested){clearTimeout(timer);timer=setTimeout(()=>fetchBalances(),400);}}
 }
 $('balances').addEventListener('click',()=>fetchBalances(true));
 for(const b of document.querySelectorAll('[data-period]'))b.addEventListener('click',()=>{period=b.dataset.period;page=0;loadPage();});
 for(const b of document.querySelectorAll('[data-mode]'))b.addEventListener('click',()=>{mode=b.dataset.mode;page=0;loadPage();});
 for(const b of document.querySelectorAll('[data-filter]'))b.addEventListener('click',()=>{filter=b.dataset.filter;page=0;loadPage();});
 $('address-search').maxLength=42;
-$('address-search').addEventListener('input',()=>{page=0;clearTimeout(searchTimer);clearTimeout(timer);searchTimer=setTimeout(loadPage,300);});$('sort').addEventListener('change',()=>{page=0;loadPage();});
+$('address-search').addEventListener('input',()=>{page=0;clearTimeout(searchTimer);clearTimeout(timer);searchTimer=setTimeout(loadPage,300);});$('sort').addEventListener('change',()=>{page=0;loadPage();});$('sort-direction').addEventListener('change',()=>{page=0;loadPage();});
+for(const button of document.querySelectorAll('[data-sort]'))button.addEventListener('click',()=>{const key=button.dataset.sort;$('sort-direction').value=$('sort').value===key?$('sort-direction').value==='desc'?'asc':'desc':key==='address'?'asc':'desc';$('sort').value=key;page=0;loadPage();});
 $('prev').addEventListener('click',()=>{page--;loadPage();});$('next').addEventListener('click',()=>{page++;loadPage();});
 $('refresh').addEventListener('click',async()=>{
  if(busy)return;busy=true;++generation;$('refresh').disabled=true;$('refresh').textContent='正在刷新…';$('status').textContent='正在读取交易和持仓…';const seq=generation,requestedKey=datasetKey(),requestedURL=url();
@@ -94,5 +108,7 @@ if(['today','yesterday','history'].includes(query.get('period')))period=query.ge
 if(['all','own','received','other','frequency'].includes(query.get('filter')))filter=query.get('filter');
 if(['initiator','funding'].includes(query.get('mode')))mode=query.get('mode');
 $('address-search').value=(query.get('search')||'').slice(0,42);
+if(SELLER_SORT_KEYS.includes(query.get('sort')))$('sort').value=query.get('sort');
+if(['asc','desc'].includes(query.get('direction')))$('sort-direction').value=query.get('direction');
 try{const config=await json('./data/esim-config.json');endpoint=config.apiOrigin?new URL('/api/esim',config.apiOrigin).href:location.hostname.endsWith('.vercel.app')?'./api/esim':null;}catch{endpoint=null;}
 try{await Promise.all([loadSaved().then(data=>{saved=data;}),loadHolders()]);await loadPage();$('status').textContent=endpoint?'数据已读取，可手动刷新。':'后台约每小时同步；刷新按钮读取最新可用快照。';}catch{$('status').textContent='地址数据暂时无法读取，请点击刷新重试。';$('status').className='notice';}

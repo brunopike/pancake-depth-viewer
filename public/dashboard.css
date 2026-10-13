@@ -41,6 +41,10 @@ body.report-page,body.monitor-page,body.holder-page{font-size:16px;line-height:1
 .execution-evidence summary{cursor:pointer;color:var(--muted)}
 .execution-evidence p{margin-top:8px;line-height:1.6}
 .execution-evidence small{display:block;font-size:11px}
+.monitor-page .column-sort{border:1px solid #435b7066;border-radius:999px;background:#26394c66;padding:5px 9px}
+.monitor-page .column-sort:hover{background:#354d65;color:var(--text)}
+.monitor-page .column-sort[aria-pressed=true]{background:#d9c59320;border-color:#d9c59380;color:var(--accent)}
+.monitor-page .count-sorts{justify-content:flex-end}
 
 /* Keep the navigation sticky across the page while sharing the title row. */
 :is(.report-page,.monitor-page,.holder-page) main{display:grid;grid-template-columns:minmax(220px,1fr) auto auto;column-gap:24px}
