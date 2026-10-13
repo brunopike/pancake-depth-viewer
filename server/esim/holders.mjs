@@ -43,11 +43,12 @@ export function holderBehavior(state, cutoff) {
       const r=get(t.initiator), day=beijingDate(t.timestamp); if(!r.days.has(day))r.days.set(day,new Set());r.days.get(day).add(t.tx);
       if(t.executor===OWN_EXECUTOR)r.ownExecution=true;
       if(!r.roundTrips.has(t.tx))r.roundTrips.set(t.tx,new Set());r.roundTrips.get(t.tx).add(t.side);
+      // Trading activity belongs to the initiator; ownership attribution is separate.
+      for(const window of ['history',...(t.timestamp>=cutoff-86400?['day']:[])]){
+        const s=r[window];s[t.side==='buy'?'buyAmount':'sellAmount']+=BigInt(t.amount_wei);s[t.side==='buy'?'buys':'sells'].add(t.tx);
+      }
     }
     if(!valid(t.address))continue;const r=get(t.address);
-    for(const window of ['history',...(t.timestamp>=cutoff-86400?['day']:[])]){
-      const s=r[window];s[t.side==='buy'?'buyAmount':'sellAmount']+=BigInt(t.amount_wei);s[t.side==='buy'?'buys':'sells'].add(t.tx);
-    }
     const claim=state.firstRecipient[t.address];
     // Attribution already checked exact receipt/log order for same-timestamp claims.
     if(t.side==='sell'&&claim&&(t.group==='source_recipients'||claim.timestamp<t.timestamp))r.receivedSold=true;
@@ -59,7 +60,7 @@ function label(id,text,kind,evidence){return {id,text,kind,evidence};}
 export function buildHolderReport({state,addresses,balances,priorBalances,contracts={},block,priorBlock,totalSupply,price,discovery,seed=SEED}) {
   assert(addresses.length===balances.length&&(!priorBalances||priorBalances.length===addresses.length),'HOLDER_BALANCE_INCOMPLETE');
   assert(new Set(addresses).size===addresses.length&&addresses.every(valid),'INVALID_HOLDER_ADDRESSES');
-  const cutoff=num(block.timestamp),behavior=holderBehavior(state,cutoff),ownLP=new Set(seed.lpAddresses), pools=new Set(Object.keys(state.pools).filter(a=>a.length===42));
+  const cutoff=num(block.timestamp),tradeCutoff=Math.min(state.cutoff,cutoff),behavior=holderBehavior(state,tradeCutoff),ownLP=new Set(seed.lpAddresses), pools=new Set(Object.keys(state.pools).filter(a=>a.length===42));
   const rows=addresses.map((address,i)=>{
     const balance=BigInt(balances[i]);assert(balance>=0n,'NEGATIVE_HOLDER_BALANCE');
     const r=behavior.rows.get(address),prior=priorBalances?.[i]??null,known=seed.labels[address],tags=[];
@@ -85,7 +86,7 @@ export function buildHolderReport({state,addresses,balances,priorBalances,contra
   }).sort((a,b)=>BigInt(a.balance)===BigInt(b.balance)?a.address.localeCompare(b.address):BigInt(a.balance)>BigInt(b.balance)?-1:1);
   const sum=rows.reduce((n,r)=>n+BigInt(r.balance),0n);assert(sum<=BigInt(totalSupply),'HOLDER_SUPPLY_MISMATCH');
   return {version:1,token:TOKEN,decimals:18,cutoff,block:num(block.number),blockHash:block.hash,priorCutoff:priorBlock?num(priorBlock.timestamp):null,priorBlock:priorBlock?num(priorBlock.number):null,
-    totalSupply,price,priceSource:'Pancake Infinity ESIM/USDT 池现价',pricePool:PRICE_POOL,tradeCutoff:Math.min(state.cutoff,cutoff),historyStart:state.origin,
+    totalSupply,price,priceSource:'Pancake Infinity ESIM/USDT 池现价',pricePool:PRICE_POOL,tradeCutoff,tradeWindowStart:tradeCutoff-86400,historyStart:state.origin,
     coverage:{seedTop:seed.seedLimit,seedAt:seed.capturedAt,source:seed.source,reportedHolders:seed.reportedHolders,tracked:rows.length,holding:rows.filter(r=>BigInt(r.balance)>0n).length,balance:sum.toString(),exhaustive:false,discovery},contracts,rows};
 }
 export async function collectHolders(state, transport, {previous,progress=()=>{}}={}) {
@@ -109,9 +110,16 @@ export async function collectHolders(state, transport, {previous,progress=()=>{}
   const price=1/(Number(sqrt)/2**96)**2;assert(Number.isFinite(price)&&price>0,'INVALID_HOLDER_PRICE');
   const balances=await readHolderBalances(addresses,hex(end),transport);
   let priorBalances=null;try{priorBalances=await readHolderBalances(addresses,priorBlock.number,transport);}catch{progress({phase:'historical-balances-unavailable'});}
-  const contracts={...(previous?.contracts||{})}, missing=addresses.filter(a=>!(a in contracts));
-  const codes=await batch(missing.map(a=>['eth_getCode',[a,hex(end)]]));
-  for(let i=0;i<missing.length;i++)contracts[missing[i]]=codes[i]!=='0x';
+  const contracts={...(previous?.contracts||{})};
+  // Type lookup is supplementary. Prioritize the largest holders, cap cost, and
+  // leave unknown types unclassified rather than discarding verified balances.
+  const missing=addresses.map((a,i)=>({a,b:BigInt(balances[i])})).filter(r=>!(r.a in contracts)).sort((a,b)=>a.b>b.b?-1:a.b<b.b?1:0).slice(0,500).map(r=>r.a);
+  for(let start=0;start<missing.length;start+=20){
+    const chunk=missing.slice(start,start+20);
+    try{const codes=await batch(chunk.map(a=>['eth_getCode',[a,hex(end)]]));for(let i=0;i<chunk.length;i++)contracts[chunk[i]]=codes[i]!=='0x';}
+    catch{progress({phase:'contract-types-partial'});break;}
+    await new Promise(resolve=>setTimeout(resolve,250));
+  }
   const after=await rpc('eth_getBlockByNumber',[hex(end),false],{fresh:true});assert(after?.hash===block.hash,'HOLDER_BLOCK_CHANGED');
   if(previous?.block&&start===previous.block+1){const old=await rpc('eth_getBlockByNumber',[hex(previous.block),false],{fresh:true});assert(old?.hash===previous.blockHash,'HOLDER_CHECKPOINT_CHANGED');}
   return buildHolderReport({state,addresses,balances,priorBalances,contracts,block,priorBlock:priorBalances?priorBlock:null,totalSupply:BigInt(supply).toString(),price,discovery:{fromBlock:start,toBlock:end,transfers:logs.length}});
