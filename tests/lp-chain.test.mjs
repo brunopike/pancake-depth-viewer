@@ -18,7 +18,7 @@ const events = [
   { address: CL_POSITION_MANAGER, blockNumber: 11n, logIndex: 1, removed: false, args: { from: OWNERS[0], to: external, tokenId: 1n } },
   { address: CL_POSITION_MANAGER, blockNumber: 12n, logIndex: 2, removed: false, args: { from: external, to: OWNERS[1], tokenId: 3n } }
 ];
-function setup({ counts = [1n, 1n, 0n], logs = events, badHash = false, wrongOwner = false } = {}) {
+function setup({ counts = [1n, 1n, 0n, 0n], logs = events, badHash = false, wrongOwner = false } = {}) {
   const calls = [];
   const rpc = { getBlock: async ({ blockNumber }) => ({ hash: badHash ? hash(99) : hash(Number(blockNumber)) }),
     getLogs: async query => { calls.push(query); return logs.filter(l => query.args.from ? OWNERS.includes(l.args.from) : OWNERS.includes(l.args.to)); } };
@@ -49,7 +49,7 @@ test('Transfers update ownership and current position liquidity is read at the p
 });
 
 test('A missed NFT, stale indexer owner or incomplete log response makes the split unavailable', async () => {
-  for (const env of [setup({ counts: [2n, 1n, 0n] }), setup({ wrongOwner: true }), setup({ logs: [{ ...events[0], removed: true }, events[1]] })]) {
+  for (const env of [setup({ counts: [2n, 1n, 0n, 0n] }), setup({ wrongOwner: true }), setup({ logs: [{ ...events[0], removed: true }, events[1]] })]) {
     const pool = cl();
     assert.equal(await load(pool, env), undefined);
     assert.equal(pool.ownership.status, 'unavailable');
@@ -78,7 +78,7 @@ test('An active owned pool omitted by the official catalog is added, rather than
 test('V2 shares and V3 enumerable NFTs use current balances and the exact factory pool', async () => {
   const v2 = { id: external, kind: 'v2', protocol: 'v2' }, v3 = { ...cl(), id: external, protocol: 'v3' };
   const read = async contracts => contracts.map(c => {
-    if (c.functionName === 'balanceOf') return c.address === V3_POSITION_MANAGER ? (c.args[0] === OWNERS[0] ? 1n : 0n) : [2n, 3n, 0n][OWNERS.indexOf(c.args[0])];
+    if (c.functionName === 'balanceOf') return c.address === V3_POSITION_MANAGER ? (c.args[0] === OWNERS[0] ? 1n : 0n) : [2n, 3n, 0n, 1n][OWNERS.indexOf(c.args[0])];
     if (c.functionName === 'totalSupply') return 10n;
     if (c.functionName === 'tokenOfOwnerByIndex') return 5n;
     if (c.functionName === 'ownerOf') return OWNERS[0];
@@ -87,6 +87,6 @@ test('V2 shares and V3 enumerable NFTs use current balances and the exact factor
     throw new Error('Unexpected read');
   });
   await loadOwnership([v2, v3], { read, rpc: setup().rpc, blockNumber: 12n, blockHash: hash(12) });
-  assert.deepEqual(v2.ownership, { status: 'verified', ownBalance: 5n, totalSupply: 10n, shares: OWNERS.map((owner, i) => ({ owner, ownBalance: [2n, 3n, 0n][i] })) });
+  assert.deepEqual(v2.ownership, { status: 'verified', ownBalance: 6n, totalSupply: 10n, shares: OWNERS.map((owner, i) => ({ owner, ownBalance: [2n, 3n, 0n, 1n][i] })) });
   assert.equal(v3.ownership.status, 'verified'); assert.equal(v3.ownership.positions[0].tokenId, '5');
 });

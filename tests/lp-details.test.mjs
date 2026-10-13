@@ -10,9 +10,9 @@ const pool={id:'pool',protocol:'infinityCl',kind:'cl',token0:base,token1:quote,s
  fullRange:true,minTick:MIN_TICK,maxTick:MAX_TICK,ticks:[{index:-200,net:L},{index:200,net:-L},{index:1000,net:L},{index:1200,net:-L}],
  ownership:{status:'verified',positions:[pos(OWNERS[0],'1',-200,200,L/4n),pos(OWNERS[1],'2',-200,200,L/4n),pos(OWNERS[2],'1570878',1000,1200,L)]}};
 const v2={id:'v2',kind:'v2',protocol:'v2',token0:base,token1:quote,reserve0:1000e18,reserve1:4000e18,
- ownership:{status:'verified',totalSupply:10n,ownBalance:6n,shares:OWNERS.map((owner,i)=>({owner,ownBalance:BigInt(i+1)}))}};
+ ownership:{status:'verified',totalSupply:10n,ownBalance:7n,shares:OWNERS.map((owner,i)=>({owner,ownBalance:[1n,2n,3n,1n][i]}))}};
 const near=(a,b)=>assert.ok(Math.abs(a-b)<Math.max(1,Math.abs(b))*1e-10,`${a} != ${b}`);
-test('Three wallets, individual LPs and whole/own/external totals reconcile in either token order',()=>{
+test('Four wallets, individual LPs and whole/own/external totals reconcile in either token order',()=>{
  for(const baseId of ['base','quote']){
   const wallets=lpDetails([pool,v2],baseId), split=inventorySplit([pool,v2],baseId);
   assert.deepEqual(wallets.map(w=>w.owner),OWNERS);
@@ -45,8 +45,8 @@ test('Missing attribution or old positive V2 totals cannot be presented as per-w
  const bad={...v2,ownership:{...v2.ownership,shares:OWNERS.map(owner=>({owner,ownBalance:0n}))}};
  assert.throws(()=>validateOwnership(bad));
 });
-test('A two-owner checkpoint is rejected after adding the third wallet',()=>{
- const index={version:1,chainId:56,blockNumber:100n,blockHash:'0x'+'1'.repeat(64),owners:OWNERS.slice(0,2),nfts:[]};
+test('An older checkpoint is rejected after adding the fourth wallet',()=>{
+ const index={version:1,chainId:56,blockNumber:100n,blockHash:'0x'+'1'.repeat(64),owners:OWNERS.slice(0,3),nfts:[]};
  assert.throws(()=>validateOwnershipIndex(index));
- assert.equal(validateOwnershipIndex({...index,owners:OWNERS}).owners.length,3);
+ assert.equal(validateOwnershipIndex({...index,owners:OWNERS}).owners.length,4);
 });

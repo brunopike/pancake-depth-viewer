@@ -1,6 +1,6 @@
 import { keccak256, encodeAbiParameters, parseAbiParameters } from 'viem';
 // Public wallet labels. These are addresses, never signing credentials.
-export const OWNERS = ['0x1db99241d9e230edc33996567ec2707c42475fd8', '0xc40409aee5b913f14dfd8f967299ddf9dc5009a1', '0x23dd01612443d15c166aed7b430abdaeef923783'];
+export const OWNERS = ['0x1db99241d9e230edc33996567ec2707c42475fd8', '0xc40409aee5b913f14dfd8f967299ddf9dc5009a1', '0x23dd01612443d15c166aed7b430abdaeef923783', '0xdcdb497a0b2ab74753f8e40e36071ce7a0ab4930'];
 export const V3_POSITION_MANAGER = '0x46a15b0b27311cedf172ab29e4f4766fbe7f4364';
 export const CL_POSITION_MANAGER = '0x55f4c8aba71a1e923edc303eb4feff14608cc226';
 export const CL_POOL_MANAGER = '0xa0ffb9c1ce1fe56963b0321b32e7a0302114058b';
