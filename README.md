@@ -4,19 +4,29 @@ A public, read-only PancakeSwap market depth viewer by MMDock.
 
 **[Open the viewer](https://starkweng.github.io/pancake-depth-viewer/)**
 
-Search BNB Chain markets by symbol, token address, or pool address. View the five-column order-book-style price ladder and cumulative AMM liquidity depth of the selected **exact token pair**, aggregated across discovered V2, V3, and Infinity CL pools. Enter a price-range percentage or select Maximum, then choose decimal price precision (0–18 places). Default: ESIM/USDT, a ±50% price range and four decimal places (a 0.0001 base price band). The closest 100 bands stay unmerged, followed by grouped distant bands up to the 500-row limit. Up to 500 rows per side are rendered by merging adjacent bands when necessary; endpoint totals always cover the entire selected range. Hover to inspect a level or enter a price to locate it. The address bar preserves the pair and display settings.
+Search BNB Chain markets by symbol, token address, or pool address. View the order-book-style price ladder with own / external breakdowns for each amount column and cumulative AMM liquidity depth of the selected **exact token pair**, aggregated across discovered V2, V3, and Infinity CL pools. Enter a price-range percentage or select Maximum, then choose decimal price precision (0–18 places). Default: ESIM/USDT, a ±50% price range and four decimal places (a 0.0001 base price band). The closest 100 bands stay unmerged, followed by grouped distant bands up to the 500-row limit. Up to 500 rows per side are rendered by merging adjacent bands when necessary; endpoint totals always cover the entire selected range. Hover to inspect a level or enter a price to locate it. The address bar preserves the pair and display settings.
 
 ## 新手怎么用
 
 1. 点“切换代币”，输入名称。`ESIM / USDT` 表示用 USDT 买卖 ESIM。
 2. 顶部显示全池的两种币：卖盘是 ESIM 数量，买盘是用于买入的 USDT 数量。统计全部价格范围中的交易资金，不随图表范围变化，未含 CL 未领取的手续费。
 3. 输入“目标价格估算”后点“算一算”。高于现价：看预计需付多少 USDT、买到多少 ESIM。低于现价：看需卖出多少 ESIM、预计换回多少 USDT。目标价不受图表显示范围限制；没有流动性的池子会提示。
-4. 输入“价格上下范围”控制表格和曲线。例如 10%，看参考价上下 10% 内的买卖数量和金额；也可点“最大”看现价的 0.5～2 倍范围。
+4. 订单簿和曲线的价格范围分别设置，默认都为上下 50%，修改一边不影响另一边，也不用重新读链。输入“订单簿上下范围”控制表格；曲线上方单独设置曲线范围。例如 10%，看参考价上下 10% 内的买卖数量和金额；也可点“最大”看现价的 0.5～2 倍范围。
 5. 默认 ESIM/USDT、上下 50%、4 位小数。4 位小数表示每档价格相差 0.0001，2 位就是 0.01。档数自动计算，最多每侧 500 行；最近的 100 档保留，其余合并，范围总额保持完整。
-6. 卖盘红色在上，买盘绿色在下，卖盘从高到低排列，最下面最接近现价；买盘从高到低排列，最上面最接近现价。表格显示价格、币量、累计币量、价值 U、累计价值 U；U 表示 USDT，非 USDT 市场显示实际计价币。输入“定位价格”后点“跳转”，滚动并高亮包含该价格的行。点击一行查看完整数字。输入的定位价格会单独成为一档，总金额保持不变。
+6. 卖盘红色在上，买盘绿色在下，卖盘从高到低排列，最下面最接近现价；买盘从高到低排列，最上面最接近现价。表格保留价格、币量、累计币量、价值 U、累计价值 U 五列；四个金额列都用“我方 / 外部”并排显示，蓝色是我方、金色是外部，两数相加是全池。U 表示 USDT，非 USDT 市场显示实际计价币。输入“定位价格”后点“跳转”，滚动并高亮包含该价格的行。点击一行查看完整数字。输入的定位价格会单独成为一档，总金额保持不变。
 7. 点“查看数据明细”了解哪些池子计入，点“怎么看这些数据？”查看解释。
 
 “池子”是用于买卖两种币的一组资金。页面金额根据当前池内资金估算，未计入交易费用等影响；实际买卖金额以交易时的报价为准。大数字用“万”“亿”或科学计数显示。
+
+## LP 归属
+
+我方地址：`0x1DB99241D9E230eDc33996567EC2707c42475fd8`、`0xc40409Aee5B913f14dfD8f967299ddf9dc5009a1`。按这两个地址当前直接持有的 PancakeSwap V2 LP 份额、V3 与 Infinity CL 仓位 NFT 识别；未包含挖矿或第三方托管仓位。转走的仓位归入其余资金，已清空的仓位贡献为零。外部列是全池减去上述直接持有的我方资金，不能用于推断其他地址的实际控制人。
+
+V2 按固定区块的 `balanceOf / totalSupply` 分配储备和深度；V3 枚举钱包 NFT，核对 `ownerOf` 与工厂池地址；Infinity 使用已核对的 NFT 索引、转入转出日志、`ownerOf` 与钱包 `balanceOf` 对账，再读 PoolKey、价格区间和当前流动性。NFT 所属区块与池子一致。钱包持仓发现的活跃同币对池子即使不在官方列表，也会按完整 PoolKey 核对并补入计算；后续快照保留这些池子。索引丢失或过旧时，后台通过私有 Alchemy NFT API 重建，结果仍需链上对账。公开索引和快照仅含钱包地址及链上数据，不含 Key。
+
+每段价格使用我方仓位的实际区间积分。使用整数流动性在所有区间检查“我方不超过全池”，每行同时核对币量和 U 的加总关系。归属缺失或不一致时显示“待核对”，全池数据仍可查看；后台不会发布归属未核对完整的新快照。
+
+算法来源：[PancakeSwap V3 合约地址](https://developer.pancakeswap.finance/contracts/v3/addresses)、[Infinity 仓位管理合约](https://github.com/pancakeswap/infinity-periphery/blob/main/src/pool-cl/CLPositionManager.sol)、[Infinity 价格区间编码](https://github.com/pancakeswap/infinity-periphery/blob/main/src/pool-cl/libraries/CLPositionInfoLibrary.sol)、[Alchemy NFT 查询](https://www.alchemy.com/docs/reference/nft-api-endpoints/nft-api-endpoints/nft-ownership-endpoints/get-nf-ts-for-owner-v-3)。
 
 ## Data and coverage
 

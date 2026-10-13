@@ -2,7 +2,8 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import vm from 'node:vm';
-import { buildDepth, settings, poolInventory, estimateTarget } from '../src/math.mjs';
+import { buildDepth, settings, poolInventory, estimateTarget, priceAtTick, cumulative, priceOf } from '../src/math.mjs';
+import { OWNERS, poolMetadata } from '../src/ownership.mjs';
 
 const source = (await readFile(new URL('../src/app.js', import.meta.url), 'utf8')).replace(/^import .*;\n/gm, '');
 const html = await readFile(new URL('../index.html', import.meta.url), 'utf8');
@@ -31,7 +32,7 @@ function app() {
   const context = vm.createContext({ document, window: {}, location: { href: 'https://example.test/', search: '' },
     history: { replaceState() {} }, URL, URLSearchParams, console, devicePixelRatio: 1,
     ResizeObserver: class { observe() {} }, setInterval: callback => timers.push(callback),
-    fetch: () => new Promise(() => {}), buildDepth, settings, poolInventory, estimateTarget,
+    fetch: () => new Promise(() => {}), buildDepth, settings, poolInventory, estimateTarget, priceAtTick, cumulative, priceOf, OWNERS, poolMetadata,
     readBrowserCache: selected => selected === market ? live() : null, saveBrowserCache() {}, readSharedCache: async () => null,
     loadPools: () => new Promise(resolve => pending.push(resolve)), market });
   vm.runInContext(source, context);
@@ -104,4 +105,40 @@ test('Switching tokens during an update cannot show the previous market data', a
   const fresh = live(102n, 6); fresh.pools[0].token0 = other;
   await a.finish(fresh); await newRead;
   assert.equal(a.read('state.depth.price'), 6);
+});
+
+test('The book splits all four amount columns into own and external with cumulative totals', async () => {
+  const a = app(), reading = a.read('refresh()'); await settle();
+  const data = live(101n, 5); data.pools[0].ownership = { status: 'verified', ownBalance: 3n, totalSupply: 10n };
+  await a.finish(data); await reading;
+  assert.equal(a.read('state.depth.ownershipVerified'), true);
+  assert.match(a.elements.get('bids').innerHTML, /class="split-value"/);
+  assert.match(a.elements.get('bids').innerHTML, /class="own-color"/);
+  assert.match(a.elements.get('bids').innerHTML, /class="external-color"/);
+  assert.match(a.elements.get('lp-status').textContent, /已核对/);
+  const row = a.read('state.depth.bids[0]');
+  assert.ok(Math.abs(row.own.quantity / row.quantity - .3) < 1e-12);
+  assert.equal(a.elements.get('asks').scrollTop, 1000); assert.equal(a.elements.get('bids').scrollTop, 0);
+});
+
+test('Missing ownership displays pending attribution while full-pool prices remain available', async () => {
+  const a = app(), reading = a.read('refresh()'); await settle(); await a.finish(); await reading;
+  assert.match(a.elements.get('lp-status').textContent, /待核对/);
+  assert.match(a.elements.get('bids').innerHTML, /待核对/);
+  assert.equal(a.read('state.depth.price'), 5);
+});
+
+test('Chart and book ranges can change independently without a new chain read', async () => {
+  const a = app(), reading = a.read('refresh()'); await settle(); await a.finish(); await reading;
+  const before = a.elements.get('bids').innerHTML;
+  a.elements.get('chart-percent').value = '10';
+  a.listeners.get('chart-settings:submit')({ preventDefault() {} });
+  assert.equal(a.read('state.chartDepth.low'), 4.5);
+  assert.equal(a.read('state.depth.low'), 2.5);
+  assert.equal(a.elements.get('bids').innerHTML, before);
+  a.elements.get('percent').value = '20';
+  a.listeners.get('settings-form:submit')({ preventDefault() {} });
+  assert.equal(a.read('state.depth.low'), 4);
+  assert.equal(a.read('state.chartDepth.low'), 4.5);
+  assert.equal(a.pending.length, 0);
 });

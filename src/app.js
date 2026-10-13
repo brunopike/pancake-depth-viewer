@@ -1,5 +1,6 @@
 import { loadPools } from './chain.mjs';
-import { buildDepth, settings, poolInventory, estimateTarget } from './math.mjs';
+import { buildDepth, settings, poolInventory, estimateTarget, priceAtTick, cumulative, priceOf } from './math.mjs';
+import { OWNERS, poolMetadata } from './ownership.mjs';
 import { readBrowserCache, readSharedCache, saveBrowserCache } from './browser-cache.mjs';
 const $ = id => document.getElementById(id);
 const escape = value => String(value ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -18,7 +19,7 @@ const price = n => Number.isFinite(n) ? n !== 0 && (Math.abs(n) >= 1e12 || Math.
 const bandPrice = n => n === 0 || !Number.isFinite(n) || Math.abs(n) >= 1e12 ? price(n) : n < state.config.step ? `＜${state.config.step.toFixed(state.config.precision)}` : Number(n).toLocaleString('en-US', { minimumFractionDigits: state.config.precision, maximumFractionDigits: state.config.precision });
 const time = n => new Date(n).toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai', hour12: false });
 const protocolName = { v2: 'V2', v3: 'V3', infinityCl: 'Infinity CL', infinityBin: 'Infinity Bin', stable: 'StableSwap', infinityStable: 'Infinity Stable' };
-const state = { catalog: null, markets: [], market: null, config: settings(50, 4), live: null, depth: null, request: 0, hover: null, focusPrice: null, targetPrice: null, busy: false };
+const state = { catalog: null, markets: [], market: null, config: settings(50, 4), chartPercent: 50, chartDepth: null, chartHover: null, live: null, depth: null, request: 0, hover: null, focusPrice: null, targetPrice: null, busy: false };
 let plot;
 
 function pairMarket(p) {
@@ -64,11 +65,13 @@ function setError(message, technical = '') {
 }
 function clearDepth() {
   state.depth = null; state.live = null; state.hover = null; state.focusPrice = null;
+  state.chartDepth = null; state.chartHover = null;
   state.targetPrice = null; $('target-price').value = ''; $('target-result').hidden = true; $('target-button').disabled = true;
   $('ask-range-note').textContent = ''; $('bid-range-note').textContent = '';
   $('range-result').hidden = true; $('jump-button').disabled = true; $('jump-status').textContent = '';
   ['mark-price', 'book-price', 'ask-total', 'bid-total'].forEach(id => $(id).textContent = '—');
   ['bids', 'asks'].forEach(id => $(id).innerHTML = '<div class="empty">正在读取池子里的资金…</div>');
+  $('lp-status').textContent = 'LP 归属待核对';
   $('chart-empty').style.display = 'flex'; $('chart-empty').textContent = '正在读取这个代币的买卖资金…';
   $('chart-tip').hidden = true; draw();
 }
@@ -77,6 +80,7 @@ function updateURL() {
   if (state.market) { url.searchParams.set('base', state.market.base.id); url.searchParams.set('quote', state.market.quote.id); }
   url.searchParams.delete('levels'); url.searchParams.delete('bps');
   url.searchParams.set('range', state.config.percent); url.searchParams.set('precision', state.config.precision);
+  url.searchParams.set('chartRange', state.chartPercent);
   history.replaceState(null, '', url);
 }
 function updateControls() {
@@ -91,6 +95,21 @@ function updateControls() {
   document.querySelectorAll('[data-percent]').forEach(b => b.classList.toggle('active', !c.maximum && Number(b.dataset.percent) === c.percent));
   $('levels-summary').textContent = '档数按价格精度自动计算';
   $('range-result').hidden = true;
+  updateChartControls();
+}
+
+function updateChartControls() {
+  const max = state.chartPercent === 'max';
+  $('chart-percent').disabled = max;
+  if (!max) $('chart-percent').value = state.chartPercent;
+  $('chart-maximum').setAttribute('aria-pressed', String(max));
+  $('chart-maximum').classList.toggle('active', max);
+  $('chart-range-note').textContent = max ? '现价 0.5～2 倍' : `上下 ${number(state.chartPercent, 4)}%`;
+}
+function rebuildChart() {
+  if (!state.depth) return;
+  state.chartDepth = buildDepth(state.live.pools, state.market.base.id, settings(state.chartPercent, state.config.precision));
+  state.chartHover = null; $('chart-tip').hidden = true; draw();
 }
 
 async function selectMarket(market) {
@@ -98,7 +117,8 @@ async function selectMarket(market) {
   state.market = market;
   $('pair-name').textContent = `${market.base.symbol} / ${market.quote.symbol}`;
   $('quote-unit').textContent = `${market.quote.symbol} / ${market.base.symbol}`;
-  $('book-units').textContent = `币量：${market.base.symbol} · 价值：${market.quote.symbol === 'USDT' ? 'U（USDT）' : market.quote.symbol}`;
+  $('book-units').textContent = `币量：${market.base.symbol} · 金额：${market.quote.symbol === 'USDT' ? 'U（USDT）' : market.quote.symbol} · 我方 + 外部 = 全池`;
+  document.querySelectorAll('.lp-units').forEach(e => e.textContent = `${market.base.symbol} / ${market.quote.symbol === 'USDT' ? 'U' : market.quote.symbol}`);
   document.querySelectorAll('.value-label').forEach(e => e.textContent = `价值 ${market.quote.symbol === 'USDT' ? 'U' : market.quote.symbol}`);
   document.querySelectorAll('.cumulative-value-label').forEach(e => e.textContent = `累计价值 ${market.quote.symbol === 'USDT' ? 'U' : market.quote.symbol}`);
   $('book-quote').textContent = market.quote.symbol;
@@ -115,6 +135,8 @@ async function refresh() {
   const usable = live => live?.pools.length && (live.range === Infinity || live.range === state.config.range) && Date.now() - live.timestamp < 86400000;
   const show = (live, updating = false) => {
     if (request !== state.request || !usable(live)) return false;
+    for (const p of [...live.pools, ...live.failed]) if (p.discoveredBy === 'ownedLP'
+      && !market.pools.some(m => m.protocol === p.protocol && m.id.toLowerCase() === p.id.toLowerCase())) market.pools.push(poolMetadata(p));
     const depth = buildDepth(live.pools, market.base.id, state.config, { focusPrice: state.focusPrice });
     state.live = live; state.depth = depth; state.hover = null;
     render(); $('jump-button').disabled = false;
@@ -137,7 +159,7 @@ async function refresh() {
     }
     if (request !== state.request) return;
     const live = await loadPools(market.pools, market.base.id, Infinity, (done, total) => {
-      if (request === state.request) $('status').textContent = `${displayed ? `显示 ${time(state.live.timestamp)} · ` : ''}正在更新池子 ${done} / ${total}…`;
+      if (request === state.request) $('status').textContent = `${displayed ? `显示 ${time(state.live.timestamp)} · ` : ''}${done === total ? '正在核对 LP 归属…' : `正在更新池子 ${done} / ${total}…`}`;
     }, { previous });
     if (request !== state.request) return;
     live.source = '公共节点';
@@ -194,11 +216,17 @@ function render() {
   $('range-result').hidden = false;
   $('range-result').textContent = d.grouped ? '相邻档已合并，总金额不变。' : '';
   $('range-result').hidden = !$('range-result').textContent;
+  const ownedPools = state.live.pools.filter(p => p.ownership?.status === 'verified').length;
+  $('lp-status').textContent = d.ownershipVerified ? `LP 归属已核对 · ${ownedPools} 个池` : `LP 归属待核对 · ${ownedPools}/${state.live.pools.length} 个池`;
+
+  const splitCell = (r, field) => r.own && r.external
+    ? `<span class="split-value" title="我方 ${number(r.own[field], 8)} / 外部 ${number(r.external[field], 8)}；全池 ${number(r[field], 8)}"><span class="own-color">${compact(r.own[field])}</span><i>/</i><span class="external-color">${compact(r.external[field])}</span></span>`
+    : '<span class="split-value pending">待核对</span>';
 
   for (const [id, rows, side] of [['bids', d.bids, 'bid'], ['asks', d.asks, 'ask']]) {
     const displayedRows = rows.map((r, i) => ({ r, i }));
     if (side === 'ask') displayedRows.reverse();
-    $(id).innerHTML = displayedRows.map(({ r, i }) => `<button class="book-row ${side}" data-side="${side}" data-index="${i}" style="--fill:${(Number.isFinite(r.cumulativeQuote) ? r.cumulativeQuote / maximum * 100 : 100)}%;--side:var(--${side === 'bid' ? 'green' : 'red'})" aria-label="${side === 'bid' ? '买盘' : '卖盘'}第 ${r.level} 档，价格 ${price(r.price)}，币量 ${compact(r.quantity)}，累计币量 ${compact(r.cumulativeQuantity)}，价值 ${compact(r.quote)}，合计金额 ${compact(r.cumulativeQuote)}"><span title="实际边界价格 ${r.price}">${r.endpoint || r.focus ? price(r.price) : bandPrice(r.price)}</span><span>${compact(r.quantity)}</span><span>${compact(r.cumulativeQuantity)}</span><span>${compact(r.quote)}</span><span>${compact(r.cumulativeQuote)}</span></button>`).join('');
+    $(id).innerHTML = displayedRows.map(({ r, i }) => `<button class="book-row ${side}" data-side="${side}" data-index="${i}" style="--fill:${(Number.isFinite(r.cumulativeQuote) ? r.cumulativeQuote / maximum * 100 : 100)}%;--side:var(--${side === 'bid' ? 'green' : 'red'})" aria-label="${side === 'bid' ? '买盘' : '卖盘'}第 ${r.level} 档，价格 ${price(r.price)}，我方 ${r.own ? `${compact(r.own.quantity)} 个币，${compact(r.own.quote)} 计价币` : '待核对'}，外部 ${r.external ? `${compact(r.external.quantity)} 个币，${compact(r.external.quote)} 计价币` : '待核对'}，全池币量 ${compact(r.quantity)}，累计币量 ${compact(r.cumulativeQuantity)}，价值 ${compact(r.quote)}，合计金额 ${compact(r.cumulativeQuote)}"><span title="实际边界价格 ${r.price}">${r.endpoint || r.focus ? price(r.price) : bandPrice(r.price)}</span>${['quantity', 'cumulativeQuantity', 'quote', 'cumulativeQuote'].map(field => splitCell(r, field)).join('')}</button>`).join('');
   }
   $('asks').scrollTop = $('asks').scrollHeight;
   $('bids').scrollTop = 0;
@@ -210,7 +238,7 @@ function render() {
     if (index >= 0) { inspect(side, index, true); $('jump-status').textContent = `已定位 ${price(p)}。`; }
     else { state.focusPrice = null; $('jump-status').textContent = ''; }
   }
-  draw();
+  rebuildChart();
 }
 
 function renderTarget() {
@@ -232,9 +260,11 @@ function inspect(side, index, locate = false) {
   const row = (side === 'bid' ? state.depth.bids : state.depth.asks)[index];
   if (!row) return;
   state.hover = { side, index };
+  state.chartHover = null;
   const color = side === 'bid' ? 'bid-color' : 'ask-color';
   const offsetText = Number.isFinite(row.offset) ? `比参考价${row.offset > 0 ? '高' : '低'} ${number(Math.abs(row.offset) / 100, 3)}%` : '没有固定价格上限';
   $('inspection').innerHTML = `<span class="eyebrow ${color}">${side === 'bid' ? '买盘' : '卖盘'} · 第 ${row.level} 档 · ${offsetText}</span><div class="inspection-data"><div><span>每个 ${escape(state.market.base.symbol)} 的价格（${escape(state.market.quote.symbol)}）</span><strong>${price(row.price)}</strong></div><div><span>币量（${escape(state.market.base.symbol)}）</span><strong>${number(row.quantity, 5)}</strong></div><div><span>累计币量（${escape(state.market.base.symbol)}）</span><strong>${number(row.cumulativeQuantity, 5)}</strong></div><div><span>价值（${escape(state.market.quote.symbol)}）</span><strong>${number(row.quote, 5)}</strong></div><div><span>累计价值（${escape(state.market.quote.symbol)}）</span><strong>${number(row.cumulativeQuote, 5)}</strong></div></div>`;
+  $('inspection').innerHTML += `<div class="inspection-data">${[['我方 LP', row.own], ['外部 LP', row.external]].map(([label, value]) => `<div><span>${label}（${escape(state.market.base.symbol)} / ${escape(state.market.quote.symbol)}）</span><strong>${value ? `${number(value.quantity, 5)} / ${number(value.quote, 5)}` : '待核对'}</strong>${value ? `<span>累计：${number(value.cumulativeQuantity, 5)} / ${number(value.cumulativeQuote, 5)}</span>` : ''}</div>`).join('')}</div>`;
   document.querySelectorAll('.book-row.selected').forEach(e => e.classList.remove('selected'));
   const button = document.querySelector(`.book-row[data-side="${side}"][data-index="${index}"]`);
   button?.classList.add('selected');
@@ -248,7 +278,7 @@ function draw() {
   canvas.width = Math.round(w * ratio); canvas.height = Math.round(h * ratio);
   const ctx = canvas.getContext('2d'); ctx.scale(ratio, ratio); ctx.clearRect(0, 0, w, h);
   const left = 57, right = w - 12, top = 16, bottom = h - (w < 400 ? 47 : 35);
-  const d = state.depth, max = d ? Math.max(...[...d.bids, ...d.asks].map(r => Number.isFinite(r.cumulativeQuote) ? r.cumulativeQuote : 0), 1e-20) * 1.1 : 100;
+  const d = state.chartDepth, max = d ? Math.max(...[...d.bids, ...d.asks].map(r => Number.isFinite(r.cumulativeQuote) ? r.cumulativeQuote : 0), 1e-20) * 1.1 : 100;
   ctx.font = '12px "IBM Plex Mono", monospace'; ctx.fillStyle = '#76899a'; ctx.strokeStyle = '#202b37'; ctx.lineWidth = 1;
   for (let i = 0; i <= 4; i++) {
     const y = bottom - (bottom - top) * i / 4;
@@ -285,12 +315,15 @@ function draw() {
   ctx.fillStyle = '#7e8f9f'; ctx.textAlign = 'left'; ctx.fillText(price(minPrice), left, h - (w < 400 ? 24 : 10));
   ctx.textAlign = 'right'; ctx.fillText(price(maxPrice), right, h - (w < 400 ? 24 : 10));
   ctx.fillStyle = '#d9c593'; ctx.textAlign = 'center'; ctx.fillText(price(d.price), x(d.price), h - (w < 400 ? 4 : 10));
-  if (state.hover) {
-    const r = (state.hover.side === 'bid' ? d.bids : d.asks)[state.hover.index];
-    if (!r || r.price < 0 || !Number.isFinite(r.price) || !Number.isFinite(r.cumulativeQuote)) return;
+  if (state.hover || state.chartHover) {
+    const side = state.chartHover?.side || state.hover.side;
+    let r = state.chartHover?.row || (side === 'bid' ? state.depth.bids : state.depth.asks)[state.hover.index];
+    if (!r || r.price < d.low || r.price > d.high || !Number.isFinite(r.price)) return;
+    if (!state.chartHover) r = { ...r, cumulativeQuote: state.live.pools.reduce((sum, pool) => sum + cumulative(pool, state.market.base.id, r.price, side).quote, 0) };
+    if (!Number.isFinite(r.cumulativeQuote)) return;
     ctx.strokeStyle = '#708394'; ctx.lineWidth = 1; ctx.setLineDash([3, 4]);
     ctx.beginPath(); ctx.moveTo(x(r.price), top); ctx.lineTo(x(r.price), bottom); ctx.stroke(); ctx.setLineDash([]);
-    ctx.beginPath(); ctx.arc(x(r.price), y(r.cumulativeQuote), 3, 0, Math.PI * 2); ctx.fillStyle = state.hover.side === 'bid' ? '#69c7a7' : '#de92a2'; ctx.fill();
+    ctx.beginPath(); ctx.arc(x(r.price), y(r.cumulativeQuote), 3, 0, Math.PI * 2); ctx.fillStyle = side === 'bid' ? '#69c7a7' : '#de92a2'; ctx.fill();
   }
 }
 
@@ -299,22 +332,38 @@ function renderMarkets() {
   const query = $('search').value.trim().toLowerCase();
   const matches = state.markets.filter(m => `${m.base.symbol} ${m.quote.symbol} ${m.base.name} ${m.quote.name} ${m.base.id} ${m.quote.id} ${m.pools.map(p => p.id).join(' ')}`.toLowerCase().includes(query));
   $('market-list').innerHTML = matches.slice(0, 200).map(m => `<button class="market-option" data-market="${escape(m.key)}"><span><strong>${escape(m.base.symbol)} / ${escape(m.quote.symbol)}</strong><small>${m.pools.length} 个池子 · ${[...new Set(m.pools.map(p => protocolName[p.protocol] || p.protocol))].map(escape).join(' / ')} · ${escape(m.base.id.slice(0, 8))}…${escape(m.base.id.slice(-4))}</small></span><span>$${compact(m.tvl)}</span></button>`).join('') || '<div class="empty">没有找到，请换个名称或粘贴地址试试</div>';
-  $('search-summary').textContent = `找到 ${matches.length} 组买卖币种${matches.length > 200 ? '，先显示前 200 组；输入名称可缩小范围' : ''}。例如 ESIM / USDT 表示用 USDT 买卖 ESIM。列表未收录的池子不会计入。`;
+  $('search-summary').textContent = `找到 ${matches.length} 组买卖币种${matches.length > 200 ? '，先显示前 200 组；输入名称可缩小范围' : ''}。例如 ESIM / USDT 表示用 USDT 买卖 ESIM。列表或我方仓位发现的池子才会计入。`;
 }
 function coverage() {
   $('detail-title').textContent = '哪些池子算进来了？';
   if (!state.market) return;
   const live = state.live;
-  $('detail-body').innerHTML = `<p>“池子”是 PancakeSwap 里用于买卖两种币的一组资金。这里把成功读取的池子合在一起看。</p><p>${escape(state.market.base.symbol)} / ${escape(state.market.quote.symbol)}：已找到 ${state.market.pools.length} 个池子。${live ? `图中已计入 ${live.pools.length} 个，未计入 ${live.failed.length} 个。<br>数据时间：${time(live.timestamp)}（北京时间）；链上记录编号（区块）：${live.blockNumber}；读取来源：${live.source === 'Alchemy' ? 'Alchemy 后台' : '公共节点'}。` : '还没有读取完链上数据。'}<br>只合并买卖同样两种币的池子。其他币种、其他链和其他交易所的资金另算。</p>` + state.market.pools.map(p => {
+  $('detail-body').innerHTML = `<p>“池子”是 PancakeSwap 里用于买卖两种币的一组资金。这里把成功读取的池子合在一起看，包括钱包仓位发现的池子。</p><p>${escape(state.market.base.symbol)} / ${escape(state.market.quote.symbol)}：已找到 ${state.market.pools.length} 个池子。${live ? `图中已计入 ${live.pools.length} 个，未计入 ${live.failed.length} 个。<br>数据时间：${time(live.timestamp)}（北京时间）；链上记录编号（区块）：${live.blockNumber}；读取来源：${live.source === 'Alchemy' ? 'Alchemy 后台' : '公共节点'}。` : '还没有读取完链上数据。'}<br>只合并买卖同样两种币的池子。钱包持仓发现的同币对池子也会补入。其他币种、其他链和其他交易所的资金另算。</p>` + state.market.pools.map(p => {
     const ready = live?.pools.find(x => x.id === p.id && x.protocol === p.protocol), failure = live?.failed.find(x => x.id === p.id && x.protocol === p.protocol);
     const special = ready?.hook && !/^0x0{40}$/i.test(ready.hook) ? ' · 这个池子有额外交易规则，本页估算未考虑这些规则' : '';
-    return `<div class="detail-pool"><strong>${escape(protocolName[p.protocol] || p.protocol)} · 列表费率 ${Number(p.feeTier) / 10000}%</strong><span class="badge ${ready ? '' : 'failed'}">${ready ? '已加进图里' : failure ? '未加进图里' : '还在读取'}</span><p>列表中的池内资金估值：$${compact(p.tvlUSD)}${ready ? ` · ${ready.kind === 'cl' ? `已读取 ${ready.ticks.length} 个价格分界点` : '已读取两种币的余额'}${special}${ready.dynamicFee ? ' · 手续费会变动' : ''}` : ''}${failure ? `<br>${escape(plainError(failure.error))}` : ''}</p>${failure ? `<details><summary>查看技术信息</summary><p>${escape(failure.error)}</p></details>` : ''}<a class="address" href="https://pancakeswap.finance/liquidity/pool/bsc/${escape(p.protocol)}/${escape(p.id)}" target="_blank" rel="noopener">池子地址：${escape(p.id)} ↗</a></div>`;
+    let single = '';
+    if (ready) try {
+      const balance = poolInventory([ready], state.market.base.id);
+      single = `<p>池内币量：${number(balance.base, 2)} ${escape(state.market.base.symbol)} · ${number(balance.quote, 2)} ${escape(state.market.quote.symbol)}<br>本池现价：${price(priceOf(ready, state.market.base.id))}</p>`;
+    } catch { /* Unavailable full inventory is not displayed. */ }
+    return `<div class="detail-pool"><strong>${escape(protocolName[p.protocol] || p.protocol)} · 列表费率 ${Number(p.feeTier) / 10000}%</strong><span class="badge ${ready ? '' : 'failed'}">${ready ? '已加进图里' : failure ? '未加进图里' : '还在读取'}</span><p>${p.discoveredBy === 'ownedLP' ? '钱包持仓发现，已补入计算' : `列表中的池内资金估值：$${compact(p.tvlUSD)}`}${ready ? ` · ${ready.kind === 'cl' ? `已读取 ${ready.ticks.length} 个价格分界点` : '已读取两种币的余额'}${special}${ready.dynamicFee ? ' · 手续费会变动' : ''}` : ''}${failure ? `<br>${escape(plainError(failure.error))}` : ''}</p>${single}${failure ? `<details><summary>查看技术信息</summary><p>${escape(failure.error)}</p></details>` : ''}<a class="address" href="https://pancakeswap.finance/liquidity/pool/bsc/${p.protocol === 'infinityCl' ? escape(p.id) : escape(p.protocol) + '/' + escape(p.id)}" target="_blank" rel="noopener">池子地址：${escape(p.id)} ↗</a></div>`;
   }).join('');
   $('detail-dialog').showModal();
 }
 function methodology() {
   $('detail-title').textContent = '怎么看这些数据？';
-  $('detail-body').innerHTML = `<h3>先选币种，再看金额</h3><p>例如 ESIM / USDT，表示用 USDT 买卖 ESIM。价格 0.06 表示 1 个 ESIM 对应 0.06 USDT。绿色是买盘，红色是卖盘。这里的“深度”，就是选定价格范围里的买卖数量和金额，按池内资金估算。</p><h3>一行表格是什么意思？</h3><p>每一行是一小段价格区间。“币量”和“价值 U”只看这一段；“累计币量”和“累计价值 U”是从最接近现价的档位加到当前这一档。点击一行能看完整数字。曲线越高，表示累计金额越多。</p><h3>全池币量和目标价格</h3><p>顶部卖盘显示池内代币，买盘显示用于买入的计价币，统计全部价格范围中的交易资金，未含未领取的手续费。输入目标价格：高于现价时，看买入要付多少；低于现价时，看要卖多少币、可换回多少。某个池子在目标价处没有资金时会提示，不能当成保证成交的报价。目标价估算不受图表范围限制，未模拟外部套利或资金新增。</p><h3>价格上下范围</h3><p>输入 10%，表格和曲线就看参考价上下 10% 内的买卖数量和金额。例如参考价 1 USDT，就是看 0.9 到 1.1 USDT。“最大”看现价的 0.5～2 倍。例如现价 0.06，就是看 0.03～0.12。表格金额是到对应价格的估算花费或所得。</p><h3>小数位数怎么设置？</h3><p>4 位小数表示每档价格相差 0.0001；2 位小数就是 0.01。档数自动计算。档位太多时，每行会合并相邻档，最多显示 500 行；整个范围的总金额不会减少。范围的最后一档可能只是一小段，以实际边界价格计算。小数位数只改变表格的细分程度，不改变范围内的总金额。</p><h3>池子是什么？为什么只显示部分数据？</h3><p>池子是用于买卖两种币的一组资金。同样两种币可以有多个池子，本页合并成功读取的池子。参考价格取这些池子中，官方列表资金估值最大的那个。读不到的池子、还未支持的池子类型不会加进图里，可点“查看数据明细”了解原因。当前只看 BNB 链上的 PancakeSwap。ESIM / USDT 与 ESIM / BNB 分开显示；同名但地址不同的代币也分开显示。</p><h3>数据从哪里来？多久更新？</h3><p>代币和池子列表来自 PancakeSwap 官方数据接口，后台每小时尝试更新。列表更新时间：${state.catalog ? time(state.catalog.fetchedAt) + '（北京时间）' : '暂时未知'}。${state.catalog?.complete ? '这次已读取完接口提供的列表，但不保证链上所有池子都在里面。' : '列表还未收集完整，有些池子可能尚未收录。'}打开时先显示有时间标记的缓存，再检查链上更新；流动性未改变的档位直接复用。打开页面立即读取链上数据，默认每分钟自动更新；回到页面也会立即检查更新。也可点“刷新数据”。ESIM/USDT 后台每 60 分钟更新共享数据，即使网页关闭也会运行；实际时间以页面显示为准。池子列表中的美元估值和图里的买卖金额是不同指标，更新时间也可能不同。</p><h3>金额是估算值</h3><p>这些数值按池子的资金计算，未计入手续费、网络费用、代币转账税费，以及某些池子的额外交易规则。实际买卖金额以交易时的报价为准。</p><details><summary>查看详细算法与技术来源</summary><p>V2 使用实际储备量的恒定乘积曲线；V3 与 Infinity CL 使用当前价格、活跃流动性、tick bitmap 和初始化 tick 的 liquidityNet，按价格区间积分。一次刷新固定同一区块。原始状态及流动性变化使用 BigInt，显示积分使用浮点数。Infinity Bin / StableSwap 目前只列入列表与明细，不计入曲线。</p><p>百分比模式的边界 = 参考价 ×（1 ± 百分比 / 100），价格下限最低为 0。精度为 n 位小数时，基础价格档距为 10⁻ⁿ；相邻档合并后仍按实际边界积分，最后一档抵达原始范围边界。最大显示范围为现价的 0.5～2 倍。后台全量缓存读取合约全部 tick bitmap 并校验两端流动性归零；显示范围独立于缓存读取范围。各池从自身现价积分到共同价格边界；各池现价不同，第一档可能包含已有池间价差。这里只合并同一对代币地址的直接池，未模拟多跳路由或真实成交。</p><p><a href="https://developer.pancakeswap.finance/apis/subgraph" target="_blank" rel="noopener">PancakeSwap 开发文档 ↗</a><br><a href="https://github.com/pancakeswap/pancakeswap-ai" target="_blank" rel="noopener">官方数据接口使用示例 ↗</a><br><a href="https://github.com/pancakeswap/infinity-core" target="_blank" rel="noopener">Infinity CL 合约与计算方法 ↗</a></p></details>`;
+  $('detail-body').innerHTML = `<h3>先选币种，再看金额</h3><p>例如 ESIM / USDT，表示用 USDT 买卖 ESIM。价格 0.06 表示 1 个 ESIM 对应 0.06 USDT。绿色是买盘，红色是卖盘。这里的“深度”，就是选定价格范围里的买卖数量和金额，按池内资金估算。</p><h3>一行表格是什么意思？</h3><p>每一行是一小段价格区间。我方 LP 是指定两个地址直接持有的资金，外部 LP 是其余资金，全池是两者之和。各列左边是我方，右边是外部；“累计币量”和“累计价值 U”从最接近现价的档位加到当前这一档。点击一行能看完整数字。曲线越高，表示累计金额越多。</p><h3>全池币量和目标价格</h3><p>顶部卖盘显示池内代币，买盘显示用于买入的计价币，统计全部价格范围中的交易资金，未含未领取的手续费。输入目标价格：高于现价时，看买入要付多少；低于现价时，看要卖多少币、可换回多少。某个池子在目标价处没有资金时会提示，不能当成保证成交的报价。订单簿与曲线的显示范围可分别设置，不影响全池统计和目标价估算。未模拟外部套利或资金新增。</p><h3>价格上下范围</h3><p>输入 10%，表格和曲线就看参考价上下 10% 内的买卖数量和金额。例如参考价 1 USDT，就是看 0.9 到 1.1 USDT。“最大”看现价的 0.5～2 倍。例如现价 0.06，就是看 0.03～0.12。表格金额是到对应价格的估算花费或所得。</p><h3>小数位数怎么设置？</h3><p>4 位小数表示每档价格相差 0.0001；2 位小数就是 0.01。档数自动计算。档位太多时，每行会合并相邻档，最多显示 500 行；整个范围的总金额不会减少。范围的最后一档可能只是一小段，以实际边界价格计算。小数位数只改变表格的细分程度，不改变范围内的总金额。</p><h3>池子是什么？为什么只显示部分数据？</h3><p>池子是用于买卖两种币的一组资金。同样两种币可以有多个池子，本页合并成功读取的池子。参考价格取官方列表资金估值最大的已读取池子。读不到的池子、还未支持的池子类型不会加进图里，可点“查看数据明细”了解原因。当前只看 BNB 链上的 PancakeSwap。ESIM / USDT 与 ESIM / BNB 分开显示；同名但地址不同的代币也分开显示。</p><h3>数据从哪里来？多久更新？</h3><p>代币和池子列表来自 PancakeSwap 官方数据接口，后台每小时尝试更新。列表更新时间：${state.catalog ? time(state.catalog.fetchedAt) + '（北京时间）' : '暂时未知'}。${state.catalog?.complete ? '这次已读取完接口提供的列表，但不保证链上所有池子都在里面。' : '列表还未收集完整，有些池子可能尚未收录。'}打开时先显示有时间标记的缓存，再检查链上更新；流动性未改变的档位直接复用。打开页面立即读取链上数据，默认每分钟自动更新；回到页面也会立即检查更新。也可点“刷新数据”。ESIM/USDT 后台每 60 分钟更新共享数据，即使网页关闭也会运行；实际时间以页面显示为准。池子列表中的美元估值和图里的买卖金额是不同指标，更新时间也可能不同。</p><h3>金额是估算值</h3><p>这些数值按池子的资金计算，未计入手续费、网络费用、代币转账税费，以及某些池子的额外交易规则。实际买卖金额以交易时的报价为准。</p><details><summary>查看详细算法与技术来源</summary><p>V2 使用实际储备量的恒定乘积曲线；V3 与 Infinity CL 使用当前价格、活跃流动性、tick bitmap 和初始化 tick 的 liquidityNet，按价格区间积分。一次刷新固定同一区块。原始状态及流动性变化使用 BigInt，显示积分使用浮点数。Infinity Bin / StableSwap 目前只列入列表与明细，不计入曲线。</p><p>百分比模式的边界 = 参考价 ×（1 ± 百分比 / 100），价格下限最低为 0。精度为 n 位小数时，基础价格档距为 10⁻ⁿ；相邻档合并后仍按实际边界积分，最后一档抵达原始范围边界。最大显示范围为现价的 0.5～2 倍。后台全量缓存读取合约全部 tick bitmap 并校验两端流动性归零；显示范围独立于缓存读取范围。各池从自身现价积分到共同价格边界；各池现价不同，第一档可能包含已有池间价差。这里只合并同一对代币地址的直接池，未模拟多跳路由或真实成交。</p><p><a href="https://developer.pancakeswap.finance/apis/subgraph" target="_blank" rel="noopener">PancakeSwap 开发文档 ↗</a><br><a href="https://github.com/pancakeswap/pancakeswap-ai" target="_blank" rel="noopener">官方数据接口使用示例 ↗</a><br><a href="https://github.com/pancakeswap/infinity-core" target="_blank" rel="noopener">Infinity CL 合约与计算方法 ↗</a></p></details>`;
+  $('detail-dialog').showModal();
+}
+
+function ownershipDetails() {
+  $('detail-title').textContent = '我方 LP';
+  const pools = state.live?.pools || [], ready = pools.filter(p => p.ownership?.status === 'verified').length;
+  const positions = pools.flatMap(p => (p.ownership?.positions || []).filter(n => n.liquidity > 0n).map(n => ({ pool: p, ...n })));
+  $('detail-body').innerHTML = `<p>按下面两个地址当前直接持有的 LP 识别。挖矿、托管仓位暂未包含。</p>${OWNERS.map(address => `<p><a class="address" href="https://bscscan.com/address/${address}" target="_blank" rel="noopener">${address} ↗</a></p>`).join('')}<p>每列左边是我方，右边是外部，两数相加就是全池。已核对 ${ready}/${pools.length} 个池。${state.live ? `区块 ${state.live.blockNumber}，与盘口相同。` : ''}</p><h3>有效仓位</h3>${positions.map(n => {
+    const bounds = [priceAtTick(n.pool, state.market.base.id, n.tickLower), priceAtTick(n.pool, state.market.base.id, n.tickUpper)].sort((a, b) => a - b);
+    return `<div class="detail-pool"><strong>${protocolName[n.pool.protocol]} · ${price(bounds[0])}～${price(bounds[1])} ${escape(state.market.quote.symbol)}</strong><p><a href="https://bscscan.com/nft/${n.manager}/${n.tokenId}" target="_blank" rel="noopener">仓位 #${n.tokenId} ↗</a> · ${n.owner.slice(0, 8)}…${n.owner.slice(-4)}</p></div>`;
+  }).join('') || '<p>暂未读到有效 NFT 仓位。</p>'}`;
   $('detail-dialog').showModal();
 }
 
@@ -336,6 +385,18 @@ $('settings-form').addEventListener('submit', e => { e.preventDefault(); try {
 document.querySelectorAll('[data-percent]').forEach(b => b.addEventListener('click', () => { $('maximum').setAttribute('aria-pressed', 'false'); $('percent').disabled = false; $('percent').value = b.dataset.percent; $('settings-form').requestSubmit(); }));
 $('maximum').addEventListener('click', () => { $('maximum').setAttribute('aria-pressed', String($('maximum').getAttribute('aria-pressed') !== 'true')); $('settings-form').requestSubmit(); });
 $('refresh').addEventListener('click', refresh);
+$('chart-settings').addEventListener('submit', e => {
+  e.preventDefault();
+  try {
+    state.chartPercent = settings($('chart-maximum').getAttribute('aria-pressed') === 'true' ? 'max' : $('chart-percent').value, state.config.precision).percent;
+    updateChartControls(); updateURL(); rebuildChart(); $('chart-range-error').hidden = true;
+  } catch (e) { $('chart-range-error').hidden = false; $('chart-range-error').textContent = e.message; }
+});
+$('chart-maximum').addEventListener('click', () => {
+  $('chart-maximum').setAttribute('aria-pressed', String($('chart-maximum').getAttribute('aria-pressed') !== 'true'));
+  $('chart-settings').requestSubmit();
+});
+$('lp-button').addEventListener('click', ownershipDetails);
 $('target-form').addEventListener('submit', e => {
   e.preventDefault(); state.targetPrice = $('target-price').value; renderTarget();
 });
@@ -348,15 +409,22 @@ for (const id of ['bids', 'asks']) {
   $(id).addEventListener('focusin', e => { const row = e.target.closest('[data-index]'); if (row) inspect(row.dataset.side, Number(row.dataset.index)); });
 }
 function chartPointer(e, locate = false) {
-  if (!plot || !state.depth) return;
+  if (!plot || !state.chartDepth) return;
   const rect = $('chart').getBoundingClientRect(), px = e.clientX - rect.left;
   const p = plot.atX(Math.max(plot.left, Math.min(plot.right, px)));
-  const side = p < state.depth.price ? 'bid' : 'ask';
-  const rows = side === 'bid' ? state.depth.bids : state.depth.asks;
+  const side = p < state.chartDepth.price ? 'bid' : 'ask';
+  const rows = side === 'bid' ? state.chartDepth.bids : state.chartDepth.asks;
   let index = rows.findIndex(r => side === 'bid' ? r.price <= p : r.price >= p);
   if (index < 0) index = rows.length - 1;
-  inspect(side, index, locate);
-  const r = (side === 'bid' ? state.depth.bids : state.depth.asks)[index];
+  const r = rows[index];
+  if (locate) {
+    if (r.price < state.depth.low || r.price > state.depth.high) $('jump-status').textContent = '这个价格超出订单簿范围，请扩大订单簿范围。';
+    else {
+      state.focusPrice = r.price; $('jump-price').value = r.price;
+      state.depth = buildDepth(state.live.pools, state.market.base.id, state.config, { focusPrice: r.price }); render();
+    }
+  }
+  state.chartHover = { side, row: r }; draw();
   const tip = $('chart-tip'); tip.hidden = false; tip.innerHTML = `<strong class="${side === 'bid' ? 'bid-color' : 'ask-color'}">${price(r.price)} ${escape(state.market.quote.symbol)}</strong><span>从第 1 档合计 ${number(r.cumulativeQuote, 2)} ${escape(state.market.quote.symbol)}</span>`;
   tip.style.left = `${Math.max(0, Math.min(rect.width - 180, px + 12))}px`; tip.style.top = '26px';
 }
@@ -375,7 +443,7 @@ $('jump-form').addEventListener('submit', e => {
 });
 $('chart').addEventListener('pointermove', e => chartPointer(e));
 $('chart').addEventListener('click', e => chartPointer(e, true));
-$('chart').addEventListener('pointerleave', () => { $('chart-tip').hidden = true; });
+$('chart').addEventListener('pointerleave', () => { $('chart-tip').hidden = true; state.chartHover = null; draw(); });
 new ResizeObserver(draw).observe($('chart').parentElement);
 setInterval(() => { if ($('auto').checked && !state.busy && !document.hidden) refresh(); }, 60000);
 document.addEventListener('visibilitychange', () => {
@@ -389,6 +457,7 @@ async function init() {
   $('auto').checked = true;
   const params = new URLSearchParams(location.search);
   try { state.config = settings(params.get('range') || (params.has('levels') && params.has('bps') ? Number(params.get('levels')) * Number(params.get('bps')) / 100 : 50), params.get('precision') ?? 4); } catch (e) { setError(`${e.message}；已恢复默认显示设置。`); }
+  try { state.chartPercent = settings(params.get('chartRange') || state.config.percent, state.config.precision).percent; } catch { state.chartPercent = 50; }
   updateControls();
   try {
     let catalog;

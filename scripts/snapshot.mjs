@@ -3,6 +3,7 @@ import { createPublicClient, http } from 'viem';
 import { bsc } from 'viem/chains';
 import { client as publicClient, loadPools } from '../src/chain.mjs';
 import { DEFAULT_BASE, DEFAULT_QUOTE, latestSharedURL, parseSnapshot, serializeSnapshot } from '../src/snapshot.mjs';
+import { discoverOwnedInfinity } from './alchemy-ownership.mjs';
 
 // This script runs on the server only. The build never reads this environment variable.
 const key = process.env.ALCHEMY_API_KEY;
@@ -24,15 +25,19 @@ if (!previous) try { previous = parseSnapshot(await readFile(file, 'utf8'), meta
 const started = Date.now();
 try {
   if (await rpc.getChainId() !== 56) throw new Error('Wrong network');
-  const live = await loadPools(metas, DEFAULT_BASE, Infinity, (done, total) => console.log(`读取 ${done}/${total}`), { client: rpc, previous });
+  const ownershipSeed = JSON.parse(await readFile('public/data/lp-owners.json', 'utf8'), (key, value) => key === 'blockNumber' ? BigInt(value) : value);
+  const live = await loadPools(metas, DEFAULT_BASE, Infinity, (done, total) => console.log(`读取 ${done}/${total}`), {
+    client: rpc, previous, ownershipSeed, discoverOwnership: key ? () => discoverOwnedInfinity(key) : undefined });
   const supported = metas.filter(p => ['v2', 'v3', 'infinityCl'].includes(p.protocol));
-  if (live.pools.length !== supported.length || !live.pools.length) throw new Error('Incomplete supported-pool snapshot');
+  if (!live.pools.length || supported.some(meta => !live.pools.some(p => p.protocol === meta.protocol && p.id.toLowerCase() === meta.id.toLowerCase()))) throw new Error('Incomplete supported-pool snapshot');
+  if (live.pools.some(p => p.ownership?.status !== 'verified')) throw new Error('Incomplete LP attribution');
   const text = serializeSnapshot(live, DEFAULT_BASE, DEFAULT_QUOTE, key ? 'Alchemy' : '公共节点');
   parseSnapshot(text, metas, DEFAULT_BASE, DEFAULT_QUOTE);
   await mkdir(file.slice(0, file.lastIndexOf('/')), { recursive: true });
   await writeFile(`${file}.tmp`, text); await rename(`${file}.tmp`, file);
   console.log(JSON.stringify({ source: key ? 'Alchemy' : '公共节点', block: String(live.blockNumber), pools: live.pools.length,
-    incrementalPools: live.pools.filter(p => p.incremental).length, elapsedMs: Date.now() - started }));
+    incrementalPools: live.pools.filter(p => p.incremental).length,
+    ownedPositions: live.pools.reduce((n, p) => n + (p.ownership.positions?.filter(x => x.liquidity > 0n).length || 0), 0), elapsedMs: Date.now() - started }));
 } catch {
   // RPC exceptions may contain the private endpoint. Never log them or publish them.
   console.error('后台快照未通过完整性校验，保留上次数据。请检查节点配置、额度或服务状态。');

@@ -1,5 +1,7 @@
+import { ownedCurve } from './ownership.mjs';
 const Q96 = 2 ** 96;
-const LOG_TICK = Math.log(1.0001);
+// log1p avoids subtractive rounding in the binary representation of 1.0001.
+const LOG_TICK = Math.log1p(0.0001);
 
 export const MIN_TICK = -887272, MAX_TICK = 887272;
 export function settings(percent = 10, precision = 4) {
@@ -181,6 +183,9 @@ export function buildDepth(pools, baseId, input, options = {}) {
   let low = Math.max(0, price * (1 - config.range)), high = price * (1 + config.range);
   // Maximum is a useful viewing window, independent of the full-range chain cache.
   if (config.maximum) { low = price * .5; high = price * 2; }
+  let ownCurves;
+  try { ownCurves = pools.map(ownedCurve); } catch { ownCurves = []; }
+  const ownershipVerified = ownCurves.length === pools.length && ownCurves.every(Boolean);
   const side = (name, sign, endpoint) => {
     const bands = boundaries(price, endpoint, config, sign);
     const focus = options.focusPrice;
@@ -190,20 +195,36 @@ export function buildDepth(pools, baseId, input, options = {}) {
       if (bands.prices.length >= 500) bands.prices.splice(bands.prices.length - 2, 1);
       bands.prices.push(focus); bands.prices.sort((a, b) => sign * (a - b));
     }
-    let previousQ = 0, previousV = 0;
+    let previousQ = 0, previousV = 0, previousOwnQ = 0, previousOwnV = 0, previousExternalQ = 0, previousExternalV = 0;
     const rows = bands.prices.map((boundary, i) => {
-      let q = 0, v = 0;
+      let q = 0, v = 0, oq = 0, ov = 0, eq = 0, ev = 0;
       // Integrate this band directly. Subtracting two large cumulative quantities
       // can erase a tiny token amount at extreme prices while its quote value remains huge.
       for (const pool of pools) { const value = cumulative(pool, baseId, boundary, name, i ? bands.prices[i - 1] : undefined); q += value.quantity; v += value.quote; }
+      if (ownershipVerified) for (const own of ownCurves) {
+        for (const [curve, scale, mine] of [[own.pool, own.scale, true], [own.external, own.externalScale, false]]) {
+          if (!scale) continue;
+          const value = cumulative(curve, baseId, boundary, name, i ? bands.prices[i - 1] : undefined);
+          if (mine) { oq += value.quantity * scale; ov += value.quote * scale; }
+          else { eq += value.quantity * scale; ev += value.quote * scale; }
+        }
+      }
+      // Only rounding-sized differences may be clamped. Material mismatches remain unknown.
+      const matches = (whole, first, second) => whole === Infinity ? first + second === Infinity
+        : Number.isFinite(first + second) && Math.abs(first + second - whole) <= Math.max(whole, 1e-20) * 1e-9;
+      const splitValid = ownershipVerified && matches(q, oq, eq) && matches(v, ov, ev);
       const row = { level: i + 1, price: boundary, offset: (boundary / price - 1) * 10000,
         quantity: q, quote: v, cumulativeQuantity: previousQ + q, cumulativeQuote: previousV + v,
+        own: splitValid ? { quantity: oq, quote: ov, cumulativeQuantity: previousOwnQ + oq, cumulativeQuote: previousOwnV + ov } : null,
+        external: splitValid ? { quantity: eq, quote: ev, cumulativeQuantity: previousExternalQ + eq, cumulativeQuote: previousExternalV + ev } : null,
         focus: boundary === options.focusPrice, endpoint: i === bands.prices.length - 1 };
-      previousQ = row.cumulativeQuantity; previousV = row.cumulativeQuote; return row;
+      previousQ = row.cumulativeQuantity; previousV = row.cumulativeQuote;
+      previousOwnQ += oq; previousOwnV += ov; previousExternalQ += eq; previousExternalV += ev; return row;
     });
     return { rows, grouped: bands.grouped, logScale: bands.logScale };
   };
   const bid = side('bid', -1, low), ask = side('ask', 1, high);
   return { price, config, low, high, bids: bid.rows, asks: ask.rows,
-    grouped: bid.grouped || ask.grouped, compressed: bid.logScale || ask.logScale, unbounded: high === Infinity };
+    grouped: bid.grouped || ask.grouped, compressed: bid.logScale || ask.logScale, unbounded: high === Infinity,
+    ownershipVerified: ownershipVerified && [...bid.rows, ...ask.rows].every(r => r.own !== null) };
 }

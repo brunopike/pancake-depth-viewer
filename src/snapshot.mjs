@@ -1,3 +1,4 @@
+import { validateOwnership, validateOwnershipIndex, validateDiscoveredPool, poolMetadata } from './ownership.mjs';
 export const DEFAULT_BASE = '0x7765a659c5b0cfbfd9fbc2ef2298b75a598f2d2d';
 export const DEFAULT_QUOTE = '0x55d398326f99059ff775485246999027b3197955';
 export const SHARED_URL = 'https://raw.githubusercontent.com/starkweng/pancake-depth-viewer/depth-cache/esim-usdt.json';
@@ -16,7 +17,7 @@ export async function latestSharedURL(signal) {
 }
 const address = s => typeof s === 'string' && /^0x[0-9a-f]{40}$/i.test(s);
 const poolKey = p => `${p.protocol}:${p.id.toLowerCase()}`;
-const bigintKeys = new Set(['blockNumber', 'sqrtPriceX96', 'liquidity', 'net']);
+const bigintKeys = new Set(['blockNumber', 'sqrtPriceX96', 'liquidity', 'net', 'ownBalance', 'totalSupply']);
 
 export function serializeSnapshot(live, base, quote, source = '公共节点') {
   const payload = { ...live, version: 1, chainId: 56, base: base.toLowerCase(), quote: quote.toLowerCase(),
@@ -31,15 +32,16 @@ export function parseSnapshot(text, metas, base, quote) {
     || !/^0x[0-9a-f]{64}$/i.test(data.blockHash) || !Number.isFinite(data.timestamp) || data.timestamp > Date.now() + 60000
     || !Array.isArray(data.pools) || !Array.isArray(data.failed)
     || !(data.range === 'max' || Number.isFinite(data.range) && data.range > 0)) throw new Error('缓存数据无效');
-  const known = new Map(metas.map(p => [poolKey(p), p]));
+  const known = new Map(metas.map(p => [poolKey(p), poolMetadata(p)]));
+  const tokens = [...new Map(metas.flatMap(p => [p.token0, p.token1]).map(t => [t.id.toLowerCase(), t])).values()];
   const seen = new Set();
   for (const p of [...data.pools, ...data.failed]) {
-    const key = poolKey(p), meta = known.get(key);
+    const key = poolKey(p), meta = known.get(key) || validateDiscoveredPool(p, tokens.filter(t => [base.toLowerCase(), quote.toLowerCase()].includes(t.id.toLowerCase())));
     if (!meta || seen.has(key) || !['token0', 'token1'].every(k => p[k]?.id.toLowerCase() === meta[k].id.toLowerCase() && p[k].decimals === meta[k].decimals)) throw new Error('缓存池子身份不一致');
     seen.add(key);
     Object.assign(p, meta); // Current catalog supplies identity/labels, never cached display metadata.
   }
-  if (seen.size !== known.size) throw new Error('缓存未覆盖当前池子列表');
+  if ([...known.keys()].some(key => !seen.has(key))) throw new Error('缓存未覆盖当前池子列表');
   for (const p of data.pools) {
     if (p.kind === 'v2') {
       if (p.protocol !== 'v2' || ![p.reserve0, p.reserve1].every(n => Number.isFinite(n) && n > 0)) throw new Error('缓存储备无效');
@@ -59,6 +61,20 @@ export function parseSnapshot(text, metas, base, quote) {
         if (left !== 0n || right !== 0n) throw new Error('缓存全部价格校验失败');
       }
     } else throw new Error('缓存池子类型无效');
+  }
+  if (data.ownershipIndex) {
+    validateOwnershipIndex(data.ownershipIndex);
+    if (data.ownershipIndex.blockNumber !== data.blockNumber || data.ownershipIndex.blockHash !== data.blockHash) throw new Error('LP 与池子不在同一区块');
+  }
+  const positionIds = new Set();
+  for (const pool of data.pools) {
+    if (!validateOwnership(pool)) continue;
+    for (const position of pool.ownership.positions || []) {
+      const id = `${position.manager}:${position.tokenId}`;
+      if (positionIds.has(id)) throw new Error('LP 仓位重复');
+      positionIds.add(id);
+      if (pool.protocol === 'infinityCl' && !data.ownershipIndex?.nfts.some(n => n.tokenId === position.tokenId && n.owner === position.owner)) throw new Error('LP 归属索引不一致');
+    }
   }
   data.range = data.range === 'max' ? Infinity : data.range;
   return data;

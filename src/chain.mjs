@@ -2,6 +2,8 @@ import { createPublicClient, http, fallback, parseAbi, parseAbiItem } from 'viem
 import { bsc } from 'viem/chains';
 import { priceOf, tickRange } from './math.mjs';
 import { mergeTicks, cacheMatchesPool } from './liquidity-cache.mjs';
+import { loadOwnership } from './lp-chain.mjs';
+import { poolMetadata } from './ownership.mjs';
 
 export const RPCS = ['https://bsc-mainnet.public.blastapi.io', 'https://bsc-rpc.publicnode.com', 'https://bsc-dataseed.bnbchain.org', 'https://bsc-dataseed1.binance.org'];
 export const client = createPublicClient({ chain: bsc, transport: fallback(RPCS.map(u => http(u, { timeout: 16000, retryCount: 1 }))),
@@ -143,8 +145,10 @@ export async function loadPools(metas, baseId, range, progress = () => {}, optio
     try { if ((await rpc.getBlock({ blockNumber: previous.blockNumber })).hash !== previous.blockHash) previous = null; }
     catch { previous = null; }
   } else previous = null;
-  const supported = metas.filter(p => ['v2', 'v3', 'infinityCl'].includes(p.protocol));
-  const failed = metas.filter(p => !supported.includes(p)).map(p => ({ ...p, error: '此版本尚未支持深度计算' }));
+  const allMetas = [...metas];
+  for (const p of previous?.pools || []) if (p.discoveredBy === 'ownedLP' && !allMetas.some(m => m.protocol === p.protocol && m.id.toLowerCase() === p.id.toLowerCase())) allMetas.push(poolMetadata(p));
+  const supported = allMetas.filter(p => ['v2', 'v3', 'infinityCl'].includes(p.protocol));
+  const failed = allMetas.filter(p => !supported.includes(p)).map(p => ({ ...p, error: '此版本尚未支持深度计算' }));
   const pools = [];
   // The largest indexed pool establishes a common price boundary; all reads pin the same block.
   const ordered = [...supported].sort((a, b) => Number(b.tvlUSD) - Number(a.tvlUSD));
@@ -158,7 +162,7 @@ export async function loadPools(metas, baseId, range, progress = () => {}, optio
       else failed.push({ ...chunk[j], error: r.reason?.shortMessage || r.reason?.message || '读取失败' });
     });
     if (!reference && pools.length) reference = priceOf(pools[0], baseId);
-    progress(pools.length + failed.length, metas.length);
+    progress(pools.length + failed.length, allMetas.length);
   }
   // Initial parallel reads may have used a local reference. Re-read their ticks using the dominant price.
   const dominant = [...pools].sort((a, b) => Number(b.tvlUSD) - Number(a.tvlUSD))[0];
@@ -170,7 +174,23 @@ export async function loadPools(metas, baseId, range, progress = () => {}, optio
       catch (e) { failed.push({ ...pools[i], error: e.message }); pools[i] = null; }
     }
   }
-  // Re-check the pin before publishing a state assembled over many RPC requests.
+  const livePools = pools.filter(Boolean);
+  const ownershipIndex = await loadOwnership(livePools, { rpc, blockNumber, blockHash: block.hash,
+    previous: previous?.ownershipIndex, seed: options.ownershipSeed, discover: options.discoverOwnership,
+    read: contracts => batch(contracts, blockNumber, 80, rpc),
+    readDiscoveredPool: async meta => {
+      try {
+        const value = await readPool(meta, baseId, reference, range, blockNumber, rpc,
+          previous?.pools.find(p => p.id.toLowerCase() === meta.id), previous?.blockNumber, timestamp);
+        const failedIndex = failed.findIndex(p => p.protocol === meta.protocol && p.id.toLowerCase() === meta.id);
+        if (failedIndex >= 0) failed.splice(failedIndex, 1);
+        return value;
+      } catch {
+        if (!failed.some(p => p.id.toLowerCase() === meta.id)) failed.push({ ...meta, error: '钱包发现的池子暂时读不到，未计入' });
+        throw new Error('Owned pool read unavailable');
+      }
+    } });
+  // Re-check the pin before publishing pool and owner state assembled over many RPC requests.
   if ((await rpc.getBlock({ blockNumber })).hash !== block.hash) throw new Error('读取期间区块发生变化，请刷新');
-  return { pools: pools.filter(Boolean), failed, blockNumber, blockHash: block.hash, timestamp, range };
+  return { pools: livePools, failed, blockNumber, blockHash: block.hash, timestamp, range, ownershipIndex };
 }
