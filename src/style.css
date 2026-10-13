@@ -39,11 +39,13 @@
 .book-row .split-value{display:flex;align-items:center;justify-content:flex-end;gap:4px;min-width:0}
 .split-value>span{overflow:hidden;text-overflow:ellipsis}.split-value>i{font-style:normal;color:#627386;flex-shrink:0}
 .split-value.pending{color:var(--muted);font-size:13px}
-.book-scroll{height:270px}.book-row{padding:8px;line-height:1.45}
+/* Keep ten complete rows visible on each side of the reference price. */
+.books{--book-row-height:38px}
+.book-scroll{height:calc(var(--book-row-height) * 10)}.book-row{height:var(--book-row-height);padding:8px;line-height:1.45}
 .chart-controls{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:13px;color:var(--muted);margin:0 0 12px}
 #chart-percent{width:78px}#chart-precision{width:65px}#chart-range-note{color:var(--accent)}#chart-range-error{color:var(--red);width:100%}
 #chart-maximum.active{color:var(--bg);background:var(--accent)}
-@media(max-width:600px){.book-header,.book-scroll{min-width:800px}.book-scroll{height:235px}}
+@media(max-width:600px){.book-header,.book-scroll{min-width:800px}}
 
 .book-view-controls{display:flex;gap:6px;margin:0 8px 15px}.book-view-controls .active,#chart-custom.active{color:var(--bg);border-color:var(--accent);background:var(--accent)}
 .total-view .book-header small{visibility:hidden}.total-view .book-header,.total-view .book-scroll{min-width:560px}.total-value{color:var(--text)}
