@@ -1,6 +1,9 @@
 import { beijingDayStart, beijingDate } from './metrics.mjs';
 import { readFile } from 'node:fs/promises';
+import {CONFIRMED_HOLDER_LABELS} from '../../src/holder-labels.mjs';
 const tags = JSON.parse(await readFile(new URL('./address-tags.json', import.meta.url)));
+const holderSeed=JSON.parse(await readFile(new URL('./holder-seed.json',import.meta.url)));
+const knownLabels={...holderSeed.labels,...CONFIRMED_HOLDER_LABELS};
 const lp = new Set(tags.lpAddresses);
 export const OWN_EXECUTOR = tags.ownExecutor;
 function ownProgramAddresses(state) { return new Set(state.trades.filter(t => t.executor === OWN_EXECUTOR).map(t => t.initiator).filter(Boolean)); }
@@ -19,10 +22,11 @@ export function addressRanking(state, start, end, mode = 'initiator') {
   }
   return { missingSold: missingSold.toString(), rows: [...rows.values()].filter(r => r.sold > 0n).map(r => {
     const peakDailyTrades = Math.max(...[...r.days.values()].map(s => s.size));
+    const own=lp.has(r.address)||ownProgram.has(r.address)||r.address===OWN_EXECUTOR||knownLabels[r.address]?.kind==='own';
     return { address: r.address, sold: r.sold.toString(), bought: r.bought.toString(), netSold: (r.sold - r.bought).toString(),
       sellCount: r.sells.size, buyCount: r.buys.size, trades: r.txs.size, peakDailyTrades,
-      highFrequency: peakDailyTrades >= 100, own: lp.has(r.address) || ownProgram.has(r.address) || r.address === OWN_EXECUTOR,
-      ownType: lp.has(r.address) ? 'LP' : ownProgram.has(r.address) || r.address === OWN_EXECUTOR ? '刷量' : null,
+      highFrequency: !own&&(peakDailyTrades >= 100||['frequency','arbitrage'].includes(knownLabels[r.address]?.kind)), own,
+      ownType: lp.has(r.address) ? 'LP' : ownProgram.has(r.address) || r.address === OWN_EXECUTOR ? '刷量' : own?'关联':null,
       received: !!state.firstRecipient[r.address] && state.firstRecipient[r.address].timestamp < end,
       first: r.first, last: r.last };
   }).sort((a, b) => BigInt(a.sold) > BigInt(b.sold) ? -1 : BigInt(a.sold) < BigInt(b.sold) ? 1 : a.address.localeCompare(b.address)) };
@@ -56,5 +60,14 @@ export function buildAddressPage(state, options, now = Date.now() / 1000) {
   return { version:1, cutoff:state.cutoff, block:state.block, blockHash:state.blockHash, generatedAt:now,
     ownProgramCount:ownProgramAddresses(state).size, ownExecutor:OWN_EXECUTOR, highFrequencyThreshold:100,
     window:{start,end,available:end>start}, population:data.rows.length, missingSold:data.missingSold,
-    total:rows.length, page, pageSize:25, options:o, rows:rows.slice(page*25,(page+1)*25) };
+    total:rows.length, totals:{sold:rows.reduce((n,r)=>n+BigInt(r.sold),0n).toString(),bought:rows.reduce((n,r)=>n+BigInt(r.bought),0n).toString(),own:rows.filter(r=>r.own).length},page, pageSize:25, options:o, rows:rows.slice(page*25,(page+1)*25) };
+}
+
+// One period and one attribution mode only; keeps the complete ranking below
+// the full three-window snapshot size, without collecting any new chain data.
+export function buildAddressDataset(state,options,now=Date.now()/1000){
+ const o=addressOptions(options),day=beijingDayStart(now),start=o.period==='today'?day:o.period==='yesterday'?day-86400:state.origin;
+ const end=Math.min(o.period==='yesterday'?day:now,state.cutoff),data=addressRanking(state,start,end,o.mode);
+ return {version:1,cutoff:state.cutoff,block:state.block,blockHash:state.blockHash,ownProgramCount:ownProgramAddresses(state).size,ownExecutor:OWN_EXECUTOR,
+   window:{start,end,available:end>start},population:data.rows.length,missingSold:data.missingSold,rows:data.rows};
 }

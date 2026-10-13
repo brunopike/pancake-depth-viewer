@@ -1,3 +1,6 @@
+import {readSnapshot,readTradingReport} from './snapshot-client.mjs';
+import {holderInsights,holderViewURL} from './holder-insights.mjs';
+import {TAG_KEY,readManual} from './holder-model.mjs';
 const $ = id => document.getElementById(id);
 const names = { source_recipients: '曾领币地址', other_wallet_candidates: '其他钱包', remaining_unattributed: '未归因交易', all_pools: '合计' };
 const groups = Object.keys(names);
@@ -14,7 +17,16 @@ const amount = (wei, scale = 10000, decimals = 2) => {
 const net = wei => { if (wei == null) return '待核验'; const n = BigInt(wei); return `<strong class="${n > 0n ? 'sell' : 'buy'}">${n > 0n ? '卖出' : n < 0n ? '买入' : '持平'} ${amount(n < 0n ? -n : n)}</strong>`; };
 const metric = (label, value, unit = '', sub = '', cls = '') => `<div class="metric ${cls}"><span>${label}</span><strong>${value}${unit ? `<em>${unit}</em>` : ''}</strong><small>${sub}</small></div>`;
 const addresses = (g, side) => `${g[side + '_addresses_lower_bound'] ? '≥' : ''}${integer(g[side + '_addresses'])}`;
-let report, active = 'today', busy = false, endpoint = null;
+let report, holderReport, active = 'today', busy = false, endpoint = null, manual={};
+try{manual=readManual(localStorage.getItem(TAG_KEY));}catch{}
+const openLink=(url,text)=>`<a href="${escape(url)}" target="_blank" rel="noopener noreferrer">${text} ↗</a>`;
+function holdingsBridge(){
+ if(!holderReport){$('holdings-bridge').innerHTML='<p class="empty">持仓摘要暂缺，点击刷新重试。</p>';return;}
+ const x=holderInsights(holderReport,manual),share=x.total==='0'?0:Number(BigInt(x.own))/Number(BigInt(x.total))*100;
+ const stateRows=x.states.map(state=>`<a class="receipt-state" href="${escape(holderViewURL({cohort:state.id,zero:state.id.endsWith('zero')}))}" target="_blank" rel="noopener noreferrer"><span>${state.label}</span><strong>${integer(state.count)} <small>地址</small></strong><span class="state-track"><i style="width:${x.receivedCount?state.count/x.receivedCount*100:0}%"></i></span><em>${amount(state.balance)} 万 ESIM ↗</em></a>`).join('');
+ $('holdings-bridge').innerHTML=`<div class="table-heading"><div><h2>当前持仓</h2><p>余额截至 ${date(x.cutoff)} · 独立于下方交易时段</p></div>${openLink(holderViewURL(),'持币明细')}</div><div class="holdings-body"><div class="inventory-view"><div class="inventory-metrics">${metric('我方钱包持仓',amount(x.own),'万 ESIM',openLink(holderViewURL({tags:['own']}),integer(x.ownCount)+' 个有持仓地址'))}${metric('领币地址仍持有',amount(x.received),'万 ESIM',openLink(holderViewURL({tags:['received'],zero:true}),integer(x.receivedCount)+' 个已索引领币地址'))}${metric('分发合约余额',amount(x.source),'万 ESIM',openLink(holderViewURL({search:'0x67b97c3845438f264965ca154ba13051c6c73416',zero:true}),'查看合约'))}${metric('非我方钱包持仓',amount(x.external),'万 ESIM',openLink(holderViewURL({excludeOwn:true}),'查看地址'))}${metric('高频 / 套利地址持仓',amount(x.robots.balance),'万 ESIM',openLink(holderViewURL({tags:['frequency','arbitrage']}),integer(x.robots.count)+' 个有持仓地址 · 含疑似'))}${metric('非我方前十持仓占比',x.externalTop10===null?'—':fmt.format(x.externalTop10)+'%','',openLink(holderViewURL({excludeOwn:true,chart:'top'}),'查看集中度'))}</div><div class="ownership-track" role="img" aria-label="已索引持仓中我方占 ${fmt.format(share)}%"><i style="width:${share}%"></i></div><p class="muted compact-note">已索引持仓：我方 ${fmt.format(share)}% · 其余 ${fmt.format(100-share)}% · 钱包余额，不含池内 LP</p></div><div class="receipt-view"><h3>领币后的当前状态</h3>${stateRows}<p class="muted compact-note">零持仓也可能由转出造成${x.manualCount?' · 含当前浏览器的手动标签':''}</p></div></div>`;
+}
+
 
 function tradeTable(w) {
   return `<section class="card"><div class="section-heading"><h3>谁在买卖</h3><span>万 ESIM</span></div><div class="table-scroll"><table class="trade-table"><thead><tr><th>地址类别</th><th>卖出量</th><th>买入量</th><th>净数额</th></tr></thead><tbody>${groups.map(key => {
@@ -36,7 +48,7 @@ function operations(w) {
 }
 function panel(key, w) {
   const title = key === 'today' ? '今日' : '昨日 · 24 小时';
-  const heading = `<div class="period-heading"><h2>${title}</h2><p>${date(w.start)} — ${w.available ? date(key === 'today' ? w.availableThrough : w.end) : '等待更新'}<span>北京时间</span></p></div>`;
+  const heading = `<div class="period-heading"><h2>${title}</h2><p>${date(w.start)} — ${w.available ? date(key === 'today' ? w.availableThrough : w.end) : '等待更新'}<span>北京时间</span></p>${openLink(`https://starkweng.github.io/esim-onchain/?view=addresses&period=${key}`,'查看卖出排名')}</div>`;
   if (!w.available) return heading + '<div class="empty">这个时段还没有更新的数据，请点击“刷新数据”。</div>';
   const g = w.groups.all_pools, b = w.bnb, d = w.distribution;
   return heading + `<div class="hero-grid">${metric('BNB 入金', amount(b.direct_inflow_wei, 1, 3), 'BNB', `${integer(b.direct_inflow_addresses)} 地址 · ${integer(b.direct_inflow_txs)} 笔`)}${metric('分发收币', amount(d.total_wei), '万 ESIM', `${integer(d.recipients)} 地址 · ${integer(d.transactions)} 笔`)}${metric('卖出总量', amount(g.sold_wei), '万 ESIM', integer(g.sell_txs) + ' 笔', 'sell')}${metric('买入总量', amount(g.bought_wei), '万 ESIM', integer(g.buy_txs) + ' 笔', 'buy')}${metric('净数额', net(g.net_sold_wei), '万 ESIM')}${metric('卖出地址', addresses(g, 'sell'), '', `曾领币 ${addresses(w.groups.source_recipients, 'sell')} 个`)}</div>${tradeTable(w)}${chart(report.hourly[key])}${operations(w)}`;
@@ -48,13 +60,12 @@ function render(r) {
   $('tab-today').textContent = reportDay === naturalDay ? '今日' : `${date(r.windows.today.start).slice(0, 10)}（保存）`;
   $('tab-yesterday').textContent = reportDay === naturalDay ? '昨日 · 24 小时' : `${date(r.windows.yesterday.start).slice(0, 10)} · 24 小时`;
   $('cutoff').textContent = `数据截至 ${date(r.cutoff)} · 北京时间`;
-  $('origin').textContent = `${date(r.origin)} 起`;
   const w = r.windows.history, g = w.groups.source_recipients;
-  $('cumulative').innerHTML = metric('累计交互地址', integer(w.interaction.successful_addresses)) + metric('累计收币地址', integer(w.distribution.recipients)) + metric('曾领币卖出地址', addresses(g, 'sell')) + metric('累计直接入金', amount(w.bnb.direct_inflow_wei, 1, 3), 'BNB') + metric('累积分发', amount(w.distribution.total_wei), '万 ESIM') + metric('曾领币累计卖出', amount(g.sold_wei), '万 ESIM');
+  const cumulative = metric('累计交互地址', integer(w.interaction.successful_addresses)) + metric('累计收币地址', integer(w.distribution.recipients)) + metric('曾领币卖出地址', addresses(g, 'sell')) + metric('累计直接入金', amount(w.bnb.direct_inflow_wei, 1, 3), 'BNB') + metric('累积分发', amount(w.distribution.total_wei), '万 ESIM') + metric('曾领币累计卖出', amount(g.sold_wei), '万 ESIM');
   for (const key of ['today', 'yesterday']) $('panel-' + key).innerHTML = panel(key, r.windows[key]);
-  $('panel-history').innerHTML = `<div class="period-heading"><h2>历史累计</h2><p>${date(r.origin)} — ${date(r.cutoff)}</p></div>${tradeTable(w)}${operations(w)}<section class="card"><div class="section-heading"><h3>每日历史</h3><span>万 ESIM · 北京时间</span></div><div class="table-scroll"><table class="history-table"><thead><tr><th>日期</th><th>BNB 入金</th><th>合约交互</th><th>分发</th><th>卖出</th><th>买入</th><th>净数额</th></tr></thead><tbody>${r.history.map(d => `<tr data-date="${d.date}"><th><button type="button" class="day-button" data-day="${d.date}" aria-expanded="false" aria-controls="day-${d.date}">${d.date} ＋</button><small>${d.partialFirstDay ? '09:59:50 起' : d.end - d.start < 86400 ? '截至 ' + date(d.end).slice(-5) : '完整自然日'}</small></th><td>${amount(d.bnb.direct_inflow_wei, 1, 3)}<small>${integer(d.bnb.direct_inflow_addresses)} 地址 · ${integer(d.bnb.direct_inflow_txs)} 笔</small></td><td>${integer(d.interaction.successful_calls)}<small>${integer(d.interaction.successful_addresses)} 地址</small></td><td>${amount(d.distribution.total_wei)}<small>${integer(d.distribution.recipients)} 地址 · ${integer(d.distribution.transactions)} 笔</small></td><td>${amount(d.groups.all_pools.sold_wei)}<small>${addresses(d.groups.all_pools, 'sell')} 地址</small></td><td>${amount(d.groups.all_pools.bought_wei)}<small>${addresses(d.groups.all_pools, 'buy')} 地址</small></td><td>${net(d.groups.all_pools.net_sold_wei)}</td></tr><tr class="day-detail" id="day-${d.date}" hidden><td colspan="7"><div>${tradeTable(d)}${operations(d)}</div></td></tr>`).join('')}</tbody></table></div></section>`;
+  $('panel-history').innerHTML = `<section class="cumulative"><div class="cum-caption"><strong>累计概览</strong><span>${date(r.origin)} 起</span></div><div class="cum-grid">${cumulative}</div></section><div class="period-heading"><h2>历史累计</h2><p>${date(r.origin)} — ${date(r.cutoff)}</p></div>${tradeTable(w)}${operations(w)}<section class="card"><div class="section-heading"><h3>每日历史</h3><span>万 ESIM · 北京时间</span></div><div class="table-scroll"><table class="history-table"><thead><tr><th>日期</th><th>BNB 入金</th><th>合约交互</th><th>分发</th><th>卖出</th><th>买入</th><th>净数额</th></tr></thead><tbody>${r.history.map(d => `<tr data-date="${d.date}"><th><button type="button" class="day-button" data-day="${d.date}" aria-expanded="false" aria-controls="day-${d.date}">${d.date} ＋</button><small>${d.partialFirstDay ? '09:59:50 起' : d.end - d.start < 86400 ? '截至 ' + date(d.end).slice(-5) : '完整自然日'}</small></th><td>${amount(d.bnb.direct_inflow_wei, 1, 3)}<small>${integer(d.bnb.direct_inflow_addresses)} 地址 · ${integer(d.bnb.direct_inflow_txs)} 笔</small></td><td>${integer(d.interaction.successful_calls)}<small>${integer(d.interaction.successful_addresses)} 地址</small></td><td>${amount(d.distribution.total_wei)}<small>${integer(d.distribution.recipients)} 地址 · ${integer(d.distribution.transactions)} 笔</small></td><td>${amount(d.groups.all_pools.sold_wei)}<small>${addresses(d.groups.all_pools, 'sell')} 地址</small></td><td>${amount(d.groups.all_pools.bought_wei)}<small>${addresses(d.groups.all_pools, 'buy')} 地址</small></td><td>${net(d.groups.all_pools.net_sold_wei)}</td></tr><tr class="day-detail" id="day-${d.date}" hidden><td colspan="7"><div>${tradeTable(d)}${operations(d)}</div></td></tr>`).join('')}</tbody></table></div></section>`;
   $('coverage').textContent = `覆盖 ${r.coverage?.poolCount ?? '—'} 个已核验 ESIM 池，不含 CEX。区块 ${integer(r.block)}。`;
-  $('top-addresses').innerHTML = `<div class="top-table"><h4>曾领币地址 · 累计卖出前三</h4><table class="trade-table"><thead><tr><th>地址</th><th>领取（万）</th><th>卖出（万）</th><th>余额（万）</th></tr></thead><tbody>${r.top.map(a => `<tr><th><a href="https://bscscan.com/address/${escape(a.address)}" target="_blank" rel="noopener noreferrer">${a.address.slice(0, 10)}…${a.address.slice(-6)} ↗</a></th><td>${amount(a.received_wei)}</td><td>${amount(a.sold_wei)}</td><td>${amount(a.balance_wei)}</td></tr>`).join('')}</tbody></table></div>`;
+  $('top-addresses').innerHTML = `<div class="top-table"><h4>曾领币地址 · 累计卖出前三</h4><table class="trade-table"><thead><tr><th>地址</th><th>领取（万）</th><th>卖出（万）</th><th>余额（万）</th></tr></thead><tbody>${r.top.map(a => `<tr><th><a href="https://bscscan.com/address/${escape(a.address)}" target="_blank" rel="noopener noreferrer">${a.address.slice(0, 10)}…${a.address.slice(-6)} ↗</a></th><td>${amount(a.received_wei)}</td><td>${amount(a.sold_wei)}</td><td>${amount(holderReport?.rows.find(r=>r.address===a.address)?.balance??a.balance_wei)}<small>${holderReport?.rows.some(r=>r.address===a.address)?date(holderReport.cutoff):date(report.cutoff)}</small></td></tr>`).join('')}</tbody></table></div>`;
   document.querySelectorAll('[data-day]').forEach(button => button.addEventListener('click', () => {
     const row = $('day-' + button.dataset.day), opened = button.getAttribute('aria-expanded') === 'true';
     button.setAttribute('aria-expanded', String(!opened)); row.hidden = opened; button.textContent = button.dataset.day + (opened ? ' ＋' : ' −');
@@ -63,6 +74,7 @@ function render(r) {
     const show = () => { button.closest('.detail-body').querySelector('.chart-readout').textContent = button.dataset.detail; };
     button.addEventListener('click', show); button.addEventListener('focus', show); button.addEventListener('mouseenter', show);
   });
+  holdingsBridge();
   selectTab(active);
 }
 function selectTab(key, focus = false) {
@@ -81,34 +93,23 @@ async function json(url, options = {}) {
   if (!response.ok) throw new Error(body.message || '查询暂时不可用，保留上次数据。');
   return body;
 }
-async function refresh() {
-  if (busy) return;
-  busy = true; $('refresh').disabled = true; $('refresh').textContent = '正在查询…';
-  $('status').textContent = '正在查询新增交易，完成后会更新截止时间。'; $('status').className = 'working';
-  try {
-    if (!endpoint) throw new Error('实时查询接口尚未连接，当前显示已核验的历史记录。');
-    const result = await json(endpoint, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}', signal: AbortSignal.timeout(260000) });
-    if (!result.report) throw new Error('查询未返回完整数据，保留上次记录。');
-    render(result.report);
-    $('status').textContent = result.catchingUp ? '已更新一段数据；正在补齐较长时间的间隔，请再次刷新。' : `已更新至 ${date(result.report.cutoff)}。`;
-    $('status').className = result.catchingUp ? 'notice' : 'success';
-  } catch (e) { $('status').textContent = e.name === 'TimeoutError' ? '本次查询超时，保留上次数据。请稍后重试。' : e.message; $('status').className = 'notice'; }
-  finally { busy = false; $('refresh').disabled = false; $('refresh').textContent = '↻ 刷新数据'; }
+async function refresh(live=true) {
+  if(busy)return;busy=true;$('refresh').disabled=true;$('refresh').textContent='正在刷新…';$('status').textContent='正在读取交易和持仓…';$('status').className='working';
+  try{
+    const trading=()=>readTradingReport({current:report,live:!!endpoint&&live,queryLive:endpoint?async()=>{const result=await json(endpoint,{method:'POST',headers:{'Content-Type':'application/json'},body:'{}',signal:AbortSignal.timeout(260000)});if(!result.report)throw Error('交易查询未返回完整数据。');return result.report;}:null});
+    const [trades,holders]=await Promise.allSettled([trading(),readSnapshot('holders',{current:holderReport})]);
+    if(holders.status==='fulfilled')holderReport=holders.value.data;
+    if(trades.status==='fulfilled'&&(!report||trades.value.data.block>=report.block))render(trades.value.data);else if(report)holdingsBridge();
+    if(!report)throw Error('交易数据暂时无法读取，请重试。');
+    const retained=trades.status==='rejected'||trades.value.source==='retained'||holders.status==='rejected'||holders.value.source==='retained';
+    $('status').textContent=`${retained?'部分更新未完成，保留已显示的数据。':'已刷新。'}交易 ${date(report.cutoff)}${holderReport?' · 持仓 '+date(holderReport.cutoff):''}${endpoint?'':' · 后台每小时更新'}`;
+    $('status').className=retained?'notice':'success';
+  }catch(e){$('status').textContent=e.message;$('status').className='notice';}
+  finally{busy=false;$('refresh').disabled=false;$('refresh').textContent='刷新数据';}
 }
-$('refresh').addEventListener('click', refresh);
-try {
-  const config = await json('./data/esim-config.json');
-  endpoint = config.apiOrigin ? new URL('/api/esim', config.apiOrigin).href : location.hostname.endsWith('.vercel.app') || location.hostname === '127.0.0.1' ? './api/esim' : null;
-  const r = await json('./data/esim-report.json'); render(r);
-  $('status').textContent = `已读取核验记录。点击“刷新数据”查询新增交易。`;
-  if (Date.now() / 1000 - r.cutoff > 900) { $('status').textContent = '当前是已保存的数据，点击“刷新数据”查询最新。'; $('status').className = 'notice'; }
-  if (endpoint) try {
-    const saved = await json(endpoint, { signal: AbortSignal.timeout(25000) });
-    if (saved.report && !busy) render(saved.report);
-  } catch { /* Keep the visible saved report; manual refresh reports errors. */ }
-  else try {
-    const saved = await json('https://raw.githubusercontent.com/starkweng/pancake-depth-viewer/esim-cache/report.json', { signal: AbortSignal.timeout(15000) });
-    if (saved.block >= r.block) render(saved);
-    $('status').textContent = '已读取后台保存的数据；实时查询接口待连接。';
-  } catch { /* Keep the bundled verified report. */ }
-} catch { $('status').textContent = '数据暂时无法读取，请稍后刷新。'; $('status').className = 'notice'; }
+$('refresh').addEventListener('click',refresh);
+window.addEventListener('storage',e=>{if(e.key===TAG_KEY){manual=readManual(e.newValue);holdingsBridge();}});
+try{
+ const config=await json('./data/esim-config.json');endpoint=config.apiOrigin?new URL('/api/esim',config.apiOrigin).href:location.hostname.endsWith('.vercel.app')?'./api/esim':null;
+}catch{}
+await refresh(false);

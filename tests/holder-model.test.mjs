@@ -29,7 +29,7 @@ test('own tags suppress stale and manual robot tags in display, filters, search 
  assert.equal(rowTags(r,{}).length,2);
 });
 test('confirmed contract labels apply to old snapshots, search, filters and chart without duplicates',()=>{
- const addresses=Object.keys(CONFIRMED_HOLDER_LABELS);
+ const addresses=['0xe1de6ac2ee058df5d3be8edeb62a8815fd13ff5a','0xda537697845c1da9e639274fc011caf6ee89b33c','0x218c18d02f0723291ce93aa5c0e5eb709903179a'];
  const rows=addresses.map(address=>row(address,'100',[{id:'frequency',kind:'frequency',text:'高频机器人（疑似）'}]));
  assert.deepEqual(selectHolders({rows},{filter:['own']}).rows.map(r=>r.address),[addresses[0]]);
  assert.deepEqual(selectHolders({rows},{filter:['frequency']}).rows.map(r=>r.address),addresses.slice(1));

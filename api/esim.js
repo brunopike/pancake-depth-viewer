@@ -2,7 +2,7 @@ import { makeRpc } from '../server/esim/rpc.mjs';
 import { refreshState } from '../server/esim/collector.mjs';
 import { loadState } from '../server/esim/store.mjs';
 import { buildReport } from '../server/esim/metrics.mjs';
-import { buildAddressPage, addressOptions } from '../server/esim/addresses.mjs';
+import { buildAddressPage, buildAddressDataset, addressOptions } from '../server/esim/addresses.mjs';
 import { queryBalances } from '../server/esim/balances.mjs';
 
 let current, pending, checkedAt = 0, lastAttempt = 0, loadedAt = 0;
@@ -24,13 +24,13 @@ export default async function handler(req, res) {
   if (!['GET', 'POST'].includes(req.method)) return res.status(405).json({ message: '不支持此请求。' });
   const q = req.query || {}, body = req.body || {};
   const balanceRequest = req.method === 'POST' && body.action === 'balances';
-  const validQuery = Object.keys(q).every(k => q.view === 'addresses' ? ['view','period','mode','filter','sort','page','search'].includes(k) : k === 'view') && (!q.view || q.view === 'addresses');
+  const validQuery = Object.keys(q).every(k => q.view === 'addresses' ? ['view','period','mode','filter','sort','page','search','dataset'].includes(k) : k === 'view') && (!q.view || q.view === 'addresses')&&(!q.dataset||q.dataset==='1');
   const validBody = balanceRequest ? Object.keys(body).every(k => ['action', 'addresses'].includes(k)) && Array.isArray(body.addresses) && body.addresses.length > 0 && body.addresses.length <= 25 : Object.keys(body).length === 0;
   // Balance addresses must also belong to the verified ESIM trading dataset.
   if (!validQuery || !validBody) return res.status(400).json({ message: '此接口只查询固定的 ESIM 报表与已识别地址。' });
   let options;
   try { if (q.view === 'addresses') options = addressOptions(q); } catch { return res.status(400).json({ message: '地址筛选条件无效。' }); }
-  const reportFor = state => q.view === 'addresses' ? buildAddressPage(state, options) : buildReport(state);
+  const reportFor = state => q.view === 'addresses' ? q.dataset==='1'?buildAddressDataset(state,options):buildAddressPage(state, options) : buildReport(state);
   try {
     if (!current || Date.now() - loadedAt > 300000) {
       const saved = await loadState();

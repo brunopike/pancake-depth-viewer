@@ -1,5 +1,9 @@
 // User-confirmed classifications apply to cached snapshots and future reports.
 export const CONFIRMED_HOLDER_LABELS = {
+  '0x278d858f05b94576c1e6f73285886876ff6ef8d2': {
+    kind: 'arbitrage', label: '套利机器人（用户确认）',
+    source: '用户确认（2026-10-13）：机器人套利钱包',
+  },
   '0xe1de6ac2ee058df5d3be8edeb62a8815fd13ff5a': {
     kind: 'own', label: '我方关联 · 买卖执行合约',
     source: '用户确认（2026-10-13）：我方关联的高频买卖执行合约',

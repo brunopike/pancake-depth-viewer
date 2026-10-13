@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { addressRanking, buildAddressReport, buildAddressPage, addressOptions, OWN_EXECUTOR } from '../server/esim/addresses.mjs';
+import { addressRanking, buildAddressReport, buildAddressPage, buildAddressDataset, addressOptions, OWN_EXECUTOR } from '../server/esim/addresses.mjs';
 import { queryBalances } from '../server/esim/balances.mjs';
 import { TOKEN, ORIGIN } from '../server/esim/metrics.mjs';
 const a = '0x' + '1'.repeat(40), b = '0x' + '2'.repeat(40), router = '0x' + '3'.repeat(40);
@@ -47,6 +47,9 @@ test('server address response is paginated and filters do not broaden the paid b
  const trades=Array.from({length:80},(_,i)=>({...state.trades[0],tx:'t'+i,initiator:'0x'+(i+10).toString(16).padStart(40,'0'),amount_wei:String(i+1)}));
  const page=buildAddressPage({...state,trades},{period:'history',page:'1'},state.cutoff);
  assert.equal(page.rows.length,25);assert.equal(page.total,80);assert.equal(page.page,1);assert.equal(page.rows[0].sold,'55');
+ assert.equal(page.totals.sold,'3240');
+ const dataset=buildAddressDataset({...state,trades},{period:'history'},state.cutoff);
+ assert.equal(dataset.rows.length,80);assert.equal(dataset.rows.reduce((n,r)=>n+BigInt(r.sold),0n),3240n);
  assert.equal(buildAddressPage(state,{period:'history',filter:'received'},state.cutoff).total,1);
  assert.throws(()=>addressOptions({page:'-1'}),/INVALID_ADDRESS_FILTER/);
  assert.throws(()=>addressOptions({mode:'anything'}),/INVALID_ADDRESS_FILTER/);

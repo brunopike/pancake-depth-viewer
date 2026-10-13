@@ -1,15 +1,15 @@
+import {readSnapshot} from './snapshot-client.mjs';
 import {holderCharts} from './holder-charts.mjs';
 import {TAG_KEY,TAG_KINDS,validateManual,readManual,rowTags,selectHolders,changePercent} from './holder-model.mjs';
 const $=id=>document.getElementById(id),escape=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const CACHE='https://raw.githubusercontent.com/starkweng/pancake-depth-viewer/holder-cache/holders.json';
 const number=(n,d=2)=>Number(n).toLocaleString('zh-CN',{minimumFractionDigits:d,maximumFractionDigits:d});
 const units=s=>Number(BigInt(s))/1e18,quantity=s=>s==null?'暂缺':number(units(s),2),short=a=>a.slice(0,8)+'…'+a.slice(-6);
 const compact=s=>{const n=units(s);return n>=1e8?number(n/1e8)+'亿':n>=1e4?number(n/1e4)+'万':number(n,2);};
 const date=s=>new Date(s*1000).toLocaleString('zh-CN',{timeZone:'Asia/Shanghai',hour12:false,month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'});
-let report,manual={},page=0,pageSize=100,chartMode='groups',busy=false,pending=null,returnFocus=null;
+let report,manual={},page=0,pageSize=100,chartMode='groups',busy=false,pending=null,returnFocus=null,cohort=null,excludeOwn=false;
+const cohortNames={'held':'持币 · 未见卖出','sold-held':'卖出后仍持币','sold-zero':'卖出后零持仓','zero':'零持仓 · 未见卖出'};
 try{manual=readManual(localStorage.getItem(TAG_KEY));}catch{}
 function validate(r){if(r?.version!==1||r.token!=='0x7765a659c5b0cfbfd9fbc2ef2298b75a598f2d2d'||!Array.isArray(r.rows)||!r.block)throw new Error('持仓数据格式有误。');return r;}
-async function json(url,options={}){const r=await fetch(url,{cache:'no-store',signal:AbortSignal.timeout(25000),...options});if(!r.ok){let body;try{body=await r.json();}catch{}throw new Error(body?.message||'数据暂时无法读取。');}return r.json();}
 const selectedFilters=()=>[...$('filter').querySelectorAll('input:checked')].map(input=>input.value);
 function updateFilters(){const checked=[...$('filter').querySelectorAll('input:checked')];$('filter-label').textContent=checked.length?checked.length===1?checked[0].parentElement.textContent:`已选 ${checked.length} 项`:'全部标签';page=0;if(checked.some(input=>input.value==='cleared'))$('include-zero').checked=true;render();}
 function pair(stats,key){return `<span class="buy">买 ${key==='Count'?number(stats.buyCount,0):quantity(stats.buyAmount)}</span><span class="sell">卖 ${key==='Count'?number(stats.sellCount,0):quantity(stats.sellAmount)}</span>`;}
@@ -32,7 +32,8 @@ function drawChart(rows){
 }
 function render(){
  if(!report)return;
- const selected=selectHolders(report,{search:$('search').value,filter:selectedFilters(),includeZero:$('include-zero').checked,page,pageSize},manual);page=selected.page;
+ const selected=selectHolders(report,{search:$('search').value,filter:selectedFilters(),cohort,excludeOwn,includeZero:$('include-zero').checked,page,pageSize},manual);page=selected.page;
+ $('filter-context').hidden=!cohort&&!excludeOwn;$('filter-context').textContent=[cohort?`来自合约报告：${cohortNames[cohort]}`:'',excludeOwn?'仅看非我方地址':''].filter(Boolean).join(' · ');
  $('cutoff').textContent=`余额截至 ${date(report.cutoff)} · 北京时间 · 区块 ${number(report.block,0)}`;
  $('summary').innerHTML=`<div><span>已索引持币地址</span><strong>${number(report.coverage.holding,0)}</strong><small>含大户名单及已知活跃地址</small></div><div><span>已覆盖总供应量</span><strong>${number(Number(BigInt(report.coverage.balance))/Number(BigInt(report.totalSupply))*100)}%</strong><small>全部供应量 ${compact(report.totalSupply)} ESIM</small></div><div><span>ESIM 参考价格</span><strong>${number(report.price,6)} U</strong><small>Pancake ESIM / USDT</small></div><div><span>24h 对比时点</span><strong>${report.priorCutoff?date(report.priorCutoff):'暂缺'}</strong><small>连续 24 小时的持仓变化</small></div>`;
  $('trade-cutoff').textContent=`24h 买卖 ${date(report.tradeWindowStart)} — ${date(report.tradeCutoff)}；累计自 ${date(report.historyStart)} 起。按交易发起地址统计成交币量，买绿 / 卖红。`;
@@ -61,16 +62,26 @@ $('tag-form').addEventListener('submit',e=>{e.preventDefault();$('tag-error').te
 $('tag-remove').addEventListener('click',()=>{try{stageTag(true);}catch(e){$('tag-error').textContent=e.message;}});$('tag-cancel').addEventListener('click',closeTag);$('tag-back').addEventListener('click',()=>{pending=null;$('tag-edit').hidden=false;$('tag-confirm').hidden=true;$('tag-back').hidden=true;$('tag-remove').hidden=!manual[$('tag-address').value.toLowerCase()];$('tag-submit').textContent='下一步：核对';});
 $('add-tag').addEventListener('click',()=>openTag());$('rows').addEventListener('click',e=>{const button=e.target.closest('[data-tag]');if(button)openTag(button.dataset.tag);});
 $('search').addEventListener('input',()=>{page=0;render();});$('filter').addEventListener('change',updateFilters);$('clear-filters').addEventListener('click',()=>{for(const input of $('filter').querySelectorAll('input'))input.checked=false;updateFilters();});document.addEventListener('click',e=>{if(!$('tag-filter').contains(e.target))$('tag-filter').open=false;});$('tag-filter').addEventListener('keydown',e=>{if(e.key==='Escape'){$('tag-filter').open=false;$('filter-summary').focus();e.preventDefault();}});$('include-zero').addEventListener('change',()=>{page=0;render();});$('page-size').addEventListener('change',()=>{pageSize=Number($('page-size').value);page=0;render();});$('prev').addEventListener('click',()=>{page--;render();});$('next').addEventListener('click',()=>{page++;render();});
+for(const b of document.querySelectorAll('[data-columns]'))b.addEventListener('click',()=>{$('rows').closest('table').dataset.columns=b.dataset.columns;for(const t of document.querySelectorAll('[data-columns]'))t.setAttribute('aria-pressed',String(t===b));});
+$('reset-view').addEventListener('click',()=>{cohort=null;excludeOwn=false;$('search').value='';$('include-zero').checked=false;for(const input of $('filter').querySelectorAll('input'))input.checked=false;updateFilters();});
 for(const b of document.querySelectorAll('[data-chart]'))b.addEventListener('click',()=>{chartMode=b.dataset.chart;for(const t of document.querySelectorAll('[data-chart]'))t.setAttribute('aria-pressed',String(t===b));render();});
 window.addEventListener('storage',e=>{if(e.key===TAG_KEY){manual=readManual(e.newValue);render();}});
 async function refresh(){
- if(busy)return;busy=true;$('refresh').disabled=true;$('status').textContent='正在读取最新持仓快照…';
- try{let next;try{next=await json(`${CACHE}?t=${Date.now()}`);}catch{next=await json('./data/esim-holders.json');}
-  validate(next);if(!report||next.block>=report.block)report=next;render();
+ if(busy)return;busy=true;$('refresh').disabled=true;$('refresh').textContent='正在刷新…';$('status').textContent='正在读取最新持仓…';
+ try{const result=await readSnapshot('holders',{current:report});report=validate(result.data);render();
   const stale=Date.now()/1000-report.cutoff>7200;
-  $('status').textContent=`${stale?'快照较早':'已更新快照'} · ${date(report.cutoff)}。后台每小时查询 ESIM；按钮读取最近结果。`;
- }catch(e){$('status').textContent=`${e.name==='TimeoutError'?'查询超时，请稍后重试。':e.message}${report?' 保留上次数据。':''}`;if(!report)$('rows').innerHTML='<tr><td colspan="10" class="empty">暂时无法读取持仓，请点击刷新重试。</td></tr>';}
- finally{busy=false;$('refresh').disabled=false;}
+  $('status').className=stale||result.source==='retained'?'notice':'success';
+  $('status').textContent=`${result.source==='retained'?'更新未完成，保留上次数据':stale?'快照较早':'已刷新'} · ${date(report.cutoff)} · 后台每小时更新 ESIM`;
+ }catch(e){$('status').textContent=e.message;$('status').className='notice';if(!report)$('rows').innerHTML='<tr><td colspan="10" class="empty">暂时无法读取持仓，请点击刷新重试。</td></tr>';}
+ finally{busy=false;$('refresh').disabled=false;$('refresh').textContent='刷新数据';}
 }
+const query=new URLSearchParams(location.search);
+$('search').value=(query.get('search')||'').slice(0,64);
+cohort=Object.hasOwn(cohortNames,query.get('cohort'))?query.get('cohort'):null;
+excludeOwn=query.get('scope')==='external';
+if(query.get('chart')==='top'){chartMode='top';for(const b of document.querySelectorAll('[data-chart]'))b.setAttribute('aria-pressed',String(b.dataset.chart==='top'));}
+$('include-zero').checked=query.get('zero')==='1'||!!cohort?.endsWith('zero');
+for(const input of $('filter').querySelectorAll('input'))input.checked=(query.get('tags')||'').split(',').includes(input.value);
+updateFilters();
 $('refresh').addEventListener('click',refresh);
 await refresh();
