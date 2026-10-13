@@ -476,7 +476,10 @@ function inspect(side, index, locate = false, details = true) {
   document.querySelectorAll('.book-row.selected').forEach(e => e.classList.remove('selected'));
   const button = document.querySelector(`.book-row[data-side="${side}"][data-index="${index}"]`);
   button?.classList.add('selected');
-  if (locate && button) button.parentElement.scrollTop = Math.max(0, button.offsetTop - button.parentElement.clientHeight / 2 + button.offsetHeight / 2);
+  if (locate && button) {
+    button.parentElement.scrollTop = Math.max(0, button.offsetTop - button.parentElement.clientHeight / 2 + button.offsetHeight / 2);
+    if ($('depth-section').clientHeight < $('depth-section').scrollHeight) button.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+  }
   draw();
 }
 
