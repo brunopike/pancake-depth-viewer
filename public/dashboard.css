@@ -27,6 +27,14 @@ body.report-page,body.monitor-page,body.holder-page{font-size:16px;line-height:1
 
 .period-heading>a{font-size:13px;white-space:nowrap}.period-heading p{margin-left:auto}@media(max-width:760px){.period-heading>a{display:inline-block;margin-top:6px}}
 .holder-table thead th:nth-child(2){text-align:left}
+.holder-chart>summary.section-heading{list-style:none;cursor:pointer}
+.holder-chart>summary.section-heading::-webkit-details-marker{display:none}
+.holder-chart>summary .chart-switch{margin-left:auto}
+.chart-fold-state{font-size:13px;color:var(--muted);white-space:nowrap}
+.chart-fold-state::before{content:'展开 ▾'}
+.holder-chart[open] .chart-fold-state::before{content:'收起 ▴'}
+.holder-chart:not([open])>summary.section-heading{margin-bottom:0}
+.holder-chart:not([open])>summary .chart-switch{display:none}
 
 /* Keep the navigation sticky across the page while sharing the title row. */
 :is(.report-page,.monitor-page,.holder-page) main{display:grid;grid-template-columns:minmax(220px,1fr) auto auto;column-gap:24px}
