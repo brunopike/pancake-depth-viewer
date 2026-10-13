@@ -1,4 +1,5 @@
-import {TAG_KEY,TAG_KINDS,validateManual,readManual,rowTags,selectHolders,groupHolders,changePercent} from './holder-model.mjs';
+import {holderCharts} from './holder-charts.mjs';
+import {TAG_KEY,TAG_KINDS,validateManual,readManual,rowTags,selectHolders,changePercent} from './holder-model.mjs';
 const $=id=>document.getElementById(id),escape=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const CACHE='https://raw.githubusercontent.com/starkweng/pancake-depth-viewer/holder-cache/holders.json';
 const number=(n,d=2)=>Number(n).toLocaleString('zh-CN',{minimumFractionDigits:d,maximumFractionDigits:d});
@@ -13,14 +14,27 @@ const selectedFilters=()=>[...$('filter').querySelectorAll('input:checked')].map
 function updateFilters(){const checked=[...$('filter').querySelectorAll('input:checked')];$('filter-label').textContent=checked.length?checked.length===1?checked[0].parentElement.textContent:`已选 ${checked.length} 项`:'全部标签';page=0;if(checked.some(input=>input.value==='cleared'))$('include-zero').checked=true;render();}
 function pair(stats,key){return `<span class="buy">买 ${key==='Count'?number(stats.buyCount,0):quantity(stats.buyAmount)}</span><span class="sell">卖 ${key==='Count'?number(stats.sellCount,0):quantity(stats.sellAmount)}</span>`;}
 function drawChart(rows){
- const total=rows.reduce((n,r)=>n+BigInt(r.balance),0n);$('chart').setAttribute('aria-label',`已筛选 ${rows.length} 个地址，共 ${quantity(total.toString())} ESIM`);
- if(total===0n){$('chart').innerHTML='<p class="empty">当前筛选没有持仓。</p>';return;}
+ const model=holderCharts(rows,manual),{total,count,groups,top}=model;
+ $('chart').setAttribute('aria-label',`已筛选 ${count} 个有持仓地址，共 ${quantity(total)} ESIM`);
+ if(!count){$('chart').innerHTML='<p class="empty">当前筛选没有持仓。</p>';return;}
+ const panel=(title,note,body)=>`<section class="distribution-panel"><h3>${title}</h3><p class="distribution-note">${note}</p>${body}</section>`;
+ const scope=`<p class="distribution-scope">当前筛选：${number(count,0)} 个有持仓地址 · ${quantity(total)} ESIM${chartMode==='top'&&count<10?' · 前 10 地址仅显示现有 '+count+' 个':''}</p>`;
  if(chartMode==='top'){
-  const top=rows.filter(r=>BigInt(r.balance)>0n).slice(0,10),max=Number(BigInt(top[0].balance));
-  $('chart').innerHTML=`<div class="top-bars">${top.map((r,index)=>`<div class="bar-row"><span class="bar-rank">${index+1}</span><a href="https://bscscan.com/address/${r.address}" target="_blank" rel="noopener noreferrer" title="${r.address}">${short(r.address)}</a><div class="bar-track"><span style="width:${Math.max(.4,Number(BigInt(r.balance))/max*100)}%"></span></div><strong title="${quantity(r.balance)} ESIM">${compact(r.balance)}</strong></div>`).join('')}</div>`;return;
+  const max=Number(BigInt(top[0].balance));
+  const bars=`<div class="rank-bars">${top.map((r,i)=>`<div class="rank-row"><span class="bar-rank">${i+1}</span><div class="rank-holder"><a href="https://bscscan.com/address/${escape(r.address)}" target="_blank" rel="noopener noreferrer" title="${escape(r.address)}">${escape(short(r.address))} ↗</a><div class="bar-track"><span style="width:${Number(BigInt(r.balance))/max*100}%"></span></div></div><div class="rank-value"><strong title="${quantity(r.balance)} ESIM">${compact(r.balance)} <small>ESIM</small></strong><span>${number(r.share)}%</span></div></div>`).join('')}</div>`;
+  const x=i=>48+(i+1)/10*552,y=p=>224-p*1.84;
+  const points=`48,224 ${top.map((r,i)=>`${x(i)},${y(r.cumulativeShare)}`).join(' ')}`;
+  const lines=[0,25,50,75,100].map(p=>`<line x1="48" y1="${y(p)}" x2="600" y2="${y(p)}"/><text x="38" y="${y(p)+4}" text-anchor="end">${p}%</text>`).join('');
+  const labels=top.map((r,i)=>`<text x="${x(i)}" y="250" text-anchor="middle">${i+1}</text>`).join('');
+  const curve=`<svg class="concentration-chart" viewBox="0 0 640 270" role="img" aria-label="前 ${top.length} 个地址累计占筛选持仓的 ${number(top.at(-1).cumulativeShare)}%"><g class="chart-grid">${lines}${labels}</g><polygon points="${points} ${x(top.length-1)},224" class="concentration-area"/><polyline points="${points}" class="concentration-line"/>${top.map((r,i)=>`<circle cx="${x(i)}" cy="${y(r.cumulativeShare)}" r="4"><title>前 ${i+1} 个地址：${number(r.cumulativeShare)}%</title></circle>`).join('')}</svg>`;
+  const milestones=`<div class="concentration-stats">${[1,5,10].filter(n=>n<=top.length).map(n=>`<div><span>前 ${n} 个地址</span><strong>${number(top[n-1].cumulativeShare)}%</strong></div>`).join('')}</div>`;
+  $('chart').innerHTML=scope+panel('持仓排行','横条对比持仓数量；右侧显示占筛选总持仓的比例。',bars)+panel('累计持仓占比','横轴为地址排名，纵轴为从第 1 名累加的持仓占比。',curve+milestones);return;
  }
- const groups=groupHolders(rows,manual);let cursor=0;const stops=groups.map(g=>{const start=cursor;cursor+=Number(BigInt(g.balance))/Number(total)*100;return `${g.color} ${start}% ${cursor}%`;});
- $('chart').innerHTML=`<div class="donut" style="background:conic-gradient(${stops.join(',')})"><div class="donut-center"><strong>${compact(total.toString())}</strong><span>已筛选持仓 ESIM</span></div></div><div class="chart-legend">${groups.map(g=>`<div class="legend-row"><i style="background:${g.color}"></i><span>${g.label}</span><strong>${number(Number(BigInt(g.balance))/Number(total)*100)}%</strong><small>${quantity(g.balance)} ESIM</small></div>`).join('')}</div>`;
+ let cursor=0;const stops=groups.map(g=>{const start=cursor;cursor+=Number(BigInt(g.balance))/Number(BigInt(total))*100;return `${g.color} ${start}% ${cursor}%`;});
+ const ring=`<div class="holdings-breakdown"><div class="donut" role="img" aria-label="${groups.map(g=>`${g.label} ${number(g.share)}%`).join('，')}" style="background:conic-gradient(${stops.join(',')})"><div class="donut-center"><strong>${compact(total)}</strong><span>筛选持仓 · ESIM</span></div></div><div class="chart-legend">${groups.map(g=>`<div class="legend-row"><i style="background:${g.color}"></i><span>${escape(g.label)}</span><strong>${number(g.share)}%</strong><small>${quantity(g.balance)} ESIM</small></div>`).join('')}</div></div>`;
+ const byCount=[...groups].sort((a,b)=>b.count-a.count);
+ const counts=`<div class="count-bars">${byCount.map(g=>`<div class="count-row"><div><span><i style="background:${g.color}"></i>${escape(g.label)}</span><strong>${number(g.count,0)} <small>个</small><em>${number(g.count/count*100)}%</em></strong></div><div class="bar-track"><span style="background:${g.color};width:${g.count/count*100}%"></span></div></div>`).join('')}</div>${groups.length===1?'<p class="single-group-note">当前筛选只有 1 个分类，因此占比为 100%。可清除标签或搜索条件查看整体分布。</p>':''}`;
+ $('chart').innerHTML=scope+panel('持仓占比','看币集中在哪些类别；每个地址只计入一个分类。',ring)+panel('地址数量分布','看各类有多少个地址；数量占比与持仓占比分开统计。',counts);
 }
 function render(){
  if(!report)return;
