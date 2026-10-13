@@ -1,5 +1,6 @@
 import test from 'node:test';import assert from 'node:assert/strict';
 import {validateManual,readManual,selectHolders,groupHolders,changePercent,rowTags,category} from '../src/holder-model.mjs';
+import {CONFIRMED_HOLDER_LABELS} from '../src/holder-labels.mjs';
 const a='0x'+'1'.repeat(40),b='0x'+'2'.repeat(40);const row=(address,balance,tags=[])=>({address,balance,tags});
 test('default page contains 100 and quantity ordering is retained',()=>{const report={rows:Array.from({length:205},(_,i)=>row('0x'+(i+1).toString(16).padStart(40,'0'),String(205-i)))};assert.equal(selectHolders(report).rows.length,100);assert.equal(selectHolders(report,{page:2}).rows.length,5);assert.equal(selectHolders(report,{page:50}).page,2);});
 test('zero holders are only visible when enabled, cleared filter can include them',()=>{const report={rows:[row(a,'1'),row(b,'0',[{id:'cleared',kind:'cleared',text:'清仓'}])]};assert.equal(selectHolders(report).total,1);assert.equal(selectHolders(report,{includeZero:true,filter:'cleared'}).rows[0].address,b);});
@@ -26,4 +27,14 @@ test('own tags suppress stale and manual robot tags in display, filters, search 
  assert.deepEqual(rowTags(own,{}).map(t=>t.kind),['own']);
  assert.equal(category(own,{[b]:{kind:'frequency',text:'人工机器人'}}),'own');
  assert.equal(rowTags(r,{}).length,2);
+});
+test('confirmed contract labels apply to old snapshots, search, filters and chart without duplicates',()=>{
+ const addresses=Object.keys(CONFIRMED_HOLDER_LABELS);
+ const rows=addresses.map(address=>row(address,'100',[{id:'frequency',kind:'frequency',text:'高频机器人（疑似）'}]));
+ assert.deepEqual(selectHolders({rows},{filter:['own']}).rows.map(r=>r.address),[addresses[0]]);
+ assert.deepEqual(selectHolders({rows},{filter:['frequency']}).rows.map(r=>r.address),addresses.slice(1));
+ assert.equal(selectHolders({rows},{search:'跨池'}).rows[0].address,addresses[1]);
+ assert.equal(category(rows[0],{}),'own');
+ assert.equal(groupHolders(rows,{}).find(g=>g.id==='frequency').balance,'200');
+ for(const r of rows){const tags=rowTags(r,{});assert.equal(tags.length,1);assert.match(tags[0].evidence,/用户确认/);assert.equal(rowTags({...r,tags},{}).length,1);}
 });

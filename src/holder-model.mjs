@@ -1,3 +1,4 @@
+import {CONFIRMED_HOLDER_LABELS} from './holder-labels.mjs';
 export const TAG_KEY='esim:holders:manual-tags:v1';
 export const TAG_KINDS={own:'我方',lp:'我方 LP',exchange:'交易所',contract:'合约',frequency:'高频机器人（人工标记）',arbitrage:'套利机器人（人工标记）',external:'外部',custom:'自定义'};
 export const GROUPS=[['lp','我方 LP','#9fc5e9'],['own','我方其他','#d9c593'],['exchange','交易所托管','#b49ada'],['dex','DEX / 资金池','#69c7a7'],['received','领币地址','#de92a2'],['frequency','高频 / 疑似套利','#d6a77b'],['contract','其他合约','#8297b2'],['other','其他地址','#4c6278']];
@@ -7,7 +8,11 @@ export function validateManual(value){
  return {address:value.address,kind:value.kind,text:value.text.trim(),updatedAt:new Date().toISOString()};
 }
 export function readManual(raw){try{const v=JSON.parse(raw||'{}');if(!v||typeof v!=='object'||Array.isArray(v))return {};const out={};for(const [a,r]of Object.entries(v).slice(0,2000)){try{out[a]=validateManual({...r,address:a});}catch{}}return out;}catch{return {};}}
-export function rowTags(row,manual){const tags=[...row.tags];const custom=manual[row.address];if(custom)tags.unshift({id:'manual',text:custom.text,kind:custom.kind,evidence:'当前浏览器手动标记',manual:true});return tags.some(t=>['own','lp'].includes(t.kind))?tags.filter(t=>!['frequency','arbitrage'].includes(t.kind)):tags;}
+export function rowTags(row,manual){
+ const known=CONFIRMED_HOLDER_LABELS[row.address];
+ const tags=known?[{id:`known-${known.kind}`,text:known.label,kind:known.kind,evidence:known.source},...row.tags.filter(t=>!t.id.startsWith('known-')&&!['frequency','arbitrage'].includes(t.kind))]:[...row.tags];
+ const custom=manual[row.address];if(custom)tags.unshift({id:'manual',text:custom.text,kind:custom.kind,evidence:'当前浏览器手动标记',manual:true});return tags.some(t=>['own','lp'].includes(t.kind))?tags.filter(t=>!['frequency','arbitrage'].includes(t.kind)):tags;
+}
 export function category(row,manual){const tags=rowTags(row,manual),m=tags.find(t=>t.manual);if(m&&['lp','own','exchange','contract','frequency','arbitrage'].includes(m.kind))return m.kind==='arbitrage'?'frequency':m.kind;
  for(const key of ['lp','own','exchange','dex','received','frequency','arbitrage','contract'])if(tags.some(t=>t.kind===key))return key==='arbitrage'?'frequency':key;return 'other';}
 export function selectHolders(report,{search='',filter='all',includeZero=false,page=0,pageSize=100}={},manual={}){

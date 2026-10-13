@@ -24,3 +24,10 @@ test('own LP and known own tags suppress robots; external activity still qualifi
  for(const addr of [a,b])assert(!r.rows.find(row=>row.address===addr).tags.some(t=>['frequency','arbitrage'].includes(t.kind)));
  assert(r.rows.find(row=>row.address===c).tags.some(t=>t.kind==='frequency'));
 });
+
+ test('confirmed contract labels persist in future reports without duplicate frequency tags',()=>{
+ const addresses=['0xe1de6ac2ee058df5d3be8edeb62a8815fd13ff5a','0xda537697845c1da9e639274fc011caf6ee89b33c','0x218c18d02f0723291ce93aa5c0e5eb709903179a'];
+ const trades=addresses.flatMap(address=>Array.from({length:100},(_,i)=>({address,initiator:address,side:'sell',amount_wei:'1',timestamp:end-10,tx:address+i})));
+ const r=report({addresses,seed:SEED,state:{...state,trades}});
+ for(const [i,address]of addresses.entries()){const row=r.rows.find(r=>r.address===address);assert(row.tags.some(t=>t.kind===(i===0?'own':'frequency')&&t.evidence.includes('用户确认')));assert.equal(row.tags.filter(t=>t.kind==='frequency').length,i===0?0:1);assert.equal(row.history.sellCount,100);}
+ });
