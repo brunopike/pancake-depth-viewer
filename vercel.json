@@ -2,5 +2,14 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
-  "functions": { "api/esim.js": { "maxDuration": 300, "includeFiles": "server/esim/**" } }
+  "functions": {
+    "api/esim.js": {
+      "maxDuration": 300,
+      "includeFiles": "server/esim/**"
+    },
+    "api/holders.js": {
+      "maxDuration": 60,
+      "includeFiles": "server/esim/**"
+    }
+  }
 }
