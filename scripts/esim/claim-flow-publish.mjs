@@ -20,7 +20,7 @@ for(let attempt=0;attempt<3;attempt++){
  try{
   const ref=await api('git/ref/heads/esim-cache');if(!ref)throw Error('CORE_CHECKPOINT_MISSING');
   const old=await api(`contents/claim-flow.json?ref=${ref.object.sha}`);
-  if(old?.content&&JSON.parse(Buffer.from(old.content,'base64').toString()).throughBlock>=checkpoint.throughBlock){console.log('Claim flow already current.');break;}
+  if(old?.content){const saved=JSON.parse(Buffer.from(old.content,'base64').toString());if(saved.throughBlock>checkpoint.throughBlock||saved.throughBlock===checkpoint.throughBlock&&(saved.modelRevision??1)>=(report.modelRevision??1)){console.log('Claim flow already current.');break;}}
   const prior=await api(`git/commits/${ref.object.sha}`),tree=await api('git/trees',{base_tree:prior.tree.sha,tree:entries});
   const commit=await api('git/commits',{message:`Verified proportional ESIM claim flow at block ${checkpoint.throughBlock}`,tree:tree.sha,parents:[ref.object.sha]});
   await api('git/refs/heads/esim-cache',{sha:commit.sha,force:false},'PATCH');

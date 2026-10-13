@@ -27,6 +27,14 @@ export function traceClaimFlow({source,marketAddresses,openingBalances,transfers
  const ordered=[...transfers].sort(compare);let tx=null,sinks=new Map(),owners=new Map(),inputGross=0n,outputSeen=false,recycled=false;
  const finish=()=>{
   const safe=!unsafe.has(tx)&&!recycled&&inputGross===[...owners.values()].reduce((n,t)=>n+t.amount,0n);
+  // A fee-retaining router mixes prior dust with the current input. With one
+  // verified funding owner and an exact whole-transaction fill, its unassigned
+  // portions belong to that sale; root provenance remains proportional.
+  if(safe&&owners.size===1&&sinks.has(null)){
+   const address=owners.keys().next().value,loose=sinks.get(null),sink=sinks.get(address);
+   if(sink){sink.gross+=loose.gross;sink.parts.push(...loose.parts);}else sinks.set(address,loose);
+   sinks.delete(null);
+  }
   for(const [address,t]of owners){const sink=sinks.get(address);if(!safe||!sink||sink.gross!==t.amount)continue;
    sink.confirmed=true;
    totals.matchedGross+=t.amount;
@@ -40,6 +48,7 @@ export function traceClaimFlow({source,marketAddresses,openingBalances,transfers
   ensure(!seen.has(e.id),'FLOW_DUPLICATE');seen.add(e.id);
   if(e.tx!==tx){finish();tx=e.tx;sinks=new Map();owners=byTx.get(tx)||new Map();inputGross=0n;outputSeen=false;recycled=false;}
   const value=BigInt(e.value);ensure(value>=0n,'FLOW_NEGATIVE_TRANSFER');if(!value||e.from===e.to)continue;
+  if(markets.has(e.from)&&markets.has(e.to))continue;
   if(markets.has(e.from)&&!markets.has(e.to))outputSeen=true;
   if(markets.has(e.to)&&!markets.has(e.from)){inputGross+=value;if(outputSeen)recycled=true;}
   let parts;
@@ -67,11 +76,11 @@ export function traceClaimFlow({source,marketAddresses,openingBalances,transfers
  for(const w of wallets.values()){const all=[...w.lots.values()];ensure(all.reduce((n,p)=>n+p.amount,0n)===w.balance,'FLOW_LEDGER_MISMATCH');remaining+=all.filter(p=>p.root).reduce((n,p)=>n+p.amount,0n);}
  const sold=totals.direct+totals.relay,unconfirmed=totals.pool-sold;
  ensure(unconfirmed>=0n&&totals.issued===remaining+sold+unconfirmed+totals.returned+totals.burned,'FLOW_CONSERVATION');
- return {version:1,method:'proportional-v1',sales,unconfirmedFlows,totals:{issued_wei:totals.issued.toString(),direct_wei:totals.direct.toString(),relay_wei:totals.relay.toString(),sold_wei:sold.toString(),remaining_wei:remaining.toString(),unconfirmed_pool_wei:unconfirmed.toString(),returned_wei:totals.returned.toString(),burned_wei:totals.burned.toString(),matched_gross_wei:totals.matchedGross.toString()},closingBalances:Object.fromEntries([...wallets].map(([a,w])=>[a,w.balance.toString()]))};
+ return {version:1,modelRevision:2,method:'proportional-v1',sales,unconfirmedFlows,totals:{issued_wei:totals.issued.toString(),direct_wei:totals.direct.toString(),relay_wei:totals.relay.toString(),sold_wei:sold.toString(),remaining_wei:remaining.toString(),unconfirmed_pool_wei:unconfirmed.toString(),returned_wei:totals.returned.toString(),burned_wei:totals.burned.toString(),matched_gross_wei:totals.matchedGross.toString()},closingBalances:Object.fromEntries([...wallets].map(([a,w])=>[a,w.balance.toString()]))};
 }
 export function claimFlowWindow(flow,start,end){
  if(!flow)return null;const rows=flow.sales.filter(s=>s.timestamp>=start&&s.timestamp<end),direct=sum(rows,'direct_wei'),relay=sum(rows,'relay_wei');
  const ranked=new Map();for(const r of rows){if(!BigInt(r.relay_wei))continue;const prior=ranked.get(r.address);if(prior)prior.amount+=BigInt(r.relay_wei);else ranked.set(r.address,{address:r.address,amount:BigInt(r.relay_wei),example:r.examples.find(e=>e.root!==r.address),tx:r.tx});}
- const pending=(flow.unconfirmedFlows||[]).filter(r=>r.timestamp>=start&&r.timestamp<end),unknown=(flow.unconfirmedFlows||[]).some(r=>r.timestamp===null),pendingAmount=sum(pending,'amount_wei');
- return {method:flow.method,cutoff:flow.cutoff??null,throughBlock:flow.throughBlock??null,direct_wei:direct.toString(),relay_wei:relay.toString(),sold_wei:(direct+relay).toString(),pending_wei:unknown?null:pendingAmount.toString(),pendingTransactions:new Set(pending.map(r=>r.tx)).size,complete:!unknown&&pendingAmount===0n&&flow.cutoff>=end,transactions:new Set(rows.map(r=>r.tx)).size,relayAddresses:ranked.size,examples:[...ranked.values()].sort((a,b)=>a.amount>b.amount?-1:a.amount<b.amount?1:a.address.localeCompare(b.address)).slice(0,50).map(r=>({...r,amount:r.amount.toString()}))};
+ const pending=(flow.unconfirmedFlows||[]).filter(r=>r.timestamp!==null&&r.timestamp>=start&&r.timestamp<end),unknown=(flow.unconfirmedFlows||[]).some(r=>r.timestamp===null),pendingAmount=sum(pending,'amount_wei');
+ return {modelRevision:flow.modelRevision??1,method:flow.method,cutoff:flow.cutoff??null,throughBlock:flow.throughBlock??null,direct_wei:direct.toString(),relay_wei:relay.toString(),sold_wei:(direct+relay).toString(),pending_wei:unknown?null:pendingAmount.toString(),pendingTransactions:new Set(pending.map(r=>r.tx)).size,complete:!unknown&&pendingAmount===0n&&flow.cutoff>=end,transactions:new Set(rows.map(r=>r.tx)).size,relayAddresses:ranked.size,examples:[...ranked.values()].sort((a,b)=>a.amount>b.amount?-1:a.amount<b.amount?1:a.address.localeCompare(b.address)).slice(0,50).map(r=>({...r,amount:r.amount.toString()}))};
 }

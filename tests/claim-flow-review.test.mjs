@@ -42,6 +42,57 @@ test('independent owners sharing one execution router do not count the combined 
   assert.equal(flow.totals.remaining_wei, '0');
 });
 
+function feeRetainingRouter(unsafeTransactions = []) {
+  return trace([
+    edge(1, 'source', 'b', 20), edge(2, 'b', 'router', 20),
+    edge(3, 'source', 'a', 120), edge(4, 'a', 'router', 120, 'fee-sale'),
+    edge(5, 'router', 'pool', 100, 'fee-sale'),
+    edge(6, 'pool', 'vault', 100, 'fee-sale'),
+  ], [sell('fee-sale', 'a', 100)], {
+    marketAddresses: ['pool', 'vault'],
+    openingBalances: { a: '0', b: '0', router: '60' }, unsafeTransactions,
+  });
+}
+
+test('a fee-retaining router preserves mixed provenance while linking its input to the sole verified sale owner', () => {
+  // Router has 60 unrelated + 20 previously distributed tokens. A sends 120,
+  // then 100 of the mixed 200 enters the pool: A's share 60, B's 10, unrelated 30.
+  const flow = feeRetainingRouter();
+  assert.equal(flow.totals.direct_wei, '60');
+  assert.equal(flow.totals.relay_wei, '10');
+  assert.equal(flow.totals.sold_wei, '70');
+  assert.equal(flow.totals.remaining_wei, '70');
+  assert.equal(flow.totals.matched_gross_wei, '100');
+  assert.equal(flow.totals.unconfirmed_pool_wei, '0');
+  assert.equal(flow.closingBalances.router, '100');
+  assert.equal(flow.sales.length, 1);
+  assert.equal(flow.sales[0].address, 'a');
+  assert.deepEqual(flow.sales[0].examples.map(example => example.root).sort(), ['a', 'b']);
+});
+
+test('single-owner router reconciliation never overrides an unsafe receipt path', () => {
+  const flow = feeRetainingRouter(new Set(['fee-sale']));
+  assert.equal(flow.totals.sold_wei, '0');
+  assert.equal(flow.totals.matched_gross_wei, '0');
+  assert.equal(flow.totals.unconfirmed_pool_wei, '70');
+  assert.equal(flow.totals.remaining_wei, '70');
+});
+
+test('old router balances are not assigned arbitrarily between multiple verified sale owners', () => {
+  const flow = trace([
+    edge(1, 'source', 'c', 20), edge(2, 'c', 'router', 20),
+    edge(3, 'source', 'a', 60), edge(4, 'source', 'b', 60),
+    edge(5, 'a', 'router', 60, 'multi'), edge(6, 'b', 'router', 60, 'multi'),
+    edge(7, 'router', 'pool', 120, 'multi'),
+  ], [sell('multi', 'a', 60), sell('multi', 'b', 60)], {
+    openingBalances: { a: '0', b: '0', c: '0', router: '60' },
+  });
+  assert.equal(flow.totals.sold_wei, '0');
+  assert.equal(flow.totals.unconfirmed_pool_wei, '84');
+  assert.equal(flow.totals.remaining_wei, '56');
+  assert.equal(flow.totals.issued_wei, '140');
+});
+
 test('LP input cannot borrow another address sale fill after pool output in the same transaction', () => {
   // A deposits its claimed tokens; B receives previously pooled tokens and sells those.
   // The original funding attribution can identify A's net outflow as the sale owner.
