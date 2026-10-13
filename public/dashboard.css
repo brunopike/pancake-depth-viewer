@@ -26,3 +26,4 @@ body.report-page,body.monitor-page,body.holder-page{font-size:16px;line-height:1
 @media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important}}
 
 .period-heading>a{font-size:13px;white-space:nowrap}.period-heading p{margin-left:auto}@media(max-width:760px){.period-heading>a{display:inline-block;margin-top:6px}}
+.holder-table thead th:nth-child(2){text-align:left}
