@@ -1,0 +1,29 @@
+name: Refresh ESIM holders
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '49 * * * *'
+permissions:
+  contents: write
+concurrency:
+  group: esim-holders-checkpoint
+  cancel-in-progress: false
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci --no-audit --no-fund
+      - name: Read only ESIM balances and transfers
+        env:
+          ALCHEMY_API_KEY: ${{ secrets.ALCHEMY_API_KEY }}
+        run: node scripts/esim/holders-refresh.mjs
+      - name: Publish verified holder snapshot
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: node scripts/esim/holders-publish.mjs
