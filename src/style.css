@@ -92,3 +92,5 @@
 .pool-scope-bar{display:flex;align-items:center;flex-wrap:wrap;gap:12px;margin:0 0 22px;font-size:13px;color:var(--muted)}.pool-scope-options{display:flex;flex-wrap:wrap;gap:8px}.pool-scope-options .button{display:flex;align-items:center;gap:8px;min-height:38px}.pool-scope-options .button small{font:12px var(--mono);opacity:.75}.pool-scope-options .button.active{color:var(--bg);background:var(--accent);border-color:var(--accent)}#pool-scope-note{font-size:12px}@media(max-width:600px){.pool-scope-bar{gap:8px;margin-bottom:16px}.pool-scope-options{width:100%;gap:6px}.pool-scope-options .button{flex:1;justify-content:center;gap:5px;font-size:12px;padding:8px 7px}.pool-scope-options .button small{font-size:11px}#pool-scope-note{line-height:1.6}}
 
 @media(max-width:360px){.pool-scope-options .button small{display:none}}
+
+.price-tools{margin-bottom:22px;padding-bottom:16px;border-bottom:1px solid var(--line)}.price-tools .target-form{margin:0;padding-top:0;border-top:0}.price-tools .price-interval{margin-top:16px;padding-top:14px}.price-tools .price-interval .section-heading{margin-bottom:10px}.price-tools .interval-note{margin-bottom:0}
