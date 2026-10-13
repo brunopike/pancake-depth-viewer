@@ -51,3 +51,17 @@
 .total-view .book-header small{visibility:hidden}.total-view .book-header,.total-view .book-scroll{min-width:560px}.total-value{color:var(--text)}
 
 #refresh-minutes{width:65px}#refresh-interval-error{font-size:13px}
+
+.sticky-summary{position:sticky;top:0;z-index:20;background:var(--bg);padding-top:12px;box-shadow:0 12px 16px -12px #000b}
+.sticky-summary .marketbar{margin-bottom:18px}
+.lp-gaps{margin-top:24px;padding-top:20px;border-top:1px solid var(--line)}
+.gap-controls{display:flex;align-items:center;flex-wrap:wrap;gap:9px;font-size:13px;color:var(--muted)}
+#lp-gap-percent{width:90px}#lp-gaps-error{width:100%}
+.gap-note{font-size:12px;color:var(--muted);line-height:1.8;margin:12px 0}
+.gap-results{max-height:290px;overflow:auto;font-size:14px;color:var(--muted);scrollbar-width:thin;scrollbar-color:#334355 transparent}
+.gap-row{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:12px;padding:10px 0;border-bottom:1px solid var(--line);font-family:var(--mono);color:var(--text);overflow-wrap:anywhere}
+.gap-row>span:last-child{text-align:right;color:var(--accent)}
+.gap-header{position:sticky;top:0;background:var(--bg);font-family:var(--sans);font-size:12px;color:var(--muted)}
+.gap-header>span:last-child{color:var(--muted)}.gap-empty{margin:12px 0}
+@media(max-width:600px){.sticky-summary .marketbar{gap:12px;margin-bottom:12px}.sticky-summary .market-button,.sticky-summary .market-value{min-width:calc(50% - 12px)}.gap-row{font-size:13px;gap:8px}}
+@media(max-height:600px){.sticky-summary{max-height:55vh;overflow:auto}}

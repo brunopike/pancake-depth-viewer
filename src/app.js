@@ -2,6 +2,7 @@ import { loadPools } from './chain.mjs';
 import { buildDepth, settings, poolInventory, estimateTarget, priceAtTick, cumulative, priceOf } from './math.mjs';
 import { OWNERS, poolMetadata } from './ownership.mjs';
 import { readBrowserCache, readSharedCache, saveBrowserCache } from './browser-cache.mjs';
+import { ownLiquidityGaps, gapPercent } from './lp-gaps.mjs';
 const $ = id => document.getElementById(id);
 const escape = value => String(value ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const number = (n, digits = 2) => !Number.isFinite(Number(n)) ? '无有限上限' : Number(n) !== 0 && Math.abs(n) < 10 ** -digits
@@ -20,6 +21,7 @@ const bandPrice = n => n === 0 || !Number.isFinite(n) || Math.abs(n) >= 1e12 ? p
 const time = n => new Date(n).toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai', hour12: false });
 const protocolName = { v2: 'V2', v3: 'V3', infinityCl: 'Infinity CL', infinityBin: 'Infinity Bin', stable: 'StableSwap', infinityStable: 'Infinity Stable' };
 const state = { catalog: null, markets: [], market: null, config: settings(50, 4), bookView: 'split', chartPercent: 50, chartPrecision: 4, inspection: null, chartDepth: null, chartHover: null, live: null, depth: null, request: 0, hover: null, focusPrice: null, targetPrice: null, refreshMinutes: 10, nextRefreshAt: Date.now() + 600000, busy: false };
+state.gapPercent = 100;
 let plot;
 
 function pairMarket(p) {
@@ -72,6 +74,10 @@ function clearDepth() {
   ['mark-price', 'book-price', 'ask-total', 'bid-total'].forEach(id => $(id).textContent = '—');
   ['bids', 'asks'].forEach(id => $(id).innerHTML = '<div class="empty">正在读取池子里的资金…</div>');
   $('lp-status').textContent = 'LP 归属待核对';
+  $('lp-gaps-count').textContent = '';
+  $('lp-gaps-error').hidden = true;
+  $('lp-gaps-summary').textContent = '按我方 LP 的实际区间查询。';
+  $('lp-gaps-result').textContent = '正在读取 LP 数据…';
   $('chart-empty').style.display = 'flex'; $('chart-empty').textContent = '正在读取这个代币的买卖资金…';
   $('chart-tip').hidden = true; draw();
 }
@@ -84,6 +90,7 @@ function updateURL() {
   url.searchParams.set('chartPrecision', state.chartPrecision);
   url.searchParams.set('view', state.bookView);
   url.searchParams.set('refreshMinutes', state.refreshMinutes);
+  url.searchParams.set('gapPercent', state.gapPercent);
   history.replaceState(null, '', url);
 }
 function updateControls() {
@@ -217,7 +224,10 @@ async function refresh() {
       $('chart-empty').textContent = '暂时没有可用数据';
     }
   } finally {
-    if (request === state.request) { state.busy = false; $('refresh').disabled = false; $('jump-button').disabled = !state.depth; }
+    if (request === state.request) {
+      state.busy = false; $('refresh').disabled = false; $('jump-button').disabled = !state.depth;
+      if (!state.depth) renderGaps();
+    }
   }
 }
 function render({ preserveChart = false } = {}) {
@@ -239,6 +249,7 @@ function render({ preserveChart = false } = {}) {
     $('target-button').disabled = true;
   }
   renderTarget();
+  renderGaps();
   const maximum = Math.max(...[...d.bids, ...d.asks].map(r => Number.isFinite(r.cumulativeQuote) ? r.cumulativeQuote : 0), 1e-20);
   $('levels-summary').textContent = `卖盘 ${d.asks.length} 行 · 买盘 ${d.bids.length} 行${d.grouped ? ' · 相邻档已合并' : ''}`;
   $('range-result').hidden = false;
@@ -269,6 +280,26 @@ function render({ preserveChart = false } = {}) {
     else { state.focusPrice = null; $('jump-status').textContent = ''; }
   }
   if (!preserveChart) rebuildChart();
+}
+
+function renderGaps() {
+  const result = $('lp-gaps-result');
+  $('lp-gaps-count').textContent = '';
+  if (!state.depth || !state.live) { result.textContent = '数据未就绪，请先刷新。'; return; }
+  try {
+    const data = ownLiquidityGaps(state.live.pools, state.market.base.id, state.depth.price, state.gapPercent,
+      { expectedPoolCount: state.market.pools.length, failedCount: state.live.failed.length });
+    $('lp-gaps-count').textContent = `${data.gaps.length} 个区间`;
+    $('lp-gaps-summary').textContent = `查询 ${price(data.low)}～${price(data.high)} ${state.market.quote.symbol} · 已核对 ${state.live.pools.length} 个池 · ${time(state.live.timestamp)}`;
+    const relative = value => { const n = (value / state.depth.price - 1) * 100; return `${n > 0 ? '+' : ''}${number(n, 3)}%`; };
+    result.innerHTML = data.gaps.length
+      ? '<div class="gap-row gap-header"><span>我方 LP 为 0 的价格区间</span><span>相对现价</span></div>'
+        + data.gaps.map(g => `<div class="gap-row"><span>${price(g.low)} ～ ${price(g.high)}</span><span>${relative(g.low)} ～ ${relative(g.high)}</span></div>`).join('')
+      : '<p class="gap-empty">这个范围内没有空缺区间。</p>';
+  } catch (e) {
+    $('lp-gaps-summary').textContent = '按我方 LP 的实际区间查询。';
+    result.textContent = e.message;
+  }
 }
 
 function renderTarget() {
@@ -458,6 +489,13 @@ $('target-form').addEventListener('submit', e => {
   e.preventDefault(); state.targetPrice = $('target-price').value; renderTarget();
 });
 $('target-price').addEventListener('input', () => { state.targetPrice = null; $('target-result').hidden = true; });
+$('lp-gaps-form').addEventListener('submit', e => {
+  e.preventDefault();
+  try {
+    state.gapPercent = gapPercent($('lp-gap-percent').value);
+    $('lp-gaps-error').hidden = true; updateURL(); renderGaps();
+  } catch (error) { $('lp-gaps-error').hidden = false; $('lp-gaps-error').textContent = error.message; }
+});
 $('coverage-button').addEventListener('click', coverage);
 $('method-button').addEventListener('click', methodology);
 for (const id of ['bids', 'asks']) {
@@ -531,6 +569,8 @@ async function init() {
   state.refreshMinutes = Number.isInteger(minutes) && minutes >= 1 && minutes <= 1440 ? minutes : 10;
   $('refresh-minutes').value = state.refreshMinutes; resetRefreshClock();
   state.bookView = params.get('view') === 'total' ? 'total' : 'split';
+  try { state.gapPercent = gapPercent(params.get('gapPercent') ?? 100); } catch { state.gapPercent = 100; }
+  $('lp-gap-percent').value = state.gapPercent;
   updateControls();
   try {
     let catalog;
