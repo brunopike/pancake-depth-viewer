@@ -1,5 +1,6 @@
-import {rowTags,recipientState} from './holder-model.mjs';
+import {rowTags,recipientState,ownershipAmounts} from './holder-model.mjs';
 import {holderCharts} from './holder-charts.mjs';
+import {HOLDER_BALANCE_SPLITS} from './holder-labels.mjs';
 
 export function holderInsights(report, manual = {}) {
   const states = [
@@ -12,8 +13,8 @@ export function holderInsights(report, manual = {}) {
   const external=[];
   for(const row of report.rows){
     const tags=rowTags(row,manual), balance=BigInt(row.balance);
-    if(tags.some(t=>['own','lp'].includes(t.kind))){own+=balance;if(balance>0n)ownCount++;}
-    else{external.push(row);if(tags.some(t=>['frequency','arbitrage'].includes(t.kind))){robotBalance+=balance;if(balance>0n)robotCount++;}}
+    const parts=ownershipAmounts(row,manual);own+=BigInt(parts.own);if(BigInt(parts.own)>0n)ownCount++;
+    if(BigInt(parts.external)>0n){external.push(parts.mixed?{...row,balance:parts.external,ownershipScope:'external'}:row);if(tags.some(t=>['frequency','arbitrage'].includes(t.kind))){robotBalance+=BigInt(parts.external);robotCount++;}}
     if(!tags.some(t=>t.id==='received'||t.kind==='received'))continue;
     receivedCount++;received+=balance;
     const index=states.findIndex(s=>s.id===recipientState(row,manual));
@@ -32,9 +33,11 @@ export function holderInsights(report, manual = {}) {
 // Combine public classifications without attributing every contract caller to its owner.
 export function sellerProfile(row, holder, manual = {}) {
   const tags=holder?rowTags(holder,manual):rowTags({address:row.address,tags:[]},manual);
-  const own=row.own||tags.some(t=>['own','lp'].includes(t.kind));
+  const mixed=!!HOLDER_BALANCE_SPLITS[row.address];
+  const own=!mixed&&(row.own||tags.some(t=>['own','lp'].includes(t.kind)));
   const confirmedRobot=tags.some(t=>['frequency','arbitrage'].includes(t.kind)&&(t.manual||t.evidence?.includes('用户确认')));
-  const frequency=!own&&(row.highFrequency||confirmedRobot);
+  const associated=own||mixed;
+  const frequency=!associated&&(row.highFrequency||confirmedRobot);
   // Period filters retain receipt status at the end of that trading window.
   const received=!!row.received;
   const visible=tags.filter(t=>!['received-sold','received-relay-sold','cleared','received-zero'].includes(t.id)&&(!own||!['frequency','arbitrage'].includes(t.kind))&&(!['frequency','arbitrage'].includes(t.kind)||frequency))

@@ -1,9 +1,10 @@
 import {readSnapshot} from './snapshot-client.mjs';
 import {showSnapshotStatus,refreshButtonLabel} from './snapshot-status.mjs';
 import {holderCharts} from './holder-charts.mjs';
-import {TAG_KEY,TAG_KINDS,validateManual,readManual,rowTags,selectHolders,changePercent} from './holder-model.mjs';
+import {TAG_KEY,TAG_KINDS,validateManual,readManual,rowTags,selectHolders,changePercent,ownershipAmounts} from './holder-model.mjs';
 import {HOLDER_SORT_KEYS} from './holder-ranking.mjs';
 import {createTagFilter} from './tag-filter-control.mjs';
+import {HOLDER_IMPORT} from './holder-labels.mjs';
 const $=id=>document.getElementById(id),escape=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const number=(n,d=2)=>Number(n).toLocaleString('zh-CN',{minimumFractionDigits:d,maximumFractionDigits:d});
 const units=s=>Number(BigInt(s))/1e18,quantity=s=>s==null?'暂缺':number(units(s),2),short=a=>a.slice(0,8)+'…'+a.slice(-6);
@@ -28,7 +29,7 @@ function syncSort(){
 }
 function pair(stats,key){return `<span class="buy">买 ${key==='Count'?number(stats.buyCount,0):quantity(stats.buyAmount)}</span><span class="sell">卖 ${key==='Count'?number(stats.sellCount,0):quantity(stats.sellAmount)}</span>`;}
 function drawChart(rows){
- const model=holderCharts(rows,manual),{total,count,groups,top}=model;
+ const model=holderCharts(rows,manual),{total,count,groups,countGroups,top}=model;
  $('chart').setAttribute('aria-label',`已筛选 ${count} 个有持仓地址，共 ${quantity(total)} ESIM`);
  if(!count){$('chart').innerHTML='<p class="empty">当前筛选没有持仓。</p>';return;}
  const panel=(title,note,body)=>`<section class="distribution-panel"><h3>${title}</h3><p class="distribution-note">${note}</p>${body}</section>`;
@@ -40,25 +41,27 @@ function drawChart(rows){
  }
  let cursor=0;const stops=groups.map(g=>{const start=cursor;cursor+=Number(BigInt(g.balance))/Number(BigInt(total))*100;return `${g.color} ${start}% ${cursor}%`;});
  const ring=`<div class="holdings-breakdown"><div class="donut" role="img" aria-label="${groups.map(g=>`${g.label} ${number(g.share)}%`).join('，')}" style="background:conic-gradient(${stops.join(',')})"><div class="donut-center"><strong>${compact(total)}</strong><span>筛选持仓 · ESIM</span></div></div><div class="chart-legend">${groups.map(g=>`<div class="legend-row"><i style="background:${g.color}"></i><span>${escape(g.label)}</span><strong>${number(g.share)}%</strong><small>${quantity(g.balance)} ESIM</small></div>`).join('')}</div></div>`;
- const byCount=[...groups].sort((a,b)=>b.count-a.count);
+ const byCount=[...countGroups].sort((a,b)=>b.count-a.count);
  const counts=`<div class="count-bars">${byCount.map(g=>`<div class="count-row"><div><span><i style="background:${g.color}"></i>${escape(g.label)}</span><strong>${number(g.count,0)} <small>个</small><em>${number(g.count/count*100)}%</em></strong></div><div class="bar-track"><span style="background:${g.color};width:${g.count/count*100}%"></span></div></div>`).join('')}</div>${groups.length===1?'<p class="single-group-note">当前筛选只有 1 个分类，因此占比为 100%。可清除标签或搜索条件查看整体分布。</p>':''}`;
- $('chart').innerHTML=scope+panel('持仓占比','看币集中在哪些类别；每个地址只计入一个分类。',ring)+panel('地址数量分布','看各类有多少个地址；数量占比与持仓占比分开统计。',counts);
+ $('chart').innerHTML=scope+panel('持仓占比','已确认的混合持仓按我方 / 外部份额拆分，币量不重复统计。',ring)+panel('地址数量分布','每个地址只计一次；混合归属地址单独列组。',counts);
 }
 function render(){
  if(!report)return;
  const selected=selectHolders(report,{search:$('search').value,filter:selectedFilters(),cohort,excludeOwn,includeZero:$('include-zero').checked,page,pageSize,sort:$('sort').value,direction:$('sort-direction').value},manual);page=selected.page;syncSort();
- $('filter-context').hidden=!cohort&&!excludeOwn;$('filter-context').textContent=[cohort?`来自合约报告：${cohortNames[cohort]}`:'',excludeOwn?'仅看非我方地址':''].filter(Boolean).join(' · ');
+ $('filter-context').hidden=!cohort&&!excludeOwn;$('filter-context').textContent=[cohort?`来自合约报告：${cohortNames[cohort]}`:'',excludeOwn?'仅看非我方持仓；混合地址仅显示外部份额':''].filter(Boolean).join(' · ');
  $('cutoff').textContent=`余额截至 ${date(report.cutoff)} · 北京时间 · 区块 ${number(report.block,0)}`;
  $('summary').innerHTML=`<div><span>已索引持币地址</span><strong>${number(report.coverage.holding,0)}</strong><small>含大户名单及已知活跃地址</small></div><div><span>已覆盖总供应量</span><strong>${number(Number(BigInt(report.coverage.balance))/Number(BigInt(report.totalSupply))*100)}%</strong><small>全部供应量 ${compact(report.totalSupply)} ESIM</small></div><div><span>ESIM 参考价格</span><strong>${number(report.price,6)} U</strong><small>Pancake ESIM / USDT</small></div><div><span>24h 对比时点</span><strong>${report.priorCutoff?date(report.priorCutoff):'暂缺'}</strong><small>连续 24 小时的持仓变化</small></div>`;
  $('trade-cutoff').textContent=`24h 买卖 ${date(report.tradeWindowStart)} — ${date(report.tradeCutoff)}；累计自 ${date(report.historyStart)} 起。按交易发起地址统计成交币量，买绿 / 卖红。`;
  $('rows').innerHTML=selected.rows.map((r,i)=>{
   const pct=changePercent(r.balance,r.priorBalance),change=r.change24h,positive=change!==null&&BigInt(change)>0n;
   const tags=rowTags(r,manual);
+  const parts=ownershipAmounts(r,manual);
+  const splitNote=r.ownershipScope==='external'?`<small>仅外部份额 · 钱包合计 ${quantity(r.walletBalance)}</small>`:parts.mixed?`<small class="holding-split"><span class="own-share">我方 ${quantity(parts.own)}</span><span class="external-share">外部 ${quantity(parts.external)}</span>${parts.needsReview?'<span class="sell">余额低于已确认外部份额，归属需复核；暂不计入我方。</span>':''}</small>`:'';
   const delta=change===null?'暂缺':`${positive?'+':''}${quantity(change)}`;
-  return `<tr data-mobile-expanded="${mobileExpanded.has(r.address)}"><th scope="row"><span class="rank">${page*pageSize+i+1}</span><a href="https://bscscan.com/address/${r.address}" target="_blank" rel="noopener noreferrer" title="${r.address}">${short(r.address)} ↗</a><small><button class="tag-edit-button" data-tag="${r.address}">${manual[r.address]?'编辑标签':'加标签'}</button></small></th><td>${tags.length?tags.map(t=>`<span class="tag" data-kind="${escape(t.kind)}" title="${escape(t.evidence)}">${t.manual?'✎ ':''}${escape(t.text)}</span>`).join(''):'<span class="tag">待识别</span>'}${tags.length?`<details class="tag-evidence"><summary>依据</summary>${tags.map(t=>`<p><strong>${escape(t.text)}</strong>：${escape(t.evidence)}</p>`).join('')}</details>`:''}</td><td data-mobile-label="持仓 · ESIM">${quantity(r.balance)}</td><td data-mobile-label="参考价值 · USDT">${number(units(r.balance)*report.price)}</td><td data-mobile-label="占总供应量">${number(Number(BigInt(r.balance))/Number(BigInt(report.totalSupply))*100,4)}%</td><td data-mobile-label="24h 持仓变化 · ESIM" class="${change===null||BigInt(change)===0n?'':positive?'buy':'sell'}">${delta}<small>${pct===null?'历史余额暂缺':pct==='new'?'新增持仓':`${Number(pct)>0?'+':''}${number(pct,2)}%`}</small></td><td data-mobile-label="24h 买卖次数">${pair(r.day,'Count')}</td><td data-mobile-label="24h 买卖币量 · ESIM">${pair(r.day,'Amount')}</td><td data-mobile-label="累计买卖次数">${pair(r.history,'Count')}</td><td data-mobile-label="累计买卖币量 · ESIM">${pair(r.history,'Amount')}</td><td class="mobile-holder-details"><button type="button" class="mobile-holder-toggle" data-mobile-toggle="${escape(r.address)}" aria-expanded="${mobileExpanded.has(r.address)}">${mobileExpanded.has(r.address)?'收起买卖数据':'展开买卖数据'}</button><p class="mobile-full-address">${escape(r.address)}</p></td></tr>`;
+  return `<tr data-mobile-expanded="${mobileExpanded.has(r.address)}"><th scope="row"><span class="rank">${page*pageSize+i+1}</span><a href="https://bscscan.com/address/${r.address}" target="_blank" rel="noopener noreferrer" title="${r.address}">${short(r.address)} ↗</a><small><button class="tag-edit-button" data-tag="${r.address}">${manual[r.address]?'编辑标签':'加标签'}</button></small></th><td>${tags.length?tags.map(t=>`<span class="tag" data-kind="${escape(t.kind)}" title="${escape(t.evidence)}">${t.manual?'✎ ':''}${escape(t.text)}</span>`).join(''):'<span class="tag">待识别</span>'}${tags.length?`<details class="tag-evidence"><summary>依据</summary>${tags.map(t=>`<p><strong>${escape(t.text)}</strong>：${escape(t.evidence)}</p>`).join('')}</details>`:''}</td><td data-mobile-label="持仓 · ESIM">${quantity(r.balance)}${splitNote}</td><td data-mobile-label="参考价值 · USDT">${number(units(r.balance)*report.price)}</td><td data-mobile-label="占总供应量">${number(Number(BigInt(r.balance))/Number(BigInt(report.totalSupply))*100,4)}%</td><td data-mobile-label="24h 持仓变化 · ESIM" class="${change===null||BigInt(change)===0n?'':positive?'buy':'sell'}">${delta}<small>${pct===null?'历史余额暂缺':pct==='new'?'新增持仓':`${Number(pct)>0?'+':''}${number(pct,2)}%`}</small></td><td data-mobile-label="24h 买卖次数">${pair(r.day,'Count')}</td><td data-mobile-label="24h 买卖币量 · ESIM">${pair(r.day,'Amount')}</td><td data-mobile-label="累计买卖次数">${pair(r.history,'Count')}</td><td data-mobile-label="累计买卖币量 · ESIM">${pair(r.history,'Amount')}</td><td class="mobile-holder-details"><button type="button" class="mobile-holder-toggle" data-mobile-toggle="${escape(r.address)}" aria-expanded="${mobileExpanded.has(r.address)}">${mobileExpanded.has(r.address)?'收起买卖数据':'展开买卖数据'}</button><p class="mobile-full-address">${escape(r.address)}</p></td></tr>`;
  }).join('')||'<tr><td colspan="10" class="empty">没有符合条件的地址。可切换标签，或显示零持仓地址。</td></tr>';
  $('row-count').textContent=`${number(selected.total,0)} 个地址`;$('page').textContent=`${selected.total?page+1:0} / ${Math.ceil(selected.total/pageSize)}`;$('prev').disabled=page===0;$('next').disabled=(page+1)*pageSize>=selected.total;
- $('coverage').innerHTML=`<p>名单来源：<a href="${escape(report.coverage.source)}" target="_blank" rel="noopener noreferrer">OKLink 前 ${report.coverage.seedTop} 名</a>（${escape(report.coverage.seedAt.slice(0,10))}），并补入已知领币、交易、交互地址和新增 ESIM 转账地址。本表是已索引地址排名，不是全链完整持有人名单。余额、24h 变化来自固定区块的链上读取。</p>`;
+ $('coverage').innerHTML=`<p>名单来源：<a href="${escape(report.coverage.source)}" target="_blank" rel="noopener noreferrer">OKLink 前 ${report.coverage.seedTop} 名</a>（${escape(report.coverage.seedAt.slice(0,10))}），并补入已知领币、交易、交互地址和新增 ESIM 转账地址。本表是已索引地址排名，不是全链完整持有人名单。余额、24h 变化来自固定区块的链上读取。</p><p>补充名单：${escape(HOLDER_IMPORT.source)}，${escape(date(Date.parse(HOLDER_IMPORT.capturedAt)/1000))}（北京时间），共 ${HOLDER_IMPORT.count} 个地址。同步地址归属及类型；表格持仓快照不覆盖链上余额。标签的“依据”可查看来源。</p>`;
  drawChart(selected.all);
 }
 function openTag(address=''){

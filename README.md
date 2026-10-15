@@ -4,6 +4,10 @@ A public, read-only PancakeSwap market depth viewer by MMDock.
 
 **[链上深度](https://starkweng.github.io/esim-onchain/) · [合约报告](https://starkweng.github.io/esim-onchain/?view=report) · [卖出监控](https://starkweng.github.io/esim-onchain/?view=addresses) · [持币地址](https://starkweng.github.io/esim-onchain/?view=holders)**
 
+持币地址补充名单来自用户提供的 `ESIM_持币1万以上地址.xlsx`（2026-10-15 16:27 北京时间，221 个地址），归属与类型保存在 `src/holder-import.json`，不导入表格中的旧余额或动态买卖标签。补充名单与已有索引合并，余额、24h 变化和成交数据继续使用固定区块链上快照。
+
+用户确认 `0x588177775e6fba9e752d0c9dfd5bbb562e8f016a` 的外部份额为 409,924 ESIM，其余才计入我方持仓；分配规则在 `src/holder-labels.mjs`。混合地址按币量拆分，地址数量只计一次，历史成交不据此推断整地址归我方。若余额低于已确认外部份额，提示重新核对并暂不计入我方；本地备注不能覆盖确认份额。
+
 Search configured BNB Chain pairs by symbol, token address, or pool address. View the order-book-style price ladder with own / external breakdowns for each amount column and cumulative AMM liquidity depth of the selected **exact token pair**, aggregated across discovered V2, V3, and Infinity CL pools. Enter a price-range percentage or select Maximum, then choose decimal price precision (0–18 places). Default: ESIM/USDT, a ±50% price range and four decimal places (a 0.0001 base price band). The closest 100 bands stay unmerged, followed by grouped distant bands up to the 500-row limit. Up to 500 rows per side are rendered by merging adjacent bands when necessary; endpoint totals always cover the entire selected range. Hover to inspect a level or enter a price to locate it. The address bar preserves the pair and display settings.
 
 ## 新手怎么用

@@ -28,11 +28,12 @@ export function addressRanking(state, start, end, mode = 'initiator') {
   }
   return { missingSold: missingSold.toString(), rows: [...rows.values()].filter(r => r.sold > 0n).map(r => {
     const peakDailyTrades = Math.max(...[...r.days.values()].map(s => s.size));
-    const own=lp.has(r.address)||ownProgram.has(r.address)||r.address===OWN_EXECUTOR||knownLabels[r.address]?.kind==='own';
+    const ownLP=lp.has(r.address)||knownLabels[r.address]?.kind==='lp';
+    const own=knownLabels[r.address]?.kind!=='mixed'&&(ownLP||ownProgram.has(r.address)||r.address===OWN_EXECUTOR||knownLabels[r.address]?.kind==='own');
     return { address: r.address, sold: r.sold.toString(), bought: r.bought.toString(), netSold: (r.sold - r.bought).toString(),
       sellCount: r.sells.size, buyCount: r.buys.size, trades: r.txs.size, peakDailyTrades,
-      highFrequency: !own&&(peakDailyTrades >= 100||['frequency','arbitrage'].includes(knownLabels[r.address]?.kind)), own,
-      ownType: lp.has(r.address) ? 'LP' : ownProgram.has(r.address) || r.address === OWN_EXECUTOR ? '刷量' : own?'关联':null,
+      highFrequency: !own&&knownLabels[r.address]?.kind!=='mixed'&&(peakDailyTrades >= 100||['frequency','arbitrage'].includes(knownLabels[r.address]?.kind)), own,
+      ownType: !own?null:ownLP ? 'LP' : ownProgram.has(r.address) || r.address === OWN_EXECUTOR ? '刷量' : '关联',
       received: !!state.firstRecipient[r.address] && state.firstRecipient[r.address].timestamp < end,
       firstReceived: state.firstRecipient[r.address]?.timestamp ?? null,
       firstReceivedSale: firstSales.get(r.address) ?? null,

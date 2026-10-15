@@ -1,0 +1,1049 @@
+{
+  "source": "ESIM_持币1万以上地址.xlsx",
+  "sha256": "14fcce0161284826c1018678b9b96ea7e4e28b7fcf8357cd2a02973fa11536d0",
+  "sheet": "持币1万以上",
+  "block": 127754440,
+  "count": 221,
+  "capturedAt": "2026-10-15T16:27:00+08:00",
+  "range": "A4:H224",
+  "records": [
+    {
+      "address": "0xdd79e78b3c3917c607f6a320fc1b0394bb219777",
+      "row": 4,
+      "ownership": "own",
+      "type": "Safe多签",
+      "verified": "Safe 多签（2/3）"
+    },
+    {
+      "address": "0xa7d81e889f2df910389c95fa0f9d6092220edf87",
+      "row": 5,
+      "type": "普通地址（无代码）"
+    },
+    {
+      "address": "0x71857547a4ef8a466adc4648d222de31d64eff13",
+      "row": 6,
+      "ownership": "own",
+      "type": "普通地址（无代码）"
+    },
+    {
+      "address": "0x73d8bd54f7cf5fab43fe4ef40a62d390644946db",
+      "row": 7,
+      "type": "交易路由合约",
+      "verified": "Binance: Alpha 2.0 Router Proxy"
+    },
+    {
+      "address": "0xf4a9f2c917ba3d8f987cb536545e0521eb88ce05",
+      "row": 8,
+      "ownership": "own",
+      "type": "普通地址（无代码）"
+    },
+    {
+      "address": "0x6a526702bb1e3b4de2e9fcfa5ac091d64c3528da",
+      "row": 9,
+      "ownership": "own",
+      "type": "普通地址（无代码）"
+    },
+    {
+      "address": "0x752cedf136c2e8fa72c6726ca3685435c4436e5d",
+      "row": 10,
+      "ownership": "own",
+      "type": "普通地址（无代码）"
+    },
+    {
+      "address": "0x238a358808379702088667322f80ac48bad5e6c4",
+      "row": 11,
+      "type": "共享Vault",
+      "verified": "PancakeSwap Infinity 共享Vault"
+    },
+    {
+      "address": "0x857627e285d4dde7f4882d21e806432f8649e601",
+      "row": 12,
+      "ownership": "own",
+      "type": "普通地址（无代码）"
+    },
+    {
+      "address": "0xdde4deb7aab7cefdd5aa1ab4fdc8675eb901cad7",
+      "row": 13,
+      "type": "合约（用途未确认）"
+    },
+    {
+      "address": "0x4695f04b5f5665394a0383abce6c05dda310915f",
+      "row": 14,
+      "ownership": "own",
+      "type": "普通地址（无代码）"
+    },
+    {
+      "address": "0x5678a7c531c77bf2293e7d875bb7b060c30b66bb",
+      "row": 15,
+      "ownership": "own",
+      "type": "普通地址（无代码）"
+    },
+    {
+      "address": "0x9dd1f3c262fa2a7dd6e78e425d07ef6d7cb49fb8",
+      "row": 16,
+      "ownership": "own",
+      "type": "普通地址（无代码）"
+    },
+    {
+      "address": "0xb65b592f765e914f59e9a6b914fa36858c851804",
+      "row": 17,
+      "ownership": "own",
+      "type": "普通地址（无代码）"
+    },
+    {
+      "address": "0x910722555c0d59af80ed5981c0efb3dc649e6481",
+      "row": 18,
+      "ownership": "own",
+      "type": "普通地址（无代码）"
+    },
+    {
+      "address": "0xec6badcbdf3cd40d7760e25a4686996f6340e87f",
+      "row": 19,
+      "ownership": "own",
+      "type": "普通地址（无代码）"
+    },
+    {
+      "address": "0xcdef7cb22797aeab9b19d637d1bce133539ac636",
+      "row": 20,
+      "ownership": "own",
+      "type": "普通地址（无代码）"
+    },
+    {
+      "address": "0x7c56af4fcf2ba28314e7eb053674d3c63e2dcdf9",
+      "row": 21,
+      "ownership": "own",
+      "type": "普通地址（无代码）"
+    },
+    {
+      "address": "0xe8ba3034aaa9f094c4a9b191b209e869974f1ed6",
+      "row": 22,
+      "ownership": "own",
+      "type": "普通地址（无代码）"
+    },
+    {
+      "address": "0xb93a14a6761653a27ba94fb42de0c1038716b319",
+      "row": 23,
+      "ownership": "own",
+      "type": "普通地址（无代码）"
+    },
+    {
+      "address": "0xd03b0d23fb1311285487e08b7a48a3d9851cfb0d",
+      "row": 24,
+      "ownership": "own",
+      "type": "普通地址（无代码）"
+    },
+    {
+      "address": "0x8e632387715f335f0381231504d1c9655e5106a0",
+      "row": 25,
+      "ownership": "own",
+      "type": "普通地址（无代码）"
+    },
+    {
+      "address": "0x8885c7a5ea853c9e72e34c4afd8f32f1abc4b791",
+      "row": 26,
+      "ownership": "own",
+      "type": "普通地址（无代码）"
+    },
+    {
+      "address": "0x0c4c63a33eb52898895c7b647f96562b9ee2c482",
+      "row": 27,
+      "ownership": "own",
+      "type": "普通地址（无代码）"
+    },
+    {
+      "address": "0x4e27d5454fa69ecaf9c40de3cd2b2f1eb967a21f",
+      "row": 28,
+      "ownership": "own",
+      "type": "普通地址（无代码）"
+    },
+    {
+      "address": "0x4252f9e683c7d38b6fd053346358f6460d982745",
+      "row": 29,
+      "type": "Safe多签",
+      "verified": "Safe 多签（3/4）；固定10%收币地址"
+    },
+    {
+      "address": "0x4689a5124b81f3e1e42909054eb2add921cf8c30",
+      "row": 30,
+      "ownership": "own",
+      "type": "普通地址（无代码）"
+    },
+    {
+      "address": "0x13a5ab391f7a7af779cb6a6b9a3c63455efddf30",
+      "row": 31,
+      "ownership": "own",
+      "type": "普通地址（无代码）"
+    },
+    {
+      "address": "0xfa4742ebdf47153a82984dff6f2737a0057d949c",
+      "row": 32,
+      "ownership": "own",
+      "type": "合约（用途未确认）"
+    },
+    {
+      "address": "0x53f78a071d04224b8e254e243fffc6d9f2f3fa23",
+      "row": 33,
+      "type": "交易所地址",
+      "verified": "KuCoin: Hot Wallet 2"
+    },
+    {
+      "address": "0x6685c24b20e64e88ab05df304e295e4b0acf6fb8",
+      "row": 34,
+      "ownership": "own",
+      "type": "普通地址（无代码）"
+    },
+    {
+      "address": "0x824c3992fdaef4984d62d4cac9c8408c836d8368",
+      "row": 35,
+      "ownership": "own",
+      "type": "普通地址（无代码）"
+    },
+    {
+      "address": "0x67b97c3845438f264965ca154ba13051c6c73416",
+      "row": 36,
+      "ownership": "own",
+      "type": "分发合约",
+      "verified": "ESIM 分发合约"
+    },
+    {
+      "address": "0x54403ec2c1035295e81172e1bf381d01df135f67",
+      "row": 37,
+      "ownership": "external",
+      "type": "普通地址（无代码）"
+    },
+    {
+      "address": "0x1db99241d9e230edc33996567ec2707c42475fd8",
+      "row": 38,
+      "ownership": "own",
+      "lp": true,
+      "type": "EIP-7702委托地址"
+    },
+    {
+      "address": "0x588177775e6fba9e752d0c9dfd5bbb562e8f016a",
+      "row": 39,
+      "type": "合约（用途未确认）"
+    },
+    {
+      "address": "0x1ab4973a48dc892cd9971ece8e01dcc7688f8f23",
+      "row": 40,
+      "type": "交易所地址",
+      "verified": "Bitget 6"
+    },
+    {
+      "address": "0xc40409aee5b913f14dfd8f967299ddf9dc5009a1",
+      "row": 41,
+      "ownership": "own",
+      "lp": true,
+      "type": "普通地址（无代码）"
+    },
+    {
+      "address": "0xdcdb497a0b2ab74753f8e40e36071ce7a0ab4930",
+      "row": 42,
+      "ownership": "own",
+      "lp": true,
+      "type": "EIP-7702委托地址"
+    },
+    {
+      "address": "0xe1de6ac2ee058df5d3be8edeb62a8815fd13ff5a",
+      "row": 43,
+      "ownership": "own",
+      "type": "合约（用途未确认）"
+    },
+    {
+      "address": "0x28c37e2370d0ca3c2e3b04830a11f2c0ffaeb0f9",
+      "row": 44,
+      "ownership": "own",
+      "type": "普通地址（无代码）"
+    },
+    {
+      "address": "0xbeca05f454f2e9f894b4178eeac7d8a54ffccc5c",
+      "row": 45,
+      "type": "普通地址（无代码）"
+    },
+    {
+      "address": "0x4290872f03114ee90e3939a0dc670819b902bce5",
+      "row": 46,
+      "type": "普通地址（无代码）"
+    },
+    {
+      "address": "0xb8b079246869cc8407ec592bbea198fc0df4f649",
+      "row": 47,
+      "type": "普通地址（无代码）"
+    },
+    {
+      "address": "0xf78f370135a9bd7ecc62ffd503dba525a75cd37e",
+      "row": 48,
+      "type": "普通地址（无代码）"
+    },
+    {
+      "address": "0x23dd01612443d15c166aed7b430abdaeef923783",
+      "row": 49,
+      "ownership": "own",
+      "lp": true,
+      "type": "普通地址（无代码）"
+    },
+    {
+      "address": "0x815cee7a3820e142e56f649f29c9f947af3d31ba",
+      "row": 50,
+      "type": "普通地址（无代码）"
+    },
+    {
+      "address": "0x464c76b0aa9ef6d3c923294f786f63a1ab9ecfc8",
+      "row": 51,
+      "type": "普通地址（无代码）"
+    },
+    {
+      "address": "0x408352541d669087f05d84f64c9ba37c780021ee",
+      "row": 52,
+      "type": "普通地址（无代码）"
+    },
+    {
+      "address": "0xb701671c18a27ea91491e927556785027fe7ca0c",
+      "row": 53,
+      "type": "普通地址（无代码）"
+    },
+    {
+      "address": "0x82eb4090d0eaab4e7756dd6815ab2beada833cd6",
+      "row": 54,
+      "type": "EIP-7702委托地址"
+    },
+    {
+      "address": "0x7ce42e8d57444c64bb312938e057d0901bd95953",
+      "row": 55,
+      "type": "EIP-7702委托地址"
+    },
+    {
+      "address": "0xec4387262cdb82ee2bcb40c61e732a086cda739d",
+      "row": 56,
+      "type": "普通地址（无代码）"
+    },
+    {
+      "address": "0xcd06956a47164ea866c3e9601085777e89cffad5",
+      "row": 57,
+      "type": "DEX / 资金池（地址库）"
+    },
+    {
+      "address": "0x9ee031f32d44bc4d047414a6b35c48714b4991c9",
+      "row": 58,
+      "type": "合约（地址库）"
+    },
+    {
+      "address": "0xeb0b1845eaa0fd66fbd84b862828324e5c0ed9b3",
+      "row": 59
+    },
+    {
+      "address": "0xbfbb0452e2d746e3c7d20992d22511bd5f5f0ff5",
+      "row": 60
+    },
+    {
+      "address": "0x2b3bf74b29f59fb8dda41cf3d6a8da28cf8e7921",
+      "row": 61,
+      "type": "交易所标签（地址库）"
+    },
+    {
+      "address": "0x86fd19105886b4fef2fe73042255af3194be1254",
+      "row": 62
+    },
+    {
+      "address": "0xf975e7e240c59146e67971e2aa5497f0f22441ff",
+      "row": 63
+    },
+    {
+      "address": "0xe858154e5b1d0c295b24103dbc7671b67faccba3",
+      "row": 64,
+      "ownership": "own"
+    },
+    {
+      "address": "0x75bbded46be059da7a3985f1d560c5629abefdf3",
+      "row": 65
+    },
+    {
+      "address": "0x2a6228c7277fcab61a78867eb6d0d942ad7da935",
+      "row": 66
+    },
+    {
+      "address": "0x5ad0d9e555806f8d5e73fce9a1891148819c3984",
+      "row": 67
+    },
+    {
+      "address": "0x60e18abf635c506b3e914fcb9ed497094d0f793f",
+      "row": 68
+    },
+    {
+      "address": "0x4982085c9e2f89f2ecb8131eca71afad896e89cb",
+      "row": 69,
+      "type": "交易所标签（地址库）"
+    },
+    {
+      "address": "0x55d6bd297bd60e5975efb5dc53fb8144fe51bf62",
+      "row": 70,
+      "ownership": "own"
+    },
+    {
+      "address": "0x218c18d02f0723291ce93aa5c0e5eb709903179a",
+      "row": 71,
+      "type": "合约（地址库）"
+    },
+    {
+      "address": "0x005573281c053f8e0b6d0aa0a245b12a72d7714b",
+      "row": 72,
+      "type": "合约（地址库）"
+    },
+    {
+      "address": "0xa599713264889aa3466ca13d649cbf30b544bd74",
+      "row": 73,
+      "type": "合约（地址库）"
+    },
+    {
+      "address": "0x42f2a79335e3d2f520dd48ef784db144d6a2e3c0",
+      "row": 74
+    },
+    {
+      "address": "0x26c88f127d1b64af897bf18f2b6bde3dc26bbb61",
+      "row": 75,
+      "type": "合约（地址库）"
+    },
+    {
+      "address": "0xf2e18bf27ac2f82808187e83024ca9632f3d1db4",
+      "row": 76
+    },
+    {
+      "address": "0xa43d178b2cd45eda128ebcc1f7896f4230cf08f1",
+      "row": 77
+    },
+    {
+      "address": "0x547672c67972d4b6f8bc4438386951dbbc4854da",
+      "row": 78
+    },
+    {
+      "address": "0xf8748a5c50b2eb2057457a5d0a8d87b3838f7f25",
+      "row": 79
+    },
+    {
+      "address": "0x36e3d975f30e5eaf8548ce560852de290ef8fd1d",
+      "row": 80
+    },
+    {
+      "address": "0x0298bd91fb1a29dc5d4b867d9c7b49ab76750603",
+      "row": 81,
+      "ownership": "own"
+    },
+    {
+      "address": "0x6d5ab94c317ccee3bdbc875566fc68875455d270",
+      "row": 82,
+      "type": "合约（地址库）"
+    },
+    {
+      "address": "0x51b929ea0cf6d6d3399cd1aa83153dffc0ff5c40",
+      "row": 83
+    },
+    {
+      "address": "0x204ee653482fa1d6f2a6ff9d867be710013c9d2f",
+      "row": 84
+    },
+    {
+      "address": "0xed9ab5bc05a0152b9dc2f7902e8369af7bc18771",
+      "row": 85,
+      "type": "交易所标签（地址库）"
+    },
+    {
+      "address": "0x89c5e622febebb4a1258ea95e084b4d77533637e",
+      "row": 86,
+      "type": "合约（地址库）"
+    },
+    {
+      "address": "0xb95f24b72fae41ee50ad2d82edbbfbe9f77c1005",
+      "row": 87
+    },
+    {
+      "address": "0xdeae49639e06bc63d647ab47ff4472e4d55b0c5e",
+      "row": 88,
+      "type": "合约（地址库）"
+    },
+    {
+      "address": "0xcf78d7d5c3832f2bdeee6f77f23975657af26ed3",
+      "row": 89,
+      "type": "合约（地址库）"
+    },
+    {
+      "address": "0xca79f587c361be6b541e1206da5b36908dcf0cb3",
+      "row": 90
+    },
+    {
+      "address": "0x1b24fe58b40088037346fc4cf840019bbc64c81a",
+      "row": 91
+    },
+    {
+      "address": "0x07964f135f276412b3182a3b2407b8dd45000000",
+      "row": 92,
+      "type": "DEX / 资金池（地址库）"
+    },
+    {
+      "address": "0x1cf8a4704db43dda6d59e0e2b5643e86789f3401",
+      "row": 93
+    },
+    {
+      "address": "0xe8e15e97a8652ebdc8333007ea9d3b0275595d96",
+      "row": 94,
+      "ownership": "own",
+      "type": "合约（地址库）"
+    },
+    {
+      "address": "0x68551c2a913aba9ac6ba88170bc6190cfdd7efb2",
+      "row": 95
+    },
+    {
+      "address": "0x2e360e392007915fd062880a462d4f7d763ffac4",
+      "row": 96,
+      "type": "合约（地址库）"
+    },
+    {
+      "address": "0x3b035f745033f6c8baca528eae5b98d831434f9b",
+      "row": 97
+    },
+    {
+      "address": "0x77759fc6646fbd73c4d4fe0bdd9add89f5542970",
+      "row": 98
+    },
+    {
+      "address": "0x0aebe86f50cb4187b94bcd91d2e588e82c393ced",
+      "row": 99
+    },
+    {
+      "address": "0xbcf57bbc96c1d7c693b4c7a3e07664114636dd3b",
+      "row": 100
+    },
+    {
+      "address": "0xa7879ece6c4947dff6f240c4950bf5b89ca4652b",
+      "row": 101
+    },
+    {
+      "address": "0xddddf76d2f29743d974259664f0a2bb97147a348",
+      "row": 102
+    },
+    {
+      "address": "0x142772f5cd2349b80be563f6fc19592a7a6e2cc4",
+      "row": 103
+    },
+    {
+      "address": "0x80b797d078d2f0b7cfdca592b0099299c2b30318",
+      "row": 104
+    },
+    {
+      "address": "0x9d66e9ba7a8e1bdb5f711d556eaa47f3c15b4f3f",
+      "row": 105
+    },
+    {
+      "address": "0x124d9bf2fecbc16b54ec4accdb14d44c2144f012",
+      "row": 106,
+      "type": "交易所标签（地址库）"
+    },
+    {
+      "address": "0x4aa142dd1dcebd851d0b24033e2eaf00e2216d95",
+      "row": 107
+    },
+    {
+      "address": "0x85e471fd8abe8e0c6b6f6b4c635956020336a12e",
+      "row": 108,
+      "ownership": "own",
+      "type": "合约（地址库）"
+    },
+    {
+      "address": "0x6bb42bf96bd0b73c7bbc961d39361e2cbb8f1814",
+      "row": 109
+    },
+    {
+      "address": "0xbcd0796403442f1d2162677c3c2afb33bbf4802e",
+      "row": 110,
+      "type": "合约（地址库）"
+    },
+    {
+      "address": "0x13dc07f7201f2eddef0586ab83e5816a79377f5b",
+      "row": 111
+    },
+    {
+      "address": "0x5157b6c9c96caabd2ac7521c0c30233b974c8bd8",
+      "row": 112
+    },
+    {
+      "address": "0xa6ec14db10a84d49f8c992ef081e063f16ae7e8d",
+      "row": 113
+    },
+    {
+      "address": "0x6a4731754bcabad8359501a1e232e11869948fd5",
+      "row": 114,
+      "type": "合约（地址库）"
+    },
+    {
+      "address": "0xce462110a58518c833331f8c8fb0aef4ec28f049",
+      "row": 115,
+      "type": "合约（地址库）"
+    },
+    {
+      "address": "0xec6579a6bdca99fe61ba0f365498a6c981382fda",
+      "row": 116
+    },
+    {
+      "address": "0xa249df529ebd5df9ff91b4af68e3286937424f9c",
+      "row": 117
+    },
+    {
+      "address": "0xfa00a9ed787f3793db668bff3e6e6e7db0f92a1b",
+      "row": 118
+    },
+    {
+      "address": "0x627b0ee4fb075c4c25f8dde0fac0899681d6ce82",
+      "row": 119
+    },
+    {
+      "address": "0x88fef7df0783a1184c0750fc8fed19db534a2c30",
+      "row": 120
+    },
+    {
+      "address": "0x8762b1623e15639979a882f81ba108eff991b5eb",
+      "row": 121
+    },
+    {
+      "address": "0x2bdb9865c51c8227039bfac7d0366345367353ee",
+      "row": 122
+    },
+    {
+      "address": "0x0908a40eb8dc56b76065a549824b5fa777ef1ed7",
+      "row": 123
+    },
+    {
+      "address": "0x2618438f7a067ef85cdcbe559d7e1bd559e7573f",
+      "row": 124
+    },
+    {
+      "address": "0x173f57603a0df18e8e6d94804225d45150380c29",
+      "row": 125
+    },
+    {
+      "address": "0x76556bad0c810f13de4bca27e774821405796cc6",
+      "row": 126
+    },
+    {
+      "address": "0x749af1cd0ae8ee9beb33187af1aedcabed964066",
+      "row": 127
+    },
+    {
+      "address": "0x1387b3243ee271578c6b1e8b6b3d90b935dec2a0",
+      "row": 128
+    },
+    {
+      "address": "0x1a5e41d0d1dbe475a487783732bb14d91774704b",
+      "row": 129
+    },
+    {
+      "address": "0x25ac986df74d6863ebc303aea8e1391ff919de0a",
+      "row": 130
+    },
+    {
+      "address": "0x2a0dcf3b06699f8c7eac1ce44105bcd8d5537470",
+      "row": 131,
+      "type": "合约（地址库）"
+    },
+    {
+      "address": "0x2ba4fa57a4508b8684b7e72a5e6f0c9cd8ff45cc",
+      "row": 132
+    },
+    {
+      "address": "0x33158f5025be1537da06b6e8a8e1e7ec24787e3e",
+      "row": 133
+    },
+    {
+      "address": "0x4831bbc78c5b386a6f0330ee6826325643f2b668",
+      "row": 134,
+      "type": "合约（地址库）"
+    },
+    {
+      "address": "0x48457ed09679f18fdb9637a96cb58d42377677f8",
+      "row": 135
+    },
+    {
+      "address": "0x4f6da31a7341f8bcfd4ea46efd096a25f9cb028e",
+      "row": 136
+    },
+    {
+      "address": "0x51fd7a64ef8cfd1c83724422ebcdb69b6084d593",
+      "row": 137,
+      "type": "合约（地址库）"
+    },
+    {
+      "address": "0x61329b29891917fe53e68e98419287c0c6fb7c79",
+      "row": 138,
+      "type": "合约（地址库）"
+    },
+    {
+      "address": "0x8810b05696ce245aed527fd27a001246a5b9d12a",
+      "row": 139
+    },
+    {
+      "address": "0x8fcf7862ad3a42d2027585ed8b14533982a8f336",
+      "row": 140,
+      "type": "合约（地址库）"
+    },
+    {
+      "address": "0x8ff069ba7cde0fdca8e9044f2dd831b607e9e1e6",
+      "row": 141
+    },
+    {
+      "address": "0xab124c083c4cb7784a91f26a86a1660528f7d128",
+      "row": 142
+    },
+    {
+      "address": "0xaca38dcad4ad28b1cd72abf25a6add188e237b69",
+      "row": 143
+    },
+    {
+      "address": "0xae3bc9f9f2978ece15be68acc4a89feb4edf57a6",
+      "row": 144
+    },
+    {
+      "address": "0xaee0f23fa360b53decf20c50b815782b0dd9c3c1",
+      "row": 145
+    },
+    {
+      "address": "0xafdb69f36dd8b0638048b2614022df4a23876a52",
+      "row": 146
+    },
+    {
+      "address": "0xb2a0f6f88309ebf1b581260a20a02144f1bb0ac9",
+      "row": 147,
+      "type": "合约（地址库）"
+    },
+    {
+      "address": "0xbc223544111ab710ba32e599427d601d9637bfbc",
+      "row": 148
+    },
+    {
+      "address": "0xbc383aa06108511e70b883826492789532ca420b",
+      "row": 149
+    },
+    {
+      "address": "0xda6c2d238db36252a59905fea72d4e751ce5dc9c",
+      "row": 150
+    },
+    {
+      "address": "0xe1ecf29c3e222565d532669389a3d2baf667507c",
+      "row": 151
+    },
+    {
+      "address": "0xe26093db79fe9cc8eeda96ac329aec747539742d",
+      "row": 152,
+      "type": "合约（地址库）"
+    },
+    {
+      "address": "0xe2fbf94a43ecba22a0b4b674285b417b32110886",
+      "row": 153,
+      "type": "合约（地址库）"
+    },
+    {
+      "address": "0xe7cf2f45890fdcae0b9d1120c7af203b6073bfd2",
+      "row": 154
+    },
+    {
+      "address": "0xf4d19522e11bf9f0c11cd4f8b731b271db5e2d37",
+      "row": 155
+    },
+    {
+      "address": "0xf82b184007b8848a5e9bd55098f3b16f7003813b",
+      "row": 156
+    },
+    {
+      "address": "0xfaeef1d0d144d53f8eec7bf2100947946c14bbaf",
+      "row": 157
+    },
+    {
+      "address": "0xff35a3a94792c6be557e903fb0ebf4c814fbd4c0",
+      "row": 158,
+      "type": "合约（地址库）"
+    },
+    {
+      "address": "0x88f0cd3dc9ac89e9199a1a27952df58d37bcb5f2",
+      "row": 159
+    },
+    {
+      "address": "0xf8aa3cafcef2bc192ba5050dc238ff425ef1c3dd",
+      "row": 160
+    },
+    {
+      "address": "0x87fecf356039dc63775124f8b4c033061b1881c4",
+      "row": 161
+    },
+    {
+      "address": "0x9f738f3e353e9837e8f5d13717fef5e2aa7224e1",
+      "row": 162
+    },
+    {
+      "address": "0xa6b9f2f8507c3dcee32f765361f2c5527d7b6ad6",
+      "row": 163,
+      "ownership": "own",
+      "type": "合约（地址库）"
+    },
+    {
+      "address": "0x9240b7fd8e72e5c7e63221b732f64ef1066963bc",
+      "row": 164,
+      "type": "合约（地址库）"
+    },
+    {
+      "address": "0xa39506a63e2d052b7784b80c7ab52568ee8e2496",
+      "row": 165
+    },
+    {
+      "address": "0x9e30a3731d6b842524d78d27ed0e6b7636372d60",
+      "row": 166
+    },
+    {
+      "address": "0xb5dba6e7d6e7b912484f4029904079bf148225c7",
+      "row": 167
+    },
+    {
+      "address": "0xd8136f61c53c5c298b26a9a49d69ce4f3b73a2bd",
+      "row": 168
+    },
+    {
+      "address": "0xb0b1177e8b32bfb9744c50f1350c6a614cc1aa77",
+      "row": 169
+    },
+    {
+      "address": "0xd51faf7c8d3216407b279cb8688ded86c4d58ba0",
+      "row": 170
+    },
+    {
+      "address": "0x317ae848cf47db242b70c946bc81e9468b2ef8a3",
+      "row": 171,
+      "type": "合约（地址库）"
+    },
+    {
+      "address": "0xb8ab7f4be346707e632c5e22de170da30005e469",
+      "row": 172,
+      "type": "合约（地址库）"
+    },
+    {
+      "address": "0x603ff539727f11e5024aee3e6631d6b18a20dd66",
+      "row": 173
+    },
+    {
+      "address": "0x04dd4a1cd66dd8c3b3859a51014ecfda09941403",
+      "row": 174
+    },
+    {
+      "address": "0x75b0d84afa97b29350bc74ccb823a5cc432b59b7",
+      "row": 175
+    },
+    {
+      "address": "0x5b67d587a3ce7229d68e4d4500c91e90bb337c00",
+      "row": 176,
+      "type": "合约（地址库）"
+    },
+    {
+      "address": "0xfc8f0593db4d6f353bbce8c84656b2d69edcb3ae",
+      "row": 177
+    },
+    {
+      "address": "0x4d5a46c5176c6cad39b26dd9128d49d6ce10d672",
+      "row": 178
+    },
+    {
+      "address": "0x743abc893f256ec4077bcdf106f17492b5d392ad",
+      "row": 179
+    },
+    {
+      "address": "0x0907e5923b6164a9c177aa01ef85d1a528ef9f4f",
+      "row": 180
+    },
+    {
+      "address": "0x7cfb9dbc5f5777a0c7a936825010c53454fdc61d",
+      "row": 181
+    },
+    {
+      "address": "0xd65f866f0155d3188512e3e5e7e1b781c55136f6",
+      "row": 182
+    },
+    {
+      "address": "0x79e46f6f2ca18d2e2fb3efc365324d0deda88257",
+      "row": 183
+    },
+    {
+      "address": "0x3a56a77404df88e599d9b735c8ec2714b55ee6ff",
+      "row": 184
+    },
+    {
+      "address": "0x2c684d0793fea232a8bf695524710ac3049aa7fe",
+      "row": 185,
+      "type": "合约（地址库）"
+    },
+    {
+      "address": "0x3b33c4e998c5989758e60253509fd5f4484b792a",
+      "row": 186
+    },
+    {
+      "address": "0x0b62a216a4b43d7d51462af6b9bd2e776c2dd399",
+      "row": 187
+    },
+    {
+      "address": "0x02d8fb9031b3b55e4ad902a4c95f1d2c057a5450",
+      "row": 188,
+      "type": "合约（地址库）"
+    },
+    {
+      "address": "0xbc2a2464e70876704fabe88467811284f9650d18",
+      "row": 189
+    },
+    {
+      "address": "0x218d8917178bb1e3b1ce6d5d6d3c5fd89c58fd09",
+      "row": 190
+    },
+    {
+      "address": "0x54ab3b6d6902af974b69fa638258866cbd1d6238",
+      "row": 191
+    },
+    {
+      "address": "0xe21454469d3c6e54e6511eba3a8d8456cd470ddf",
+      "row": 192,
+      "type": "合约（地址库）"
+    },
+    {
+      "address": "0xcc4e5f70ac1e8a9fc19a71246fd51f238a3ec0c7",
+      "row": 193
+    },
+    {
+      "address": "0x1cb6b214735019e9f223567103334665a5dc657e",
+      "row": 194
+    },
+    {
+      "address": "0x4481201a3f9e53886008e80d48f8dfb620822229",
+      "row": 195
+    },
+    {
+      "address": "0x9b8993eedcc0429f3b81bf4a5ac5ae8c72c4ef6f",
+      "row": 196
+    },
+    {
+      "address": "0x186b3d67a0c42a648b881d6a241117540468b11f",
+      "row": 197
+    },
+    {
+      "address": "0xbf4dc3116ba2490ba860849b2cd3399932e843bc",
+      "row": 198,
+      "type": "DEX / 资金池（地址库）"
+    },
+    {
+      "address": "0xd9898bbea961b5fb6f24bd2c8127d28df8236a92",
+      "row": 199
+    },
+    {
+      "address": "0x21210a015524280488a776f6ffc29b320425ecf1",
+      "row": 200,
+      "type": "合约（地址库）"
+    },
+    {
+      "address": "0xfbb2daf4ebfc4ce82263ab0301edb3f7d18bfcf7",
+      "row": 201
+    },
+    {
+      "address": "0x28e2ea090877bf75740558f6bfb36a5ffee9e9df",
+      "row": 202,
+      "type": "DEX / 资金池（地址库）"
+    },
+    {
+      "address": "0x943850a13c3e6d6cbd95bab42bf1407e74388f9c",
+      "row": 203,
+      "type": "合约（地址库）"
+    },
+    {
+      "address": "0xfe363106120d800ee8c7e4c1d068cd8204b4d3be",
+      "row": 204
+    },
+    {
+      "address": "0x07e923e317d10cb4cee6e32af6e574b317246728",
+      "row": 205
+    },
+    {
+      "address": "0x1c71a351d0335f038834011ce96269ef0cb641af",
+      "row": 206
+    },
+    {
+      "address": "0x6b02953e37b2d283b903260a12930da7562a1ad5",
+      "row": 207
+    },
+    {
+      "address": "0x1fb5ef013951bdbaf7517e9950d15d34abf5df77",
+      "row": 208,
+      "type": "合约（地址库）"
+    },
+    {
+      "address": "0x8bfc8754c88c5c8684eb35c953e3af7b6396c2aa",
+      "row": 209
+    },
+    {
+      "address": "0x127b1d9b04ee42b2a60306b770834698aa4eddcb",
+      "row": 210,
+      "type": "合约（地址库）"
+    },
+    {
+      "address": "0xf86f5536e02f9e9a4e0d0a7021d47a1fe04a13ff",
+      "row": 211
+    },
+    {
+      "address": "0xf1ffdaa6e478363c2122f3edede8b79e068cebda",
+      "row": 212
+    },
+    {
+      "address": "0x4a035b8579aed34a1244d42e83634792f78bc59f",
+      "row": 213
+    },
+    {
+      "address": "0xd113e0ce17586eb0946b4038c3de867b960d5735",
+      "row": 214,
+      "type": "合约（地址库）"
+    },
+    {
+      "address": "0xf1821ad8207647674daa7823fa10139738bdf4bf",
+      "row": 215
+    },
+    {
+      "address": "0x9a39f4dc7b4abff4a722d86fdbea1dcb9691761b",
+      "row": 216
+    },
+    {
+      "address": "0xafe0b2ecfef6c1199bf8c918710cd1e407174e52",
+      "row": 217
+    },
+    {
+      "address": "0x1f8164d077c402417af8c13678017c5d763b8710",
+      "row": 218,
+      "type": "合约（地址库）"
+    },
+    {
+      "address": "0xa23ef2319ba4c933ebfdba80c332664a6cb13f1a",
+      "row": 219,
+      "type": "交易所标签（地址库）"
+    },
+    {
+      "address": "0x4ff1d40fb7b56665bf95d8d8e3a5320de46709a1",
+      "row": 220,
+      "type": "合约（地址库）"
+    },
+    {
+      "address": "0xf660e7144b0d75da9b594fd4555ecc9c2cd143de",
+      "row": 221,
+      "type": "合约（地址库）"
+    },
+    {
+      "address": "0xc3e7d6a7de58c22db4deea979c1243473a2a1cc2",
+      "row": 222
+    },
+    {
+      "address": "0x87aa6728f76e38402a6bef77fc9a872a747d9a5e",
+      "row": 223,
+      "type": "合约（地址库）"
+    },
+    {
+      "address": "0xf9bbbdd2cdd687ba7aaf0cdeac65ea7bc17b75d8",
+      "row": 224
+    }
+  ]
+}

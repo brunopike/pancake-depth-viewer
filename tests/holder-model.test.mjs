@@ -36,7 +36,8 @@ test('confirmed contract labels apply to old snapshots, search, filters and char
  assert.equal(selectHolders({rows},{search:'跨池'}).rows[0].address,addresses[1]);
  assert.equal(category(rows[0],{}),'own');
  assert.equal(groupHolders(rows,{}).find(g=>g.id==='frequency').balance,'200');
- for(const r of rows){const tags=rowTags(r,{});assert.equal(tags.length,1);assert.match(tags[0].evidence,/用户确认/);assert.equal(rowTags({...r,tags},{}).length,1);}
+ for(const r of rows){const tags=rowTags(r,{});assert.equal(tags.filter(t=>t.id.startsWith('known-')).length,1);assert.match(tags[0].evidence,/用户确认/);assert.deepEqual(rowTags({...r,tags},{}),tags);}
+ assert.deepEqual(rowTags(rows[0],{}).map(t=>t.kind),['own','contract']);
 });
 
 test('named custom label filters deduplicate options and combine with automatic tags', async()=>{

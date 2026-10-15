@@ -3,9 +3,9 @@ import { encodeFunctionData, decodeFunctionResult, parseAbi } from 'viem';
 import { TOKEN, SOURCE, beijingDate } from './metrics.mjs';
 import { OWN_EXECUTOR } from './addresses.mjs';
 import { TRANSFER } from './attribution.mjs';
-import { CONFIRMED_HOLDER_LABELS } from '../../src/holder-labels.mjs';
+import { CONFIRMED_HOLDER_LABELS, HOLDER_IMPORT, applyHolderLabels } from '../../src/holder-labels.mjs';
 const seedFile = JSON.parse(await readFile(new URL('./holder-seed.json', import.meta.url)));
-export const SEED = {...seedFile, labels:{...seedFile.labels,...CONFIRMED_HOLDER_LABELS}};
+export const SEED = {...seedFile, addresses:[...new Set([...seedFile.addresses,...HOLDER_IMPORT.records.map(r=>r.address)])], supplement:{source:HOLDER_IMPORT.source,capturedAt:HOLDER_IMPORT.capturedAt,block:HOLDER_IMPORT.block,count:HOLDER_IMPORT.count}, labels:{...seedFile.labels,...CONFIRMED_HOLDER_LABELS}};
 export const HOLDER_CACHE = 'https://raw.githubusercontent.com/starkweng/pancake-depth-viewer/holder-cache/holders.json';
 const ZERO = '0x0000000000000000000000000000000000000000';
 const valid = a => /^0x[0-9a-f]{40}$/.test(a || '') && a !== ZERO;
@@ -81,18 +81,18 @@ export function buildHolderReport({state,addresses,balances,priorBalances,contra
     }
     if(behavior.callers.has(address))tags.push(label('interacted','交互过我方合约','interaction','已核对向我方合约发起的成功调用'));
     const peak=r?Math.max(0,...[...r.days.values()].map(s=>s.size)):0;
-    const own=tags.some(t=>['own','lp'].includes(t.kind));
+    const own=tags.some(t=>['own','lp','mixed'].includes(t.kind));
     if(peak>=100&&!own&&!tags.some(t=>['frequency','arbitrage'].includes(t.kind)))tags.push(label('frequency','高频机器人（疑似）','frequency',`单个北京时间自然日交易至少 ${peak} 笔；频率不能证明机器人身份`));
     const roundTrips=r?[...r.roundTrips.values()].filter(s=>s.size===2).length:0;
-    if(roundTrips>=3&&!own&&!known)tags.push(label('arbitrage','套利机器人（疑似）','arbitrage',`${roundTrips} 笔交易中同时出现 ESIM 买入和卖出；未核实盈利或控制人`));
+    if(roundTrips>=3&&!own&&!['frequency','arbitrage'].includes(known?.kind))tags.push(label('arbitrage','套利机器人（疑似）','arbitrage',`${roundTrips} 笔交易中同时出现 ESIM 买入和卖出；未核实盈利或控制人`));
     if(contracts[address]===true&&!tags.some(t=>['dex','contract'].includes(t.kind)))tags.push(label('contract','合约地址','contract','固定区块 eth_getCode 返回非空代码'));
-    return {address,balance:balance.toString(),priorBalance:prior,change24h:prior===null?null:(balance-BigInt(prior)).toString(),tags,
+    return {address,balance:balance.toString(),priorBalance:prior,change24h:prior===null?null:(balance-BigInt(prior)).toString(),tags:applyHolderLabels(address,tags),
       history:packed(r?.history||blankStats()),day:packed(r?.day||blankStats()),peakDailyTrades:peak};
   }).sort((a,b)=>BigInt(a.balance)===BigInt(b.balance)?a.address.localeCompare(b.address):BigInt(a.balance)>BigInt(b.balance)?-1:1);
   const sum=rows.reduce((n,r)=>n+BigInt(r.balance),0n);assert(sum<=BigInt(totalSupply),'HOLDER_SUPPLY_MISMATCH');
   return {version:1,token:TOKEN,decimals:18,cutoff,block:num(block.number),blockHash:block.hash,priorCutoff:priorBlock?num(priorBlock.timestamp):null,priorBlock:priorBlock?num(priorBlock.number):null,
     totalSupply,price,priceSource:'Pancake Infinity ESIM/USDT 池现价',pricePool:PRICE_POOL,tradeCutoff,tradeWindowStart:tradeCutoff-86400,historyStart:state.origin,
-    coverage:{seedTop:seed.seedLimit,seedAt:seed.capturedAt,source:seed.source,reportedHolders:seed.reportedHolders,tracked:rows.length,holding:rows.filter(r=>BigInt(r.balance)>0n).length,balance:sum.toString(),exhaustive:false,discovery},contracts,rows};
+    coverage:{seedTop:seed.seedLimit,seedAt:seed.capturedAt,source:seed.source,reportedHolders:seed.reportedHolders,supplement:seed.supplement,tracked:rows.length,holding:rows.filter(r=>BigInt(r.balance)>0n).length,balance:sum.toString(),exhaustive:false,discovery},contracts,rows};
 }
 export async function collectHolders(state, transport, {previous,progress=()=>{}}={}) {
   const {rpc,batch}=transport;

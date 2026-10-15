@@ -1,10 +1,11 @@
 import {CONFIRMED_HOLDER_LABELS} from '../../src/holder-labels.mjs';
 const OWN_EXECUTOR='0x21a0541e4122090c30fbc04e98cf27430608e007';
 const valid=a=>typeof a==='string'&&/^0x[0-9a-f]{40}$/i.test(a)?a.toLowerCase():null;
-const categories={own:'我方相关合约',binance:'币安路由',pancake:'Pancake 路由',okx:'OKX 路由',robot:'链上机器人（用户确认）',frequency:'高频交易地址',other:'其他合约 / 路径待核对'};
+const categories={own:'我方相关地址 / 合约',binance:'币安路由',pancake:'Pancake 路由',okx:'OKX 路由',robot:'链上机器人（用户确认）',frequency:'高频交易地址',other:'其他合约 / 路径待核对'};
 export const EXECUTION_LABELS={
  [OWN_EXECUTOR]:{category:'own',label:'我方做市执行合约',source:'用户指定执行合约'},
- ...Object.fromEntries(Object.entries(CONFIRMED_HOLDER_LABELS).map(([a,r])=>[a,{category:r.kind==='own'?'own':'robot',label:r.label,source:r.source}])),
+ ...Object.fromEntries(Object.entries(CONFIRMED_HOLDER_LABELS).filter(([,r])=>['own','lp','frequency','arbitrage'].includes(r.kind)).map(([a,r])=>[a,{category:['own','lp'].includes(r.kind)?'own':'robot',label:r.label,source:r.source}])),
+ '0x73d8bd54f7cf5fab43fe4ef40a62d390644946db':{category:'binance',label:CONFIRMED_HOLDER_LABELS['0x73d8bd54f7cf5fab43fe4ef40a62d390644946db'].label,source:CONFIRMED_HOLDER_LABELS['0x73d8bd54f7cf5fab43fe4ef40a62d390644946db'].source},
  '0x6aba0315493b7e6989041c91181337b662fb1b90':{category:'binance',label:'币安 Alpha 2.0 路由',source:'BscScan 地址标签',sourceURL:'https://bscscan.com/address/0x6aba0315493b7e6989041c91181337b662fb1b90'},
  '0xb300000b72deaeb607a12d5f54773d1c19c7028d':{category:'binance',label:'币安 DEX 路由',source:'BscScan 地址标签',sourceURL:'https://bscscan.com/address/0xb300000b72deaeb607a12d5f54773d1c19c7028d'},
  '0xd9c500dff816a1da21a48a732d3498bf09dc9aeb':{category:'pancake',label:'Pancake Infinity 通用路由',source:'Pancake 官方部署表',sourceURL:'https://developer.pancakeswap.finance/contracts/universal-router/addresses'},
@@ -26,7 +27,7 @@ export function executionBreakdown(rows){
   for(const candidate of [t.executor,t.address]){const a=valid(candidate);if(a&&EXECUTION_LABELS[a]){address=a;profile=EXECUTION_LABELS[a];break;}}
   const initiator=valid(t.initiator);
   if(!profile&&initiator&&['own','robot'].includes(EXECUTION_LABELS[initiator]?.category)){address=initiator;profile=EXECUTION_LABELS[initiator];}
-  if(!profile&&initiator&&frequent.has(initiator)&&!ownInitiators.has(initiator)&&!EXECUTION_LABELS[initiator]){address=initiator;profile={category:'frequency',label:'高频交易发起地址',source:'本时段内单个北京时间自然日至少100笔交易；身份待核对'};}
+  if(!profile&&initiator&&frequent.has(initiator)&&!ownInitiators.has(initiator)&&!EXECUTION_LABELS[initiator]&&CONFIRMED_HOLDER_LABELS[initiator]?.kind!=='mixed'){address=initiator;profile={category:'frequency',label:'高频交易发起地址',source:'本时段内单个北京时间自然日至少100笔交易；身份待核对'};}
   if(!profile){address=valid(t.executor)||valid(t.address)||initiator;profile={category:'other',label:'身份待核对',source:'交易回执与已识别资金路径'};}
   const key=profile.category;if(!bins.has(key))bins.set(key,{id:key,label:categories[key],sold:0n,bought:0n,sells:new Set(),buys:new Set(),refs:new Map(),missing:false});
   const b=bins.get(key),value=BigInt(t.amount_wei);b[t.side==='sell'?'sold':'bought']+=value;b[t.side==='sell'?'sells':'buys'].add(t.tx);

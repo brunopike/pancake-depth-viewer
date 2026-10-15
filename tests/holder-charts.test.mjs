@@ -22,5 +22,5 @@ test('top ten sort exact balances and cumulative share includes the rest in the 
   assert.equal(holderCharts([rows[0]]).top[0].cumulativeShare, 100);
 });
 test('empty and zero-only filters produce no chart segments or invalid ratios', () => {
-  for (const rows of [[], [row(1, 0)]]) assert.deepEqual(holderCharts(rows), {total:'0', count:0, groups:[], top:[]});
+  for (const rows of [[], [row(1, 0)]]) assert.deepEqual(holderCharts(rows), {total:'0', count:0, groups:[], countGroups:[], top:[]});
 });
