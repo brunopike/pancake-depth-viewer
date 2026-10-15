@@ -6,6 +6,7 @@
 .holder-page [data-tone=excluded]{--tone:#baa3dd;--row-bg:#201c2e;--row-hover:#2b263c}
 .holder-page [data-tone=external]{--tone:#91a4b8;--row-bg:#111923;--row-hover:#1b2634}
 .holder-page .holder-summary{margin:20px 0 0}
+.holder-page .holder-main .holder-summary{grid-template-columns:repeat(2,minmax(0,1fr))}
 .holder-page .holder-summary>div{position:relative;padding:20px 22px 18px;background:var(--row-bg);border-top:3px solid var(--tone)}
 .holder-page .holder-summary>div:last-child{border-top:3px solid var(--tone)}
 .holder-page .holder-summary>div>span{font-size:14px;font-weight:600;color:var(--tone)}
@@ -15,6 +16,15 @@
 .holder-page .holder-summary p{font-size:12px;line-height:1.7;color:#9dacba;margin:9px 0 0}
 .ledger-meta{display:flex;flex-wrap:wrap;column-gap:20px;row-gap:7px;color:#91a2b3;font-size:12px;line-height:1.7;margin:12px 2px 24px}
 .ledger-meta>span:first-child{color:#c2ced9;font-weight:600}
+.ledger-exclusions{margin:-9px 2px 22px;color:var(--muted);font-size:12px;line-height:1.8}
+.ledger-exclusions>summary{cursor:pointer;width:fit-content;color:#a7b5c3;padding:5px 0}
+.ledger-exclusions>summary span{margin-left:8px;color:#8093a5}
+.ledger-exclusions[open]{padding-bottom:12px;border-bottom:1px solid var(--line)}
+.exclusion-values{display:flex;flex-wrap:wrap;gap:12px 32px;margin:12px 0 8px}
+.exclusion-values>div{display:grid;grid-template-columns:auto auto;column-gap:14px;align-items:baseline}
+.exclusion-values strong{font:500 13px var(--mono);color:#b5c2cf}.exclusion-values em{font:11px var(--sans);font-style:normal;color:var(--muted)}
+.exclusion-values small{grid-column:2;font:11px var(--mono);color:var(--muted);margin-top:5px}
+.ledger-exclusions>p{font-size:12px;margin:8px 0 0;line-height:1.8}
 .holder-scope-bar{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;padding:18px 20px;border-bottom:1px solid var(--line)}
 .holder-scopes{display:flex;gap:6px;flex-wrap:wrap}
 .holder-page .holder-scopes button{background:#172433;border-color:#33485b;color:#afbfce;padding:9px 15px;min-height:40px}

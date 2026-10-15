@@ -58,9 +58,10 @@ function render(){
  $('cutoff').textContent=`余额截至 ${date(report.cutoff)} · 北京时间 · 区块 ${number(report.block,0)}`;
  const ledger=holderLedger(report,manual),totalSupply=Number(BigInt(report.totalSupply));
  const metrics=[{label:'我方份额',balance:ledger.own,tone:'own',note:'含混合钱包内已确认的我方部分'},
-  {label:'外部统计',balance:ledger.external,tone:'external',note:'已扣我方、活动预留与共享 Vault'},
-  ...ledger.exclusions.map(r=>({label:r.label,balance:r.balance,tone:'excluded',note:r.label==='共享 Vault'?'单列排除 · 不认定全部为我方':'单列排除 · 不计外部统计'}))];
+  {label:'外部统计',balance:ledger.external,tone:'external',note:'已扣我方、活动预留与共享 Vault'}];
  $('summary').innerHTML=metrics.map(m=>`<div data-tone="${m.tone}"><span>${escape(m.label)}</span><strong title="${quantity(m.balance)} ESIM">${compact(m.balance)} <em>ESIM</em></strong><small>${number(Number(BigInt(m.balance))/totalSupply*100)}% 总供应量</small><p>${m.note}</p></div>`).join('');
+ $('exclusion-count').textContent=`${ledger.exclusions.length} 项`;
+ $('exclusion-values').innerHTML=ledger.exclusions.map(r=>`<div><span>${escape(r.label)}</span><strong>${quantity(r.balance)} <em>ESIM</em></strong><small>${number(Number(BigInt(r.balance))/totalSupply*100)}% 总供应量</small></div>`).join('');
  $('ledger-meta').innerHTML=`<span>总账 · 全部已索引地址</span><span>有持仓 ${number(report.coverage.holding,0)} 个</span><span>覆盖供应量 ${number(Number(BigInt(ledger.indexed))/totalSupply*100)}%</span><span>未索引 ${quantity(ledger.unindexed)} ESIM</span><span>参考价格 ${number(report.price,6)} U</span><span>24h 对比 ${report.priorCutoff?date(report.priorCutoff):'暂缺'}</span>`;
  const selectedBalance=selected.all.reduce((sum,r)=>sum+BigInt(r.balance),0n).toString();
  $('selection-summary').textContent=`${HOLDER_SCOPES[scope]} · ${number(selected.total,0)} 个地址 · ${quantity(selectedBalance)} ESIM · ${number(Number(BigInt(selectedBalance))/totalSupply*100)}% 总供应量`;
