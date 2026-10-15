@@ -1,6 +1,7 @@
 import { readFile, writeFile, mkdir, rename } from 'node:fs/promises';
 import { gunzipSync, gzipSync } from 'node:zlib';
 import { TOKEN, SOURCE } from './metrics.mjs';
+import {validSourceInflow,newerSourceInflow} from './source-inflows.mjs';
 export const CHECKPOINT_URL = 'https://raw.githubusercontent.com/starkweng/pancake-depth-viewer/esim-cache/state.json.gz';
 export const CLAIM_FLOW_URL = 'https://raw.githubusercontent.com/starkweng/pancake-depth-viewer/esim-cache/claim-flow.json';
 export function validClaimFlow(state,flow){
@@ -8,6 +9,7 @@ export function validClaimFlow(state,flow){
     const address=a=>/^0x[0-9a-f]{40}$/.test(a||''),hash=h=>/^0x[0-9a-f]{64}$/.test(h||''),uint=n=>typeof n==='string'&&/^\d+$/.test(n);
     if(!(flow?.version===1&&flow.method==='proportional-v1'&&flow.token===TOKEN&&flow.source===SOURCE&&hash(flow.blockHash)&&Number.isSafeInteger(flow.throughBlock)&&flow.throughBlock<=state.block&&Number.isFinite(flow.cutoff)&&flow.cutoff<=state.cutoff&&Array.isArray(flow.sales)&&Array.isArray(flow.unconfirmedFlows)))return false;
     if(flow.throughBlock===state.block&&flow.blockHash!==state.blockHash)return false;
+    if(flow.sourceInflow&&!validSourceInflow(flow.sourceInflow,flow))return false;
     if(!flow.sales.every(r=>address(r.address)&&hash(r.tx)&&Number.isFinite(r.timestamp)&&r.timestamp<flow.cutoff&&Number.isSafeInteger(r.block)&&r.block<=flow.throughBlock&&['amount_wei','direct_wei','relay_wei'].every(k=>uint(r[k]))&&BigInt(r.direct_wei)+BigInt(r.relay_wei)<=BigInt(r.amount_wei)&&Array.isArray(r.examples)))return false;
     if(!flow.unconfirmedFlows.every(r=>hash(r.tx)&&(r.address===null||address(r.address))&&(r.timestamp===null||Number.isFinite(r.timestamp)&&r.timestamp<flow.cutoff)&&uint(r.amount_wei)))return false;
     const t=flow.totals;if(!t||!Object.values(t).every(uint))return false;
@@ -16,7 +18,11 @@ export function validClaimFlow(state,flow){
   }catch{return false;}
 }
 export function attachClaimFlow(state,flow){
-  if(validClaimFlow(state,flow)&&(!state.claimFlow||state.claimFlow.throughBlock<=flow.throughBlock))return {...state,claimFlow:flow};
+  const prior=state.claimFlow;
+  if(validClaimFlow(state,flow)&&(!prior||prior.throughBlock<flow.throughBlock||prior.throughBlock===flow.throughBlock&&(prior.modelRevision??1)<=(flow.modelRevision??1))){
+    const sourceInflow=newerSourceInflow(prior?.sourceInflow,flow.sourceInflow,flow);
+    return {...state,claimFlow:sourceInflow&&sourceInflow!==flow.sourceInflow?{...flow,sourceInflow}:flow};
+  }
   return state;
 }
 export function parseState(bytes) {

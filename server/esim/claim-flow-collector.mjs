@@ -2,10 +2,11 @@ import {TOKEN,SOURCE} from './metrics.mjs';
 import {TRANSFER,PCS,UNI,VAULT,addr,order,eventKey,signature} from './attribution.mjs';
 import {readHolderBalances} from './holders.mjs';
 import {traceClaimFlow} from './claim-flow.mjs';
+import {SOURCE_INFLOW_SEED,buildSourceInflow} from './source-inflows.mjs';
 const ZERO='0x0000000000000000000000000000000000000000',hex=n=>'0x'+n.toString(16);
 const ensure=(ok,code)=>{if(!ok)throw Error(code);};
 const lpEvents=new Set(['Mint(address,address,int24,int24,uint128,uint256,uint256)','Burn(address,int24,int24,uint128,uint256,uint256)','Collect(address,address,int24,int24,uint128,uint128)','Mint(address,uint256,uint256)','Burn(address,uint256,uint256,address)','ModifyLiquidity(bytes32,address,int24,int24,int256,bytes32)'].map(signature));
-export async function collectClaimFlow(state,transport,{previous,progress=()=>{},readBalances=readHolderBalances}={}){
+export async function collectClaimFlow(state,transport,{previous,progress=()=>{},readBalances=readHolderBalances,sourceInflowSeed=SOURCE_INFLOW_SEED}={}){
  ensure(state.token===TOKEN&&state.source===SOURCE&&state.distributions.length,'FLOW_INVALID_SOURCE');
  const startBlock=state.distributions.reduce((n,r)=>Math.min(n,r.block),Infinity),openingBlock=startBlock-1;
  const markets=new Set([PCS,UNI,VAULT,...Object.keys(state.pools).filter(a=>a.length===42)]);
@@ -13,9 +14,12 @@ export async function collectClaimFlow(state,transport,{previous,progress=()=>{}
  if(previous)ensure(previous.version===1&&previous.token===TOKEN&&previous.source===SOURCE&&previous.startBlock===startBlock&&previous.throughBlock<=state.block,'FLOW_INVALID_CHECKPOINT');
  const checks=[['eth_chainId',[]],['eth_getBlockByNumber',[hex(openingBlock),false]],['eth_getBlockByNumber',[hex(state.block),false]]];
  if(previous)checks.push(['eth_getBlockByNumber',[hex(previous.throughBlock),false]]);
- const [chain,opening,end,prior]=await transport.batch(checks,{fresh:true});
+ const includeSource=state.block>=sourceInflowSeed.throughBlock;
+ if(includeSource)checks.push(['eth_getBlockByNumber',[hex(sourceInflowSeed.throughBlock),false]]);
+ const headers=await transport.batch(checks,{fresh:true}),[chain,opening,end,prior]=headers;
  ensure(chain==='0x38'&&end?.hash===state.blockHash&&opening?.hash,'FLOW_CHAIN_CHANGED');
  if(previous)ensure(previous.openingBlockHash===opening.hash&&previous.blockHash===prior?.hash,'FLOW_CHECKPOINT_CHANGED');
+ if(includeSource)ensure(headers.at(-1)?.hash===sourceInflowSeed.blockHash,'SOURCE_INFLOW_CHECKPOINT_CHANGED');
  const fromBlock=previous?previous.throughBlock+1:startBlock;
  ensure(state.block-fromBlock<=3000000,'FLOW_BACKFILL_LIMIT');
  const queries=[];for(let b=fromBlock;b<=state.block;b+=3000)queries.push(['eth_getLogs',[{address:TOKEN,topics:[TRANSFER],fromBlock:hex(b),toBlock:hex(Math.min(b+2999,state.block))}]]);
@@ -55,8 +59,15 @@ export async function collectClaimFlow(state,transport,{previous,progress=()=>{}
  progress({phase:'claim-closing-reconciliation',addresses:addresses.length,block:state.block});
  const closing=await readBalances(addresses,hex(state.block),transport);
  ensure(addresses.every((a,i)=>closing[i]===(traced.closingBalances[a]??openingBalances[a])),'FLOW_CLOSING_MISMATCH');
+ let sourceInflow=null;
+ if(includeSource){
+  const [balance]=await readBalances([SOURCE],hex(state.block),transport);
+  sourceInflow=buildSourceInflow({transfers,startBlock,throughBlock:state.block,blockHash:state.blockHash,cutoff:state.cutoff,balance,checkpoint:sourceInflowSeed});
+ }
  const after=await transport.rpc('eth_getBlockByNumber',[hex(state.block),false],{fresh:true});ensure(after?.hash===end.hash,'FLOW_END_CHANGED');
  const {closingBalances,...report}=traced;
- Object.assign(report,{token:TOKEN,source:SOURCE,startBlock,openingBlock,openingBlockHash:opening.hash,throughBlock:state.block,blockHash:state.blockHash,cutoff:state.cutoff,transferCount:transfers.length,addressCount:addresses.length,receiptCount:Object.keys(proof).length,coverage:'single-token-rpc-logs; sale-receipts-and-wallet-balances-reconciled; unknown-net-zero-transfers-depend-on-rpc-completeness'});
+ // Revision 3 adds the reconciled all-history source inflow counter; the
+ // proportional sale-attribution algorithm is unchanged.
+ Object.assign(report,{modelRevision:3,token:TOKEN,source:SOURCE,startBlock,openingBlock,openingBlockHash:opening.hash,throughBlock:state.block,blockHash:state.blockHash,cutoff:state.cutoff,sourceInflow,transferCount:transfers.length,addressCount:addresses.length,receiptCount:Object.keys(proof).length,coverage:'single-token-rpc-logs; sale-receipts-and-wallet-balances-reconciled; unknown-net-zero-transfers-depend-on-rpc-completeness'});
  return {version:1,token:TOKEN,source:SOURCE,startBlock,openingBlock,openingBlockHash:opening.hash,throughBlock:state.block,blockHash:state.blockHash,cutoff:state.cutoff,openingBalances,transfers,receiptProof:proof,blockTimes,report};
 }

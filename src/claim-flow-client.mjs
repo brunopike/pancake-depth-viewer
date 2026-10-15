@@ -1,4 +1,5 @@
 import {claimFlowWindow} from '../server/esim/claim-flow.mjs';
+import {newerSourceInflow} from '../server/esim/source-inflows.mjs';
 
 export const CLAIM_FLOW_URL='https://raw.githubusercontent.com/starkweng/pancake-depth-viewer/esim-cache/claim-flow.json';
 const TOKEN='0x7765a659c5b0cfbfd9fbc2ef2298b75a598f2d2d',SOURCE='0x67b97c3845438f264965ca154ba13051c6c73416';
@@ -67,7 +68,8 @@ export function enrichClaimFlowSnapshot(kind,snapshot,flow){
   }
   return [key,next];
  }));
- return changed?{...snapshot,windows}:snapshot;
+ const sourceInflow=kind==='report'?newerSourceInflow(snapshot.sourceInflow,flow.sourceInflow,snapshot):null;
+ return changed||sourceInflow&&sourceInflow!==snapshot.sourceInflow?{...snapshot,windows,...(kind==='report'?{sourceInflow}: {})}:snapshot;
 }
 
 export async function readClaimFlowSnapshot(kind,snapshot,{fetch:request=globalThis.fetch}={}){

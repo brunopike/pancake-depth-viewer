@@ -1,4 +1,9 @@
 import {readClaimFlowSnapshot} from './claim-flow-client.mjs';
+import {newerSourceInflow} from '../server/esim/source-inflows.mjs';
+function retainSourceInflow(next,prior){
+  const value=newerSourceInflow(prior?.sourceInflow,next.sourceInflow,next);
+  return value===next.sourceInflow||value===null&&!Object.hasOwn(next,'sourceInflow')?next:{...next,sourceInflow:value};
+}
 
 export const SNAPSHOTS={
   report:['./data/current-esim-report.json','https://raw.githubusercontent.com/starkweng/pancake-depth-viewer/esim-cache/report.json','./data/esim-report.json'],
@@ -24,12 +29,13 @@ export async function readSnapshot(kind,{current,fetch:request=globalThis.fetch}
   if(!selected)try{selected=await read(2);}catch{}
   const result=selected&&(!current||selected.data.block>=current.block)?selected:current?{data:current,source:'retained'}:null;
   if(!result)throw Error('数据暂时无法读取，请点击刷新重试。');
-  return {...result,data:await readClaimFlowSnapshot(kind,result.data,{fetch:request})};
+  const data=kind==='report'?retainSourceInflow(result.data,current):result.data;
+  return {...result,data:await readClaimFlowSnapshot(kind,data,{fetch:request})};
 }
 
 export async function readTradingReport({current,live=false,queryLive,fetch}={}){
   const saved=await readSnapshot('report',{current,fetch});
   if(!live||!queryLive)return saved;
-  try{const data=await queryLive();if(!data?.windows||!Number.isFinite(data.block))throw Error('INVALID_REPORT');const selected=newerSnapshot(saved.data,data);return {data:selected,source:selected===data?'live':'retained'};}
+  try{const data=await queryLive();if(!data?.windows||!Number.isFinite(data.block))throw Error('INVALID_REPORT');const selected=newerSnapshot(saved.data,data);return {data:retainSourceInflow(selected,saved.data),source:selected===data?'live':'retained'};}
   catch{return {...saved,source:'retained'};}
 }

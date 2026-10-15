@@ -1,0 +1,15 @@
+{
+  "version": 1,
+  "chainId": 56,
+  "token": "0x7765a659c5b0cfbfd9fbc2ef2298b75a598f2d2d",
+  "source": "0x67b97c3845438f264965ca154ba13051c6c73416",
+  "decimals": 18,
+  "scope": "all-history-gross",
+  "throughBlock": 127754110,
+  "blockHash": "0x66cd8f3d63e909d4b08f97130163068f82523a4a1d5fb1e5f6f035a231f3a3b6",
+  "cutoff": 1792052672,
+  "total_wei": "30107845345513670974954265",
+  "transfer_events": 1575,
+  "balance_wei": "1771865534556842255701393",
+  "verification": "Prior fixed-block audit: first two inbound transfers before the first distribution, complete ESIM Transfer ledger, pinned tail scan and balance reconciliation. Includes returns and repeated transfers."
+}

@@ -1,5 +1,6 @@
 import {executionBreakdown} from './execution-categories.mjs';
 import {claimFlowWindow} from './claim-flow.mjs';
+import {newerSourceInflow} from './source-inflows.mjs';
 export const TOKEN = '0x7765a659c5b0cfbfd9fbc2ef2298b75a598f2d2d';
 export const SOURCE = '0x67b97c3845438f264965ca154ba13051c6c73416';
 export const ORIGIN = Date.parse('2026-10-03T09:59:50+08:00') / 1000;
@@ -88,6 +89,6 @@ export function buildReport(state, now = Date.now() / 1000) {
   }));
   return { version: 1, token: TOKEN, source: SOURCE, origin: state.origin, cutoff: state.cutoff,
     generatedAt: now, block: state.block, blockHash: state.blockHash,
-    coverage: state.coverage, balance_wei: state.balance ?? null, windows, hourly,
+    coverage: state.coverage, balance_wei: state.balance ?? null, sourceInflow:newerSourceInflow(null,state.claimFlow?.sourceInflow,state), windows, hourly,
     history: history.reverse(), top, warnings: state.warnings || [] };
 }
