@@ -1,7 +1,7 @@
 import {readSnapshot} from './snapshot-client.mjs';
 import {showSnapshotStatus,refreshButtonLabel} from './snapshot-status.mjs';
-import {holderCharts} from './holder-charts.mjs';
-import {TAG_KEY,TAG_KINDS,validateManual,readManual,rowTags,selectHolders,changePercent,ownershipAmounts} from './holder-model.mjs';
+import {holderLedger,holderAppearance,HOLDER_TONES,HOLDER_SCOPES,selectHolderView,holderOverviewCharts} from './holder-overview.mjs';
+import {TAG_KEY,TAG_KINDS,validateManual,readManual,rowTags,changePercent,ownershipAmounts} from './holder-model.mjs';
 import {HOLDER_SORT_KEYS} from './holder-ranking.mjs';
 import {createTagFilter} from './tag-filter-control.mjs';
 import {HOLDER_IMPORT} from './holder-labels.mjs';
@@ -11,6 +11,10 @@ const units=s=>Number(BigInt(s))/1e18,quantity=s=>s==null?'暂缺':number(units(
 const compact=s=>{const n=units(s);return n>=1e8?number(n/1e8)+'亿':n>=1e4?number(n/1e4)+'万':number(n,2);};
 const date=s=>new Date(s*1000).toLocaleString('zh-CN',{timeZone:'Asia/Shanghai',hour12:false,month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'});
 let report,manual={},page=0,pageSize=100,chartMode='groups',busy=false,pending=null,returnFocus=null,cohort=null,excludeOwn=false;
+let scope='all';
+const UI_KEY='esim:holders:view:v1';
+let viewPrefs={};try{viewPrefs=JSON.parse(localStorage.getItem(UI_KEY)||'{}')||{};}catch{}
+const saveView=()=>{try{localStorage.setItem(UI_KEY,JSON.stringify(viewPrefs));}catch{}};
 const mobileExpanded = new Set();
 const cohortNames={'held':'持币 · 未见卖出','sold-held':'卖出后仍持币','sold-zero':'卖出后零持仓','zero':'零持仓 · 未见卖出'};
 try{manual=readManual(localStorage.getItem(TAG_KEY));}catch{}
@@ -29,7 +33,7 @@ function syncSort(){
 }
 function pair(stats,key){return `<span class="buy">买 ${key==='Count'?number(stats.buyCount,0):quantity(stats.buyAmount)}</span><span class="sell">卖 ${key==='Count'?number(stats.sellCount,0):quantity(stats.sellAmount)}</span>`;}
 function drawChart(rows){
- const model=holderCharts(rows,manual),{total,count,groups,countGroups,top}=model;
+ const model=holderOverviewCharts(rows,manual),{total,count,groups,countGroups,top}=model;
  $('chart').setAttribute('aria-label',`已筛选 ${count} 个有持仓地址，共 ${quantity(total)} ESIM`);
  if(!count){$('chart').innerHTML='<p class="empty">当前筛选没有持仓。</p>';return;}
  const panel=(title,note,body)=>`<section class="distribution-panel"><h3>${title}</h3><p class="distribution-note">${note}</p>${body}</section>`;
@@ -47,18 +51,27 @@ function drawChart(rows){
 }
 function render(){
  if(!report)return;
- const selected=selectHolders(report,{search:$('search').value,filter:selectedFilters(),cohort,excludeOwn,includeZero:$('include-zero').checked,page,pageSize,sort:$('sort').value,direction:$('sort-direction').value},manual);page=selected.page;syncSort();
- $('filter-context').hidden=!cohort&&!excludeOwn;$('filter-context').textContent=[cohort?`来自合约报告：${cohortNames[cohort]}`:'',excludeOwn?'仅看非我方持仓；混合地址仅显示外部份额':''].filter(Boolean).join(' · ');
+ const selected=selectHolderView(report,{scope,minimum:(BigInt($('minimum').value)*10n**18n).toString(),search:$('search').value,filter:selectedFilters(),cohort,excludeOwn,includeZero:$('include-zero').checked,page,pageSize,sort:$('sort').value,direction:$('sort-direction').value},manual);page=selected.page;syncSort();
+ for(const button of document.querySelectorAll('[data-scope]'))button.setAttribute('aria-pressed',String(button.dataset.scope===scope));
+ const scopeNote=scope==='external-stat'?'外部统计：扣除我方份额、币安活动预留和共享 Vault；混合钱包仅显示外部份额。':scope==='own'?'我方地址：包含混合归属钱包，行内展示钱包总额及两方份额；顶部我方金额仅计我方份额。':scope==='received'?'领币地址：按领取记录筛选，包含我方；领币不等同于当前余额全部来自分发。':scope==='excluded'?'统计排除：币安活动预留与共享 Vault 单列；排除口径不等同于全部归属我方。':'全部地址：钱包余额完整展示，混合钱包另列份额；平台 / DEX 是用途分类，不自动认定我方。';
+ $('filter-context').textContent=[cohort?`来自合约报告：${cohortNames[cohort]}`:'',excludeOwn?'合约报告带入的非我方范围；混合钱包仅显示外部份额':'',scopeNote].filter(Boolean).join(' · ');
  $('cutoff').textContent=`余额截至 ${date(report.cutoff)} · 北京时间 · 区块 ${number(report.block,0)}`;
- $('summary').innerHTML=`<div><span>已索引持币地址</span><strong>${number(report.coverage.holding,0)}</strong><small>含大户名单及已知活跃地址</small></div><div><span>已覆盖总供应量</span><strong>${number(Number(BigInt(report.coverage.balance))/Number(BigInt(report.totalSupply))*100)}%</strong><small>全部供应量 ${compact(report.totalSupply)} ESIM</small></div><div><span>ESIM 参考价格</span><strong>${number(report.price,6)} U</strong><small>Pancake ESIM / USDT</small></div><div><span>24h 对比时点</span><strong>${report.priorCutoff?date(report.priorCutoff):'暂缺'}</strong><small>连续 24 小时的持仓变化</small></div>`;
+ const ledger=holderLedger(report,manual),totalSupply=Number(BigInt(report.totalSupply));
+ const metrics=[{label:'我方份额',balance:ledger.own,tone:'own',note:'含混合钱包内已确认的我方部分'},
+  {label:'外部统计',balance:ledger.external,tone:'external',note:'已扣我方、活动预留与共享 Vault'},
+  ...ledger.exclusions.map(r=>({label:r.label,balance:r.balance,tone:'excluded',note:r.label==='共享 Vault'?'单列排除 · 不认定全部为我方':'单列排除 · 不计外部统计'}))];
+ $('summary').innerHTML=metrics.map(m=>`<div data-tone="${m.tone}"><span>${escape(m.label)}</span><strong title="${quantity(m.balance)} ESIM">${compact(m.balance)} <em>ESIM</em></strong><small>${number(Number(BigInt(m.balance))/totalSupply*100)}% 总供应量</small><p>${m.note}</p></div>`).join('');
+ $('ledger-meta').innerHTML=`<span>总账 · 全部已索引地址</span><span>有持仓 ${number(report.coverage.holding,0)} 个</span><span>覆盖供应量 ${number(Number(BigInt(ledger.indexed))/totalSupply*100)}%</span><span>未索引 ${quantity(ledger.unindexed)} ESIM</span><span>参考价格 ${number(report.price,6)} U</span><span>24h 对比 ${report.priorCutoff?date(report.priorCutoff):'暂缺'}</span>`;
+ const selectedBalance=selected.all.reduce((sum,r)=>sum+BigInt(r.balance),0n).toString();
+ $('selection-summary').textContent=`${HOLDER_SCOPES[scope]} · ${number(selected.total,0)} 个地址 · ${quantity(selectedBalance)} ESIM · ${number(Number(BigInt(selectedBalance))/totalSupply*100)}% 总供应量`;
  $('trade-cutoff').textContent=`24h 买卖 ${date(report.tradeWindowStart)} — ${date(report.tradeCutoff)}；累计自 ${date(report.historyStart)} 起。按交易发起地址统计成交币量，买绿 / 卖红。`;
  $('rows').innerHTML=selected.rows.map((r,i)=>{
   const pct=changePercent(r.balance,r.priorBalance),change=r.change24h,positive=change!==null&&BigInt(change)>0n;
-  const tags=rowTags(r,manual);
+  const tags=rowTags(r,manual),tone=holderAppearance(r,manual);
   const parts=ownershipAmounts(r,manual);
   const splitNote=r.ownershipScope==='external'?`<small>仅外部份额 · 钱包合计 ${quantity(r.walletBalance)}</small>`:parts.mixed?`<small class="holding-split"><span class="own-share">我方 ${quantity(parts.own)}</span><span class="external-share">外部 ${quantity(parts.external)}</span>${parts.needsReview?'<span class="sell">余额低于已确认外部份额，归属需复核；暂不计入我方。</span>':''}</small>`:'';
   const delta=change===null?'暂缺':`${positive?'+':''}${quantity(change)}`;
-  return `<tr data-mobile-expanded="${mobileExpanded.has(r.address)}"><th scope="row"><span class="rank">${page*pageSize+i+1}</span><a href="https://bscscan.com/address/${r.address}" target="_blank" rel="noopener noreferrer" title="${r.address}">${short(r.address)} ↗</a><small><button class="tag-edit-button" data-tag="${r.address}">${manual[r.address]?'编辑标签':'加标签'}</button></small></th><td>${tags.length?tags.map(t=>`<span class="tag" data-kind="${escape(t.kind)}" title="${escape(t.evidence)}">${t.manual?'✎ ':''}${escape(t.text)}</span>`).join(''):'<span class="tag">待识别</span>'}${tags.length?`<details class="tag-evidence"><summary>依据</summary>${tags.map(t=>`<p><strong>${escape(t.text)}</strong>：${escape(t.evidence)}</p>`).join('')}</details>`:''}</td><td data-mobile-label="持仓 · ESIM">${quantity(r.balance)}${splitNote}</td><td data-mobile-label="参考价值 · USDT">${number(units(r.balance)*report.price)}</td><td data-mobile-label="占总供应量">${number(Number(BigInt(r.balance))/Number(BigInt(report.totalSupply))*100,4)}%</td><td data-mobile-label="24h 持仓变化 · ESIM" class="${change===null||BigInt(change)===0n?'':positive?'buy':'sell'}">${delta}<small>${pct===null?'历史余额暂缺':pct==='new'?'新增持仓':`${Number(pct)>0?'+':''}${number(pct,2)}%`}</small></td><td data-mobile-label="24h 买卖次数">${pair(r.day,'Count')}</td><td data-mobile-label="24h 买卖币量 · ESIM">${pair(r.day,'Amount')}</td><td data-mobile-label="累计买卖次数">${pair(r.history,'Count')}</td><td data-mobile-label="累计买卖币量 · ESIM">${pair(r.history,'Amount')}</td><td class="mobile-holder-details"><button type="button" class="mobile-holder-toggle" data-mobile-toggle="${escape(r.address)}" aria-expanded="${mobileExpanded.has(r.address)}">${mobileExpanded.has(r.address)?'收起买卖数据':'展开买卖数据'}</button><p class="mobile-full-address">${escape(r.address)}</p></td></tr>`;
+  return `<tr data-tone="${tone}" data-mobile-expanded="${mobileExpanded.has(r.address)}"><th scope="row"><span class="rank">${page*pageSize+i+1}</span><a href="https://bscscan.com/address/${r.address}" target="_blank" rel="noopener noreferrer" title="${r.address}">${short(r.address)} ↗</a><small class="address-tools"><span class="ownership-badge" data-tone="${tone}">${HOLDER_TONES[tone].label}</span><button class="tag-edit-button" data-tag="${r.address}">${manual[r.address]?'编辑标签':'加标签'}</button></small></th><td>${tags.length?tags.map(t=>`<span class="tag" data-kind="${escape(t.kind)}" title="${escape(t.evidence)}">${t.manual?'✎ ':''}${escape(t.text)}</span>`).join(''):'<span class="tag">待识别</span>'}${tags.length?`<details class="tag-evidence"><summary>依据</summary>${tags.map(t=>`<p><strong>${escape(t.text)}</strong>：${escape(t.evidence)}</p>`).join('')}</details>`:''}</td><td data-mobile-label="持仓 · ESIM">${quantity(r.balance)}${splitNote}</td><td data-mobile-label="参考价值 · USDT">${number(units(r.balance)*report.price)}</td><td data-mobile-label="占总供应量">${number(Number(BigInt(r.balance))/Number(BigInt(report.totalSupply))*100,4)}%</td><td data-mobile-label="24h 持仓变化 · ESIM" class="${change===null||BigInt(change)===0n?'':positive?'buy':'sell'}">${delta}<small>${pct===null?'历史余额暂缺':pct==='new'?'新增持仓':`${Number(pct)>0?'+':''}${number(pct,2)}%`}</small></td><td data-mobile-label="24h 买卖次数">${pair(r.day,'Count')}</td><td data-mobile-label="24h 买卖币量 · ESIM">${pair(r.day,'Amount')}</td><td data-mobile-label="累计买卖次数">${pair(r.history,'Count')}</td><td data-mobile-label="累计买卖币量 · ESIM">${pair(r.history,'Amount')}</td><td class="mobile-holder-details"><button type="button" class="mobile-holder-toggle" data-mobile-toggle="${escape(r.address)}" aria-expanded="${mobileExpanded.has(r.address)}">${mobileExpanded.has(r.address)?'收起买卖数据':'展开买卖数据'}</button><p class="mobile-full-address">${escape(r.address)}</p></td></tr>`;
  }).join('')||'<tr><td colspan="10" class="empty">没有符合条件的地址。可切换标签，或显示零持仓地址。</td></tr>';
  $('row-count').textContent=`${number(selected.total,0)} 个地址`;$('page').textContent=`${selected.total?page+1:0} / ${Math.ceil(selected.total/pageSize)}`;$('prev').disabled=page===0;$('next').disabled=(page+1)*pageSize>=selected.total;
  $('coverage').innerHTML=`<p>名单来源：<a href="${escape(report.coverage.source)}" target="_blank" rel="noopener noreferrer">OKLink 前 ${report.coverage.seedTop} 名</a>（${escape(report.coverage.seedAt.slice(0,10))}），并补入已知领币、交易、交互地址和新增 ESIM 转账地址。本表是已索引地址排名，不是全链完整持有人名单。余额、24h 变化来自固定区块的链上读取。</p><p>补充名单：${escape(HOLDER_IMPORT.source)}，${escape(date(Date.parse(HOLDER_IMPORT.capturedAt)/1000))}（北京时间），共 ${HOLDER_IMPORT.count} 个地址。同步地址归属及类型；表格持仓快照不覆盖链上余额。标签的“依据”可查看来源。</p>`;
@@ -95,8 +108,14 @@ $('search').addEventListener('input',()=>{page=0;render();});$('include-zero').a
 $('sort').addEventListener('change',()=>{page=0;render();});$('sort-direction').addEventListener('change',()=>{page=0;render();});
 for(const button of document.querySelectorAll('[data-sort]'))button.addEventListener('click',()=>{const key=button.dataset.sort;$('sort-direction').value=$('sort').value===key?$('sort-direction').value==='desc'?'asc':'desc':key==='address'?'asc':'desc';$('sort').value=key;page=0;render();});
 $('page-size').addEventListener('change',()=>{pageSize=Number($('page-size').value);page=0;render();});$('prev').addEventListener('click',()=>{page--;render();});$('next').addEventListener('click',()=>{page++;render();});
-for(const b of document.querySelectorAll('[data-columns]'))b.addEventListener('click',()=>{$('rows').closest('table').dataset.columns=b.dataset.columns;for(const t of document.querySelectorAll('[data-columns]'))t.setAttribute('aria-pressed',String(t===b));});
-$('reset-view').addEventListener('click',()=>{cohort=null;excludeOwn=false;$('search').value='';$('include-zero').checked=false;for(const input of $('filter').querySelectorAll('input'))input.checked=false;updateFilters();});
+function setColumns(mode){$('rows').closest('table').dataset.columns=mode;for(const b of document.querySelectorAll('[data-columns]'))b.setAttribute('aria-pressed',String(b.dataset.columns===mode));}
+for(const b of document.querySelectorAll('[data-columns]'))b.addEventListener('click',()=>{setColumns(b.dataset.columns);viewPrefs.columns=b.dataset.columns;saveView();});
+$('holder-chart').open=viewPrefs.chartOpen===true;
+$('holder-chart').addEventListener('toggle',()=>{viewPrefs.chartOpen=$('holder-chart').open;saveView();});
+setColumns(['all','holdings','trades'].includes(viewPrefs.columns)?viewPrefs.columns:'holdings');
+for(const b of document.querySelectorAll('[data-scope]'))b.addEventListener('click',()=>{scope=b.dataset.scope;excludeOwn=false;cohort=null;page=0;render();});
+$('minimum').addEventListener('change',()=>{page=0;render();});
+$('reset-view').addEventListener('click',()=>{cohort=null;excludeOwn=false;scope='all';$('minimum').value='0';$('search').value='';$('include-zero').checked=false;for(const input of $('filter').querySelectorAll('input'))input.checked=false;updateFilters();});
 for(const b of document.querySelectorAll('[data-chart]'))b.addEventListener('click',()=>{chartMode=b.dataset.chart;for(const t of document.querySelectorAll('[data-chart]'))t.setAttribute('aria-pressed',String(t===b));render();});
 window.addEventListener('storage',e=>{if(e.key===TAG_KEY){manual=readManual(e.newValue);renderCustomFilters();updateFilters();if($('label-manager').open)renderLabelManager();}});
 async function refresh(){
@@ -113,7 +132,9 @@ if(HOLDER_SORT_KEYS.includes(query.get('sort')))$('sort').value=query.get('sort'
 if(['asc','desc'].includes(query.get('direction')))$('sort-direction').value=query.get('direction');
 cohort=Object.hasOwn(cohortNames,query.get('cohort'))?query.get('cohort'):null;
 excludeOwn=query.get('scope')==='external';
-if(query.get('chart')==='top'){chartMode='top';for(const b of document.querySelectorAll('[data-chart]'))b.setAttribute('aria-pressed',String(b.dataset.chart==='top'));}
+if(Object.hasOwn(HOLDER_SCOPES,query.get('scope')))scope=query.get('scope');
+if(['0','10000','100000','1000000'].includes(query.get('minimum')))$('minimum').value=query.get('minimum');
+if(query.get('chart')==='top'){$('holder-chart').open=true;chartMode='top';for(const b of document.querySelectorAll('[data-chart]'))b.setAttribute('aria-pressed',String(b.dataset.chart==='top'));}
 $('include-zero').checked=query.get('zero')==='1'||!!cohort?.endsWith('zero');
 for(const input of $('filter').querySelectorAll('input'))input.checked=(query.get('tags')||'').split(',').includes(input.value);
 updateFilters();

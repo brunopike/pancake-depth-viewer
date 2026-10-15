@@ -31,7 +31,7 @@ for (const file of ['esim-addresses.js', 'esim.css', 'report-theme.css', 'site-n
 await writeFile('dist/esim-addresses.html', addressHTML);
 await build({entryPoints:['src/esim-holders.js'],bundle:true,minify:true,outfile:'dist/esim-holders.js',target:['es2022'],format:'esm'});
 let holdersHTML=await readFile('esim-holders.html','utf8');
-for(const file of ['esim-holders.js','esim.css','report-theme.css','site-nav.css','holders.css','dashboard.css']){
+for(const file of ['esim-holders.js','esim.css','report-theme.css','site-nav.css','holders.css','dashboard.css','holders-overview.css']){
  const version=createHash('sha256').update(await readFile(`dist/${file}`)).digest('hex').slice(0,12);
  holdersHTML=holdersHTML.replace(`"./${file}"`,`"./${file}?v=${version}"`);
 }
