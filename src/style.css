@@ -140,3 +140,118 @@
  .market-identity>.market-value{display:flex;flex-direction:column;align-items:flex-end;gap:2px}
  .market-identity>.market-value>strong{font-size:18px}
 }
+
+/* Keep the work area dominant, with related controls sharing a row. */
+.visually-hidden{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap;border:0}
+main{padding-top:16px;padding-bottom:12px}
+.sticky-summary{padding:6px 0 12px;margin-bottom:12px}
+.page-heading{margin-bottom:10px;gap:12px}
+.page-heading h1{margin:0;font-size:24px}
+.page-actions{gap:12px}
+.pool-scope-bar{gap:10px;margin-bottom:12px}
+.pool-scope-options{gap:6px}
+.pool-scope-options .button{min-height:34px;padding:6px 10px}
+#pool-scope-note{margin-left:auto}
+.marketbar{gap:16px}
+.inventory-groups{gap:10px}
+.inventory-group{padding:8px 10px}
+.inventory-heading{margin-bottom:4px}
+.inventory-values{gap:10px}
+.error{padding:7px 12px;margin-bottom:10px;font-size:13px;line-height:1.5}
+.workspace{gap:24px}
+.depth-section{container-type:inline-size}
+.chart-section{container-type:inline-size}
+.workspace .section-heading{min-height:26px;margin-bottom:8px}
+.depth-section .toolbar{gap:8px;padding:0 0 8px}
+.depth-section #percent{width:78px}
+.depth-section #precision{width:58px}
+.depth-section .presets{margin-right:0;gap:4px}
+.depth-section .range-label{font-size:12px}
+.book-meta{display:flex;justify-content:space-between;align-items:baseline;gap:4px 12px;flex-wrap:wrap;margin-bottom:10px}
+.book-meta .settings-note{font-size:12px;line-height:1.5;margin:0}
+.book-meta .statusbar{padding:0;gap:10px;font-size:12px;flex:1;justify-content:flex-end}
+.book-meta .text-button{font-size:12px}
+.book-actions{display:flex;align-items:center;justify-content:space-between;gap:8px 12px;flex-wrap:wrap;margin-bottom:8px}
+.book-actions .jump-form{margin:0;gap:7px;flex:1}
+.book-actions #jump-price{width:110px}
+.book-view-controls{margin:0;padding:3px;gap:2px;border:1px solid #344350;border-radius:8px;background:#101923}
+.book-view-controls .button{padding:6px 9px;border:0;border-radius:5px;font-size:12px;background:transparent}
+.book-view-controls .button.active{background:var(--accent)}
+.lp-summary{margin:0 0 6px;font-size:12px}
+.side-heading{padding:4px 8px;margin-bottom:6px;border-left:3px solid currentColor;font-weight:500}
+.ask-book .side-heading{background:#de92a210}
+.bid-book .side-heading{background:#69c7a710}
+.book-mid{padding:10px 8px}
+.depth-section:not(.total-view) .book-header,.depth-section:not(.total-view) .book-scroll{min-width:700px}
+@container(max-width:760px){
+ .book-row{padding-top:4px;padding-bottom:4px}
+ .book-row .split-value{display:flex;flex-direction:column;align-items:flex-end;gap:1px;font-size:13px;line-height:1.1}
+ .split-value>i{display:none}
+ .split-value>span{flex-shrink:0;max-width:100%}
+}
+.price-tools{margin-bottom:12px;padding-bottom:12px}
+.price-tools .target-form{gap:8px}
+.price-tools .price-interval{margin-top:12px;padding-top:10px}
+.price-tools .price-interval .section-heading{margin-bottom:8px}
+.interval-controls{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr) auto max-content;gap:8px}
+.interval-controls input[type=number]{width:100%;min-width:0}
+.interval-note{line-height:1.5;margin:6px 0 0}
+@container(min-width:850px){
+ .price-tools{display:grid;grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr);align-items:start;gap:20px}
+ .price-tools .price-interval{margin:0;padding:0;border:0}
+ .price-tools .target-form{display:grid;grid-template-columns:minmax(0,1fr) auto auto}
+ .price-tools .target-form>label{grid-column:1/-1;color:var(--text);font-size:16px;line-height:26px;font-weight:500}
+ .price-tools .target-form #target-price{width:100%;min-width:0}
+ .price-tools .target-result{grid-column:1/-1}
+}
+.chart-controls{gap:6px;margin-bottom:8px}
+.chart-controls #chart-percent{width:66px}
+.chart-controls #chart-precision{width:54px}
+.canvas-wrap{margin-top:12px}
+.bottomline{margin-top:8px;padding-top:8px;align-items:center;line-height:1.5}
+main>footer{margin-top:4px;line-height:1.5}
+@media(min-width:1001px) and (max-width:1599px){
+ .marketbar{display:grid;grid-template-columns:180px minmax(0,1fr);align-items:stretch}
+ .market-identity{width:auto;flex-direction:column;align-items:flex-start;justify-content:center;min-width:0;gap:6px}
+ .market-identity>.market-value{display:grid;grid-template-columns:1fr 1fr;gap:2px 6px}
+ .market-identity>.market-value>span{grid-column:1;grid-row:1}
+ .market-identity>.market-value>small{grid-column:2;grid-row:1;text-align:right}
+ .market-identity>.market-value>strong{grid-column:1/-1;grid-row:2;white-space:nowrap}
+ .inventory-values .market-value strong{font-size:18px}
+ .inventory-values .market-value>span{font-size:12px}
+ .inventory-heading .inventory-note{font-size:11px}
+ #pool-scope-note{display:none}
+}
+@media(min-width:1251px){
+ .workspace>section{padding-right:6px}
+ .bottomline{margin-top:8px;padding-top:8px}
+ main>footer{margin-top:4px}
+}
+@media(max-width:760px){
+ main{padding-top:0}
+ .sticky-summary{display:contents}
+ .page-heading{position:sticky;top:0;z-index:30;background:var(--bg);padding:6px 0 8px;margin:0 0 12px;border-bottom:1px solid #344350;box-shadow:0 10px 14px -12px #000b}
+ .page-heading>div:first-child{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}
+ .page-actions{width:100%;gap:6px}
+ .page-actions .site-nav{width:100%}
+ .page-actions .site-nav a,.page-actions .site-nav .site-nav-current{min-height:44px;padding:10px 8px;font-size:13px}
+ .global-refresh{gap:7px}
+ .pool-scope-bar{margin-bottom:10px}
+ .pool-scope-options{gap:5px}
+ .pool-scope-options .button{padding:6px;gap:5px;font-size:12px}
+ #pool-scope-note{display:none}
+ .marketbar{margin-bottom:14px!important;gap:10px}
+ .inventory-groups{gap:6px}
+ .inventory-group{padding:7px 10px;grid-template-columns:32px minmax(0,1fr)}
+ .inventory-values .market-value{gap:3px}
+ .inventory-values .market-value strong{font-size:17px}
+ .book-meta .statusbar{flex-basis:100%;justify-content:space-between}
+ .book-actions{gap:8px}
+ .book-actions .jump-form{flex-basis:100%}
+ .price-tools{margin-bottom:14px;padding-bottom:12px}
+ .interval-controls{gap:6px;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr) auto}
+ .interval-controls .button{grid-column:1/-1;justify-self:start}
+ .interval-note{font-size:12px}
+ .bottomline{column-gap:12px}
+ main>footer>span{display:none}
+}
