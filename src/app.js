@@ -304,12 +304,12 @@ function render({ preserveChart = false } = {}) {
     $('own-bid-total').textContent = `${compact(own.quote)} ${state.market.quote.symbol}`;
     $('own-ask-total').title = `${number(own.base, 8)} ${state.market.base.symbol}`;
     $('own-bid-total').title = `${number(own.quote, 8)} ${state.market.quote.symbol}`;
-    $('own-ask-note').textContent = `${OWNERS.length} 个地址 · 币量`;
+    $('own-ask-note').textContent = `${OWNERS.length} 个地址`;
     $('external-ask-total').textContent = `${compact(external.base)} ${state.market.base.symbol}`;
     $('external-bid-total').textContent = `${compact(external.quote)} ${state.market.quote.symbol}`;
     $('external-ask-total').title = `${number(external.base, 8)} ${state.market.base.symbol}`;
     $('external-bid-total').title = `${number(external.quote, 8)} ${state.market.quote.symbol}`;
-    $('external-ask-note').textContent = '其余 LP · 币量';
+    $('external-ask-note').textContent = '其余 LP';
     $('external-bid-note').textContent = '其余 LP · 资金';
     $('own-bid-note').textContent = `${OWNERS.length} 个地址 · 资金`;
   } catch {
