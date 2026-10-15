@@ -102,6 +102,9 @@
 .inspection-lps{flex:1 1 360px;grid-template-columns:repeat(2,minmax(0,1fr))}
 .inspection-layout .inspection-data>div{min-width:0}
 
+.bottomline{flex-wrap:wrap;row-gap:6px}
+#data-updated-at{margin-right:auto}
+
 /* The two desktop columns scroll separately; each book keeps its own ten-row viewport. */
 @media(min-width:1251px){
   main{height:100dvh;display:flex;flex-direction:column}

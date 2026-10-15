@@ -19,7 +19,7 @@ const settle = () => new Promise(resolve => setImmediate(resolve));
 
 function app(search = '') {
   // DOM and external reads are controlled; actual app handlers and depth math run unchanged.
-  const elements = new Map(), listeners = new Map(), timers = [], pending = [], labels = [];
+  const elements = new Map(), listeners = new Map(), timers = [], pending = [], progress = [], labels = [];
   const canvas = new Proxy({}, { get: (_, key) => key === 'createLinearGradient' ? () => ({ addColorStop() {} }) : key === 'fillText' ? text => labels.push(text) : () => {} });
   for (const match of html.matchAll(/<[^>]*\bid="([^"]+)"[^>]*>/g)) {
     const attributes = new Map([...match[0].matchAll(/([\w-]+)="([^"]*)"/g)].map(m => [m[1], m[2]]));
@@ -39,10 +39,10 @@ function app(search = '') {
     fetch: () => new Promise(() => {}), buildDepth, settings, poolInventory, ownedInventory, inventorySplit, estimateTarget, priceAtTick, cumulative, priceOf, intervalStats, OWNERS, poolMetadata, lpDetails,
     readBrowserCache: selected => selected === market ? live() : null, saveBrowserCache() {}, readSharedCache: async () => null,
     POOL_SCOPES, validPoolScope, scopedSnapshot,
-    loadPools: () => new Promise(resolve => pending.push(resolve)), market });
+    loadPools: (_pools, _base, _range, onProgress) => { progress.push(onProgress); return new Promise(resolve => pending.push(resolve)); }, market });
   vm.runInContext(source, context);
   vm.runInContext('state.market = market;', context);
-  return { elements, listeners, timers, pending, labels, context, read: code => vm.runInContext(code, context),
+  return { elements, listeners, timers, pending, progress, labels, context, read: code => vm.runInContext(code, context),
     async finish(data = live(101n, 5)) { pending.shift()(data); await settle(); } };
 }
 
@@ -76,9 +76,32 @@ test('Changing display settings does not discard an in-flight chain update', asy
 test('A slower older RPC result cannot replace a newer displayed snapshot', async () => {
   const a = app();
   const reading = a.read('refresh()'); await settle();
+  const displayedTime = a.elements.get('data-updated-at').textContent;
   await a.finish(live(99n, 3)); await reading;
   assert.equal(a.read('state.live.blockNumber'), 100n);
   assert.equal(a.read('state.depth.price'), 4);
+  assert.equal(a.elements.get('data-updated-at').textContent, displayedTime);
+});
+
+test('The footer time follows displayed data through progress, failure and a successful update', async () => {
+  const a = app();
+  a.context.cached = { ...live(), timestamp: Date.now() - 120000 };
+  a.read('state.live = cached');
+  const reading = a.read('refresh()'); await settle();
+  const displayedTime = a.read('`数据更新时间：${time(cached.timestamp)}（北京时间）`');
+  assert.equal(a.elements.get('data-updated-at').textContent, displayedTime);
+  assert.doesNotMatch(a.elements.get('status').textContent, /\d{4}\//);
+  a.progress[0](9, 34);
+  assert.equal(a.elements.get('status').textContent, '正在更新池子 9 / 34…');
+  assert.equal(a.elements.get('data-updated-at').textContent, displayedTime);
+  await a.finish({ ...live(), pools: [] }); await reading;
+  assert.match(a.elements.get('status').textContent, /更新失败/);
+  assert.equal(a.elements.get('data-updated-at').textContent, displayedTime);
+  const retry = a.read('refresh()'); await settle();
+  const fresh = live(101n, 5); a.context.fresh = fresh;
+  await a.finish(fresh); await retry;
+  assert.equal(a.elements.get('data-updated-at').textContent, a.read('`数据更新时间：${time(fresh.timestamp)}（北京时间）`'));
+  assert.notEqual(a.elements.get('data-updated-at').textContent, displayedTime);
 });
 
 test('Returning to the page catches up only when the refresh interval has elapsed', async () => {
@@ -112,6 +135,7 @@ test('Switching tokens during an update cannot show the previous market data', a
   const other = { ...base, id: '0x3333333333333333333333333333333333333333', symbol: 'OTHER' };
   a.context.otherMarket = { ...market, base: other, key: `${other.id}/${quote.id}` };
   const newRead = a.read('selectMarket(otherMarket)'); await settle();
+  assert.equal(a.elements.get('data-updated-at').textContent, '数据更新时间：—');
   await a.finish(); await oldRead;
   assert.equal(a.read('state.depth === null'), true);
   assert.equal(a.elements.get('pair-name').textContent, 'OTHER / USDT');

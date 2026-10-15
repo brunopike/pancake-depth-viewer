@@ -49,7 +49,7 @@
       </section>
     </section>
   </div>
-  <div class="bottomline"><span id="catalog-status">代币列表：正在加载</span><a class="text-button" href="https://github.com/starkweng/pancake-depth-viewer/edit/main/public/data/background-markets.json" target="_blank" rel="noopener">后台币种设置 ↗</a><button id="method-button" class="text-button">怎么看这些数据？ ↗</button></div>
+  <div class="bottomline"><span id="catalog-status">代币列表：正在加载</span><span id="data-updated-at" role="status" aria-live="polite">数据更新时间：—</span><a class="text-button" href="https://github.com/starkweng/pancake-depth-viewer/edit/main/public/data/background-markets.json" target="_blank" rel="noopener">后台币种设置 ↗</a><button id="method-button" class="text-button">怎么看这些数据？ ↗</button></div>
   <footer>池内资金估算，未扣交易费用；实际成交以报价为准。<span>仅查看，不需要连接钱包</span></footer>
 </main>
 <dialog id="market-dialog"><div class="dialog-heading"><div><span class="eyebrow">PancakeSwap 代币列表</span><h2>选择要查看的代币</h2></div><button class="close" aria-label="关闭" data-close="market-dialog">×</button></div><input id="search" class="search" placeholder="输入代币名称，例如 ESIM、ARTX；也可粘贴地址" aria-label="搜索代币"><div class="market-list-head"><span>买卖币种 / 池子数量</span><span>池内资金估值（美元）</span></div><div id="market-list" class="market-list"></div><div id="search-summary" class="dialog-foot"></div></dialog>

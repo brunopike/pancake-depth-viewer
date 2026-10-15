@@ -69,8 +69,13 @@ function setError(message, technical = '') {
   $('error').innerHTML = escape(message || '') + (technical && technical !== message
     ? `<details><summary>查看技术信息</summary><p>${escape(technical)}</p></details>` : '');
 }
+function updateDataTimestamp() {
+  $('data-updated-at').textContent = state.depth && Number.isFinite(state.live?.timestamp)
+    ? `数据更新时间：${time(state.live.timestamp)}（北京时间）` : '数据更新时间：—';
+}
 function clearDepth({ retainLive = false } = {}) {
   state.depth = null; if (!retainLive) { state.live = null; state.selection = null; } state.hover = null; state.focusPrice = null;
+  updateDataTimestamp();
   state.chartDepth = null; state.chartHover = null; state.inspection = null;
   if (!retainLive) { state.intervalPrices = null; $('interval-first').value = ''; $('interval-second').value = ''; } $('interval-result').hidden = true; $('interval-button').disabled = true;
   if (!retainLive) { state.targetPrice = null; $('target-price').value = ''; } $('target-result').hidden = true; $('target-button').disabled = true;
@@ -175,7 +180,7 @@ function updateScopeControls() {
 }
 function snapshotStatus(suffix = '') {
   const view = state.selection;
-  return `${time(state.live.timestamp)} · ${POOL_SCOPES[state.poolScope]} · 合并 ${view.pools.length}/${view.expectedPoolCount} 个池子${view.failed.length ? ` · ${view.failed.length} 个未计入` : ''}${suffix}`;
+  return `${POOL_SCOPES[state.poolScope]} · 合并 ${view.pools.length}/${view.expectedPoolCount} 个池子${view.failed.length ? ` · ${view.failed.length} 个未计入` : ''}${suffix}`;
 }
 function rebuildDepthScope() {
   state.selection = scopedSnapshot(state.live, state.market.pools, state.poolScope);
@@ -243,7 +248,7 @@ async function refresh() {
     }
     if (request !== state.request) return;
     const live = await loadPools(market.pools, market.base.id, Infinity, (done, total) => {
-      if (request === state.request) $('status').textContent = `${displayed ? `显示 ${time(state.live.timestamp)} · ` : ''}${done === total ? '正在核对 LP 归属…' : `正在更新池子 ${done} / ${total}…`}`;
+      if (request === state.request) $('status').textContent = done === total ? '正在核对 LP 归属…' : `正在更新池子 ${done} / ${total}…`;
     }, { previous });
     if (request !== state.request) return;
     live.source = '公共节点';
@@ -282,6 +287,7 @@ async function refresh() {
 }
 function render({ preserveChart = false } = {}) {
   const d = state.depth;
+  updateDataTimestamp();
   updateBookView();
   $('mark-price').textContent = price(d.price); $('book-price').textContent = price(d.price);
   try {
