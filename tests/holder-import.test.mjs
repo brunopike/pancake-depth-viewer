@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {HOLDER_IMPORT,applyHolderLabels} from '../src/holder-labels.mjs';
+import {HOLDER_IMPORT,applyHolderLabels,HOLDER_CIRCULATION_EXCLUSIONS} from '../src/holder-labels.mjs';
 import {rowTags,selectHolders,category,groupHolders,ownershipAmounts} from '../src/holder-model.mjs';
 import {holderInsights,sellerProfile} from '../src/holder-insights.mjs';
 import {holderCharts} from '../src/holder-charts.mjs';
@@ -53,7 +53,7 @@ test('Safe, exchange and EIP-7702 types retain source evidence and LP ownership 
   ['0x4252f9e683c7d38b6fd053346358f6460d982745','Safe 多签（3/4）'],
   ['0x53f78a071d04224b8e254e243fffc6d9f2f3fa23','KuCoin: Hot Wallet 2'],
   ['0x1ab4973a48dc892cd9971ece8e01dcc7688f8f23','Bitget 6'],
- ]){const tags=applyHolderLabels(address);assert(tags.some(t=>t.text.includes(text)&&t.evidence.includes('2026-10-15T16:27:00+08:00')));}
+ ]){const tags=applyHolderLabels(address);assert(tags.some(t=>t.text.includes(text)&&t.evidence.includes(address==='0x4252f9e683c7d38b6fd053346358f6460d982745'?'用户确认':'2026-10-15T16:27:00+08:00')));}
  const address='0x1db99241d9e230edc33996567ec2707c42475fd8';
  const tags=applyHolderLabels(address,[{id:'own-lp',kind:'lp',text:'我方 LP'},{id:'contract',kind:'contract',text:'合约地址'},{id:'frequency',kind:'frequency',text:'高频'}]);
  assert.equal(tags.filter(t=>t.kind==='lp').length,1);assert(tags.some(t=>t.kind==='account'&&t.text.includes('EIP-7702')));assert(!tags.some(t=>t.id==='contract'||t.kind==='frequency'));assert.deepEqual(applyHolderLabels(address,tags),tags);
@@ -66,10 +66,23 @@ test('new RPC reports use the shared identities but keep exact fresh chain balan
  assert.equal(report.rows[0].history.sellAmount,'0');assert(!report.rows[0].tags.some(t=>t.id==='received'));assert.equal(report.coverage.supplement.count,221);assert.equal(report.coverage.seedTop,1000);assert.equal(report.coverage.exhaustive,false);
 });
 test('ordinary imported identities never suppress independently observed round-trip behavior in fresh or cached reports',()=>{
- const addresses=[router,'0x54403ec2c1035295e81172e1bf381d01df135f67','0x4252f9e683c7d38b6fd053346358f6460d982745'];
+ const addresses=[router,'0x54403ec2c1035295e81172e1bf381d01df135f67'];
  const cutoff=1792051200,trades=addresses.flatMap(address=>Array.from({length:3},(_,i)=>['buy','sell'].map(side=>({address,initiator:address,side,amount_wei:'1',timestamp:cutoff-10,tx:address+i})))).flat();
- const report=buildHolderReport({state:{origin:1,cutoff,trades,calls:[],pools:{},firstRecipient:{}},addresses,balances:['10','20','30'],block:{number:'0x79dc0f7',timestamp:`0x${cutoff.toString(16)}`,hash:'hash'},totalSupply:'1000',price:.06});
+ const report=buildHolderReport({state:{origin:1,cutoff,trades,calls:[],pools:{},firstRecipient:{}},addresses,balances:['10','20'],block:{number:'0x79dc0f7',timestamp:`0x${cutoff.toString(16)}`,hash:'hash'},totalSupply:'1000',price:.06});
  for(const r of report.rows){assert(r.tags.some(t=>t.id==='arbitrage'));const old=rowTags({...r,tags:[{id:'arbitrage',kind:'arbitrage',text:'套利机器人（疑似）'}]},{});assert(old.some(t=>t.id==='arbitrage'));assert.equal(r.history.buyCount,3);assert.equal(r.history.sellCount,3);}
+});
+test('confirmed contract and fixed-ten-percent Safe become own while shared Vault is only a reporting exclusion',()=>{
+ const addresses=['0xdde4deb7aab7cefdd5aa1ab4fdc8675eb901cad7','0x4252f9e683c7d38b6fd053346358f6460d982745'];
+ for(const address of addresses){
+  const r={...row(address,'100',[{id:'known-contract',kind:'contract',text:'旧合约标签'},{id:'frequency',kind:'frequency',text:'高频机器人'}]),history:{sellCount:3,sellAmount:'7'}};
+  const before=structuredClone(r),tags=rowTags(r,{});
+  assert.equal(ownershipAmounts(r).own,'100');assert.equal(ownershipAmounts(r).external,'0');assert.equal(category(r,{}),'own');
+  assert(!tags.some(t=>['frequency','arbitrage'].includes(t.kind)));assert(tags.some(t=>t.kind==='own'&&t.evidence.includes('用户确认')));
+  assert.deepEqual(rowTags({...r,tags},{}),tags);assert.deepEqual(r,before);
+ }
+ const vault='0x238a358808379702088667322f80ac48bad5e6c4',r=row(vault,'100');
+ assert(HOLDER_CIRCULATION_EXCLUSIONS[vault]);assert.equal(ownershipAmounts(r).own,'0');assert.equal(ownershipAmounts(r).external,'100');assert.equal(category(r,{}),'dex');
+ assert(rowTags(r,{}).some(t=>t.text.includes('外部统计排除')));
 });
 test('mixed wallet counts only balance minus the confirmed 409924 ESIM as our holding; stocks reconcile exactly',()=>{
  const unit=10n**18n,address='0x588177775e6fba9e752d0c9dfd5bbb562e8f016a';

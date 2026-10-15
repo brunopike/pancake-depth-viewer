@@ -8,6 +8,8 @@ A public, read-only PancakeSwap market depth viewer by MMDock.
 
 用户确认 `0x588177775e6fba9e752d0c9dfd5bbb562e8f016a` 的外部份额为 409,924 ESIM，其余才计入我方持仓；分配规则在 `src/holder-labels.mjs`。混合地址按币量拆分，地址数量只计一次，历史成交不据此推断整地址归我方。若余额低于已确认外部份额，提示重新核对并暂不计入我方；本地备注不能覆盖确认份额。
 
+2026-10-15 用户确认 `0xdde4deb7aab7cefdd5aa1ab4fdc8675eb901cad7` 合约和 `0x4252f9e683c7d38b6fd053346358f6460d982745` Safe 3/4 固定10%收币地址为我方。共享 Infinity Vault 与币安活动预留在本次 Excel 的外部余额统计中排除，规则保存于 `HOLDER_CIRCULATION_EXCLUSIONS`；共享 Vault 保留 DEX 标签，不把整个托管余额认定为我方。页面现有“非我方钱包持仓”仍为非我方地址余额口径，与这个排除后的自定义统计不同。
+
 合约报告的固定累计概览包含“分发合约累计转入”：统计分发合约全历史收到的正值 ESIM Transfer 事件，包含回流、自转账和重复转入，不代表净流入。以已核验的区块 127754110 为检查点，后续复用 ESIM 转账索引增量累加，并用同区块合约余额对账；页面单独标示该项截止时间。定时后台同步更新，验证失败保留最近核验值，不增加其他币种抓取。
 
 Search configured BNB Chain pairs by symbol, token address, or pool address. View the order-book-style price ladder with own / external breakdowns for each amount column and cumulative AMM liquidity depth of the selected **exact token pair**, aggregated across discovered V2, V3, and Infinity CL pools. Enter a price-range percentage or select Maximum, then choose decimal price precision (0–18 places). Default: ESIM/USDT, a ±50% price range and four decimal places (a 0.0001 base price band). The closest 100 bands stay unmerged, followed by grouped distant bands up to the 500-row limit. Up to 500 rows per side are rendered by merging adjacent bands when necessary; endpoint totals always cover the entire selected range. Hover to inspect a level or enter a price to locate it. The address bar preserves the pair and display settings.

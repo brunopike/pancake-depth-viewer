@@ -3,6 +3,12 @@ import workbook from './holder-import.json' with {type:'json'};
 // Import identity and address types only. Workbook balances and behavioral tags
 // are snapshots; fresh balances and trading/claim activity still come from RPC.
 export const HOLDER_IMPORT = workbook;
+// Reporting exclusions are distinct from wallet ownership. The shared Vault
+// is not wholly attributed to us; the user excludes it from external float.
+export const HOLDER_CIRCULATION_EXCLUSIONS = {
+  '0xa7d81e889f2df910389c95fa0f9d6092220edf87': {label:'币安活动预留',source:'用户确认（2026-10-15）：活动预留不计入外部流通统计。'},
+  '0x238a358808379702088667322f80ac48bad5e6c4': {label:'共享 Vault',source:'用户确认（2026-10-15）：基本为我方，按统计约定从外部流通排除；不据此认定共享 Vault 的全部底层资产均属我方。'},
+};
 export const HOLDER_BALANCE_SPLITS = {
   '0x588177775e6fba9e752d0c9dfd5bbb562e8f016a': {
     external: '409924000000000000000000',
@@ -29,6 +35,18 @@ const importedLabels = Object.fromEntries(workbook.records.flatMap(row => {
 // user confirmations take precedence over supplemental workbook descriptions.
 export const CONFIRMED_HOLDER_LABELS = {
   ...importedLabels,
+  '0xdde4deb7aab7cefdd5aa1ab4fdc8675eb901cad7': {
+    kind:'own',label:'我方合约（用户确认）',
+    source:'用户确认（2026-10-15）：原用途未明合约属于我方；地址用途仍待核实。',
+  },
+  '0x4252f9e683c7d38b6fd053346358f6460d982745': {
+    kind:'own',label:'我方 · Safe 多签（3/4）· 固定10%收币',
+    source:'用户确认（2026-10-15）：Safe 3/4 多签、固定10%收币地址属于我方。',
+  },
+  '0x238a358808379702088667322f80ac48bad5e6c4': {
+    kind:'dex',label:'PancakeSwap Infinity 共享 Vault · 外部统计排除',
+    source:HOLDER_CIRCULATION_EXCLUSIONS['0x238a358808379702088667322f80ac48bad5e6c4'].source,
+  },
   '0x588177775e6fba9e752d0c9dfd5bbb562e8f016a': {
     kind:'mixed', label:'混合持仓 · 部分我方',
     source:HOLDER_BALANCE_SPLITS['0x588177775e6fba9e752d0c9dfd5bbb562e8f016a'].source,
