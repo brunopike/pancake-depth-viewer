@@ -53,15 +53,16 @@ function render(){
  if(!report)return;
  const selected=selectHolderView(report,{scope,minimum:(BigInt($('minimum').value)*10n**18n).toString(),search:$('search').value,filter:selectedFilters(),cohort,excludeOwn,includeZero:$('include-zero').checked,page,pageSize,sort:$('sort').value,direction:$('sort-direction').value},manual);page=selected.page;syncSort();
  for(const button of document.querySelectorAll('[data-scope]'))button.setAttribute('aria-pressed',String(button.dataset.scope===scope));
- const scopeNote=scope==='external-stat'?'外部统计：扣除我方份额、币安活动预留和共享 Vault；混合钱包仅显示外部份额。':scope==='own'?'我方地址：包含混合归属钱包，行内展示钱包总额及两方份额；顶部我方金额仅计我方份额。':scope==='received'?'领币地址：按领取记录筛选，包含我方；领币不等同于当前余额全部来自分发。':scope==='excluded'?'统计排除：币安活动预留与共享 Vault 单列；排除口径不等同于全部归属我方。':'全部地址：钱包余额完整展示，混合钱包另列份额；平台 / DEX 是用途分类，不自动认定我方。';
+ const scopeNote=scope==='external-stat'?'外部流通：从已索引持仓中扣除我方份额、币安活动预留和底池（共享 Vault）；混合钱包仅显示外部份额。':scope==='own'?'我方地址：包含混合归属钱包，行内展示钱包总额及两方份额；仅已确认的我方部分计入我方持仓。':scope==='received'?'领币地址：按领取记录筛选，包含我方；领币不等同于当前余额全部来自分发。':scope==='excluded'?'统计排除：币安活动预留与底池（共享 Vault）计入非外部流通；不据此认定共享 Vault 全部归属我方。':'全部地址：钱包余额完整展示，混合钱包另列份额；非外部流通包含我方、活动预留与底池，不等同于我方持仓。';
  $('filter-context').textContent=[cohort?`来自合约报告：${cohortNames[cohort]}`:'',excludeOwn?'合约报告带入的非我方范围；混合钱包仅显示外部份额':'',scopeNote].filter(Boolean).join(' · ');
  $('cutoff').textContent=`余额截至 ${date(report.cutoff)} · 北京时间 · 区块 ${number(report.block,0)}`;
  const ledger=holderLedger(report,manual),totalSupply=Number(BigInt(report.totalSupply));
- const metrics=[{label:'我方份额',balance:ledger.own,tone:'own',note:'含混合钱包内已确认的我方部分'},
-  {label:'外部统计',balance:ledger.external,tone:'external',note:'已扣我方、活动预留与共享 Vault'}];
- $('summary').innerHTML=metrics.map(m=>`<div data-tone="${m.tone}"><span>${escape(m.label)}</span><strong title="${quantity(m.balance)} ESIM">${compact(m.balance)} <em>ESIM</em></strong><small>${number(Number(BigInt(m.balance))/totalSupply*100)}% 总供应量</small><p>${m.note}</p></div>`).join('');
- $('exclusion-count').textContent=`${ledger.exclusions.length} 项`;
- $('exclusion-values').innerHTML=ledger.exclusions.map(r=>`<div><span>${escape(r.label)}</span><strong>${quantity(r.balance)} <em>ESIM</em></strong><small>${number(Number(BigInt(r.balance))/totalSupply*100)}% 总供应量</small></div>`).join('');
+ const metrics=[{label:'非外部流通数量',balance:ledger.nonExternal,tone:'own',note:'我方持仓 + 币安活动预留 + 底池（共享 Vault）'},
+  {label:'外部流通数量',balance:ledger.external,tone:'external',note:'已索引持仓 − 非外部流通数量；含混合钱包的外部份额'}];
+ $('summary').innerHTML=metrics.map(m=>`<div data-tone="${m.tone}"><span>${escape(m.label)}</span><strong title="${quantity(m.balance)} ESIM">${compact(m.balance)} <em>ESIM</em></strong><small>${number(Number(BigInt(m.balance))/totalSupply*100)}% 总供应量 · 已索引口径</small><p>${m.note}</p></div>`).join('');
+ const components=[{label:'我方持仓',balance:ledger.own},...ledger.exclusions.map(r=>({...r,label:r.label==='共享 Vault'?'底池（共享 Vault）':r.label}))];
+ $('exclusion-count').textContent=`${components.length} 项`;
+ $('exclusion-values').innerHTML=components.map(r=>`<div><span>${escape(r.label)}</span><strong>${quantity(r.balance)} <em>ESIM</em></strong><small>${number(Number(BigInt(r.balance))/totalSupply*100)}% 总供应量</small></div>`).join('');
  $('ledger-meta').innerHTML=`<span>总账 · 全部已索引地址</span><span>有持仓 ${number(report.coverage.holding,0)} 个</span><span>覆盖供应量 ${number(Number(BigInt(ledger.indexed))/totalSupply*100)}%</span><span>未索引 ${quantity(ledger.unindexed)} ESIM</span><span>参考价格 ${number(report.price,6)} U</span><span>24h 对比 ${report.priorCutoff?date(report.priorCutoff):'暂缺'}</span>`;
  const selectedBalance=selected.all.reduce((sum,r)=>sum+BigInt(r.balance),0n).toString();
  $('selection-summary').textContent=`${HOLDER_SCOPES[scope]} · ${number(selected.total,0)} 个地址 · ${quantity(selectedBalance)} ESIM · ${number(Number(BigInt(selectedBalance))/totalSupply*100)}% 总供应量`;

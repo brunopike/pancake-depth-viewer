@@ -2,7 +2,7 @@ import {HOLDER_CIRCULATION_EXCLUSIONS} from './holder-labels.mjs';
 import {ownershipAmounts,rowTags,selectHolders} from './holder-model.mjs';
 import {holderCharts} from './holder-charts.mjs';
 
-export const HOLDER_SCOPES={all:'全部地址',own:'我方地址','external-stat':'外部统计',received:'领币地址',excluded:'统计排除'};
+export const HOLDER_SCOPES={all:'全部地址',own:'我方地址','external-stat':'外部流通',received:'领币地址',excluded:'统计排除'};
 export const HOLDER_TONES={
  own:{label:'我方',color:'#80c5ad'},mixed:{label:'混合归属',color:'#d9c593'},
  received:{label:'外部 · 领币',color:'#de92a2'},institution:{label:'平台 / DEX',color:'#9fc5e9'},
@@ -31,7 +31,7 @@ export function holderLedger(report,manual={}){
   if(excluded(row)){byAddress.get(row.address).balance=balance.toString();continue;}
   const parts=ownershipAmounts(row,manual);own+=BigInt(parts.own);external+=BigInt(parts.external);
  }
- return {own:own.toString(),external:external.toString(),indexed:indexed.toString(),
+ return {own:own.toString(),nonExternal:(indexed-external).toString(),external:external.toString(),indexed:indexed.toString(),
   unindexed:(BigInt(report.totalSupply)-indexed).toString(),exclusions};
 }
 

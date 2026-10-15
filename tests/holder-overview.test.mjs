@@ -9,7 +9,9 @@ const rows=[row(a,1000000,[tag('own'),tag('received')]),row(mixed,500000,[tag('r
 const report={rows,totalSupply:(21000000n*W).toString()};
 test('ledger reconciles all indexed shares and leaves supply remainder separate',()=>{
  const result=holderLedger(report);assert.equal(result.own,(1090076n*W).toString());assert.equal(result.external,(699924n*W).toString());
- assert.equal(result.exclusions.reduce((sum,r)=>sum+BigInt(r.balance),BigInt(result.own)+BigInt(result.external)),BigInt(result.indexed));
+ assert.equal(result.nonExternal,(20090076n*W).toString());
+ assert.equal(result.exclusions.reduce((sum,r)=>sum+BigInt(r.balance),BigInt(result.own)),BigInt(result.nonExternal));
+ assert.equal(BigInt(result.nonExternal)+BigInt(result.external),BigInt(result.indexed));
  assert.equal(BigInt(result.indexed)+BigInt(result.unindexed),BigInt(report.totalSupply));
 });
 test('classification respects ownership and exclusions before recipient styling',()=>{
@@ -37,6 +39,7 @@ test('quick scopes intersect tag filters, search and zero holder controls',()=>{
 test('manual ownership updates totals and scope without absorbing fixed exclusions',()=>{
  const manual={[b]:{kind:'own',text:'我方 B'},[vault]:{kind:'own',text:'本地备注'}};
  assert.equal(holderLedger(report,manual).own,(1180076n*W).toString());assert.equal(holderAppearance(rows[5],manual),'excluded');
+ assert.equal(holderLedger(report,manual).nonExternal,(20180076n*W).toString());
  assert.equal(selectHolderView(report,{scope:'external-stat'},manual).total,2);
 });
 test('chart amounts reconcile, mixed shares split and address counts remain unique',()=>{
