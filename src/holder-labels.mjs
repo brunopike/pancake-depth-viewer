@@ -35,6 +35,10 @@ const importedLabels = Object.fromEntries(workbook.records.flatMap(row => {
 // user confirmations take precedence over supplemental workbook descriptions.
 export const CONFIRMED_HOLDER_LABELS = {
   ...importedLabels,
+  '0xea4bd4aad512ca4dccda821e8693b6b38b51fc68': {
+    kind:'own',label:'我方地址（用户确认）',
+    source:'用户确认（2026-10-17）：该地址属于我方。',
+  },
   '0xdde4deb7aab7cefdd5aa1ab4fdc8675eb901cad7': {
     kind:'own',label:'我方合约（用户确认）',
     source:'用户确认（2026-10-15）：原用途未明合约属于我方；地址用途仍待核实。',

@@ -71,12 +71,13 @@ test('ordinary imported identities never suppress independently observed round-t
  const report=buildHolderReport({state:{origin:1,cutoff,trades,calls:[],pools:{},firstRecipient:{}},addresses,balances:['10','20'],block:{number:'0x79dc0f7',timestamp:`0x${cutoff.toString(16)}`,hash:'hash'},totalSupply:'1000',price:.06});
  for(const r of report.rows){assert(r.tags.some(t=>t.id==='arbitrage'));const old=rowTags({...r,tags:[{id:'arbitrage',kind:'arbitrage',text:'套利机器人（疑似）'}]},{});assert(old.some(t=>t.id==='arbitrage'));assert.equal(r.history.buyCount,3);assert.equal(r.history.sellCount,3);}
 });
-test('confirmed contract and fixed-ten-percent Safe become own while shared Vault is only a reporting exclusion',()=>{
- const addresses=['0xdde4deb7aab7cefdd5aa1ab4fdc8675eb901cad7','0x4252f9e683c7d38b6fd053346358f6460d982745'];
+test('confirmed own addresses include the new wallet while shared Vault is only a reporting exclusion',()=>{
+ const addresses=['0xdde4deb7aab7cefdd5aa1ab4fdc8675eb901cad7','0x4252f9e683c7d38b6fd053346358f6460d982745','0xea4bd4aad512ca4dccda821e8693b6b38b51fc68'];
  for(const address of addresses){
   const r={...row(address,'100',[{id:'known-contract',kind:'contract',text:'旧合约标签'},{id:'frequency',kind:'frequency',text:'高频机器人'}]),history:{sellCount:3,sellAmount:'7'}};
   const before=structuredClone(r),tags=rowTags(r,{});
   assert.equal(ownershipAmounts(r).own,'100');assert.equal(ownershipAmounts(r).external,'0');assert.equal(category(r,{}),'own');
+  assert.equal(sellerProfile(r,null,{}).own,true);assert.equal(EXECUTION_LABELS[address].category,'own');assert.equal(SEED.labels[address].kind,'own');
   assert(!tags.some(t=>['frequency','arbitrage'].includes(t.kind)));assert(tags.some(t=>t.kind==='own'&&t.evidence.includes('用户确认')));
   assert.deepEqual(rowTags({...r,tags},{}),tags);assert.deepEqual(r,before);
  }
