@@ -1,7 +1,7 @@
 import {claimFlowWindow} from '../server/esim/claim-flow.mjs';
 import {newerSourceInflow} from '../server/esim/source-inflows.mjs';
 
-export const CLAIM_FLOW_URL='https://raw.githubusercontent.com/starkweng/pancake-depth-viewer/esim-cache/claim-flow.json';
+export const CLAIM_FLOW_URL='https://raw.githubusercontent.com/brunopike/pancake-depth-viewer/esim-cache/claim-flow.json';
 const TOKEN='0x7765a659c5b0cfbfd9fbc2ef2298b75a598f2d2d',SOURCE='0x67b97c3845438f264965ca154ba13051c6c73416';
 const address=value=>typeof value==='string'&&/^0x[0-9a-f]{40}$/.test(value);
 const hash=value=>typeof value==='string'&&/^0x[0-9a-f]{64}$/.test(value);

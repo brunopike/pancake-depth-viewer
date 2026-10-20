@@ -6,6 +6,7 @@ import {setTimeout as sleep} from 'node:timers/promises';
 import {runHourlyWorker,dispatchNextWorker} from '../hourly-worker.mjs';
 import {validSnapshot} from '../../src/snapshot-client.mjs';
 import {SNAPSHOT_INTERVAL_MS} from '../../src/snapshot-status.mjs';
+import {projectRepository} from '../../server/esim/repository.mjs';
 
 // One timer owns both datasets. Each dataset has its own cutoff and failure boundary.
 export async function refreshDueSnapshots({read,refresh,publishSite,now=Date.now,onError=()=>{}}){
@@ -26,8 +27,8 @@ export async function refreshDueSnapshots({read,refresh,publishSite,now=Date.now
 }
 
 async function main(){
- const repo=process.env.GITHUB_REPOSITORY,token=process.env.GITHUB_TOKEN,minutes=Number(process.env.SESSION_MINUTES||300);
- if(repo!=='starkweng/pancake-depth-viewer'||!token||!process.env.ALCHEMY_API_KEY)throw Error('INVALID_WORKER_CONFIGURATION');
+ const repo=projectRepository(process.env.GITHUB_REPOSITORY),token=process.env.GITHUB_TOKEN,minutes=Number(process.env.SESSION_MINUTES||300);
+ if(!repo||!token||!process.env.ALCHEMY_API_KEY)throw Error('INVALID_WORKER_CONFIGURATION');
  if(!Number.isInteger(minutes)||minutes<1||minutes>300)throw Error('INVALID_WORKER_DURATION');
  const root=`https://api.github.com/repos/${repo}`,headers={Authorization:`Bearer ${token}`,Accept:'application/vnd.github.raw+json'};
  const read=async kind=>{

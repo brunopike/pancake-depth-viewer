@@ -1,8 +1,9 @@
 import {readFile} from 'node:fs/promises';
 import {gunzipSync} from 'node:zlib';
 import {validClaimFlow} from '../../server/esim/store.mjs';
-const token=process.env.GITHUB_TOKEN,repo=process.env.GITHUB_REPOSITORY;
-if(!token||repo!=='starkweng/pancake-depth-viewer')throw Error('INVALID_PUBLICATION_CONFIGURATION');
+import {projectRepository} from '../../server/esim/repository.mjs';
+const token=process.env.GITHUB_TOKEN,repo=projectRepository(process.env.GITHUB_REPOSITORY);
+if(!token||!repo)throw Error('INVALID_PUBLICATION_CONFIGURATION');
 const bytes=await readFile('.goodway/claim-flow/state.json.gz'),checkpoint=JSON.parse(gunzipSync(bytes)),report=checkpoint.report;
 if(!validClaimFlow({block:checkpoint.throughBlock,blockHash:checkpoint.blockHash,cutoff:checkpoint.cutoff},report))throw Error('FLOW_REPORT_INVALID');
 const root=`https://api.github.com/repos/${repo}`,headers={Authorization:`Bearer ${token}`,Accept:'application/vnd.github+json','Content-Type':'application/json'};

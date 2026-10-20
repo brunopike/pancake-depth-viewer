@@ -2,9 +2,10 @@ import { readFile } from 'node:fs/promises';
 import { parseState } from '../../server/esim/store.mjs';
 import { buildReport } from '../../server/esim/metrics.mjs';
 import { buildAddressReport } from '../../server/esim/addresses.mjs';
+import { PROJECT_REPOSITORY,projectRepository } from '../../server/esim/repository.mjs';
 const token = process.env.GITHUB_TOKEN;
-const repo = process.env.GITHUB_REPOSITORY || 'starkweng/pancake-depth-viewer';
-if (!token || repo !== 'starkweng/pancake-depth-viewer') throw new Error('Invalid publication configuration');
+const repo = projectRepository(process.env.GITHUB_REPOSITORY || PROJECT_REPOSITORY);
+if (!token || !repo) throw new Error('Invalid publication configuration');
 const bytes = await readFile('.goodway/esim-monitor/state.json.gz');
 const state = parseState(bytes);
 const root = `https://api.github.com/repos/${repo}/git`;
@@ -17,7 +18,7 @@ async function api(path, body, method = body ? 'POST' : 'GET') {
 const ref = await api('ref/heads/esim-cache');
 const previous = ref ? await api(`commits/${ref.object.sha}`) : null;
 if (ref) {
-  const old = await fetch('https://raw.githubusercontent.com/starkweng/pancake-depth-viewer/esim-cache/report.json', { signal: AbortSignal.timeout(15000) });
+  const old = await fetch('https://raw.githubusercontent.com/brunopike/pancake-depth-viewer/esim-cache/report.json', { signal: AbortSignal.timeout(15000) });
   if (old.ok && (await old.json()).block >= state.block) { console.log('ESIM checkpoint already current.'); process.exit(0); }
 }
 const files = [ ['state.json.gz', bytes.toString('base64'), 'base64'], ['report.json', JSON.stringify(buildReport(state)), 'utf-8'], ['addresses.json', JSON.stringify(buildAddressReport(state)), 'utf-8'] ];

@@ -2,8 +2,8 @@ import { readFile, writeFile, mkdir, rename } from 'node:fs/promises';
 import { gunzipSync, gzipSync } from 'node:zlib';
 import { TOKEN, SOURCE } from './metrics.mjs';
 import {validSourceInflow,newerSourceInflow} from './source-inflows.mjs';
-export const CHECKPOINT_URL = 'https://raw.githubusercontent.com/starkweng/pancake-depth-viewer/esim-cache/state.json.gz';
-export const CLAIM_FLOW_URL = 'https://raw.githubusercontent.com/starkweng/pancake-depth-viewer/esim-cache/claim-flow.json';
+export const CHECKPOINT_URL = 'https://raw.githubusercontent.com/brunopike/pancake-depth-viewer/esim-cache/state.json.gz';
+export const CLAIM_FLOW_URL = 'https://raw.githubusercontent.com/brunopike/pancake-depth-viewer/esim-cache/claim-flow.json';
 export function validClaimFlow(state,flow){
   try{
     const address=a=>/^0x[0-9a-f]{40}$/.test(a||''),hash=h=>/^0x[0-9a-f]{64}$/.test(h||''),uint=n=>typeof n==='string'&&/^\d+$/.test(n);

@@ -6,9 +6,9 @@ function retainSourceInflow(next,prior){
 }
 
 export const SNAPSHOTS={
-  report:['./data/current-esim-report.json','https://raw.githubusercontent.com/starkweng/pancake-depth-viewer/esim-cache/report.json','./data/esim-report.json'],
-  addresses:['./data/current-esim-addresses.json','https://raw.githubusercontent.com/starkweng/pancake-depth-viewer/esim-cache/addresses.json','./data/esim-addresses.json'],
-  holders:['./data/current-esim-holders.json','https://raw.githubusercontent.com/starkweng/pancake-depth-viewer/holder-cache/holders.json','./data/esim-holders.json'],
+  report:['./data/current-esim-report.json','https://raw.githubusercontent.com/brunopike/pancake-depth-viewer/esim-cache/report.json','./data/esim-report.json'],
+  addresses:['./data/current-esim-addresses.json','https://raw.githubusercontent.com/brunopike/pancake-depth-viewer/esim-cache/addresses.json','./data/esim-addresses.json'],
+  holders:['./data/current-esim-holders.json','https://raw.githubusercontent.com/brunopike/pancake-depth-viewer/holder-cache/holders.json','./data/esim-holders.json'],
 };
 export function validSnapshot(kind,data){
   return data?.version===1&&Number.isSafeInteger(data.block)&&Number.isFinite(data.cutoff)&&(kind==='holders'?Array.isArray(data.rows):!!data.windows)&&(kind==='addresses'||data.token==='0x7765a659c5b0cfbfd9fbc2ef2298b75a598f2d2d');

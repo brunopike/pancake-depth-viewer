@@ -2,7 +2,7 @@ import {readFile} from 'node:fs/promises';
 import {validateHolders} from '../../server/esim/holders.mjs';
 const content=await readFile('.goodway/esim-holders/holders.json','utf8'),report=validateHolders(JSON.parse(content));
 const token=process.env.GITHUB_TOKEN;if(!token)throw new Error('NO_GITHUB_TOKEN');
-const root='https://api.github.com/repos/starkweng/pancake-depth-viewer/git';
+const root='https://api.github.com/repos/brunopike/pancake-depth-viewer/git';
 async function api(path,body,method=body?'POST':'GET'){
  const response=await fetch(`${root}/${path}`,{method,headers:{Authorization:`Bearer ${token}`,Accept:'application/vnd.github+json','Content-Type':'application/json'},body:body?JSON.stringify(body):undefined});
  if(response.status===404&&method==='GET')return null;if(!response.ok)throw new Error(`PUBLICATION_${response.status}`);return response.json();

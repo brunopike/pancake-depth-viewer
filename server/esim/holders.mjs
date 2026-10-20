@@ -6,7 +6,7 @@ import { TRANSFER } from './attribution.mjs';
 import { CONFIRMED_HOLDER_LABELS, HOLDER_IMPORT, applyHolderLabels } from '../../src/holder-labels.mjs';
 const seedFile = JSON.parse(await readFile(new URL('./holder-seed.json', import.meta.url)));
 export const SEED = {...seedFile, addresses:[...new Set([...seedFile.addresses,...HOLDER_IMPORT.records.map(r=>r.address)])], supplement:{source:HOLDER_IMPORT.source,capturedAt:HOLDER_IMPORT.capturedAt,block:HOLDER_IMPORT.block,count:HOLDER_IMPORT.count}, labels:{...seedFile.labels,...CONFIRMED_HOLDER_LABELS}};
-export const HOLDER_CACHE = 'https://raw.githubusercontent.com/starkweng/pancake-depth-viewer/holder-cache/holders.json';
+export const HOLDER_CACHE = 'https://raw.githubusercontent.com/brunopike/pancake-depth-viewer/holder-cache/holders.json';
 const ZERO = '0x0000000000000000000000000000000000000000';
 const valid = a => /^0x[0-9a-f]{40}$/.test(a || '') && a !== ZERO;
 const hex = n => `0x${n.toString(16)}`, num = n => Number(BigInt(n));

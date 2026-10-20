@@ -3,7 +3,7 @@ import {gunzipSync,gzipSync} from 'node:zlib';
 import {loadState,parseState,validClaimFlow} from '../../server/esim/store.mjs';
 import {collectClaimFlow} from '../../server/esim/claim-flow-collector.mjs';
 import {makeRpc} from '../../server/esim/rpc.mjs';
-const work='.goodway/claim-flow',url='https://raw.githubusercontent.com/starkweng/pancake-depth-viewer/esim-cache/claim-flow-state.json.gz';
+const work='.goodway/claim-flow',url='https://raw.githubusercontent.com/brunopike/pancake-depth-viewer/esim-cache/claim-flow-state.json.gz';
 await mkdir(work,{recursive:true});
 try{
  let state;try{state=parseState(await readFile('.goodway/esim-monitor/state.json.gz'));}catch{state=await loadState();}
