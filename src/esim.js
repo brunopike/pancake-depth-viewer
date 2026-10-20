@@ -1,4 +1,5 @@
 import {readSnapshot,readTradingReport} from './snapshot-client.mjs';
+import {esimEndpoint} from './site-runtime.mjs';
 import {showSnapshotStatus,refreshButtonLabel} from './snapshot-status.mjs';
 import {holderInsights,holderViewURL} from './holder-insights.mjs';
 import {TAG_KEY,readManual} from './holder-model.mjs';
@@ -57,7 +58,7 @@ function claimFlowCard(w){
 }
 function panel(key, w) {
   const title = key === 'today' ? '今日·0点到现在' : '昨日 · 24 小时';
-  const heading = `<div class="period-heading"><h2>${title}</h2><p>${date(w.start)} — ${w.available ? date(key === 'today' ? w.availableThrough : w.end) : '等待更新'}<span>北京时间</span></p>${openLink(`https://starkweng.github.io/esim-onchain/?view=addresses&period=${key}`,'查看卖出排名')}</div>`;
+  const heading = `<div class="period-heading"><h2>${title}</h2><p>${date(w.start)} — ${w.available ? date(key === 'today' ? w.availableThrough : w.end) : '等待更新'}<span>北京时间</span></p>${openLink(`./esim-addresses.html?period=${key}`,'查看卖出排名')}</div>`;
   if (!w.available) return heading + '<div class="empty">这个时段还没有更新的数据，请点击“刷新数据”。</div>';
   const g = w.groups.all_pools, b = w.bnb, d = w.distribution;
   return heading + `<div class="hero-grid">${metric('BNB 入金', amount(b.direct_inflow_wei, 1, 3), 'BNB', `${integer(b.direct_inflow_addresses)} 地址 · ${integer(b.direct_inflow_txs)} 笔`)}${metric('分发收币', amount(d.total_wei), '万 ESIM', `${integer(d.recipients)} 地址 · ${integer(d.transactions)} 笔`)}${metric('卖出总量', amount(g.sold_wei), '万 ESIM', integer(g.sell_txs) + ' 笔', 'sell')}${metric('买入总量', amount(g.bought_wei), '万 ESIM', integer(g.buy_txs) + ' 笔', 'buy')}${metric('净数额', net(g.net_sold_wei), '万 ESIM')}${metric('卖出地址', addresses(g, 'sell'), '', `曾领币 ${addresses(w.groups.source_recipients, 'sell')} 个`)}</div>${claimFlowCard(w)}${tradeTable(w)}${chart(report.hourly[key])}${operations(w)}`;
@@ -121,6 +122,6 @@ async function refresh(live=true) {
 $('refresh').addEventListener('click',refresh);
 window.addEventListener('storage',e=>{if(e.key===TAG_KEY){manual=readManual(e.newValue);holdingsBridge();}});
 try{
- const config=await json('./data/esim-config.json');endpoint=config.apiOrigin?new URL('/api/esim',config.apiOrigin).href:location.hostname.endsWith('.vercel.app')?'./api/esim':null;
+ const config=await json('./data/esim-config.json');endpoint=esimEndpoint(config);
 }catch{}
 await refresh(false);

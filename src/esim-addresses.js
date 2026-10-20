@@ -1,4 +1,5 @@
 import {readSnapshot,newerSnapshot} from './snapshot-client.mjs';
+import {esimEndpoint} from './site-runtime.mjs';
 import {showSnapshotStatus,refreshButtonLabel} from './snapshot-status.mjs';
 import {sellerProfile,holderViewURL,displayEsimBalance} from './holder-insights.mjs';
 import {TAG_KEY,readManual} from './holder-model.mjs';
@@ -116,5 +117,5 @@ if(SELLER_SORT_KEYS.includes(query.get('sort')))$('sort').value=query.get('sort'
 if(['asc','desc'].includes(query.get('direction')))$('sort-direction').value=query.get('direction');
 for(const input of $('filter').querySelectorAll('input'))input.checked=(query.get('tags')||'').split(',').includes(input.value);
 tagFilter.refresh();
-try{const config=await json('./data/esim-config.json');endpoint=config.apiOrigin?new URL('/api/esim',config.apiOrigin).href:location.hostname.endsWith('.vercel.app')?'./api/esim':null;}catch{endpoint=null;}
+try{const config=await json('./data/esim-config.json');endpoint=esimEndpoint(config);}catch{endpoint=null;}
 try{await Promise.all([loadSaved().then(data=>{saved=data;}),loadHolders()]);await loadPage();showSnapshotStatus($('status'),$('refresh'),[['交易',current||saved],['持仓',holderReport]],{retained:lastTradeSource==='retained'||lastHolderSource==='retained'});}catch{$('status').textContent='地址数据暂时无法读取，请点击刷新重试。';$('status').className='notice';}

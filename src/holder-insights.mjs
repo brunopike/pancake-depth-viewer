@@ -55,7 +55,7 @@ export function sellerProfile(row, holder, manual = {}) {
   return {own,frequency,received,tags:visible,balance:holder?.balance??null};
 }
 
-export function holderViewURL({tags=[],search='',zero=false,cohort,excludeOwn=false,chart}={}) {
+export function holderViewURL({tags=[],search='',zero=false,cohort,excludeOwn=false,chart}={},pageURL=globalThis.location?.href) {
   const q=new URLSearchParams({view:'holders'});
   if(tags.length)q.set('tags',tags.join(','));
   if(search)q.set('search',search);
@@ -63,7 +63,9 @@ export function holderViewURL({tags=[],search='',zero=false,cohort,excludeOwn=fa
   if(cohort)q.set('cohort',cohort);
   if(excludeOwn)q.set('scope','external');
   if(chart)q.set('chart',chart);
-  return `https://starkweng.github.io/esim-onchain/?${q}`;
+  const target=pageURL?new URL('./esim-holders.html',pageURL):new URL('https://starkweng.github.io/esim-onchain/');
+  target.search=q.toString();
+  return target.href;
 }
 
 export function displayEsimBalance(live,holder,holderReport){

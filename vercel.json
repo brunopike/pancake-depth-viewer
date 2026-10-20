@@ -2,6 +2,11 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
+  "rewrites": [
+    { "source": "/", "has": [{ "type": "query", "key": "view", "value": "report" }], "destination": "/esim.html" },
+    { "source": "/", "has": [{ "type": "query", "key": "view", "value": "addresses" }], "destination": "/esim-addresses.html" },
+    { "source": "/", "has": [{ "type": "query", "key": "view", "value": "holders" }], "destination": "/esim-holders.html" }
+  ],
   "functions": {
     "api/esim.js": {
       "maxDuration": 300,
