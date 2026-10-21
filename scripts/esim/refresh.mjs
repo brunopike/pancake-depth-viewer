@@ -19,12 +19,13 @@ try {
     cacheDir: `${work}/rpc-cache`, progress: e => { if (e.phase !== 'rpc' || e.physical % 10 === 0) console.log(JSON.stringify(e)); } });
   for (let i = 0; i < 30; i++) {
     const next = await refreshState(state, transport, { targetBlock, progress: e => console.log(JSON.stringify(e)) });
-    if (next.block === state.block) break;
+    const advanced=next.block>state.block;
     state = next;
     await writeFile(`${work}/state.tmp`, gzipSync(JSON.stringify(state)));
     await rename(`${work}/state.tmp`, `${work}/state.json.gz`);
     await writeFile(`${work}/latest.json`, JSON.stringify(buildReport(state)));
     console.log(JSON.stringify({ phase: 'checkpoint', block: state.block, cutoff: state.cutoff, calls: state.calls.length, trades: state.trades.length, ...transport.stats }));
+    if (!advanced) break;
     if (targetBlock && state.block >= targetBlock) break;
     if (!targetBlock && Date.now() / 1000 - state.cutoff < 120) break;
   }

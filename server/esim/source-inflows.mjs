@@ -20,7 +20,7 @@ export function buildSourceInflow({transfers,startBlock,throughBlock,blockHash,c
     if(event.from===checkpoint.source)expected-=value;
   }
   ensure(uint(balance)&&expected>=0n&&expected===BigInt(balance),'SOURCE_INFLOW_BALANCE_MISMATCH');
-  return {version:1,token:checkpoint.token,source:checkpoint.source,scope:'all-history-gross',seedBlock:checkpoint.throughBlock,
+  return {version:1,method:'transfer-events-v1',token:checkpoint.token,source:checkpoint.source,scope:'all-history-gross',seedBlock:checkpoint.seedBlock??checkpoint.throughBlock,
     throughBlock,blockHash,cutoff,total_wei:total.toString(),transfer_events:count,balance_wei:balance,reconciled:true};
 }
 
@@ -38,28 +38,6 @@ export function newerSourceInflow(current,next,snapshot){
   const prior=validSourceInflow(current,snapshot)?current:null;
   return validSourceInflow(next,snapshot)&&(!prior||next.throughBlock>=prior.throughBlock&&next.cutoff>=prior.cutoff&&BigInt(next.total_wei)>=BigInt(prior.total_wei)&&next.transfer_events>=prior.transfer_events)?next:prior;
 }
-
-// Exact balance-sheet reconciliation, independent of the slower per-recipient
-// provenance scan. This derives gross inflow; it does not count inbound events.
-export function buildSourceAccounting(state){
- try{
-  const pinned=state.sourceTokenBalance;
-  if(state.token!==seed.token||state.source!==seed.source||!pinned||pinned.block!==state.block||pinned.blockHash!==state.blockHash||pinned.cutoff!==state.cutoff||!uint(pinned.balance_wei)||state.block<seed.throughBlock)return null;
-  let openingOut=0n,outgoing=0n;
-  for(const row of state.distributions){
-   if(!uint(row.value)||!Number.isSafeInteger(row.block)||row.block>state.block)return null;
-   outgoing+=BigInt(row.value);if(row.block<=seed.throughBlock)openingOut+=BigInt(row.value);
-  }
-  if(openingOut!==BigInt(seed.total_wei)-BigInt(seed.balance_wei))return null;
-  const value={version:1,method:'balance-reconciliation-v1',token:seed.token,source:seed.source,anchorBlock:seed.throughBlock,anchorHash:seed.blockHash,
-   throughBlock:state.block,blockHash:state.blockHash,cutoff:state.cutoff,incoming_wei:(outgoing+BigInt(pinned.balance_wei)).toString(),outgoing_wei:outgoing.toString(),balance_wei:pinned.balance_wei,reconciled:true};
-  return validSourceAccounting(value,state)?value:null;
- }catch{return null;}
-}
-export function validSourceAccounting(value,snapshot){
- try{return value?.version===1&&value.method==='balance-reconciliation-v1'&&value.token===seed.token&&value.source===seed.source&&value.anchorBlock===seed.throughBlock&&value.anchorHash===seed.blockHash&&value.reconciled===true&&
-  value.throughBlock===snapshot.block&&value.throughBlock>=seed.throughBlock&&hash(value.blockHash)&&value.blockHash===snapshot.blockHash&&value.cutoff===snapshot.cutoff&&value.cutoff>=seed.cutoff&&
-  ['incoming_wei','outgoing_wei','balance_wei'].every(k=>uint(value[k]))&&BigInt(value.incoming_wei)>=BigInt(seed.total_wei)&&BigInt(value.outgoing_wei)>=BigInt(seed.total_wei)-BigInt(seed.balance_wei)&&
-  BigInt(value.incoming_wei)-BigInt(value.outgoing_wei)===BigInt(value.balance_wei);
- }catch{return false;}
+export function isSourceInflowAligned(value,snapshot){
+ return validSourceInflow(value,snapshot)&&value.throughBlock===snapshot.block&&value.blockHash===snapshot.blockHash&&value.cutoff===snapshot.cutoff;
 }

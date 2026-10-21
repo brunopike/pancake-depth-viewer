@@ -2,12 +2,15 @@ import { readFile } from 'node:fs/promises';
 import { parseState } from '../../server/esim/store.mjs';
 import { buildReport } from '../../server/esim/metrics.mjs';
 import { buildAddressReport } from '../../server/esim/addresses.mjs';
+import {isSourceInflowAligned} from '../../server/esim/source-inflows.mjs';
 import { PROJECT_REPOSITORY,projectRepository } from '../../server/esim/repository.mjs';
 const token = process.env.GITHUB_TOKEN;
 const repo = projectRepository(process.env.GITHUB_REPOSITORY || PROJECT_REPOSITORY);
 if (!token || !repo) throw new Error('Invalid publication configuration');
 const bytes = await readFile('.goodway/esim-monitor/state.json.gz');
 const state = parseState(bytes);
+const report=buildReport(state);
+if(!isSourceInflowAligned(report.sourceInflow,report))throw Error('SOURCE_INFLOW_NOT_SYNCHRONIZED');
 const root = `https://api.github.com/repos/${repo}/git`;
 async function api(path, body, method = body ? 'POST' : 'GET') {
   const r = await fetch(`${root}/${path}`, { method, headers: { Authorization: `Bearer ${token}`, Accept: 'application/vnd.github+json', 'Content-Type': 'application/json' }, body: body ? JSON.stringify(body) : undefined, signal: AbortSignal.timeout(60000) });
@@ -19,9 +22,12 @@ const ref = await api('ref/heads/esim-cache');
 const previous = ref ? await api(`commits/${ref.object.sha}`) : null;
 if (ref) {
   const old = await fetch('https://raw.githubusercontent.com/brunopike/pancake-depth-viewer/esim-cache/report.json', { signal: AbortSignal.timeout(15000) });
-  if (old.ok && (await old.json()).block >= state.block) { console.log('ESIM checkpoint already current.'); process.exit(0); }
+  if (old.ok) {
+    const prior=await old.json();
+    if(prior.block>state.block||prior.block===state.block&&isSourceInflowAligned(prior.sourceInflow,prior)) { console.log('ESIM checkpoint already current.'); process.exit(0); }
+  }
 }
-const files = [ ['state.json.gz', bytes.toString('base64'), 'base64'], ['report.json', JSON.stringify(buildReport(state)), 'utf-8'], ['addresses.json', JSON.stringify(buildAddressReport(state)), 'utf-8'] ];
+const files = [ ['state.json.gz', bytes.toString('base64'), 'base64'], ['report.json', JSON.stringify(report), 'utf-8'], ['addresses.json', JSON.stringify(buildAddressReport(state)), 'utf-8'] ];
 const entries = [];
 for (const [path, content, encoding] of files) {
   const blob = await api('blobs', { content, encoding });

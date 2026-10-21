@@ -1,4 +1,5 @@
 import { TOKEN, SOURCE } from './metrics.mjs';
+import {collectSourceInflow} from './source-inflow-collector.mjs';
 import { TRANSFER, V2, V3, V4, PCS, UNI, SWAPS, signature, topic, addr, order, before, eventKey,
   decodeLeg, attributionCandidates, attributedRows } from './attribution.mjs';
 const hex = n => `0x${n.toString(16)}`;
@@ -24,7 +25,7 @@ export async function refreshState(state, transport, { maxBlocks = 24000, target
   const [chain, prior, head] = await batch([['eth_chainId', []], ['eth_getBlockByNumber', [hex(state.block), false]], ['eth_getBlockByNumber', ['latest', false]]], { fresh: true });
   ensure(chain === '0x38' && prior?.hash === state.blockHash, 'CHAIN_OR_CHECKPOINT_CHANGED');
   const end = Math.min(num(head.number) - 20, targetBlock ?? Infinity, state.block + maxBlocks), start = state.block + 1;
-  if (end < start) return state;
+  if (end < start) return {...state,sourceInflow:await collectSourceInflow(state,transport,{progress})};
   const [last, excluded, balance, tokenBalance] = await batch([['eth_getBlockByNumber', [hex(end), false]], ['eth_getBlockByNumber', [hex(end + 1), false]], ['eth_getBalance', [SOURCE, hex(end)]],['eth_call',[{to:TOKEN,data:`0x70a08231${SOURCE.slice(2).padStart(64,'0')}`},hex(end)]]]);
   ensure(last && excluded?.parentHash === last.hash, 'BOUNDARY_CHANGED');
   ensure(typeof tokenBalance==='string'&&/^0x[0-9a-f]+$/i.test(tokenBalance)&&BigInt(tokenBalance)<2n**256n,'SOURCE_TOKEN_BALANCE_MISSING');
@@ -138,9 +139,10 @@ export async function refreshState(state, transport, { maxBlocks = 24000, target
   const topValues = await batch(top.map(a => ['eth_call', [{ to: TOKEN, data: `0x70a08231${a.slice(2).padStart(64, '0')}` }, hex(end)]]));
   const topBalances = Object.fromEntries(top.map((a, i) => [a, BigInt(topValues[i]).toString()]));
   const after = await rpc('eth_getBlockByNumber', [hex(end), false], { fresh: true }); ensure(after.hash === last.hash, 'END_HASH_CHANGED');
-  return { ...state, block: end, blockHash: last.hash, cutoff: timestamp(excluded), pools, firstRecipient,
+  const next = { ...state, block: end, blockHash: last.hash, cutoff: timestamp(excluded), pools, firstRecipient,
     distributions: [...state.distributions, ...distributions], trades: allTrades,
     calls: [...state.calls, ...calls], native: [...state.native, ...native], balance: BigInt(balance).toString(),
     sourceTokenBalance:{block:end,blockHash:last.hash,cutoff:timestamp(excluded),balance_wei:BigInt(tokenBalance).toString()},
     topBalances, nativeComplete: true, coverage: { ...state.coverage, poolCount: Object.keys(pools).length }, warnings };
+  return {...next,sourceInflow:await collectSourceInflow(next,transport,{progress})};
 }

@@ -7,6 +7,7 @@ import {runHourlyWorker,dispatchNextWorker} from '../hourly-worker.mjs';
 import {validSnapshot} from '../../src/snapshot-client.mjs';
 import {SNAPSHOT_INTERVAL_MS} from '../../src/snapshot-status.mjs';
 import {projectRepository} from '../../server/esim/repository.mjs';
+import {isSourceInflowAligned} from '../../server/esim/source-inflows.mjs';
 
 // One timer owns both datasets. Each dataset has its own cutoff and failure boundary.
 export async function refreshDueSnapshots({read,refresh,publishSite,now=Date.now,onError=()=>{}}){
@@ -15,10 +16,12 @@ export async function refreshDueSnapshots({read,refresh,publishSite,now=Date.now
   try{
    const prior=await read(kind),next=prior.cutoff*1000+SNAPSHOT_INTERVAL_MS;
    if(!validSnapshot(kind,prior))throw Error('INVALID_SNAPSHOT');
-   if(next>now()){due.push(next);continue;}
+   const needsInflow=kind==='report'&&!isSourceInflowAligned(prior.sourceInflow,prior);
+   if(next>now()&&!needsInflow){due.push(next);continue;}
    await refresh(kind);
    const updated=await read(kind);
-   if(!validSnapshot(kind,updated)||updated.block<=prior.block||updated.cutoff<=prior.cutoff)throw Error('SNAPSHOT_NOT_ADVANCED');
+   const synchronized=needsInflow&&updated.block===prior.block&&updated.cutoff===prior.cutoff&&updated.blockHash===prior.blockHash&&isSourceInflowAligned(updated.sourceInflow,updated);
+   if(!validSnapshot(kind,updated)||kind==='report'&&!isSourceInflowAligned(updated.sourceInflow,updated)||!synchronized&&(updated.block<=prior.block||updated.cutoff<=prior.cutoff))throw Error('SNAPSHOT_NOT_ADVANCED');
    changed=true;due.push(Math.max(now()+60000,updated.cutoff*1000+SNAPSHOT_INTERVAL_MS));
   }catch{onError(kind);due.push(now()+SNAPSHOT_INTERVAL_MS);}
  }
