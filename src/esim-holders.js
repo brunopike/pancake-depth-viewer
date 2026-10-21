@@ -59,7 +59,14 @@ function render(){
  const ledger=holderLedger(report,manual),totalSupply=Number(BigInt(report.totalSupply));
  const metrics=[{label:'非外部流通数量',balance:ledger.nonExternal,tone:'own',note:'我方持仓 + 币安活动预留 + 底池（共享 Vault）'},
   {label:'外部流通数量',balance:ledger.external,tone:'external',note:'已索引持仓 − 非外部流通数量；含混合钱包的外部份额'}];
- $('summary').innerHTML=metrics.map(m=>`<div data-tone="${m.tone}"><span>${escape(m.label)}</span><strong title="${quantity(m.balance)} ESIM">${compact(m.balance)} <em>ESIM</em></strong><small>${number(Number(BigInt(m.balance))/totalSupply*100)}% 总供应量 · 已索引口径</small><p>${m.note}</p></div>`).join('');
+ const externalDetails=`<div class="external-breakdown" role="group" aria-label="外部流通构成">${[
+  {id:'participants',label:'领币 / 合约交互地址持仓',tone:'received'},
+  {id:'other',label:'其他外部地址持仓',tone:'external'},
+ ].map(group=>{
+  const part=ledger.externalBreakdown[group.id],share=BigInt(ledger.external)>0n?number(Number(BigInt(part.balance)*1000000n/BigInt(ledger.external))/10000):'0.00';
+  return `<div class="external-breakdown-item" data-tone="${group.tone}"><span>${group.label}</span><strong title="${quantity(part.balance)} ESIM">${compact(part.balance)} <em>ESIM</em></strong><small>${number(part.addresses,0)} 个地址 · 占外部 ${share}%</small></div>`;
+ }).join('')}</div><p class="external-breakdown-note">两项合计为外部总量，按地址当前外部份额分类；领币与成功交互地址去重，不代表当前持仓全部来自分发。其他外部未识别上述记录，不等同于全部为个人散户。</p>`;
+ $('summary').innerHTML=metrics.map(m=>`<div data-tone="${m.tone}"><span>${escape(m.label)}</span><strong title="${quantity(m.balance)} ESIM">${compact(m.balance)} <em>ESIM</em></strong><small>${number(Number(BigInt(m.balance))/totalSupply*100)}% 总供应量 · 已索引口径</small><p>${m.note}</p>${m.tone==='external'?externalDetails:''}</div>`).join('');
  const components=[{label:'我方持仓',balance:ledger.own},...ledger.exclusions.map(r=>({...r,label:r.label==='共享 Vault'?'底池（共享 Vault）':r.label}))];
  $('exclusion-count').textContent=`${components.length} 项`;
  $('exclusion-values').innerHTML=components.map(r=>`<div><span>${escape(r.label)}</span><strong>${quantity(r.balance)} <em>ESIM</em></strong><small>${number(Number(BigInt(r.balance))/totalSupply*100)}% 总供应量</small></div>`).join('');

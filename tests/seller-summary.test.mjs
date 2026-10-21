@@ -38,3 +38,7 @@ test('empty category overview still exposes all five categories with zero signed
   assert.deepEqual(groups.map(g=>g.id),['received','all','own','other','frequency']);
   assert(groups.every(g=>g.count===0&&g.sold==='0'&&g.bought==='0'&&g.netSold==='0'));
 });
+test('buy-only own wallets have nonzero purchases and zero selling-address count',()=>{
+ const groups=sellerSummaries([{sold:'0',bought:'123456789012345678901',own:true}],r=>r),own=groups.find(r=>r.id==='own');
+ assert.equal(own.count,0);assert.equal(own.sold,'0');assert.equal(own.bought,'123456789012345678901');assert.equal(own.netSold,'-123456789012345678901');
+});

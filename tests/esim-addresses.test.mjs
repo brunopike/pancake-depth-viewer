@@ -3,6 +3,8 @@ import assert from 'node:assert/strict';
 import { addressRanking, buildAddressReport, buildAddressPage, buildAddressDataset, addressOptions, OWN_EXECUTOR } from '../server/esim/addresses.mjs';
 import { queryBalances } from '../server/esim/balances.mjs';
 import { TOKEN, ORIGIN } from '../server/esim/metrics.mjs';
+import {sellerSummaries} from '../src/seller-summary.mjs';
+import {sellerProfile} from '../src/holder-insights.mjs';
 const a = '0x' + '1'.repeat(40), b = '0x' + '2'.repeat(40), router = '0x' + '3'.repeat(40);
 const state = { origin: ORIGIN, cutoff: ORIGIN + 1000, block: 1, firstRecipient: { [a]: { timestamp: ORIGIN + 5 } }, trades: [
  { tx: 't1', timestamp: ORIGIN + 10, side: 'sell', amount_wei: '100', initiator: a, executor: OWN_EXECUTOR, address: router },
@@ -24,6 +26,18 @@ test('high frequency counts unique transactions per Beijing calendar day and doe
  const trades = Array.from({length:100},(_,i)=>({ ...state.trades[3], tx:'freq'+i, timestamp: ORIGIN + i }));
  const r = addressRanking({ ...state, trades }, ORIGIN, state.cutoff).rows[0];
  assert.equal(r.highFrequency,true); assert.equal(r.own,false); assert.equal(r.peakDailyTrades,100);
+});
+test('buy-only wallets enter the full overview but remain outside the sell ranking',()=>{
+ const buyer='0x'+'4'.repeat(40),external='0x'+'5'.repeat(40),executor='0xe1de6ac2ee058df5d3be8edeb62a8815fd13ff5a';
+ const buy={tx:'buy-only',timestamp:ORIGIN+20,side:'buy',amount_wei:'6453545870944438193743',initiator:buyer,executor,address:executor};
+ const data=buildAddressDataset({...state,trades:[...state.trades,buy,{...buy,tx:'external-buy',initiator:external,executor:router,amount_wei:'17'}]},{period:'history'},state.cutoff);
+ assert(!data.rows.some(r=>r.address===buyer));assert.equal(data.buyOnlyRows.length,2);
+ const own=data.buyOnlyRows.find(r=>r.address===buyer);assert.equal(own.own,true);assert.equal(own.highFrequency,false);assert.equal(own.buyCount,1);assert.equal(own.sellCount,0);
+ const groups=sellerSummaries([...data.rows,...data.buyOnlyRows],r=>sellerProfile(r,null)),group=groups.find(r=>r.id==='own');
+ assert.equal(group.count,1);assert.equal(group.bought,(6453545870944438193743n+75n).toString());
+ assert(data.ownExecutors.includes(executor));
+ const funding=buildAddressDataset({...state,trades:[buy,{...buy,tx:'unknown',address:null}]},{period:'history',mode:'funding'},state.cutoff);
+ assert.equal(funding.buyOnlyRows[0].own,true);assert.equal(funding.missingBought,buy.amount_wei);
 });
 test('balance queries use one confirmed block, support three currencies, cache, and reject unknown addresses', async () => {
  const calls = [];

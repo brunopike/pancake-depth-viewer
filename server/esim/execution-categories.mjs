@@ -1,5 +1,7 @@
 import {CONFIRMED_HOLDER_LABELS} from '../../src/holder-labels.mjs';
 const OWN_EXECUTOR='0x21a0541e4122090c30fbc04e98cf27430608e007';
+export const OWN_EXECUTORS=new Set([OWN_EXECUTOR,'0xe1de6ac2ee058df5d3be8edeb62a8815fd13ff5a']);
+export const ownTradingInitiators=rows=>new Set(rows.filter(t=>OWN_EXECUTORS.has(t.executor?.toLowerCase())).map(t=>t.initiator?.toLowerCase()).filter(Boolean));
 const valid=a=>typeof a==='string'&&/^0x[0-9a-f]{40}$/i.test(a)?a.toLowerCase():null;
 const categories={own:'我方相关地址 / 合约',binance:'币安路由',pancake:'Pancake 路由',okx:'OKX 路由',robot:'链上机器人（用户确认）',frequency:'高频交易地址',other:'其他合约 / 路径待核对'};
 export const EXECUTION_LABELS={
@@ -16,8 +18,8 @@ export const EXECUTION_LABELS={
 // Refine execution paths inside the existing unattributed bucket. A public
 // router is a trading channel; it does not establish the fund owner.
 export function executionBreakdown(rows){
- const activity=new Map(),ownInitiators=new Set();
- for(const t of rows){const a=valid(t.initiator);if(!a)continue;if(valid(t.executor)===OWN_EXECUTOR)ownInitiators.add(a);
+ const activity=new Map(),ownInitiators=ownTradingInitiators(rows);
+ for(const t of rows){const a=valid(t.initiator);if(!a)continue;
   const day=Math.floor((t.timestamp+28800)/86400),key=a+':'+day;if(!activity.has(key))activity.set(key,new Set());activity.get(key).add(t.tx);
  }
  const frequent=new Set([...activity].filter(([,tx])=>tx.size>=100).map(([key])=>key.slice(0,42)));

@@ -25,8 +25,9 @@ export async function refreshState(state, transport, { maxBlocks = 24000, target
   ensure(chain === '0x38' && prior?.hash === state.blockHash, 'CHAIN_OR_CHECKPOINT_CHANGED');
   const end = Math.min(num(head.number) - 20, targetBlock ?? Infinity, state.block + maxBlocks), start = state.block + 1;
   if (end < start) return state;
-  const [last, excluded, balance] = await batch([['eth_getBlockByNumber', [hex(end), false]], ['eth_getBlockByNumber', [hex(end + 1), false]], ['eth_getBalance', [SOURCE, hex(end)]]]);
+  const [last, excluded, balance, tokenBalance] = await batch([['eth_getBlockByNumber', [hex(end), false]], ['eth_getBlockByNumber', [hex(end + 1), false]], ['eth_getBalance', [SOURCE, hex(end)]],['eth_call',[{to:TOKEN,data:`0x70a08231${SOURCE.slice(2).padStart(64,'0')}`},hex(end)]]]);
   ensure(last && excluded?.parentHash === last.hash, 'BOUNDARY_CHANGED');
+  ensure(typeof tokenBalance==='string'&&/^0x[0-9a-f]+$/i.test(tokenBalance)&&BigInt(tokenBalance)<2n**256n,'SOURCE_TOKEN_BALANCE_MISSING');
   progress({ phase: 'collect', start, end });
   const pools = structuredClone(state.pools), warnings = [];
   const logQueries = (address, topics) => {
@@ -140,5 +141,6 @@ export async function refreshState(state, transport, { maxBlocks = 24000, target
   return { ...state, block: end, blockHash: last.hash, cutoff: timestamp(excluded), pools, firstRecipient,
     distributions: [...state.distributions, ...distributions], trades: allTrades,
     calls: [...state.calls, ...calls], native: [...state.native, ...native], balance: BigInt(balance).toString(),
+    sourceTokenBalance:{block:end,blockHash:last.hash,cutoff:timestamp(excluded),balance_wei:BigInt(tokenBalance).toString()},
     topBalances, nativeComplete: true, coverage: { ...state.coverage, poolCount: Object.keys(pools).length }, warnings };
 }

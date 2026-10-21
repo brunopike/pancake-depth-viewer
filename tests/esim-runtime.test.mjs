@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { makeRpc } from '../server/esim/rpc.mjs';
 import { refreshState, nativeFlow } from '../server/esim/collector.mjs';
 import handler, { allowedOrigin } from '../api/esim.js';
-import { windowMetrics, SOURCE } from '../server/esim/metrics.mjs';
+import { windowMetrics, SOURCE, TOKEN } from '../server/esim/metrics.mjs';
 
 test('paid RPC has a hard request cap and reordered batch responses stay correctly mapped', async () => {
   let requests = 0;
@@ -23,6 +23,24 @@ test('checkpoint mismatch rejects update and preserves state', async () => {
   const state = { block: 1, blockHash: 'old', trades: [{ value: '100' }] }, before = structuredClone(state);
   await assert.rejects(refreshState(state, { batch: async () => ['0x38', { hash: 'reorg' }, { number: '0x10' }] }), /CHAIN_OR_CHECKPOINT_CHANGED/);
   assert.deepEqual(state, before);
+});
+test('source ESIM balance is read at the same verified closing block as distributions',async()=>{
+ const calls=[],end=108,state={version:1,token:TOKEN,source:SOURCE,block:100,blockHash:'prior',balance:'0',pools:{},firstRecipient:{},distributions:[],trades:[],calls:[],native:[],coverage:{}};
+ const rpc=async(method,params)=>{
+  calls.push([method,params]);
+  if(method==='eth_chainId')return '0x38';
+  if(method==='eth_getBlockByNumber')return params[0]==='latest'?{number:'0x80'}:params[0]==='0x64'?{hash:'prior'}:params[0]==='0x6d'?{parentHash:'closing',timestamp:'0x100'}:{hash:'closing',number:'0x6c',timestamp:'0xff'};
+  if(method==='eth_getBalance')return '0x0';
+  if(method==='eth_call')return '0x123';
+  if(method==='alchemy_getAssetTransfers')return {transfers:[]};
+  if(['eth_getLogs','trace_filter'].includes(method))return [];
+  throw Error(method);
+ };
+ const next=await refreshState(state,{rpc,batch:requests=>Promise.all(requests.map(([m,p])=>rpc(m,p)))},{maxBlocks:8});
+ assert.deepEqual(next.sourceTokenBalance,{block:end,blockHash:'closing',cutoff:256,balance_wei:'291'});
+ const balanceReads=calls.filter(([m,p])=>m==='eth_call'&&p[0].to===TOKEN);
+ assert.equal(balanceReads.length,1);assert.equal(balanceReads[0][1][1],'0x6c');assert(balanceReads[0][1][0].data.endsWith(SOURCE.slice(2)));
+ assert.equal(state.sourceTokenBalance,undefined);
 });
 test('API rejects unapproved origins and arbitrary paid RPC input before loading any data', async () => {
   assert.equal(allowedOrigin('https://evil.example', 'pancake-depth-viewer.vercel.app'), null);

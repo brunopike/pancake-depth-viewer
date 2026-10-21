@@ -53,3 +53,31 @@ test('chart amounts reconcile, mixed shares split and address counts remain uniq
 test('below-fixed external mixed balance never fabricates owned coins',()=>{
  const small={...report,rows:[row(mixed,100)]};assert.equal(holderLedger(small).own,'0');assert.equal(holderLedger(small).external,(100n*W).toString());
 });
+test('external breakdown reconciles current external shares without ownership or custody balances',()=>{
+ const ledger=holderLedger(report),{participants,other}=ledger.externalBreakdown;
+ assert.deepEqual(participants,{balance:(499924n*W).toString(),addresses:2});
+ assert.deepEqual(other,{balance:(200000n*W).toString(),addresses:1});
+ assert.equal(BigInt(participants.balance)+BigInt(other.balance),BigInt(ledger.external));
+});
+test('participant union counts receipts and successful interactions once, excluding zero and own balances',()=>{
+ const testRows=[row(a,10,[tag('interaction')]),row(b,20,[tag('received'),tag('interaction')]),row(c,30,[tag('contract')]),
+  row('0x'+'4'.repeat(40),0,[tag('received')]),row('0x'+'5'.repeat(40),40,[tag('own'),tag('interaction')]),
+  row(reserve,50,[tag('received')]),row(vault,60,[tag('interaction')])];
+ const ledger=holderLedger({...report,rows:testRows});
+ assert.deepEqual(ledger.externalBreakdown,{participants:{balance:(30n*W).toString(),addresses:2},other:{balance:(30n*W).toString(),addresses:1}});
+ assert.equal(ledger.external,(60n*W).toString());
+});
+test('external breakdown follows browser ownership labels and never absorbs a mixed wallet own share',()=>{
+ const ledger=holderLedger(report,{[b]:{kind:'own',text:'我方 B'},[mixed]:{kind:'own',text:'混合备注'}});
+ assert.equal(ledger.externalBreakdown.participants.balance,(409924n*W).toString());
+ assert.equal(ledger.externalBreakdown.participants.addresses,1);
+ assert.equal(BigInt(ledger.externalBreakdown.participants.balance)+BigInt(ledger.externalBreakdown.other.balance),BigInt(ledger.external));
+});
+test('external breakdown retains wei precision and explicit empty buckets',()=>{
+ const ledger=holderLedger({...report,rows:[{...row(a,1,[tag('received')]),balance:'1000000000000000001'},
+  {...row(b,1),balance:'999999999999999999'}]});
+ assert.equal(ledger.externalBreakdown.participants.balance,'1000000000000000001');
+ assert.equal(ledger.externalBreakdown.other.balance,'999999999999999999');
+ assert.equal(ledger.external,(2n*W).toString());
+ assert.deepEqual(holderLedger({...report,rows:[]}).externalBreakdown,{participants:{balance:'0',addresses:0},other:{balance:'0',addresses:0}});
+});

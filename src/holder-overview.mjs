@@ -10,6 +10,7 @@ export const HOLDER_TONES={
 };
 const excluded=row=>Object.hasOwn(HOLDER_CIRCULATION_EXCLUSIONS,row.address);
 const received=(row,manual)=>rowTags(row,manual).some(t=>t.kind==='received'||t.id==='received');
+const participant=(row,manual)=>rowTags(row,manual).some(t=>['received','interaction'].includes(t.kind)||['received','interacted'].includes(t.id));
 
 export function holderAppearance(row,manual={}){
  if(excluded(row))return 'excluded';
@@ -24,15 +25,21 @@ export function holderAppearance(row,manual={}){
 // exclusions describe reporting scope and never establish whole-Vault ownership.
 export function holderLedger(report,manual={}){
  let own=0n,external=0n,indexed=0n;
+ const externalBreakdown={participants:{balance:0n,addresses:0},other:{balance:0n,addresses:0}};
  const exclusions=Object.entries(HOLDER_CIRCULATION_EXCLUSIONS).map(([address,rule])=>({address,...rule,balance:'0'}));
  const byAddress=new Map(exclusions.map(r=>[r.address,r]));
  for(const row of report.rows){
   const balance=BigInt(row.balance);indexed+=balance;
   if(excluded(row)){byAddress.get(row.address).balance=balance.toString();continue;}
   const parts=ownershipAmounts(row,manual);own+=BigInt(parts.own);external+=BigInt(parts.external);
+  if(BigInt(parts.external)>0n){
+   const group=externalBreakdown[participant(row,manual)?'participants':'other'];
+   group.balance+=BigInt(parts.external);group.addresses++;
+  }
  }
  return {own:own.toString(),nonExternal:(indexed-external).toString(),external:external.toString(),indexed:indexed.toString(),
-  unindexed:(BigInt(report.totalSupply)-indexed).toString(),exclusions};
+  unindexed:(BigInt(report.totalSupply)-indexed).toString(),exclusions,
+  externalBreakdown:Object.fromEntries(Object.entries(externalBreakdown).map(([id,group])=>[id,{...group,balance:group.balance.toString()}]))};
 }
 
 export function selectHolderView(report,{scope='all',minimum='0',...options}={},manual={}){

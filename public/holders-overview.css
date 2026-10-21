@@ -14,6 +14,20 @@
 .holder-page .holder-summary strong em{font:400 12px var(--sans);color:var(--muted);font-style:normal}
 .holder-page .holder-summary small{font:13px var(--mono);color:#b0bdcb}
 .holder-page .holder-summary p{font-size:12px;line-height:1.7;color:#9dacba;margin:9px 0 0}
+.external-breakdown{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px;margin-top:18px;padding-top:16px;border-top:1px solid var(--line)}
+.external-breakdown-item{min-width:0;padding-left:12px;border-left:2px solid var(--tone)}
+.external-breakdown-item>span{display:block;font-size:13px;line-height:1.6;color:var(--tone)}
+.holder-page .holder-summary .external-breakdown-item>strong{display:block;font-size:21px;margin:5px 0 4px;overflow-wrap:anywhere}
+.holder-page .external-breakdown-item>small{display:block;font-size:12px;line-height:1.7}
+.holder-page .holder-summary .external-breakdown-note{margin-top:12px;color:#92a3b4}
+@media(max-width:760px){
+ .holder-page .holder-main .holder-summary{grid-template-columns:minmax(0,1fr)}
+ .external-breakdown{gap:12px;margin-top:14px;padding-top:14px}
+ .holder-page .holder-summary .external-breakdown-item>strong{font-size:19px}
+ .holder-page .external-breakdown-item>small{font-size:11px}
+ .external-breakdown-item>span{font-size:12px}
+}
+@media(max-width:360px){.external-breakdown{grid-template-columns:minmax(0,1fr)}}
 .ledger-meta{display:flex;flex-wrap:wrap;column-gap:20px;row-gap:7px;color:#91a2b3;font-size:12px;line-height:1.7;margin:12px 2px 24px}
 .ledger-meta>span:first-child{color:#c2ced9;font-weight:600}
 .ledger-exclusions{margin:-9px 2px 22px;color:var(--muted);font-size:12px;line-height:1.8}
