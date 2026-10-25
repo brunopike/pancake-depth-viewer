@@ -6,7 +6,14 @@ test('a transient HTTP 429 retries within the physical request budget',async()=>
  let calls=0;const delays=[];
  const rpc=makeRpc({endpoint:'https://example.invalid/private',budget:3,sleep:async n=>delays.push(n),fetch:async()=>++calls===1?{ok:false,status:429,json:async()=>({error:{code:429,message:'Throughput limit'}})}:{ok:true,json:async()=>[{id:0,result:'0x38'}]}});
  assert.equal(await rpc.rpc('eth_chainId',[]),'0x38');
- assert.equal(calls,2);assert.equal(rpc.stats.physical,2);assert.equal(delays.length,1);
+ assert.equal(calls,2);assert.equal(rpc.stats.physical,2);assert(delays.some(n=>n>=1000));
+});
+test('concurrent chunks reserve paced starts and expensive trace reads stay separate',async()=>{
+ const delays=[],sizes=[];
+ const rpc=makeRpc({endpoint:'https://example.invalid',sleep:async n=>delays.push(n),fetch:async(_,options)=>{const calls=JSON.parse(options.body);sizes.push(calls.length);return {ok:true,json:async()=>calls.map(c=>({id:c.id,result:[]}))};}});
+ await rpc.batch(Array.from({length:120},()=>['eth_getTransactionReceipt',['hash']]));
+ assert(delays.some(n=>n>=200));assert(delays.some(n=>n>=400));
+ await rpc.batch([['trace_filter',[]],['trace_filter',[]]]);assert.deepEqual(sizes.slice(-2),[1,1]);
 });
 test('monthly exhaustion is explicit, sanitized, and stops subsequent requests without retry',async()=>{
  for(const status of [200,429]){

@@ -4,12 +4,13 @@ import { gzipSync, gunzipSync } from 'node:zlib';
 import {setTimeout as sleep} from 'node:timers/promises';
 
 export function makeRpc({ key = process.env.ALCHEMY_API_KEY, endpoint, budget = 500, timeoutMs = 230000,
-  cacheDir, fetch: request = fetch, progress = () => {}, sleep:wait=sleep } = {}) {
+  cacheDir, fetch: request = fetch, progress = () => {}, sleep:wait=sleep, minIntervalMs=250 } = {}) {
   if (!key && !endpoint) throw new Error('ALCHEMY_NOT_CONFIGURED');
   const url = endpoint || `https://bnb-mainnet.g.alchemy.com/v2/${key}`;
   const deadline = Date.now() + timeoutMs;
   const stats = { physical: 0, logical: 0, cacheHits: 0 };
   let exhausted=false;
+  let nextRequestAt=0;
   const cacheKey = (method, params) => createHash('sha256').update(JSON.stringify([method, params])).digest('hex');
   async function batch(calls, { fresh = false } = {}) {
     const results = [], missing = [];
@@ -20,12 +21,18 @@ export function makeRpc({ key = process.env.ALCHEMY_API_KEY, endpoint, budget = 
       if (file) try { results[i] = JSON.parse(gunzipSync(await readFile(file))); stats.cacheHits++; continue; } catch {}
       missing.push({ i, method, params, file });
     }
-    const batchSize = calls.some(([method]) => method === 'eth_getLogs' || method.startsWith('trace_')) ? 6 : 40;
+    const batchSize = calls.some(([method]) => method.startsWith('trace_')) ? 1 : calls.some(([method]) => method === 'eth_getLogs') ? 6 : 40;
     const chunks = [];
     for (let start = 0; start < missing.length; start += batchSize) chunks.push(missing.slice(start, start + batchSize));
     async function send(chunk, attempt=0) {
       if(exhausted)throw new Error('RPC_CAPACITY_EXCEEDED');
       if (Date.now() >= deadline || stats.physical >= budget) throw new Error('QUERY_LIMIT');
+      // Reserve starts synchronously so concurrent chunks do not create CU bursts.
+      const delay=Math.max(0,nextRequestAt-Date.now());nextRequestAt=Math.max(nextRequestAt,Date.now())+minIntervalMs;
+      if(Date.now()+delay>=deadline)throw new Error('QUERY_LIMIT');
+      if(delay)await wait(delay);
+      if(exhausted)throw new Error('RPC_CAPACITY_EXCEEDED');
+      if(Date.now()>=deadline||stats.physical>=budget)throw new Error('QUERY_LIMIT');
       stats.physical++; stats.logical += chunk.length;
       let response, envelopes;
       try {
@@ -63,7 +70,7 @@ export function makeRpc({ key = process.env.ALCHEMY_API_KEY, endpoint, budget = 
       }
       progress({ phase: 'rpc', ...stats });
     }
-    const concurrency = batchSize === 6 ? 2 : 3;
+    const concurrency = batchSize === 1 ? 1 : batchSize === 6 ? 2 : 3;
     for (let i = 0; i < chunks.length; i += concurrency) {
       const settled = await Promise.allSettled(chunks.slice(i, i + concurrency).map(send));
       const failed = settled.find(r => r.status === 'rejected');
