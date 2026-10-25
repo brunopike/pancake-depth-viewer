@@ -13,9 +13,10 @@ export function matchesSellerGroup(profile, group) {
     group === 'frequency' && profile.frequency;
 }
 
-// Overview includes buy-only wallets; the ranking remains sell-address-only.
+// Overview includes buy-only wallets and unassigned verified fills in "all".
+// The ranking remains sell-address-only; unknown wallets are never invented.
 // Categories can overlap; each is counted independently, never added together.
-export function sellerSummaries(rows, getProfile) {
+export function sellerSummaries(rows, getProfile, unassigned = {}) {
   const groups = SELLER_GROUPS.map(group => ({ ...group, count: 0, sold: 0n, bought: 0n }));
   for (const row of rows) {
     const profile = getProfile(row), sold = BigInt(row.sold), bought = BigInt(row.bought);
@@ -23,5 +24,7 @@ export function sellerSummaries(rows, getProfile) {
       if(sold>0n)group.count++; group.sold += sold; group.bought += bought;
     }
   }
+  const all=groups.find(group=>group.id==='all');
+  all.sold+=BigInt(unassigned.sold||'0');all.bought+=BigInt(unassigned.bought||'0');
   return groups.map(group => ({ ...group, sold: group.sold.toString(), bought: group.bought.toString(), netSold: (group.sold - group.bought).toString() }));
 }

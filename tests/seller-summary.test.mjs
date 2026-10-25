@@ -42,3 +42,18 @@ test('buy-only own wallets have nonzero purchases and zero selling-address count
  const groups=sellerSummaries([{sold:'0',bought:'123456789012345678901',own:true}],r=>r),own=groups.find(r=>r.id==='own');
  assert.equal(own.count,0);assert.equal(own.sold,'0');assert.equal(own.bought,'123456789012345678901');assert.equal(own.netSold,'-123456789012345678901');
 });
+
+test('all verified fills include unassigned amounts without inventing classified wallets',()=>{
+ const groups=sellerSummaries([
+  {sold:'100000000000000000001',bought:'20',own:true},
+  {sold:'0',bought:'30',received:true},
+ ],r=>r,{sold:'700000000000000000003',bought:'800000000000000000007'});
+ const all=groups.find(g=>g.id==='all'),own=groups.find(g=>g.id==='own');
+ assert.equal(all.sold,'800000000000000000004');
+ assert.equal(all.bought,'800000000000000000057');
+ assert.equal(all.netSold,'-53');
+ assert.equal(all.count,1);
+ assert.equal(own.sold,'100000000000000000001');
+ assert.equal(own.bought,'20');
+ assert.equal(groups.find(g=>g.id==='other').sold,'0');
+});
