@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {refreshDueSnapshots} from '../scripts/esim/hourly-worker.mjs';
+import {refreshDueSnapshots,workerFailureCode,assertWorkerHealthy} from '../scripts/esim/hourly-worker.mjs';
 import {SNAPSHOT_INTERVAL_MS as hour} from '../src/snapshot-status.mjs';
 import {SOURCE_INFLOW_SEED as seed} from '../server/esim/source-inflows.mjs';
 const now=(seed.cutoff+100000)*1000,h=n=>'0x'+n.toString(16).padStart(64,'0');
@@ -30,4 +30,13 @@ test('a fresh report with an outdated inflow ledger is immediately synchronized,
  delete values.report.sourceInflow;
  const next=await refreshDueSnapshots({now:()=>now,read:async k=>values[k],refresh:async k=>{reads.push(k);values[k]=snapshot(k,values[k].cutoff);},publishSite:async()=>published++});
  assert.deepEqual(reads,['report']);assert.equal(published,1);assert.equal(next,now+50*60000);
+});
+test('worker preserves a safe quota failure reason and reports recovery independently',async()=>{
+ const values={report:snapshot('report',now/1000-7200),holders:snapshot('holders',now/1000-600)},errors=[],success=[];
+ await refreshDueSnapshots({now:()=>now,read:async k=>values[k],refresh:async()=>{throw Error('RPC_CAPACITY_EXCEEDED');},publishSite:()=>assert.fail('no data changed'),onError:(k,e)=>errors.push([k,workerFailureCode(e)]),onSuccess:k=>success.push(k)});
+ assert.deepEqual(errors,[['report','RPC_CAPACITY_EXCEEDED']]);assert.deepEqual(success,['holders']);
+ assert.equal(workerFailureCode({stderr:'private URL\nESIM refresh stopped: RPC_CAPACITY_EXCEEDED. Last verified checkpoint preserved.\n'}),'RPC_CAPACITY_EXCEEDED');
+ assert.equal(workerFailureCode(Error('https://private.example/secret')),'UPDATE_FAILED');
+ assert.throws(()=>assertWorkerHealthy(new Set(['report'])),/SNAPSHOT_UPDATE_FAILED/);
+ assert.doesNotThrow(()=>assertWorkerHealthy(new Set()));
 });

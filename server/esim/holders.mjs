@@ -94,6 +94,25 @@ export function buildHolderReport({state,addresses,balances,priorBalances,contra
     totalSupply,price,priceSource:'Pancake Infinity ESIM/USDT 池现价',pricePool:PRICE_POOL,tradeCutoff,tradeWindowStart:tradeCutoff-86400,historyStart:state.origin,
     coverage:{seedTop:seed.seedLimit,seedAt:seed.capturedAt,source:seed.source,reportedHolders:seed.reportedHolders,supplement:seed.supplement,tracked:rows.length,holding:rows.filter(r=>BigInt(r.balance)>0n).length,balance:sum.toString(),exhaustive:false,discovery},contracts,rows};
 }
+// Balance and trading pipelines advance independently. A failed report refresh
+// must never erase a newer, verified trading checkpoint in the holder cache.
+export function preserveHolderTrades(next,previous){
+ if(!previous||!(previous.tradeCutoff>next.tradeCutoff)||previous.tradeCutoff>next.cutoff)return next;
+ const rows=new Map(previous.rows.map(row=>[row.address,row]));
+ const behaviorTags=new Set(['received','received-sold','received-relay-sold','interacted','frequency','arbitrage','own-execution','cleared','received-zero']);
+ return {...next,tradeCutoff:previous.tradeCutoff,tradeWindowStart:previous.tradeWindowStart,historyStart:previous.historyStart,
+  rows:next.rows.map(row=>{
+   const prior=rows.get(row.address);
+   if(!prior)return {...row,history:null,day:null,peakDailyTrades:null};
+   const tags=row.tags.filter(tag=>!behaviorTags.has(tag.id));
+   tags.push(...prior.tags.filter(tag=>behaviorTags.has(tag.id)&&!['cleared','received-zero'].includes(tag.id)));
+   if(BigInt(row.balance)===0n&&tags.some(tag=>tag.id==='received')){
+    const sold=tags.some(tag=>tag.id==='received-sold');
+    tags.push(label(sold?'cleared':'received-zero',sold?'领币后卖出 · 当前清仓':'领过币 · 当前零持仓','cleared','当前固定区块 balanceOf 为 0；转出也可能造成余额归零'));
+   }
+   return {...row,history:prior.history,day:prior.day,peakDailyTrades:prior.peakDailyTrades,tags:applyHolderLabels(row.address,tags)};
+  })};
+}
 export async function collectHolders(state, transport, {previous,progress=()=>{}}={}) {
   const {rpc,batch}=transport;
   assert(await rpc('eth_chainId',[])==='0x38','WRONG_CHAIN');
@@ -127,7 +146,7 @@ export async function collectHolders(state, transport, {previous,progress=()=>{}
   }
   const after=await rpc('eth_getBlockByNumber',[hex(end),false],{fresh:true});assert(after?.hash===block.hash,'HOLDER_BLOCK_CHANGED');
   if(previous?.block&&start===previous.block+1){const old=await rpc('eth_getBlockByNumber',[hex(previous.block),false],{fresh:true});assert(old?.hash===previous.blockHash,'HOLDER_CHECKPOINT_CHANGED');}
-  return buildHolderReport({state,addresses,balances,priorBalances,contracts,block,priorBlock:priorBalances?priorBlock:null,totalSupply:BigInt(supply).toString(),price,discovery:{fromBlock:start,toBlock:end,transfers:logs.length}});
+  return preserveHolderTrades(buildHolderReport({state,addresses,balances,priorBalances,contracts,block,priorBlock:priorBalances?priorBlock:null,totalSupply:BigInt(supply).toString(),price,discovery:{fromBlock:start,toBlock:end,transfers:logs.length}}),previous);
 }
 export function validateHolders(report){
   assert(report?.version===1&&report.token===TOKEN&&Number.isSafeInteger(report.block)&&Array.isArray(report.rows)&&report.rows.length<=30000,'INVALID_HOLDER_REPORT');return report;

@@ -1,9 +1,17 @@
 import test from 'node:test';import assert from 'node:assert/strict';
-import {buildHolderReport,holderBehavior,blockAtOrBefore,SEED} from '../server/esim/holders.mjs';
+import {buildHolderReport,holderBehavior,blockAtOrBefore,preserveHolderTrades,SEED} from '../server/esim/holders.mjs';
 const a='0x'+'1'.repeat(40),b='0x'+'2'.repeat(40),c='0x'+'3'.repeat(40),end=200000;
 const state={origin:1,cutoff:end,trades:[],calls:[],pools:{},firstRecipient:{}};
 const seed={labels:{},lpAddresses:[a],seedLimit:1000,capturedAt:'2026-10-13',source:'OKLink',reportedHolders:10000};
 const report=(extra={})=>buildHolderReport({state,addresses:[a,b,c],balances:['9007199254740992002','9007199254740992001','0'],priorBalances:['9007199254740992000','0','1'],block:{number:'0x64',timestamp:'0x'+end.toString(16),hash:'hash'},priorBlock:{number:'0x32',timestamp:'0x'+(end-86400).toString(16)},totalSupply:'1000000000000000000000',price:.06,seed,...extra});
+test('a newer balance read cannot roll verified trading history back to an older report',()=>{
+ const previous=report({state:{...state,trades:[{address:a,initiator:a,side:'buy',amount_wei:'100',timestamp:end-1,tx:'buy'}]}});
+ const next=report({state:{...state,cutoff:end-3600},addresses:[a,b,'0x'+'4'.repeat(40)]});
+ const kept=preserveHolderTrades(next,previous);
+ assert.equal(kept.block,next.block);assert.equal(kept.tradeCutoff,end);assert.equal(kept.rows[0].history.buyAmount,'100');
+ assert.equal(kept.rows[2].history,null);assert.equal(kept.rows[2].day,null);
+ assert.strictEqual(preserveHolderTrades(previous,next),previous);
+});
 test('holder ranking uses exact integer balances and known denominator',()=>{const r=report();assert.equal(r.rows[0].address,a);assert.equal(r.rows[0].change24h,'2');assert.equal(r.rows[1].priorBalance,'0');assert.equal(r.rows[2].change24h,'-1');assert.equal(r.coverage.exhaustive,false);assert.equal(r.tradeCutoff,end);});
 test('historical query failure is unavailable, never zero change',()=>{const r=report({priorBalances:null,priorBlock:null});assert(r.rows.every(r=>r.change24h===null));assert.equal(r.priorCutoff,null);});
 test('all four user-confirmed LP addresses included',()=>{assert.equal(SEED.lpAddresses.length,4);assert(SEED.lpAddresses.includes('0x23dd01612443d15c166aed7b430abdaeef923783'));assert(SEED.lpAddresses.includes('0xdcdb497a0b2ab74753f8e40e36071ce7a0ab4930'));assert(report().rows[0].tags.some(t=>t.id==='own-lp'));});

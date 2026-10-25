@@ -31,7 +31,7 @@ function syncSort(){
  for(const header of document.querySelectorAll('.holder-table thead th')){const active=header.querySelector('[data-sort][aria-pressed="true"]');header.setAttribute('aria-sort',active?ascending?'ascending':'descending':'none');}
  $('holder-sort-note').textContent=`当前排序：${$('sort').selectedOptions[0].textContent} · ${ascending?'从小到大':'从大到小'}；按完整筛选结果排序，暂缺数据排在末尾。`;
 }
-function pair(stats,key){return `<span class="buy">买 ${key==='Count'?number(stats.buyCount,0):quantity(stats.buyAmount)}</span><span class="sell">卖 ${key==='Count'?number(stats.sellCount,0):quantity(stats.sellAmount)}</span>`;}
+function pair(stats,key){return ['buy','sell'].map(side=>{const value=stats?.[side+key];return `<span class="${side}">${side==='buy'?'买':'卖'} ${value==null?'暂缺':key==='Count'?number(value,0):quantity(value)}</span>`;}).join('');}
 function drawChart(rows){
  const model=holderOverviewCharts(rows,manual),{total,count,groups,countGroups,top}=model;
  $('chart').setAttribute('aria-label',`已筛选 ${count} 个有持仓地址，共 ${quantity(total)} ESIM`);
@@ -121,7 +121,7 @@ function setColumns(mode){$('rows').closest('table').dataset.columns=mode;for(co
 for(const b of document.querySelectorAll('[data-columns]'))b.addEventListener('click',()=>{setColumns(b.dataset.columns);viewPrefs.columns=b.dataset.columns;saveView();});
 $('holder-chart').open=viewPrefs.chartOpen===true;
 $('holder-chart').addEventListener('toggle',()=>{viewPrefs.chartOpen=$('holder-chart').open;saveView();});
-setColumns(['all','holdings','trades'].includes(viewPrefs.columns)?viewPrefs.columns:'holdings');
+setColumns(['all','holdings','trades'].includes(viewPrefs.columns)?viewPrefs.columns:'all');
 for(const b of document.querySelectorAll('[data-scope]'))b.addEventListener('click',()=>{scope=b.dataset.scope;excludeOwn=false;cohort=null;page=0;render();});
 $('minimum').addEventListener('change',()=>{page=0;render();});
 $('reset-view').addEventListener('click',()=>{cohort=null;excludeOwn=false;scope='all';$('minimum').value='0';$('search').value='';$('include-zero').checked=false;for(const input of $('filter').querySelectorAll('input'))input.checked=false;updateFilters();});
