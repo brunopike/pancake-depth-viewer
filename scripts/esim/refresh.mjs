@@ -17,8 +17,9 @@ try {
   if (!Number.isInteger(budget) || budget < 1 || budget > 2000) throw new Error('BAD_BUDGET');
   const transport = makeRpc({ endpoint: process.env.ESIM_RPC_URL, budget, timeoutMs: 1500000,
     cacheDir: `${work}/rpc-cache`, progress: e => { if (e.phase !== 'rpc' || e.physical % 10 === 0) console.log(JSON.stringify(e)); } });
-  for (let i = 0; i < 30; i++) {
-    const next = await refreshState(state, transport, { targetBlock, progress: e => console.log(JSON.stringify(e)) });
+  // Checkpoint busy periods in smaller ranges before the per-pass RPC cap.
+  for (let i = 0; i < 160; i++) {
+    const next = await refreshState(state, transport, { maxBlocks:5000,targetBlock, progress: e => console.log(JSON.stringify(e)) });
     const advanced=next.block>state.block;
     state = next;
     await writeFile(`${work}/state.tmp`, gzipSync(JSON.stringify(state)));
