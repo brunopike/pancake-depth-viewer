@@ -21,8 +21,9 @@ export function assertWorkerHealthy(failures){if(failures.size)throw Error('SNAP
 export async function refreshDueSnapshots({read,refresh,publishSite,now=Date.now,onError=()=>{},onSuccess=()=>{}}){
  const due=[];let changed=false,reportCheckpoint;
  for(const kind of ['report','holders']){
+  let prior;
   try{
-   const prior=await read(kind),next=prior.cutoff*1000+SNAPSHOT_INTERVAL_MS;
+   prior=await read(kind);const next=prior.cutoff*1000+SNAPSHOT_INTERVAL_MS;
    if(!validSnapshot(kind,prior))throw Error('INVALID_SNAPSHOT');
    if(kind==='report')reportCheckpoint=prior;
    const needsInflow=kind==='report'&&!isSourceInflowAligned(prior.sourceInflow,prior);
@@ -35,7 +36,17 @@ export async function refreshDueSnapshots({read,refresh,publishSite,now=Date.now
    if(!validSnapshot(kind,updated)||kind==='report'&&!isSourceInflowAligned(updated.sourceInflow,updated)||!synchronized&&!tradesSynchronized&&(updated.block<=prior.block||updated.cutoff<=prior.cutoff)||needsTrades&&!tradesSynchronized)throw Error('SNAPSHOT_NOT_ADVANCED');
    if(kind==='report')reportCheckpoint=updated;
    changed=true;onSuccess(kind);due.push(Math.max(now()+60000,updated.cutoff*1000+SNAPSHOT_INTERVAL_MS));
-  }catch(error){onError(kind,error);due.push(now()+SNAPSHOT_INTERVAL_MS);}
+  }catch(error){
+   onError(kind,error);let advanced=false;
+   if(kind==='report'&&error.message==='QUERY_LIMIT')try{
+    const updated=await read(kind);
+    if(validSnapshot(kind,updated)&&updated.block>prior?.block&&updated.cutoff>prior.cutoff&&isSourceInflowAligned(updated.sourceInflow,updated)){
+     reportCheckpoint=updated;changed=true;advanced=true;
+    }
+   }catch{}
+   // A verified partial backfill resumes promptly; outages still wait an hour.
+   due.push(now()+(advanced?60000:SNAPSHOT_INTERVAL_MS));
+  }
  }
  if(changed)try{await publishSite();onSuccess('website');}catch(error){onError('website',error);}
  return Math.min(...due);
@@ -67,7 +78,7 @@ async function main(){
    if(checkpoint&&failure?.message!=='RPC_CAPACITY_EXCEEDED'){
     await command('publish');
     // Provenance has an independent failure boundary; verified trade totals survive.
-    try{await command('claim-flow-refresh');await command('claim-flow-publish');}
+    try{if(!failure){await command('claim-flow-refresh');await command('claim-flow-publish');}}
     catch{console.error('ESIM claim flow update failed; last verified provenance preserved.');}
    }
   }

@@ -37,8 +37,14 @@ test('worker preserves a safe quota failure reason and reports recovery independ
  assert.deepEqual(errors,[['report','RPC_CAPACITY_EXCEEDED']]);assert.deepEqual(success,['holders']);
  assert.equal(workerFailureCode({stderr:'private URL\nESIM refresh stopped: RPC_CAPACITY_EXCEEDED. Last verified checkpoint preserved.\n'}),'RPC_CAPACITY_EXCEEDED');
  assert.equal(workerFailureCode(Error('https://private.example/secret')),'UPDATE_FAILED');
+ assert.equal(workerFailureCode({stderr:'ESIM refresh stopped: DIRECT_CALL_INDEX_MISMATCH. Last verified checkpoint preserved.\n'}),'DIRECT_CALL_INDEX_MISMATCH');
  assert.throws(()=>assertWorkerHealthy(new Set(['report'])),/SNAPSHOT_UPDATE_FAILED/);
  assert.doesNotThrow(()=>assertWorkerHealthy(new Set()));
+});
+test('a verified partial backfill publishes its progress and resumes after a minute',async()=>{
+ const values={report:snapshot('report',now/1000-7200),holders:snapshot('holders',now/1000)},errors=[];let published=0;
+ const next=await refreshDueSnapshots({now:()=>now,read:async k=>values[k],refresh:async k=>{assert.equal(k,'report');values[k]=snapshot('report',now/1000-3600,200);throw Error('QUERY_LIMIT');},publishSite:async()=>published++,onError:(k,e)=>errors.push([k,e.message])});
+ assert.equal(next,now+60000);assert.equal(published,1);assert.deepEqual(errors,[['report','QUERY_LIMIT']]);
 });
 test('a fresh balance snapshot still updates when its trade checkpoint trails the report',async()=>{
  const values={report:snapshot('report',now/1000-600),holders:{...snapshot('holders',now/1000-300),tradeCutoff:now/1000-7200}},calls=[];
