@@ -4,16 +4,16 @@ import {refreshDueSnapshots,workerFailureCode,assertWorkerHealthy} from '../scri
 import {SNAPSHOT_INTERVAL_MS as hour} from '../src/snapshot-status.mjs';
 import {SOURCE_INFLOW_SEED as seed} from '../server/esim/source-inflows.mjs';
 const now=(seed.cutoff+100000)*1000,h=n=>'0x'+n.toString(16).padStart(64,'0');
-const snapshot=(kind,cutoff,offset=100)=>{const block=seed.throughBlock+offset;return {version:1,block,blockHash:h(block),cutoff,token:seed.token,source:seed.source,...(kind==='holders'?{rows:[]}:{windows:{},sourceInflow:{...seed,seedBlock:seed.throughBlock,throughBlock:block,blockHash:h(block),cutoff,reconciled:true}})};};
+const snapshot=(kind,cutoff,offset=100)=>{const block=seed.throughBlock+offset;return {version:1,block,blockHash:h(block),cutoff,token:seed.token,source:seed.source,...(kind==='holders'?{rows:[],tradeCutoff:cutoff}:{windows:{},sourceInflow:{...seed,seedBlock:seed.throughBlock,throughBlock:block,blockHash:h(block),cutoff,reconciled:true}})};};
 test('fresh datasets survive worker handoff without any paid reads or website builds',async()=>{
  const values={report:snapshot('report',now/1000-600),holders:snapshot('holders',now/1000-300)};
  const next=await refreshDueSnapshots({now:()=>now,read:async k=>values[k],refresh:()=>assert.fail('duplicate paid read'),publishSite:()=>assert.fail('duplicate build')});
  assert.equal(next,now+50*60000);
 });
-test('only an overdue dataset is refreshed and both files publish through one website dispatch',async()=>{
+test('an overdue report also synchronizes holder trades and dispatches one website publication',async()=>{
  const values={report:snapshot('report',now/1000-7200),holders:snapshot('holders',now/1000-600)},reads=[];let published=0;
  const next=await refreshDueSnapshots({now:()=>now,read:async k=>values[k],refresh:async k=>{reads.push(k);values[k]=snapshot(k,now/1000,200);},publishSite:async()=>published++});
- assert.deepEqual(reads,['report']);assert.equal(published,1);assert.equal(next,now+50*60000);
+ assert.deepEqual(reads,['report','holders']);assert.equal(published,1);assert.equal(next,now+hour);
 });
 test('a failed transaction update never blocks the independent holder update or creates immediate retries',async()=>{
  const values={report:snapshot('report',now/1000-7200),holders:snapshot('holders',now/1000-7200)},errors=[];let published=0;
@@ -39,4 +39,9 @@ test('worker preserves a safe quota failure reason and reports recovery independ
  assert.equal(workerFailureCode(Error('https://private.example/secret')),'UPDATE_FAILED');
  assert.throws(()=>assertWorkerHealthy(new Set(['report'])),/SNAPSHOT_UPDATE_FAILED/);
  assert.doesNotThrow(()=>assertWorkerHealthy(new Set()));
+});
+test('a fresh balance snapshot still updates when its trade checkpoint trails the report',async()=>{
+ const values={report:snapshot('report',now/1000-600),holders:{...snapshot('holders',now/1000-300),tradeCutoff:now/1000-7200}},calls=[];
+ await refreshDueSnapshots({now:()=>now,read:async k=>values[k],refresh:async k=>{calls.push(k);values[k]={...values[k],tradeCutoff:values.report.cutoff};},publishSite:async()=>{}});
+ assert.deepEqual(calls,['holders']);
 });

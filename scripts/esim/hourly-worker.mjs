@@ -17,17 +17,21 @@ export function assertWorkerHealthy(failures){if(failures.size)throw Error('SNAP
 
 // One timer owns both datasets. Each dataset has its own cutoff and failure boundary.
 export async function refreshDueSnapshots({read,refresh,publishSite,now=Date.now,onError=()=>{},onSuccess=()=>{}}){
- const due=[];let changed=false;
+ const due=[];let changed=false,reportCheckpoint;
  for(const kind of ['report','holders']){
   try{
    const prior=await read(kind),next=prior.cutoff*1000+SNAPSHOT_INTERVAL_MS;
    if(!validSnapshot(kind,prior))throw Error('INVALID_SNAPSHOT');
+   if(kind==='report')reportCheckpoint=prior;
    const needsInflow=kind==='report'&&!isSourceInflowAligned(prior.sourceInflow,prior);
-   if(next>now()&&!needsInflow){due.push(next);onSuccess(kind);continue;}
+   const needsTrades=kind==='holders'&&reportCheckpoint&&!(prior.tradeCutoff>=reportCheckpoint.cutoff);
+   if(next>now()&&!needsInflow&&!needsTrades){due.push(next);onSuccess(kind);continue;}
    await refresh(kind);
    const updated=await read(kind);
    const synchronized=needsInflow&&updated.block===prior.block&&updated.cutoff===prior.cutoff&&updated.blockHash===prior.blockHash&&isSourceInflowAligned(updated.sourceInflow,updated);
-   if(!validSnapshot(kind,updated)||kind==='report'&&!isSourceInflowAligned(updated.sourceInflow,updated)||!synchronized&&(updated.block<=prior.block||updated.cutoff<=prior.cutoff))throw Error('SNAPSHOT_NOT_ADVANCED');
+   const tradesSynchronized=needsTrades&&updated.block>=prior.block&&updated.cutoff>=prior.cutoff&&updated.tradeCutoff>=reportCheckpoint.cutoff;
+   if(!validSnapshot(kind,updated)||kind==='report'&&!isSourceInflowAligned(updated.sourceInflow,updated)||!synchronized&&!tradesSynchronized&&(updated.block<=prior.block||updated.cutoff<=prior.cutoff)||needsTrades&&!tradesSynchronized)throw Error('SNAPSHOT_NOT_ADVANCED');
+   if(kind==='report')reportCheckpoint=updated;
    changed=true;onSuccess(kind);due.push(Math.max(now()+60000,updated.cutoff*1000+SNAPSHOT_INTERVAL_MS));
   }catch(error){onError(kind,error);due.push(now()+SNAPSHOT_INTERVAL_MS);}
  }
