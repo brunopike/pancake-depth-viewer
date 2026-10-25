@@ -14,6 +14,14 @@
   },
   "rewrites": [
     {
+      "source": "/data/current-depth/:filename",
+      "destination": "https://raw.githubusercontent.com/brunopike/pancake-depth-viewer/depth-cache/:filename"
+    },
+    {
+      "source": "/data/current-esim-claim-flow.json",
+      "destination": "https://raw.githubusercontent.com/brunopike/pancake-depth-viewer/esim-cache/claim-flow.json"
+    },
+    {
       "source": "/data/current-esim-report.json",
       "destination": "https://raw.githubusercontent.com/brunopike/pancake-depth-viewer/esim-cache/report.json"
     },
