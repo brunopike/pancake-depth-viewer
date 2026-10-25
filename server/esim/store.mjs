@@ -30,9 +30,13 @@ export function parseState(bytes) {
   if (state.version !== 1 || state.token !== TOKEN || state.source !== SOURCE || !Number.isSafeInteger(state.block) || !/^0x[0-9a-f]{64}$/.test(state.blockHash)) throw new Error('INVALID_CHECKPOINT');
   return state;
 }
-export async function loadState({ fetch: request = fetch, includeRemote = true } = {}) {
+export async function loadState({ fetch: request = fetch, includeRemote = true, checkpointFile=process.env.ESIM_CHECKPOINT_FILE } = {}) {
   let local = parseState(await readFile(new URL('./bootstrap.json.gz', import.meta.url)));
-  if (includeRemote) try {
+  if(checkpointFile){
+    let checked;try{checked=parseState(await readFile(checkpointFile));}catch{throw Error('WORKER_CHECKPOINT_UNAVAILABLE');}
+    if(checked.block>local.block)local=checked;
+  }
+  if (includeRemote&&!checkpointFile) try {
     const response = await request(`${CHECKPOINT_URL}?t=${Date.now()}`, { cache: 'no-store', signal: AbortSignal.timeout(15000) });
     if (response.ok) {
       const remote = parseState(Buffer.from(await response.arrayBuffer()));

@@ -13,6 +13,13 @@ jobs:
     timeout-minutes: 40
     steps:
       - uses: actions/checkout@v4
+      - name: Load the latest verified checkpoint directly
+        uses: actions/checkout@v4
+        with:
+          ref: esim-cache
+          path: .goodway/checkpoint
+          sparse-checkout: state.json.gz
+          sparse-checkout-cone-mode: false
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
@@ -25,6 +32,7 @@ jobs:
           restore-keys: esim-claim-flow-rpc-v1-
       - name: Read only ESIM transfers and reconcile proposed sales
         env:
+          ESIM_CHECKPOINT_FILE: .goodway/checkpoint/state.json.gz
           ALCHEMY_API_KEY: ${{ secrets.ALCHEMY_API_KEY }}
           ESIM_REMOTE_START: 'true'
           ESIM_RPC_BUDGET: '600'

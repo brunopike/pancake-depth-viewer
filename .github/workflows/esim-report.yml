@@ -23,6 +23,13 @@ jobs:
     timeout-minutes: 360
     steps:
       - uses: actions/checkout@v4
+      - name: Load the latest verified checkpoint directly
+        uses: actions/checkout@v4
+        with:
+          ref: esim-cache
+          path: .goodway/checkpoint
+          sparse-checkout: state.json.gz
+          sparse-checkout-cone-mode: false
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
@@ -30,6 +37,7 @@ jobs:
       - run: npm ci --no-audit --no-fund
       - name: Keep ESIM transactions and holders current every 60 minutes
         env:
+          ESIM_CHECKPOINT_FILE: .goodway/checkpoint/state.json.gz
           ALCHEMY_API_KEY: ${{ secrets.ALCHEMY_API_KEY }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_REPOSITORY: ${{ github.repository }}

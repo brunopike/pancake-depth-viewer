@@ -11,6 +11,8 @@ import {isSourceInflowAligned} from '../../server/esim/source-inflows.mjs';
 
 const failureCodes=['RPC_CAPACITY_EXCEEDED','RPC_RATE_LIMITED','RPC_UNAVAILABLE','RPC_MEMBER_FAILED','QUERY_LIMIT','SNAPSHOT_NOT_ADVANCED','INVALID_SNAPSHOT','CHECKPOINT_UNAVAILABLE','WEBSITE_DISPATCH_FAILED'];
 export function workerFailureCode(error){
+ const symbolic=String(error?.stderr||'').match(/^ESIM refresh stopped: ([A-Z_]{3,80})\. Last verified checkpoint preserved\.$/m);
+ if(symbolic)return symbolic[1];
  return failureCodes.find(code=>error?.message===code||new RegExp(`\\b${code}\\b`).test(error?.stderr||''))||'UPDATE_FAILED';
 }
 export function assertWorkerHealthy(failures){if(failures.size)throw Error('SNAPSHOT_UPDATE_FAILED');}
@@ -54,7 +56,7 @@ async function main(){
  };
  const run=promisify(execFile),command=async file=>{
   try{const {stdout}=await run(process.execPath,[`scripts/esim/${file}.mjs`],{timeout:1500000,maxBuffer:524288,env:{...process.env,ESIM_REMOTE_START:'true',ESIM_RPC_BUDGET:'600'}});process.stdout.write(stdout);}
-  catch(error){throw Error(workerFailureCode(error));}
+  catch(error){if(error.stdout)process.stdout.write(error.stdout);throw Error(workerFailureCode(error));}
  };
  const refresh=async kind=>{
   let failure;
