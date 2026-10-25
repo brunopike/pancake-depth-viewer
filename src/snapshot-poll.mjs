@@ -12,7 +12,7 @@ export function startSnapshotPolling(refresh){
    if(!response.ok)throw Error('STATUS_UNAVAILABLE');
    const data=await response.json(),next=`${data.processedBlock}:${data.holderBlock}`;
    if(next!==revision||Date.now()-lastFallback>=300000){const applied=await refresh();if(applied!==false){revision=next;lastFallback=Date.now();}}
-  }catch{if(Date.now()-lastFallback>=300000){try{await refresh();}catch{}lastFallback=Date.now();}}
+  }catch{if(Date.now()-lastFallback>=300000){try{const applied=await refresh();if(applied!==false)lastFallback=Date.now();}catch{}}}
   finally{pending=false;}
  };
  const timer=setInterval(poll,60000);
