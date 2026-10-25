@@ -14,6 +14,9 @@ test('workers use the checked out checkpoint without downloading the large state
   await writeFile(file,gzipSync(JSON.stringify(state)));
   const result=await loadState({checkpointFile:file,fetch:async url=>{assert(!url.includes('state.json.gz'));return {ok:false};}});
   assert.equal(result.block,state.block);
+  const currentFile=join(dir,'current.gz');await writeFile(currentFile,gzipSync(JSON.stringify({...state,block:state.block+1})));
+  const current=await loadState({checkpointFile:file,currentCheckpointFile:currentFile,fetch:async()=>({ok:false})});
+  assert.equal(current.block,state.block+1);
   await assert.rejects(loadState({checkpointFile:join(dir,'missing'),fetch:()=>assert.fail('must not fall back to bootstrap')}),/WORKER_CHECKPOINT_UNAVAILABLE/);
  }finally{await rm(dir,{recursive:true});}
 });
