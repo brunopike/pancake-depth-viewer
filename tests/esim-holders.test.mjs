@@ -39,3 +39,10 @@ test('own LP and known own tags suppress robots; external activity still qualifi
  const r=report({addresses,seed:SEED,state:{...state,trades}});
  for(const [i,address]of addresses.entries()){const row=r.rows.find(r=>r.address===address);assert(row.tags.some(t=>t.kind===(i===0?'own':'frequency')&&t.evidence.includes('用户确认')));assert.equal(row.tags.filter(t=>t.kind==='frequency').length,i===0?0:1);assert.equal(row.history.sellCount,100);}
  });
+
+test('both confirmed own executors classify their callers consistently with sell monitoring',()=>{
+ const trades=Array.from({length:100},(_,i)=>({address:b,initiator:b,executor:'0xE1DE6AC2EE058DF5D3BE8EDEB62A8815FD13FF5A',side:i%2?'buy':'sell',amount_wei:'7',timestamp:end-10,tx:String(i)}));
+ const row=report({state:{...state,trades}}).rows.find(r=>r.address===b);
+ assert(row.tags.some(t=>t.id==='own-execution'));assert(!row.tags.some(t=>['frequency','arbitrage'].includes(t.kind)));
+ assert.equal(row.day.buyCount,50);assert.equal(row.history.sellAmount,'350');
+});

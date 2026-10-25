@@ -72,7 +72,7 @@ export function makeRpc({ key = process.env.ALCHEMY_API_KEY, endpoint, budget = 
     }
     const concurrency = batchSize === 1 ? 1 : batchSize === 6 ? 2 : 3;
     for (let i = 0; i < chunks.length; i += concurrency) {
-      const settled = await Promise.allSettled(chunks.slice(i, i + concurrency).map(send));
+      const settled = await Promise.allSettled(chunks.slice(i, i + concurrency).map(chunk=>send(chunk)));
       const failed = settled.find(r => r.status === 'rejected');
       if (failed) throw failed.reason;
     }

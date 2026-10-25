@@ -54,14 +54,16 @@ export function enrichClaimFlowSnapshot(kind,snapshot,flow){
  if(!['report','addresses'].includes(kind)||!snapshot.windows)return snapshot;
  const direct=firstSales(flow,'direct_wei'),relay=firstSales(flow,'relay_wei');
  let changed=false;
+ const enrichReportWindow=window=>{
+  const end=Math.min(window?.end,snapshot.cutoff),prior=window?.claimFlow;
+  if(!Number.isFinite(window?.start)||window.start<0||!Number.isFinite(end)||end<window.start)return window;
+  if(prior?.throughBlock>flow.throughBlock||prior?.cutoff>flow.cutoff||prior?.throughBlock===flow.throughBlock&&(prior.modelRevision??1)>(flow.modelRevision??1))return window;
+  changed=true;return {...window,claimFlow:claimFlowWindow(flow,window.start,end)};
+ };
  const windows=Object.fromEntries(Object.entries(snapshot.windows).map(([key,window])=>{
   const end=Math.min(window?.end,snapshot.cutoff);
   if(!Number.isFinite(window?.start)||window.start<0||!Number.isFinite(end)||end<window.start)return [key,window];
-  if(kind==='report'){
-   const prior=window.claimFlow;
-   if(prior?.throughBlock>flow.throughBlock||prior?.cutoff>flow.cutoff||prior?.throughBlock===flow.throughBlock&&(prior.modelRevision??1)>(flow.modelRevision??1))return [key,window];
-   changed=true;return [key,{...window,claimFlow:claimFlowWindow(flow,window.start,end)}];
-  }
+  if(kind==='report')return [key,enrichReportWindow(window)];
   const next={...window};
   for(const mode of ['initiator','funding'])if(Array.isArray(window[mode]?.rows)){
    const rows=enrichAddressRows(window[mode].rows,end,direct,relay);
@@ -69,8 +71,9 @@ export function enrichClaimFlowSnapshot(kind,snapshot,flow){
   }
   return [key,next];
  }));
+ const history=kind==='report'&&Array.isArray(snapshot.history)?snapshot.history.map(enrichReportWindow):snapshot.history;
  const sourceInflow=kind==='report'?newerSourceInflow(snapshot.sourceInflow,flow.sourceInflow,snapshot):null;
- return changed||sourceInflow&&sourceInflow!==snapshot.sourceInflow?{...snapshot,windows,...(kind==='report'?{sourceInflow}: {})}:snapshot;
+ return changed||sourceInflow&&sourceInflow!==snapshot.sourceInflow?{...snapshot,windows,...(kind==='report'?{sourceInflow,...(history?{history}:{})}: {})}:snapshot;
 }
 
 export async function readClaimFlowSnapshot(kind,snapshot,{fetch:request=globalThis.fetch}={}){

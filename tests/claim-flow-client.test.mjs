@@ -93,3 +93,13 @@ test('an older model revision cannot replace a corrected estimate at the same cu
  const next=enrichClaimFlowSnapshot('report',data,{...flow(),modelRevision:1});
  assert.equal(next.windows.history.claimFlow,data.windows.history.claimFlow);
 });
+
+test('daily history drilldowns refresh from the same flow as the top-level periods',()=>{
+ const data=snapshot();data.history=[{date:'prior',start:0,end:100,claimFlow:{throughBlock:10,cutoff:10,sold_wei:'0'}},{date:'today',start:100,end:200,claimFlow:{throughBlock:10,cutoff:10,sold_wei:'0'}}];
+ const before=structuredClone(data),next=enrichClaimFlowSnapshot('report',data,flow());
+ assert.equal(next.history[0].claimFlow.sold_wei,next.windows.yesterday.claimFlow.sold_wei);
+ assert.equal(next.history[1].claimFlow.sold_wei,next.windows.today.claimFlow.sold_wei);
+ assert.equal(next.history[0].claimFlow.cutoff,200);assert.deepEqual(data,before);
+ const corrected={...data,history:[{...data.history[0],claimFlow:{throughBlock:200,cutoff:200,modelRevision:3,sold_wei:'42'}}]};
+ assert.equal(enrichClaimFlowSnapshot('report',corrected,{...flow(),modelRevision:2}).history[0].claimFlow.sold_wei,'42');
+});

@@ -29,3 +29,13 @@ test('rate limits cannot silently become empty data or exceed the retry budget',
  const rpc=makeRpc({endpoint:'https://example.invalid',budget:2,sleep:async()=>{},fetch:async()=>{calls++;return {ok:true,json:async()=>[{id:0,error:{code:429,message:'throughput'}}]};}});
  await assert.rejects(rpc.rpc('eth_getLogs',[]),/QUERY_LIMIT/);assert.equal(calls,2);
 });
+
+test('each concurrent chunk receives its own full transient retry allowance',async()=>{
+ const attempts=new Map();
+ const rpc=makeRpc({endpoint:'https://example.invalid',budget:9,minIntervalMs:0,sleep:async()=>{},fetch:async(_,options)=>{
+  const calls=JSON.parse(options.body),key=calls[0].params[0],attempt=(attempts.get(key)||0)+1;attempts.set(key,attempt);
+  return attempt<3?{ok:false,status:429,json:async()=>({error:{code:429,message:'throughput'}})}:{ok:true,status:200,json:async()=>calls.map(c=>({id:c.id,result:c.params[0]}))};
+ }});
+ const values=await rpc.batch(Array.from({length:120},(_,i)=>['eth_getTransactionReceipt',[String(i)]]));
+ assert.equal(values.length,120);assert.deepEqual([...attempts.values()],[3,3,3]);assert.equal(rpc.stats.physical,9);
+});

@@ -2,6 +2,7 @@ import { readFile } from 'node:fs/promises';
 import { encodeFunctionData, decodeFunctionResult, parseAbi } from 'viem';
 import { TOKEN, SOURCE, beijingDate } from './metrics.mjs';
 import { OWN_EXECUTOR } from './addresses.mjs';
+import {OWN_EXECUTORS} from './execution-categories.mjs';
 import { TRANSFER } from './attribution.mjs';
 import { CONFIRMED_HOLDER_LABELS, HOLDER_IMPORT, applyHolderLabels } from '../../src/holder-labels.mjs';
 const seedFile = JSON.parse(await readFile(new URL('./holder-seed.json', import.meta.url)));
@@ -43,7 +44,7 @@ export function holderBehavior(state, cutoff) {
     if(t.timestamp>cutoff)continue;
     if(valid(t.initiator)){
       const r=get(t.initiator), day=beijingDate(t.timestamp); if(!r.days.has(day))r.days.set(day,new Set());r.days.get(day).add(t.tx);
-      if(t.executor===OWN_EXECUTOR)r.ownExecution=true;
+      if(OWN_EXECUTORS.has(t.executor?.toLowerCase()))r.ownExecution=true;
       if(!r.roundTrips.has(t.tx))r.roundTrips.set(t.tx,new Set());r.roundTrips.get(t.tx).add(t.side);
       // Trading activity belongs to the initiator; ownership attribution is separate.
       for(const window of ['history',...(t.timestamp>=cutoff-86400?['day']:[])]){
@@ -71,7 +72,7 @@ export function buildHolderReport({state,addresses,balances,priorBalances,contra
     if(known)tags.push(label(`known-${known.kind}`,known.label,known.kind,known.source));
     if(address===SOURCE)tags.push(label('own-contract','我方合约','own','用户指定的分发合约'));
     if(ownLP.has(address))tags.push(label('own-lp','我方 LP','lp','用户指定的流动性地址；此表数量为钱包余额，不含 LP 仓位'));
-    if(r?.ownExecution||address===OWN_EXECUTOR)tags.push(label('own-execution','我方执行','own',`调用用户确认的执行合约 ${OWN_EXECUTOR}`));
+    if(r?.ownExecution||OWN_EXECUTORS.has(address))tags.push(label('own-execution','我方执行','own',`调用用户确认的我方执行合约：${[...OWN_EXECUTORS].join(' / ')}`));
     if(pools.has(address)&&!known?.label.includes('LP'))tags.push(label('pool','流动性池','dex','已核对的 ESIM 池合约'));
     const recipient=state.firstRecipient[address];
     if(recipient&&recipient.timestamp<=cutoff){
