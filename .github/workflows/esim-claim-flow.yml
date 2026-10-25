@@ -1,6 +1,12 @@
 name: Refresh ESIM claim flow
 on:
   workflow_dispatch:
+    inputs:
+      rpc_budget:
+        description: 'One-off recovery budget (1–2000); regular updates use 600'
+        default: '600'
+        required: false
+        type: string
 permissions:
   contents: write
 concurrency:
@@ -35,7 +41,7 @@ jobs:
           ESIM_CHECKPOINT_FILE: .goodway/checkpoint/state.json.gz
           ALCHEMY_API_KEY: ${{ secrets.ALCHEMY_API_KEY }}
           ESIM_REMOTE_START: 'true'
-          ESIM_RPC_BUDGET: '600'
+          ESIM_RPC_BUDGET: ${{ inputs.rpc_budget || '600' }}
         run: node scripts/esim/claim-flow-refresh.mjs
       - name: Publish verified provenance without overwriting the core checkpoint
         env:
