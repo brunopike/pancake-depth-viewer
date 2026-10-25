@@ -9,7 +9,7 @@ import {SNAPSHOT_INTERVAL_MS} from '../../src/snapshot-status.mjs';
 import {projectRepository} from '../../server/esim/repository.mjs';
 import {isSourceInflowAligned} from '../../server/esim/source-inflows.mjs';
 
-const failureCodes=['RPC_CAPACITY_EXCEEDED','RPC_RATE_LIMITED','RPC_UNAVAILABLE','RPC_MEMBER_FAILED','QUERY_LIMIT','SNAPSHOT_NOT_ADVANCED','INVALID_SNAPSHOT','CHECKPOINT_UNAVAILABLE','WEBSITE_DISPATCH_FAILED'];
+const failureCodes=['RPC_CAPACITY_EXCEEDED','RPC_RATE_LIMITED','RPC_UNAVAILABLE','RPC_MEMBER_FAILED','QUERY_LIMIT','SNAPSHOT_NOT_ADVANCED','INVALID_SNAPSHOT','CHECKPOINT_UNAVAILABLE','CHECKPOINT_PUBLISH_FETCH_FAILED','CHECKPOINT_PUBLISH_BUILD_FAILED','CHECKPOINT_PUBLISH_PUSH_FAILED','WEBSITE_DISPATCH_FAILED'];
 export function workerFailureCode(error){
  const symbolic=String(error?.stderr||'').match(/^ESIM refresh stopped: ([A-Z_]{3,80})\. Last verified checkpoint preserved\.$/m);
  if(symbolic)return symbolic[1];

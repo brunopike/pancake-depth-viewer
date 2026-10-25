@@ -3,6 +3,7 @@ import { parseState } from '../../server/esim/store.mjs';
 import { buildReport } from '../../server/esim/metrics.mjs';
 import { buildAddressReport } from '../../server/esim/addresses.mjs';
 import {isSourceInflowAligned} from '../../server/esim/source-inflows.mjs';
+import {publishReportFiles} from './publish-report-files.mjs';
 import { PROJECT_REPOSITORY,projectRepository } from '../../server/esim/repository.mjs';
 const token = process.env.GITHUB_TOKEN;
 const repo = projectRepository(process.env.GITHUB_REPOSITORY || PROJECT_REPOSITORY);
@@ -11,30 +12,10 @@ const bytes = await readFile('.goodway/esim-monitor/state.json.gz');
 const state = parseState(bytes);
 const report=buildReport(state);
 if(!isSourceInflowAligned(report.sourceInflow,report))throw Error('SOURCE_INFLOW_NOT_SYNCHRONIZED');
-const root = `https://api.github.com/repos/${repo}/git`;
-async function api(path, body, method = body ? 'POST' : 'GET') {
-  const r = await fetch(`${root}/${path}`, { method, headers: { Authorization: `Bearer ${token}`, Accept: 'application/vnd.github+json', 'Content-Type': 'application/json' }, body: body ? JSON.stringify(body) : undefined, signal: AbortSignal.timeout(60000) });
-  if (r.status === 404 && method === 'GET') return null;
-  if (!r.ok) throw new Error(`GitHub publication failed (${r.status})`);
-  return r.json();
-}
-const ref = await api('ref/heads/esim-cache');
-const previous = ref ? await api(`commits/${ref.object.sha}`) : null;
-if (ref) {
-  const old = await fetch('https://raw.githubusercontent.com/brunopike/pancake-depth-viewer/esim-cache/report.json', { signal: AbortSignal.timeout(15000) });
-  if (old.ok) {
-    const prior=await old.json();
-    if(prior.block>state.block||prior.block===state.block&&isSourceInflowAligned(prior.sourceInflow,prior)) { console.log('ESIM checkpoint already current.'); process.exit(0); }
-  }
-}
-const files = [ ['state.json.gz', bytes.toString('base64'), 'base64'], ['report.json', JSON.stringify(report), 'utf-8'], ['addresses.json', JSON.stringify(buildAddressReport(state)), 'utf-8'] ];
-const entries = [];
-for (const [path, content, encoding] of files) {
-  const blob = await api('blobs', { content, encoding });
-  entries.push({ path, mode: '100644', type: 'blob', sha: blob.sha });
-}
-const tree = await api('trees', { ...(previous ? { base_tree: previous.tree.sha } : {}), tree: entries });
-const commit = await api('commits', { message: `Verified ESIM checkpoint at block ${state.block}`, tree: tree.sha, parents: ref ? [ref.object.sha] : [] });
-if (ref) await api('refs/heads/esim-cache', { sha: commit.sha, force: false }, 'PATCH');
-else await api('refs', { ref: 'refs/heads/esim-cache', sha: commit.sha });
-console.log(`Published verified ESIM checkpoint at block ${state.block}.`);
+const commit=await publishReportFiles([
+ ['state.json.gz',bytes],
+ ['report.json',JSON.stringify(report)],
+ ['addresses.json',JSON.stringify(buildAddressReport(state))],
+],{message:`Verified ESIM checkpoint at block ${state.block}`,
+ skip:prior=>prior.block>state.block||prior.block===state.block&&isSourceInflowAligned(prior.sourceInflow,prior)});
+console.log(commit?`Published verified ESIM checkpoint at block ${state.block}.`:'ESIM checkpoint already current.');
