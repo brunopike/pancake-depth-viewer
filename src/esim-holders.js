@@ -1,3 +1,4 @@
+import {startSnapshotPolling} from './snapshot-poll.mjs';
 import {readSnapshot} from './snapshot-client.mjs';
 import {showSnapshotStatus,refreshButtonLabel} from './snapshot-status.mjs';
 import {holderLedger,holderAppearance,HOLDER_TONES,HOLDER_SCOPES,selectHolderView,holderOverviewCharts} from './holder-overview.mjs';
@@ -128,7 +129,7 @@ $('reset-view').addEventListener('click',()=>{cohort=null;excludeOwn=false;scope
 for(const b of document.querySelectorAll('[data-chart]'))b.addEventListener('click',()=>{chartMode=b.dataset.chart;for(const t of document.querySelectorAll('[data-chart]'))t.setAttribute('aria-pressed',String(t===b));render();});
 window.addEventListener('storage',e=>{if(e.key===TAG_KEY){manual=readManual(e.newValue);renderCustomFilters();updateFilters();if($('label-manager').open)renderLabelManager();}});
 async function refresh(){
- if(busy)return;busy=true;$('refresh').disabled=true;$('refresh').textContent='正在刷新…';$('status').textContent='正在读取最新持仓…';
+ if(busy)return false;busy=true;$('refresh').disabled=true;$('refresh').textContent='正在刷新…';$('status').textContent='正在读取最新持仓…';
  try{const result=await readSnapshot('holders',{current:report});report=validate(result.data);render();
   showSnapshotStatus($('status'),$('refresh'),[['持仓',report],['持仓内交易',{cutoff:report.tradeCutoff}]],{retained:result.source==='retained'});
  }catch(e){$('status').textContent=e.message;$('status').className='notice';if(!report)$('rows').innerHTML='<tr><td colspan="10" class="empty">暂时无法读取持仓，请点击刷新重试。</td></tr>';}
@@ -149,3 +150,5 @@ for(const input of $('filter').querySelectorAll('input'))input.checked=(query.ge
 updateFilters();
 $('refresh').addEventListener('click',refresh);
 await refresh();
+
+startSnapshotPolling(refresh);

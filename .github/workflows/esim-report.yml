@@ -35,11 +35,17 @@ jobs:
           node-version: '22'
           cache: npm
       - run: npm ci --no-audit --no-fund
-      - name: Keep ESIM transactions and holders current every 60 minutes
+      - name: Keep ESIM current with webhook hints and scheduled verification
         env:
+          ESIM_REALTIME_DATABASE_URL: ${{ secrets.ESIM_REALTIME_DATABASE_URL }}
           ESIM_CHECKPOINT_FILE: .goodway/checkpoint/state.json.gz
           ALCHEMY_API_KEY: ${{ secrets.ALCHEMY_API_KEY }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_REPOSITORY: ${{ github.repository }}
           SESSION_MINUTES: ${{ inputs.session_minutes || '300' }}
-        run: node scripts/esim/hourly-worker.mjs
+        run: |
+          if [ -n "$ESIM_REALTIME_DATABASE_URL" ]; then
+            node scripts/esim/realtime-worker.mjs
+          else
+            node scripts/esim/hourly-worker.mjs
+          fi

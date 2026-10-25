@@ -1,3 +1,4 @@
+import {startSnapshotPolling} from './snapshot-poll.mjs';
 import {readSnapshot,readTradingReport} from './snapshot-client.mjs';
 import {esimEndpoint} from './site-runtime.mjs';
 import {showSnapshotStatus,refreshButtonLabel} from './snapshot-status.mjs';
@@ -109,7 +110,7 @@ async function json(url, options = {}) {
   return body;
 }
 async function refresh(live=true) {
-  if(busy)return;busy=true;$('refresh').disabled=true;$('refresh').textContent='正在刷新…';$('status').textContent='正在读取交易和持仓…';$('status').className='working';
+  if(busy)return false;busy=true;$('refresh').disabled=true;$('refresh').textContent='正在刷新…';$('status').textContent='正在读取交易和持仓…';$('status').className='working';
   try{
     const trading=()=>readTradingReport({current:report,live:!!endpoint&&live,queryLive:endpoint?async()=>{const result=await json(endpoint,{method:'POST',headers:{'Content-Type':'application/json'},body:'{}',signal:AbortSignal.timeout(260000)});if(!result.report)throw Error('交易查询未返回完整数据。');return result.report;}:null});
     const [trades,holders]=await Promise.allSettled([trading(),readSnapshot('holders',{current:holderReport})]);
@@ -127,3 +128,5 @@ try{
  const config=await json('./data/esim-config.json');endpoint=esimEndpoint(config);
 }catch{}
 await refresh(false);
+
+startSnapshotPolling(()=>refresh(false));

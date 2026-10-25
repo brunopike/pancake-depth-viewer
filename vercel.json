@@ -10,6 +10,12 @@
     "api/holders.js": {
       "maxDuration": 60,
       "includeFiles": "server/esim/**"
+    },
+    "api/alchemy-webhook.js": {
+      "maxDuration": 30
+    },
+    "api/esim-snapshot.js": {
+      "maxDuration": 30
     }
   },
   "rewrites": [

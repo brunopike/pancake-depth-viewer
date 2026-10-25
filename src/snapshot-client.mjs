@@ -14,7 +14,14 @@ export function validSnapshot(kind,data){
   return data?.version===1&&Number.isSafeInteger(data.block)&&Number.isFinite(data.cutoff)&&(kind==='holders'?Array.isArray(data.rows):!!data.windows)&&(kind==='addresses'||data.token==='0x7765a659c5b0cfbfd9fbc2ef2298b75a598f2d2d');
 }
 export const newerSnapshot=(current,next)=>current&&next.block<current.block?current:next;
-export async function readSnapshot(kind,{current,fetch:request=globalThis.fetch}={}) {
+export const realtimeHost=()=>globalThis.location?.hostname==='esimonchain.imstark.site'||globalThis.location?.hostname?.endsWith('.vercel.app');
+export async function readSnapshot(kind,{current,fetch:request=globalThis.fetch,realtime=realtimeHost()}={}) {
+  let fast;
+  if(realtime)try{
+    const response=await request(`./api/esim-snapshot?kind=${kind}`,{cache:'no-store',signal:AbortSignal.timeout(8000)});
+    if(response.ok){const data=await response.json();if(validSnapshot(kind,data))fast={data,source:'realtime'};}
+    if(fast&&Date.now()/1000-fast.data.cutoff<600&&(!current||fast.data.block>=current.block))return {...fast,data:await readClaimFlowSnapshot(kind,kind==='report'?retainSourceInflow(fast.data,current):fast.data,{fetch:request})};
+  }catch{}
   const read=async(i)=>{const url=SNAPSHOTS[kind][i];
     const response=await request(`${url}${url.includes('?')?'&':'?'}t=${Date.now()}`,{cache:'no-store',signal:AbortSignal.timeout(i?8000:15000)});
     if(!response.ok)throw Error('SNAPSHOT_UNAVAILABLE');
@@ -24,7 +31,7 @@ export async function readSnapshot(kind,{current,fetch:request=globalThis.fetch}
   };
   // Compare both independently published sources; a successful old website file must not mask a newer checkpoint.
   const results=await Promise.allSettled([read(0),read(1)]);
-  let selected;
+  let selected=fast;
   for(const result of results)if(result.status==='fulfilled'&&(!selected||result.value.data.block>selected.data.block))selected=result.value;
   if(!selected)try{selected=await read(2);}catch{}
   const result=selected&&(!current||selected.data.block>=current.block)?selected:current?{data:current,source:'retained'}:null;

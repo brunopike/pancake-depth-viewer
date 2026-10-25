@@ -76,11 +76,16 @@ export function enrichClaimFlowSnapshot(kind,snapshot,flow){
  return changed||sourceInflow&&sourceInflow!==snapshot.sourceInflow?{...snapshot,windows,...(kind==='report'?{sourceInflow,...(history?{history}:{})}: {})}:snapshot;
 }
 
+const flowCache=new WeakMap();
 export async function readClaimFlowSnapshot(kind,snapshot,{fetch:request=globalThis.fetch}={}){
  if(!compatibleSnapshot(snapshot))return snapshot;
+ const cached=flowCache.get(request);
+ if(cached&&Date.now()-cached.at<300000)return enrichClaimFlowSnapshot(kind,snapshot,cached.flow);
  try{
   const response=await request(`${CLAIM_FLOW_URL}?t=${Date.now()}`,{cache:'no-store',signal:AbortSignal.timeout(8000)});
   if(!response.ok)return snapshot;
-  return enrichClaimFlowSnapshot(kind,snapshot,await response.json());
+  const flow=await response.json();
+  if(validClaimFlow(flow,snapshot))flowCache.set(request,{at:Date.now(),flow});
+  return enrichClaimFlowSnapshot(kind,snapshot,flow);
  }catch{return snapshot;}
 }

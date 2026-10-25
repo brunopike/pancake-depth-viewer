@@ -1,3 +1,4 @@
+import {startSnapshotPolling} from './snapshot-poll.mjs';
 import {readSnapshot,newerSnapshot} from './snapshot-client.mjs';
 import {esimEndpoint} from './site-runtime.mjs';
 import {showSnapshotStatus,refreshButtonLabel} from './snapshot-status.mjs';
@@ -98,7 +99,7 @@ $('address-search').addEventListener('input',()=>{page=0;clearTimeout(searchTime
 for(const button of document.querySelectorAll('[data-sort]'))button.addEventListener('click',()=>{const key=button.dataset.sort;$('sort-direction').value=$('sort').value===key?$('sort-direction').value==='desc'?'asc':'desc':key==='address'?'asc':'desc';$('sort').value=key;page=0;loadPage();});
 $('prev').addEventListener('click',()=>{page--;loadPage();});$('next').addEventListener('click',()=>{page++;loadPage();});
 $('refresh').addEventListener('click',async()=>{
- if(busy)return;busy=true;++generation;$('refresh').disabled=true;$('refresh').textContent='正在刷新…';$('status').textContent='正在读取交易和持仓…';const seq=generation,requestedKey=datasetKey(),requestedURL=url();
+ if(busy)return false;busy=true;++generation;$('refresh').disabled=true;$('refresh').textContent='正在刷新…';$('status').textContent='正在读取交易和持仓…';const seq=generation,requestedKey=datasetKey(),requestedURL=url();
  try{
   const trading=async()=>{if(endpoint){const result=await json(requestedURL,{method:'POST',headers:{'Content-Type':'application/json'},body:'{}',signal:AbortSignal.timeout(260000)});datasets.set(requestedKey,newerSnapshot(datasets.get(requestedKey),result.report));lastTradeSource='live';return;}saved=await loadSaved();};
   await Promise.all([trading(),loadHolders()]);current=localPage();render();
@@ -119,3 +120,9 @@ for(const input of $('filter').querySelectorAll('input'))input.checked=(query.ge
 tagFilter.refresh();
 try{const config=await json('./data/esim-config.json');endpoint=esimEndpoint(config);}catch{endpoint=null;}
 try{await Promise.all([loadSaved().then(data=>{saved=data;}),loadHolders()]);await loadPage();showSnapshotStatus($('status'),$('refresh'),[['交易',current||saved],['持仓',holderReport]],{retained:lastTradeSource==='retained'||lastHolderSource==='retained'});}catch{$('status').textContent='地址数据暂时无法读取，请点击刷新重试。';$('status').className='notice';}
+
+startSnapshotPolling(async()=>{
+ if(busy)return false;busy=true;
+ try{const [next]=await Promise.all([loadSaved(),loadHolders()]);saved=next;current=localPage();render(false);showSnapshotStatus($('status'),$('refresh'),[['交易',current],['持仓',holderReport]],{retained:lastTradeSource==='retained'||lastHolderSource==='retained'});}
+ finally{busy=false;}
+});
