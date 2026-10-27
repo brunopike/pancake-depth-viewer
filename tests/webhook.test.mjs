@@ -2,10 +2,11 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {createHmac} from 'node:crypto';
 import {Readable} from 'node:stream';
-import {gunzipSync} from 'node:zlib';
+import {gunzipSync,gzipSync} from 'node:zlib';
 import {verifyWebhook,readWebhookBody,webhookHint,bodyDigest,MAX_WEBHOOK_BYTES} from '../server/esim/webhook.mjs';
 import {encodeSnapshot,saveWebhook,publishRealtime} from '../server/esim/realtime-store.mjs';
-import {refreshNeeded,FAST_INTERVAL,FALLBACK_INTERVAL} from '../scripts/esim/realtime-worker.mjs';
+import {refreshNeeded,refreshCheckpoint,assertRealtimeHealthy,FAST_INTERVAL,FALLBACK_INTERVAL} from '../scripts/esim/realtime-worker.mjs';
+import {TOKEN,SOURCE} from '../server/esim/metrics.mjs';
 import {readSnapshot} from '../src/snapshot-client.mjs';
 const fixture=()=>({webhookId:'wh_test',id:'event_one',type:'GRAPHQL',event:{data:{block:{number:123,hash:'0x'+'a'.repeat(64),transfers:[{index:1,transaction:{hash:'0x'+'b'.repeat(64)}}]}}}});
 test('HMAC validates the exact raw body and rejects tampering, missing keys and malformed signatures',()=>{
@@ -59,6 +60,24 @@ test('worker coalesces duplicates, processes later events and recovers without n
  assert.equal(refreshNeeded({...x,lastRun:999999,pendingBlock:124}),false);
  assert.equal(refreshNeeded({...x,cutoff:(x.now-FALLBACK_INTERVAL)/1000}),true);
  assert.equal(refreshNeeded({...x,lastRun:0}),true);
+});
+test('first-run RPC failure is not hidden by a missing checkpoint',async()=>{
+ await assert.rejects(refreshCheckpoint({refresh:async()=>{throw Error('RPC_CAPACITY_EXCEEDED');},read:async()=>assert.fail('must preserve RPC error before reading missing file')}),/RPC_CAPACITY_EXCEEDED/);
+ await assert.rejects(refreshCheckpoint({refresh:async()=>{throw Error('QUERY_LIMIT');},read:async()=>{throw Error('ENOENT');}}),/QUERY_LIMIT/);
+});
+test('only an advancing verified partial checkpoint can be published after budget exhaustion',async()=>{
+ const state={version:1,token:TOKEN,source:SOURCE,block:124,blockHash:'0x'+'a'.repeat(64),cutoff:1000};
+ const opts={refresh:async()=>{throw Error('QUERY_LIMIT');},read:async()=>gzipSync(JSON.stringify(state)),block:123};
+ assert.deepEqual(await refreshCheckpoint(opts),{state,partial:true});
+ await assert.rejects(refreshCheckpoint({...opts,block:124}),/QUERY_LIMIT/);
+ await assert.rejects(refreshCheckpoint({...opts,refresh:async()=>{throw Error('SOURCE_INFLOW_CHECKPOINT_CHANGED');}}),/SOURCE_INFLOW_CHECKPOINT_CHANGED/);
+});
+test('session health rejects failed, missing or stale output even when handoff succeeded',()=>{
+ const opts={failures:new Set(),cutoff:10000,holderCutoff:9999,now:10000001};
+ assert.doesNotThrow(()=>assertRealtimeHealthy(opts));
+ assert.throws(()=>assertRealtimeHealthy({...opts,failures:new Set(['core-refresh'])}),/SNAPSHOT_UPDATE_FAILED/);
+ assert.throws(()=>assertRealtimeHealthy({...opts,holderCutoff:0}),/SNAPSHOT_STALE/);
+ assert.throws(()=>assertRealtimeHealthy({...opts,holderCutoff:8000}),/SNAPSHOT_STALE/);
 });
 const snapshot=block=>({version:1,block,cutoff:Date.now()/1000,token:'0x7765a659c5b0cfbfd9fbc2ef2298b75a598f2d2d',windows:{}});
 test('fresh realtime source avoids large fallback fetches',async()=>{
