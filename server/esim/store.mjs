@@ -3,7 +3,7 @@ import { gunzipSync, gzipSync } from 'node:zlib';
 import { TOKEN, SOURCE } from './metrics.mjs';
 import {validSourceInflow,newerSourceInflow} from './source-inflows.mjs';
 export const CHECKPOINT_URL = 'https://raw.githubusercontent.com/brunopike/pancake-depth-viewer/esim-cache/state.json.gz';
-export const CLAIM_FLOW_URL = 'https://raw.githubusercontent.com/brunopike/pancake-depth-viewer/esim-cache/claim-flow.json';
+export const CLAIM_FLOW_URL = 'https://raw.githubusercontent.com/brunopike/pancake-depth-viewer/esim-cache/claim-flow.json.gz';
 export function validClaimFlow(state,flow){
   try{
     const address=a=>/^0x[0-9a-f]{40}$/.test(a||''),hash=h=>/^0x[0-9a-f]{64}$/.test(h||''),uint=n=>typeof n==='string'&&/^\d+$/.test(n);
@@ -46,7 +46,11 @@ export async function loadState({ fetch: request = fetch, includeRemote = true, 
       if (remote.block > local.block) local=remote;
     }
   } catch { /* The bundled verified checkpoint remains usable. */ }
-  if(includeRemote)try{const r=await request(CLAIM_FLOW_URL,{cache:'no-store',signal:AbortSignal.timeout(15000)});if(r.ok)local=attachClaimFlow(local,await r.json());}catch{}
+  if(includeRemote)try{
+    const options={cache:'no-store',signal:AbortSignal.timeout(15000)},r=await request(CLAIM_FLOW_URL,options);
+    if(r.ok)local=attachClaimFlow(local,JSON.parse(gunzipSync(Buffer.from(await r.arrayBuffer()))));
+    else if(r.status===404){const legacy=await request(CLAIM_FLOW_URL.slice(0,-3),options);if(legacy.ok)local=attachClaimFlow(local,await legacy.json());}
+  }catch{}
   return local;
 }
 export async function saveState(state, dir) {

@@ -2,7 +2,7 @@ import {claimFlowWindow} from '../server/esim/claim-flow.mjs';
 import {newerSourceInflow} from '../server/esim/source-inflows.mjs';
 
 const mirrored=globalThis.location?.hostname==='esimonchain.imstark.site'||globalThis.location?.hostname?.endsWith('.vercel.app');
-export const CLAIM_FLOW_URL=mirrored?'./data/current-esim-claim-flow.json':'https://raw.githubusercontent.com/brunopike/pancake-depth-viewer/esim-cache/claim-flow.json';
+export const CLAIM_FLOW_URL=mirrored?'./data/current-esim-claim-flow.json.gz':'https://raw.githubusercontent.com/brunopike/pancake-depth-viewer/esim-cache/claim-flow.json.gz';
 const TOKEN='0x7765a659c5b0cfbfd9fbc2ef2298b75a598f2d2d',SOURCE='0x67b97c3845438f264965ca154ba13051c6c73416';
 const address=value=>typeof value==='string'&&/^0x[0-9a-f]{40}$/.test(value);
 const hash=value=>typeof value==='string'&&/^0x[0-9a-f]{64}$/.test(value);
@@ -82,9 +82,10 @@ export async function readClaimFlowSnapshot(kind,snapshot,{fetch:request=globalT
  const cached=flowCache.get(request);
  if(cached&&Date.now()-cached.at<300000)return enrichClaimFlowSnapshot(kind,snapshot,cached.flow);
  try{
-  const response=await request(`${CLAIM_FLOW_URL}?t=${Date.now()}`,{cache:'no-store',signal:AbortSignal.timeout(8000)});
+  let response=await request(`${CLAIM_FLOW_URL}?t=${Date.now()}`,{cache:'no-store',signal:AbortSignal.timeout(15000)}),compressed=true;
+  if(response.status===404){response=await request(`${CLAIM_FLOW_URL.slice(0,-3)}?t=${Date.now()}`,{cache:'no-store',signal:AbortSignal.timeout(15000)});compressed=false;}
   if(!response.ok)return snapshot;
-  const flow=await response.json();
+  const flow=compressed?await new Response(response.body.pipeThrough(new DecompressionStream('gzip'))).json():await response.json();
   if(validClaimFlow(flow,snapshot))flowCache.set(request,{at:Date.now(),flow});
   return enrichClaimFlowSnapshot(kind,snapshot,flow);
  }catch{return snapshot;}

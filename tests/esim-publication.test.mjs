@@ -4,6 +4,7 @@ import {execFileSync} from 'node:child_process';
 import {mkdtemp,writeFile,mkdir,rm,readFile} from 'node:fs/promises';
 import {tmpdir} from 'node:os';
 import {join} from 'node:path';
+import {gzipSync,gunzipSync} from 'node:zlib';
 import {publishReportFiles} from '../scripts/esim/publish-report-files.mjs';
 
 test('binary publication preserves the working branch, staged user edits and unrelated cache files',async()=>{
@@ -19,8 +20,12 @@ test('binary publication preserves the working branch, staged user edits and unr
   assert.equal(git(['show',`${commit}:keep.txt`]),'preserve');
   assert.deepEqual(execFileSync('git',['show',`${commit}:state.json.gz`],{cwd}),bytes);
   assert.equal(await publishReportFiles([['state.json.gz',bytes],['report.json','{"block":1}'],['addresses.json','{}']],{cwd,message:'old',skip:prior=>prior.block>=1}),false);
-  const flow=await publishReportFiles([['claim-flow-state.json.gz',bytes],['claim-flow.json','{"throughBlock":2}']],{cwd,message:'verified flow',skip:prior=>prior.throughBlock>=2});
-  assert.equal(git(['show',`${flow}:report.json`]),'{"block":2}');assert.equal(git(['show',`${flow}:claim-flow.json`]),'{"throughBlock":2}');
+  const packed=gzipSync('{"throughBlock":2,"evidence":["complete evidence"]}');
+  const flow=await publishReportFiles([['claim-flow-state.json.gz',bytes],['claim-flow.json.gz',packed]],{cwd,message:'verified flow',skip:prior=>prior.throughBlock>=2});
+  assert.equal(git(['show',`${flow}:report.json`]),'{"block":2}');
+  assert.equal(gunzipSync(execFileSync('git',['show',`${flow}:claim-flow.json.gz`],{cwd})).toString(),gunzipSync(packed).toString());
+  assert.equal(git(['show',`${flow}:claim-flow.json`]),'{"throughBlock":1}','legacy copy remains available to old readers');
+  assert.equal(await publishReportFiles([['claim-flow-state.json.gz',bytes],['claim-flow.json.gz',packed]],{cwd,message:'stale flow',skip:prior=>prior.throughBlock>=2}),false);
   assert.equal(git(['rev-parse','HEAD']),head);assert.equal(git(['diff','--cached']),staged);
  }finally{await rm(dir,{recursive:true,force:true});}
 });

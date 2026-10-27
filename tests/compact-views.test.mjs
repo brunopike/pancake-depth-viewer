@@ -49,6 +49,8 @@ test('warm snapshot cache singleflights heavy reads and checks small revisions o
  revision=packed({...holders,block:101},'two');now=22;assert.equal((await read('holders')).data.block,101);assert.equal(reads,2);
  revision=packed(holders,'old');now=33;await assert.rejects(read('holders'),/REGRESSED/);
  revision=packed({...holders,block:102},'three');assert.equal((await read('holders')).data.block,102);
+ revision=packed({...holders,block:103},'four');assert.equal((await read('holders')).data.block,102,'normal requests reuse the warm cache');
+ assert.equal((await read('holders',{fresh:true})).data.block,103,'a stale cross-period response rechecks the database revision immediately');
 });
 const response=()=>({headers:{},status(s){this.code=s;return this;},setHeader(k,v){this.headers[k]=v;},json(data){this.body=data;return this;},send(data){this.body=data;return this;},end(){return this;}});
 test('compact API gzip, ETag, POST balances, input errors and storage failure have honest statuses',async()=>{
@@ -68,4 +70,11 @@ test('view client retains its valid cache on 304 and rejects malformed network r
  await assert.rejects(readView('holders',options,{fetch:async()=>new Response(JSON.stringify({...view,ledger:null}))}));
  const older={...view,report:{...view.report,block:99}};assert.deepEqual(await readView('holders',options,{fetch:async()=>new Response(JSON.stringify(older))}),view);
  await cacheData('irrelevant',{no:'private labels here'});const location=globalThis.location;globalThis.location={hostname:'esimonchain.imstark.site'};try{assert(compactViewsEnabled({}));assert(!compactViewsEnabled({[address(1)]:{kind:'own',text:'private'}}));}finally{globalThis.location=location;}
+});
+test('switching seller periods retries an older CDN response instead of leaving the previous period on screen',async()=>{
+ const options=sellerViewOptions({period:'yesterday',search:'freshness-regression'}),old=buildSellerView(trades,holders,options);
+ const latest={...old,block:110,holders:{...old.holders,block:111}},calls=[];
+ const result=await readView('sellers',options,{minimum:{block:110,holderBlock:111},fetch:async(url,init)=>{calls.push({url,init});return new Response(JSON.stringify(calls.length===1?old:latest));}});
+ assert.equal(result.block,110);assert.equal(result.holders.block,111);assert.equal(calls.length,2);assert.notEqual(calls[0].url,calls[1].url);
+ await assert.rejects(readView('sellers',{...options,search:'still-stale'},{minimum:{block:110,holderBlock:111},fetch:async()=>new Response(JSON.stringify(old))}),/尚未同步/);
 });

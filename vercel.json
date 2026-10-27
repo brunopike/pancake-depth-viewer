@@ -20,6 +20,10 @@
   },
   "rewrites": [
     {
+      "source": "/data/current-esim-claim-flow.json.gz",
+      "destination": "https://raw.githubusercontent.com/brunopike/pancake-depth-viewer/esim-cache/claim-flow.json.gz"
+    },
+    {
       "source": "/data/current-depth/:filename",
       "destination": "https://raw.githubusercontent.com/brunopike/pancake-depth-viewer/depth-cache/:filename"
     },

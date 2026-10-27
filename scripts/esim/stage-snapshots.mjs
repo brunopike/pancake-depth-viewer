@@ -1,9 +1,10 @@
 import {readFile,writeFile} from 'node:fs/promises';
+import {gunzipSync} from 'node:zlib';
 import {validSnapshot,newerSnapshot} from '../../src/snapshot-client.mjs';
 import {parseState,attachClaimFlow,validClaimFlow} from '../../server/esim/store.mjs';
 import {buildReport} from '../../server/esim/metrics.mjs';
 import {buildAddressReport} from '../../server/esim/addresses.mjs';
-let flow=null;try{flow=JSON.parse(await readFile('.goodway/pages-report/claim-flow.json','utf8'));}catch{}
+let flow=null;try{flow=JSON.parse(gunzipSync(await readFile('.goodway/pages-report/claim-flow.json.gz')));}catch{try{flow=JSON.parse(await readFile('.goodway/pages-report/claim-flow.json','utf8'));}catch{}}
 // Only public, verified ESIM JSON is copied. Checkpoint state and credentials stay out of dist.
 for(const [kind,source]of [['report','.goodway/pages-report/report.json'],['addresses','.goodway/pages-report/addresses.json'],['holders','.goodway/pages-holders/holders.json']]){
  const latest=JSON.parse(await readFile(source,'utf8'));

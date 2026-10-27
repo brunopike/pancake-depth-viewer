@@ -5,10 +5,10 @@ import {readRealtime,readRealtimeMetadata} from './realtime-store.mjs';
 // share one decode; the database body is downloaded again only on a revision.
 export function createSnapshotReader({read=readRealtime,metadata=readRealtimeMetadata,now=Date.now,ttl=15000}={}){
  const cache=new Map(),pending=new Map();
- return async function snapshot(kind){
+ return async function snapshot(kind,{fresh=false}={}){
   if(!['report','addresses','holders'].includes(kind))throw Error('INVALID_SNAPSHOT_KIND');
   const prior=cache.get(kind);
-  if(prior&&now()-prior.checkedAt<ttl)return prior;
+  if(prior&&!fresh&&now()-prior.checkedAt<ttl)return prior;
   if(pending.has(kind))return pending.get(kind);
   const request=(async()=>{
    if(prior){

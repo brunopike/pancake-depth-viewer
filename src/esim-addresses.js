@@ -36,31 +36,31 @@ function localPage() {
 function render(schedule=true) {
  if(!current)return; const w=current.window; page=current.page;
  $('cutoff').textContent=`交易数据截至 ${date(current.cutoff)}${holderReport?' · 持仓快照截至 '+date(holderReport.cutoff):''} · 北京时间`;
- const funding=mode==='funding';
+ const funding=current.options.mode==='funding';
  $('mode-current').textContent=funding?'按出币地址':'按操作钱包';
  $('mode-note').textContent=funding?'按卖出币的来源地址汇总，可能包含合约；买入量按接收币的地址统计，无法确认来源的卖出单列。':'按发起交易的钱包汇总卖出量；通过合约执行时，它可能不是实际转出币的地址。';
- const category=SELLER_GROUPS.find(group=>group.id===filter).label;
+ const category=SELLER_GROUPS.find(group=>group.id===current.options.filter).label;
  $('ranking-title').textContent=`${category}卖出排名 · ${funding?'出币地址':'操作钱包'}`;
  $('address-column-label').textContent=`排名 / ${funding?'出币地址':'操作钱包'}`;
  for(const button of document.querySelectorAll('[data-sort]')){
-  const selected=button.dataset.sort===$('sort').value,ascending=$('sort-direction').value==='asc';
+  const selected=button.dataset.sort===current.options.sort,ascending=current.options.direction==='asc';
   button.setAttribute('aria-pressed',String(selected));button.querySelector('.sort-arrow').textContent=selected?(ascending?'↑':'↓'):'↕';
   button.setAttribute('aria-label',`${button.dataset.label}，${selected&&ascending?'当前升序，点击降序':selected?'当前降序，点击升序':'点击'+(button.dataset.sort==='address'?'升序':'降序')+'排序'}`);
  }
- for(const header of document.querySelectorAll('.address-table thead th')){const active=header.querySelector('[data-sort][aria-pressed="true"]');header.setAttribute('aria-sort',active?$('sort-direction').value==='asc'?'ascending':'descending':'none');}
+ for(const header of document.querySelectorAll('.address-table thead th')){const active=header.querySelector('[data-sort][aria-pressed="true"]');header.setAttribute('aria-sort',active?current.options.direction==='asc'?'ascending':'descending':'none');}
  $('balance-sort-note').hidden=!['esim','usdt','bnb'].includes($('sort').value);
  $('balance-sort-note').textContent=$('sort').value==='esim'?'按已显示的 ESIM 最新余额排序；缺失余额排在末尾。':'按已查询的余额排序；未查询地址排在末尾，不能作为全市场余额排名。';
- const groupCard=group=>`<section class="seller-group${filter===group.id?' selected':''}" data-summary-group="${group.id}"><h2>${group.label}${filter===group.id?'<small>当前排名</small>':''}</h2><div class="seller-metrics"><div><span>${group.id==='all'&&BigInt(current.missingSold)>0n?'已识别卖出地址数':'卖出地址数'}</span><strong>${w.available?integer(group.count):'—'}</strong></div><div><span>卖出 <small>ESIM</small></span><strong class="sell">${amount(w.available?group.sold:null)}</strong></div><div><span>买入 <small>ESIM</small></span><strong class="buy">${amount(w.available&&current.activityComplete?group.bought:null)}</strong></div><div><span>净卖出 <small>ESIM</small></span><strong class="${BigInt(group.netSold)>=0n?'sell':'buy'}">${amount(w.available&&current.activityComplete?group.netSold:null)}</strong></div></div></section>`;
+ const groupCard=group=>`<section class="seller-group${current.options.filter===group.id?' selected':''}" data-summary-group="${group.id}"><h2>${group.label}${current.options.filter===group.id?'<small>当前排名</small>':''}</h2><div class="seller-metrics"><div><span>${group.id==='all'&&BigInt(current.missingSold)>0n?'已识别卖出地址数':'卖出地址数'}</span><strong>${w.available?integer(group.count):'—'}</strong></div><div><span>卖出 <small>ESIM</small></span><strong class="sell">${amount(w.available?group.sold:null)}</strong></div><div><span>买入 <small>ESIM</small></span><strong class="buy">${amount(w.available&&current.activityComplete?group.bought:null)}</strong></div><div><span>净卖出 <small>ESIM</small></span><strong class="${BigInt(group.netSold)>=0n?'sell':'buy'}">${amount(w.available&&current.activityComplete?group.netSold:null)}</strong></div></div>${current.activityComplete&&group.activeCount!=null?`<p class="seller-scope">交易地址 ${integer(group.activeCount)} 个 · 仅买入 ${integer(group.buyOnlyCount)} 个（${amount(group.buyOnlyBought)} ESIM）</p>`:''}${group.id==='received'?'<p class="seller-scope">统计截至时段末领过币的地址，包含其领币前的交易；不等于领取所得的卖出量。</p>':''}</section>`;
  $('summary').innerHTML=`<div class="seller-primary">${current.groups.filter(group=>group.primary).map(groupCard).join('')}</div><div class="seller-secondary">${current.groups.filter(group=>!group.primary).map(groupCard).join('')}</div><p class="seller-scope">${w.available?date(w.start)+' — '+date(w.end)+' · 北京时间':'等待更新'} · 范围：已核验 ESIM 链上池，不含交易所内部成交。“全部”含未归因金额和仅买入的地址；其余分类及下方排名只计已识别地址，排名仅列卖过币的钱包。标签和搜索只筛选下方排名；分类可能重叠，不能相加。${current.activityComplete?'':' 买入概览待补齐：当前保存的快照仅含卖出地址。'}</p>${BigInt(current.missingSold)>0n?`<p class="seller-unattributed">未归因卖出：${amount(current.missingSold)} ESIM · 已计入“全部”成交；${funding?'出币地址':'操作钱包'}未确认，未计入地址分类及排名。</p>`:''}${BigInt(current.missingBought||'0')>0n?`<p class="seller-unattributed">未归因买入：${amount(current.missingBought)} ESIM · 已计入“全部”成交；接收或操作地址未确认，未计入地址分类及排名。</p>`:''}`;
  const net=(BigInt(current.totals.sold)-BigInt(current.totals.bought)).toString();
- $('filter-note').textContent=`当前排名：${category}${current.options.tags.length&&!current.options.tags.includes('all')?' · 标签：'+$('filter-label').textContent:''} · ${integer(current.total)} 个卖出地址 · 卖出 ${amount(current.totals.sold)} · 排名内地址买入 ${amount(current.totals.bought)} · 净卖出 ${amount(net)} ESIM${$('address-search').value.trim()?' · 已按搜索筛选':''}`;
+ $('filter-note').textContent=`当前排名：${category}${current.options.tags.length&&!current.options.tags.includes('all')?' · 标签：'+$('filter-label').textContent:''} · ${integer(current.total)} 个卖出地址 · 卖出 ${amount(current.totals.sold)} · 排名内地址买入 ${amount(current.totals.bought)} · 净卖出 ${amount(net)} ESIM${current.options.search?' · 已按搜索筛选':''}`;
  const naturalDay=Math.floor((Date.now()/1000+28800)/86400),snapshotDay=saved?Math.floor((saved.windows.today.start+28800)/86400):naturalDay;
  for(const [key,label]of [['today','今日·0点到现在'],['yesterday','昨日 · 24 小时'],['history','历史累计']])document.querySelector(`[data-period="${key}"]`).textContent=snapshotDay===naturalDay||key==='history'?label:date(saved.windows[key].start).slice(0,5)+(key==='today'?'（保存）':' · 24 小时');
  $('rows').innerHTML=current.rows.map((r,i)=>{const b=balances.get(r.address),h=holderMap.get(r.address),esim=displayEsimBalance(b,h,holderReport);return `<tr><th><span class="rank">${page*SELLER_PAGE_SIZE+i+1}</span><div class="address-link-row"><a href="https://bscscan.com/address/${r.address}" target="_blank" rel="noopener noreferrer" title="${r.address}">${r.address.slice(0,8)}…${r.address.slice(-6)} ↗</a><a class="holding-link" href="${holderViewURL({search:r.address,zero:true})}" target="_top" rel="noopener noreferrer">看持仓 →</a></div><div class="tags">${tags(r)}</div></th><td class="sell">${amount(r.sold)}</td><td class="buy">${amount(r.bought)}</td><td class="${BigInt(r.netSold)>=0n?'sell':'buy'}">${amount(r.netSold)}</td><td>${integer(r.sellCount)} / ${integer(r.buyCount)}<small>单日最多 ${integer(r.peakDailyTrades)} 笔</small></td><td>${amount(esim.balance,2)}<small>${esim.source==='missing'?'余额暂缺':(esim.source==='snapshot'?'快照 ':'查询 ')+date(esim.cutoff)}</small></td><td>${amount(b?.usdt,2)}</td><td>${amount(b?.bnb,6)}</td></tr>`;}).join('')||'<tr><td colspan="8" class="empty">这个条件下暂无卖出地址。</td></tr>';
  const start=current.total?page*SELLER_PAGE_SIZE+1:0,end=page*SELLER_PAGE_SIZE+current.rows.length;
  $('row-count').textContent=`${integer(start)}–${integer(end)} / ${integer(current.total)} 个地址 · 每页 ${SELLER_PAGE_SIZE} 条`; $('page').textContent=`${current.total?page+1:0} / ${current.pages}`;
  $('prev').disabled=page===0; $('next').disabled=(page+1)*SELLER_PAGE_SIZE>=current.total; $('balances').disabled=balanceBusy||!current.total||!endpoint;
- for(const group of ['period','mode','filter'])for(const b of document.querySelectorAll(`[data-${group}]`))b.setAttribute(group==='period'?'aria-selected':'aria-pressed',String(b.dataset[group]===({period,mode,filter})[group]));
+ for(const group of ['period','mode','filter'])for(const b of document.querySelectorAll(`[data-${group}]`))b.setAttribute(group==='period'?'aria-selected':'aria-pressed',String(b.dataset[group]===current.options[group]));
  $('own-rule').innerHTML=`我方交易：调用已确认执行合约 ${(current.ownExecutors||[current.ownExecutor]).map(a=>`<a href="https://bscscan.com/address/${a}" target="_blank" rel="noopener noreferrer">${a.slice(0,10)}…${a.slice(-6)} ↗</a>`).join(' / ')} 的发起钱包，累计已识别 ${integer(current.ownProgramCount)} 个；同时包含已确认的我方钱包与 LP 地址。`;
  const times=current.rows.map(r=>balances.get(r.address)?.timestamp).filter(Boolean);
  $('balance-status').textContent=times.length?`余额截至 ${date(Math.min(...times))}${Math.min(...times)!==Math.max(...times)?' — '+date(Math.max(...times)):''} · 北京时间`:holderReport?`ESIM 快照 ${date(holderReport.cutoff)}；USDT / BNB 余额${endpoint?'仅查询当前页':'暂缺'}。`:'余额暂缺，点击刷新重试。';
@@ -87,9 +87,9 @@ async function loadPageRequest(){
   try{
    const cached=await cachedView('sellers',o);
    if(cached&&seq===generation&&compactViewsEnabled(manual))applyCompact(cached.data,viewKey,false);
-   const view=await readView('sellers',o,{current:compactKey===viewKey?current:null,balances:['esim','usdt','bnb'].includes(o.sort)?Object.fromEntries(balances):undefined});
+   const view=await readView('sellers',o,{current:compactKey===viewKey?current:null,minimum:{block:saved?.block,holderBlock:holderReport?.block},balances:['esim','usdt','bnb'].includes(o.sort)?Object.fromEntries(balances):undefined});
    if(seq!==generation||!compactViewsEnabled(manual))return;
-   applyCompact(view,viewKey);showSnapshotStatus($('status'),$('refresh'),[['交易',current],['持仓',holderReport]]);return;
+   if(!applyCompact(view,viewKey))throw Error('所选时段的数据尚未同步，请稍后刷新。');showSnapshotStatus($('status'),$('refresh'),[['交易',current],['持仓',holderReport]]);return;
   }catch{
    if(seq!==generation)return;compactAvailable=false;
    $('status').textContent='正在读取备用快照…';
@@ -145,7 +145,7 @@ if(['asc','desc'].includes(query.get('direction')))$('sort-direction').value=que
 for(const input of $('filter').querySelectorAll('input'))input.checked=(query.get('tags')||'').split(',').includes(input.value);
 tagFilter.refresh();
 try{const config=await json('./data/esim-config.json');endpoint=esimEndpoint(config);}catch{endpoint=null;}
-try{await loadPage();showSnapshotStatus($('status'),$('refresh'),[['交易',current||saved],['持仓',holderReport]],{retained:lastTradeSource==='retained'||lastHolderSource==='retained'});}catch{$('status').textContent='地址数据暂时无法读取，请点击刷新重试。';$('status').className='notice';}
+try{if(await loadPage())showSnapshotStatus($('status'),$('refresh'),[['交易',current||saved],['持仓',holderReport]],{retained:lastTradeSource==='retained'||lastHolderSource==='retained'});}catch{$('status').textContent='地址数据暂时无法读取，请点击刷新重试。';$('status').className='notice';}
 
 startSnapshotPolling(async()=>{
  if(busy)return false;busy=true;

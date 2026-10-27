@@ -41,6 +41,7 @@ test('empty category overview still exposes all five categories with zero signed
 test('buy-only own wallets have nonzero purchases and zero selling-address count',()=>{
  const groups=sellerSummaries([{sold:'0',bought:'123456789012345678901',own:true}],r=>r),own=groups.find(r=>r.id==='own');
  assert.equal(own.count,0);assert.equal(own.sold,'0');assert.equal(own.bought,'123456789012345678901');assert.equal(own.netSold,'-123456789012345678901');
+ assert.equal(own.activeCount,1);assert.equal(own.buyOnlyCount,1);assert.equal(own.buyOnlyBought,own.bought);
 });
 
 test('all verified fills include unassigned amounts without inventing classified wallets',()=>{
@@ -53,6 +54,7 @@ test('all verified fills include unassigned amounts without inventing classified
  assert.equal(all.bought,'800000000000000000057');
  assert.equal(all.netSold,'-53');
  assert.equal(all.count,1);
+ assert.equal(all.activeCount,2);assert.equal(all.buyOnlyCount,1);assert.equal(all.buyOnlyBought,'30');
  assert.equal(own.sold,'100000000000000000001');
  assert.equal(own.bought,'20');
  assert.equal(groups.find(g=>g.id==='other').sold,'0');

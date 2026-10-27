@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {CLAIM_FLOW_URL,validClaimFlow,enrichClaimFlowSnapshot,readClaimFlowSnapshot} from '../src/claim-flow-client.mjs';
 import {readSnapshot} from '../src/snapshot-client.mjs';
+import {gzipSync} from 'node:zlib';
 
 const token='0x7765a659c5b0cfbfd9fbc2ef2298b75a598f2d2d',source='0x67b97c3845438f264965ca154ba13051c6c73416';
 const address=n=>'0x'+n.toString(16).padStart(40,'0'),hash=n=>'0x'+n.toString(16).padStart(64,'0');
@@ -78,7 +79,7 @@ test('missing, malformed or incompatible static flow never discards the chosen s
 });
 test('snapshot selection is unchanged and enrichment adds only one fixed free GET after selecting the newest source',async()=>{
  const calls=[];
- const fetch=async(url,options)=>{calls.push({url,options});return {ok:true,json:async()=>url.startsWith(CLAIM_FLOW_URL)?flow():snapshot('addresses',url.includes('raw.githubusercontent')?200:100)};};
+ const fetch=async(url,options)=>{calls.push({url,options});return url.startsWith(CLAIM_FLOW_URL)?new Response(gzipSync(JSON.stringify(flow()))):Response.json(snapshot('addresses',url.includes('raw.githubusercontent')?200:100));};
  const selected=await readSnapshot('addresses',{fetch});
  assert.equal(selected.source,'background');assert.equal(selected.data.block,200);assert.equal(selected.data.windows.today.initiator.rows[1].relaySold,true);
  assert.equal(calls.length,3);assert(calls[2].url.startsWith(CLAIM_FLOW_URL+'?t='));
@@ -86,6 +87,16 @@ test('snapshot selection is unchanged and enrichment adds only one fixed free GE
  assert(calls[2].options.signal instanceof AbortSignal);
  const retained=await readSnapshot('holders',{current:snapshot('holders',300),fetch});
  assert.equal(retained.source,'retained');assert.equal(retained.data.block,300);assert.equal(retained.data.rows[1].tags[0].id,'received-relay-sold');
+});
+
+test('compressed provenance preserves evidence and supports legacy migration only on 404',async()=>{
+ const data=snapshot(),valid=flow();
+ const next=await readClaimFlowSnapshot('report',data,{fetch:async()=>new Response(gzipSync(JSON.stringify(valid)))});
+ assert.equal(next.windows.history.claimFlow.sold_wei,'43');
+ const calls=[];
+ const legacy=await readClaimFlowSnapshot('report',data,{fetch:async url=>{calls.push(url);return url.includes('.gz?')?new Response('',{status:404}):Response.json(valid);}});
+ assert.equal(legacy.windows.history.claimFlow.sold_wei,'43');assert.equal(calls.length,2);
+ const bad=await readClaimFlowSnapshot('report',data,{fetch:async()=>new Response('not gzip')});assert.equal(bad,data);
 });
 
 test('an older model revision cannot replace a corrected estimate at the same cutoff',()=>{

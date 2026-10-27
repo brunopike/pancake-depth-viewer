@@ -22,7 +22,8 @@ export function createViewHandler(read=readViewSnapshot){return async function h
  }catch{return res.status(400).json({error:'INVALID_REQUEST'});}
  res.setHeader('Cache-Control',req.method==='GET'?'public, max-age=0, s-maxage=15, stale-while-revalidate=30':'private, no-cache');
  try{
-  const [holders,sellers]=await Promise.all([read('holders'),kind==='sellers'?read('addresses'):null]);
+  const freshness={fresh:typeof req.query?._fresh==='string'};
+  const [holders,sellers]=await Promise.all([read('holders',freshness),kind==='sellers'?read('addresses',freshness):null]);
   const etag='"'+createHash('sha256').update(JSON.stringify([kind,holders.etag,sellers?.etag,options,addresses,body.balances||{}])).digest('hex')+'"';
   res.setHeader('ETag',etag);
   if(String(req.headers?.['if-none-match']||'').split(',').some(v=>[etag,'W/'+etag].includes(v.trim())))return res.status(304).end();

@@ -14,14 +14,19 @@ export function validView(kind,data){
 }
 
 export async function cachedView(kind,options={}){const item=await cachedData(keyFor(kind,options));return validView(kind,item?.data)?item:null;}
-export async function readView(kind,options={}, {fetch:request=globalThis.fetch,balances,current}={}){
+export async function readView(kind,options={}, {fetch:request=globalThis.fetch,balances,current,minimum}={}){
  const key=keyFor(kind,options),cached=await cachedView(kind,options),headers={};
  if(cached?.etag)headers['If-None-Match']=cached.etag;
  const post=balances&&Object.keys(balances).length>0;if(post)headers['Content-Type']='application/json';
- const response=await request('./api/esim-view?'+queryFor(kind,options),{method:post?'POST':'GET',headers,cache:'no-cache',signal:AbortSignal.timeout(15000),...(post?{body:JSON.stringify({balances})}:{})});
- const data=response.status===304?cached?.data:response.ok?await response.json():null;
- if(!validView(kind,data))throw Error('紧凑快照暂时不可用。');
  const previous=validView(kind,current)?current:cached?.data;
- if(previous&&(viewBlock(data)<viewBlock(previous)||holderBlock(data)<holderBlock(previous)))return previous;
- void cacheData(key,data,response.headers.get('etag')||cached?.etag);return data;
+ const behind=data=>minimum&&(viewBlock(data)<(minimum.block||0)||holderBlock(data)<(minimum.holderBlock||0));
+ for(let attempt=0;attempt<2;attempt++){
+  const query=queryFor(kind,options);if(attempt)query.set('_fresh',String(Date.now()));
+  const response=await request('./api/esim-view?'+query,{method:post?'POST':'GET',headers:attempt?Object.fromEntries(Object.entries(headers).filter(([key])=>key!=='If-None-Match')):headers,cache:'no-cache',signal:AbortSignal.timeout(15000),...(post?{body:JSON.stringify({balances})}:{})});
+  const data=response.status===304?cached?.data:response.ok?await response.json():null;
+  if(!validView(kind,data))throw Error('紧凑快照暂时不可用。');
+  if(behind(data)){if(previous&&!behind(previous))return previous;if(!attempt)continue;throw Error('所选时段的数据尚未同步，请稍后刷新。');}
+  if(previous&&(viewBlock(data)<viewBlock(previous)||holderBlock(data)<holderBlock(previous)))return previous;
+  void cacheData(key,data,response.headers.get('etag')||cached?.etag);return data;
+ }
 }
