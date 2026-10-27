@@ -215,12 +215,12 @@ async function selectMarket(market) {
   $('chart-unit').textContent = `竖着看：合计金额（${market.quote.symbol}）`;
   updateURL(); $('market-dialog').close(); await refresh();
 }
-async function refresh() {
+async function refresh(liveQuery = false) {
   if (!state.market) return;
   resetRefreshClock();
   const request = ++state.request, market = state.market;
   setError(''); state.busy = true; $('refresh').disabled = true;
-  $('status').textContent = `正在从链上读取 ${market.pools.length} 个池子的数据…`;
+  $('status').textContent = liveQuery ? `正在从链上读取 ${market.pools.length} 个池子的数据…` : '正在读取已核验的深度快照…';
   let displayed = false, previous;
   const usable = live => live?.pools.length && (live.range === Infinity || live.range === state.config.range) && Date.now() - live.timestamp < 86400000;
   const show = (live, updating = false) => {
@@ -247,6 +247,14 @@ async function refresh() {
       previous = shared; show(shared, true); saveBrowserCache(market, shared);
     }
     if (request !== state.request) return;
+    // Initial/automatic reads use one verified snapshot. The refresh button keeps
+    // the explicit same-block pool/LP RPC verification for users who need it now.
+    if (!liveQuery && displayed && usable(shared) && shared.failed.length === 0) {
+      show(previous);
+      $('status').textContent = snapshotStatus(' · 自动检查快照；后台目标每小时更新');
+      setError(Date.now() - previous.timestamp > 90 * 60000 ? '后台深度快照较旧，可点“刷新数据”直接核验链上。' : '');
+      return;
+    }
     const live = await loadPools(market.pools, market.base.id, Infinity, (done, total) => {
       if (request === state.request) $('status').textContent = done === total ? '正在核对 LP 归属…' : `正在更新池子 ${done} / ${total}…`;
     }, { previous });
@@ -620,7 +628,7 @@ $('settings-form').addEventListener('submit', e => { e.preventDefault(); try {
 } catch (e) { setError(e.message); } });
 document.querySelectorAll('[data-percent]').forEach(b => b.addEventListener('click', () => { $('maximum').setAttribute('aria-pressed', 'false'); $('percent').disabled = false; $('percent').value = b.dataset.percent; $('settings-form').requestSubmit(); }));
 $('maximum').addEventListener('click', () => { $('maximum').setAttribute('aria-pressed', String($('maximum').getAttribute('aria-pressed') !== 'true')); $('settings-form').requestSubmit(); });
-$('refresh').addEventListener('click', refresh);
+$('refresh').addEventListener('click', () => refresh(true));
 $('chart-settings').addEventListener('submit', e => {
   e.preventDefault();
   try {

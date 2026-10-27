@@ -1,8 +1,10 @@
 import {startSnapshotPolling} from './snapshot-poll.mjs';
-import {readSnapshot,readTradingReport} from './snapshot-client.mjs';
+import {readSnapshot,readTradingReport,validSnapshot,realtimeHost} from './snapshot-client.mjs';
 import {esimEndpoint} from './site-runtime.mjs';
 import {showSnapshotStatus,refreshButtonLabel} from './snapshot-status.mjs';
 import {holderInsights,holderViewURL} from './holder-insights.mjs';
+import {compactViewsEnabled,readView,cachedView} from './view-client.mjs';
+import {cachedData} from './data-cache.mjs';
 import {TAG_KEY,readManual} from './holder-model.mjs';
 import {isSourceInflowAligned} from '../server/esim/source-inflows.mjs';
 const $ = id => document.getElementById(id);
@@ -21,12 +23,13 @@ const amount = (wei, scale = 10000, decimals = 2) => {
 const net = wei => { if (wei == null) return '待核验'; const n = BigInt(wei); return `<strong class="${n > 0n ? 'sell' : 'buy'}">${n > 0n ? '卖出' : n < 0n ? '买入' : '持平'} ${amount(n < 0n ? -n : n)}</strong>`; };
 const metric = (label, value, unit = '', sub = '', cls = '') => `<div class="metric ${cls}"><span>${label}</span><strong>${value}${unit ? `<em>${unit}</em>` : ''}</strong><small>${sub}</small></div>`;
 const addresses = (g, side) => `${g[side + '_addresses_lower_bound'] ? '≥' : ''}${integer(g[side + '_addresses'])}`;
-let report, holderReport, active = 'today', busy = false, endpoint = null, manual={};
+let report, holderReport, active = 'today', busy = false, endpoint = null, manual={},reloadForTags=false;
 try{manual=readManual(localStorage.getItem(TAG_KEY));}catch{}
 const openLink=(url,text)=>`<a href="${escape(url)}" target="_top" rel="noopener noreferrer">${text} →</a>`;
 function holdingsBridge(){
  if(!holderReport){$('holdings-bridge').innerHTML='<p class="empty">持仓摘要暂缺，点击刷新重试。</p>';return;}
- const x=holderInsights(holderReport,manual),share=x.total==='0'?0:Number(BigInt(x.own))/Number(BigInt(x.total))*100;
+ if(holderReport.insights&&Object.keys(manual).length){$('holdings-bridge').innerHTML='<p class="empty">正在按本地标签读取持仓摘要…</p>';return;}
+ const x=holderReport.insights||holderInsights(holderReport,manual),share=x.total==='0'?0:Number(BigInt(x.own))/Number(BigInt(x.total))*100;
  const stateRows=x.states.map(state=>`<a class="receipt-state" href="${escape(holderViewURL({cohort:state.id,zero:state.id.endsWith('zero')}))}" target="_top" rel="noopener noreferrer"><span>${state.label}</span><strong>${integer(state.count)} <small>地址</small></strong><span class="state-track"><i style="width:${x.receivedCount?state.count/x.receivedCount*100:0}%"></i></span><em>${amount(state.balance)} 万 ESIM →</em></a>`).join('');
  $('holdings-bridge').innerHTML=`<div class="table-heading"><div><h2>当前持仓</h2><p>余额截至 ${date(x.cutoff)} · 独立于下方交易时段</p></div>${openLink(holderViewURL(),'持币明细')}</div><div class="holdings-body"><div class="inventory-view"><div class="inventory-metrics">${metric('我方钱包持仓',amount(x.own),'万 ESIM',openLink(holderViewURL({tags:['own']}),integer(x.ownCount)+' 个有持仓地址'))}${metric('领币地址仍持有',amount(x.received),'万 ESIM',openLink(holderViewURL({tags:['received'],zero:true}),integer(x.receivedCount)+' 个已索引领币地址'))}${metric('分发合约余额',amount(x.source),'万 ESIM',openLink(holderViewURL({search:'0x67b97c3845438f264965ca154ba13051c6c73416',zero:true}),'查看合约'))}${metric('非我方钱包持仓',amount(x.external),'万 ESIM',openLink(holderViewURL({excludeOwn:true}),'查看地址'))}${metric('高频 / 套利地址持仓',amount(x.robots.balance),'万 ESIM',openLink(holderViewURL({tags:['frequency','arbitrage']}),integer(x.robots.count)+' 个有持仓地址 · 含疑似'))}${metric('非我方前十持仓占比',x.externalTop10===null?'—':fmt.format(x.externalTop10)+'%','',openLink(holderViewURL({excludeOwn:true,chart:'top'}),'查看集中度'))}</div><div class="ownership-track" role="img" aria-label="已索引持仓中我方占 ${fmt.format(share)}%"><i style="width:${share}%"></i></div><p class="muted compact-note">已索引持仓：我方 ${fmt.format(share)}% · 其余 ${fmt.format(100-share)}% · 钱包余额，不含池内 LP</p></div><div class="receipt-view"><h3>领币后的当前状态</h3>${stateRows}<p class="muted compact-note">零持仓也可能由转出造成${x.manualCount?' · 含当前浏览器的手动标签':''}</p></div></div>`;
 }
@@ -112,18 +115,28 @@ async function json(url, options = {}) {
 async function refresh(live=true) {
   if(busy)return false;busy=true;$('refresh').disabled=true;$('refresh').textContent='正在刷新…';$('status').textContent='正在读取交易和持仓…';$('status').className='working';
   try{
-    const trading=()=>readTradingReport({current:report,live:!!endpoint&&live,queryLive:endpoint?async()=>{const result=await json(endpoint,{method:'POST',headers:{'Content-Type':'application/json'},body:'{}',signal:AbortSignal.timeout(260000)});if(!result.report)throw Error('交易查询未返回完整数据。');return result.report;}:null});
-    const [trades,holders]=await Promise.allSettled([trading(),readSnapshot('holders',{current:holderReport})]);
-    if(holders.status==='fulfilled')holderReport=holders.value.data;
-    if(trades.status==='fulfilled'&&(!report||trades.value.data.block>=report.block))render(trades.value.data);else if(report)holdingsBridge();
+    const trading=()=>readTradingReport({current:report,live:!!endpoint&&live&&!realtimeHost(),queryLive:endpoint?async()=>{const result=await json(endpoint,{method:'POST',headers:{'Content-Type':'application/json'},body:'{}',signal:AbortSignal.timeout(260000)});if(!result.report)throw Error('交易查询未返回完整数据。');return result.report;}:null});
+    const tradeRequest=trading().then(result=>{if(!report||result.data.block>=report.block)render(result.data);return result;});
+    const holdings=async()=>{
+     if(compactViewsEnabled(manual))try{return {data:await readView('summary',{addresses:(report?.top||[]).map(row=>row.address)},{current:holderReport}),source:'realtime'};}catch{}
+     return readSnapshot('holders',{current:holderReport?.insights?null:holderReport});
+    };
+    const [trades,holders]=await Promise.allSettled([
+     tradeRequest,
+     tradeRequest.catch(()=>null).then(holdings).then(result=>{holderReport=result.data;if(report)render(report);else holdingsBridge();return result;}),
+    ]);
     if(!report)throw Error('交易数据暂时无法读取，请重试。');
     const retained=trades.status==='rejected'||trades.value.source==='retained'||holders.status==='rejected'||holders.value.source==='retained';
     showSnapshotStatus($('status'),$('refresh'),[['交易',report],['持仓',holderReport]],{retained});
   }catch(e){$('status').textContent=e.message;$('status').className='notice';}
-  finally{busy=false;$('refresh').disabled=false;$('refresh').textContent=refreshButtonLabel($('refresh'));}
+  finally{busy=false;$('refresh').disabled=false;$('refresh').textContent=refreshButtonLabel($('refresh'));if(reloadForTags){reloadForTags=false;void refresh(false);}}
 }
 $('refresh').addEventListener('click',refresh);
-window.addEventListener('storage',e=>{if(e.key===TAG_KEY){manual=readManual(e.newValue);holdingsBridge();}});
+window.addEventListener('storage',e=>{if(e.key===TAG_KEY){manual=readManual(e.newValue);if(busy)reloadForTags=true;else void refresh(false);}});
+void Promise.all([cachedData('report-v1'),compactViewsEnabled(manual)?cachedData('report-v1').then(item=>cachedView('summary',{addresses:(item?.data?.top||[]).map(row=>row.address)})):null]).then(([trades,holders])=>{
+ if(holders&&(!holderReport||holders.data.block>holderReport.block))holderReport=holders.data;
+ if(validSnapshot('report',trades?.data)&&(!report||trades.data.block>report.block)){render(trades.data);showSnapshotStatus($('status'),$('refresh'),[['交易',report],['持仓',holderReport]],{retained:true});}
+}).catch(()=>{});
 try{
  const config=await json('./data/esim-config.json');endpoint=esimEndpoint(config);
 }catch{}

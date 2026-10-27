@@ -1,5 +1,6 @@
 import {startSnapshotPolling} from './snapshot-poll.mjs';
-import {readSnapshot,newerSnapshot} from './snapshot-client.mjs';
+import {readSnapshot,newerSnapshot,realtimeHost} from './snapshot-client.mjs';
+import {compactViewsEnabled,readView,cachedView} from './view-client.mjs';
 import {esimEndpoint} from './site-runtime.mjs';
 import {showSnapshotStatus,refreshButtonLabel} from './snapshot-status.mjs';
 import {sellerProfile,holderViewURL,displayEsimBalance} from './holder-insights.mjs';
@@ -10,6 +11,7 @@ import {SELLER_PAGE_SIZE,SELLER_SORT_KEYS,filterSellerRows,rankSellerRows,seller
 const $ = id => document.getElementById(id);
 let saved, current, period='today', mode='initiator', filter='all', page=0, endpoint, busy=false, balanceBusy=false, timer, searchTimer, generation=0;
 let holderReport,manual={},lastTradeSource,lastHolderSource;
+let compactAvailable=true,compactKey='',reloadForTags=false;
 try{manual=readManual(localStorage.getItem(TAG_KEY));}catch{}
 const tagFilter=createTagFilter({getManual:()=>manual,onChange:()=>{page=0;loadPage();}});
 let holderMap=new Map();
@@ -69,12 +71,35 @@ async function json(path,options={}){
  try{body=await response.json();}catch{throw new Error('接口暂时不可用，请稍后再试。');}
  if(!response.ok)throw new Error(body.message||'查询失败，保留已显示的数据。');return body;
 }
-async function loadSaved(){const result=await readSnapshot('addresses',{current:saved});lastTradeSource=result.source;return result.data;}
-async function loadHolders(){try{const result=await readSnapshot('holders',{current:holderReport});holderReport=result.data;lastHolderSource=result.source;holderMap=new Map(holderReport.rows.map(r=>[r.address,r]));}catch{lastHolderSource='retained';} }
+async function loadSaved(){const result=await readSnapshot('addresses',{current:saved?._compact?null:saved});lastTradeSource=result.source;return result.data;}
+async function loadHolders(){try{const result=await readSnapshot('holders',{current:holderReport?._compact?null:holderReport});holderReport=result.data;lastHolderSource=result.source;holderMap=new Map(holderReport.rows.map(r=>[r.address,r]));}catch{lastHolderSource='retained';if(holderReport?._compact)throw Error('正在读取本地标签所需的完整持仓。');} }
+function applyCompact(view,key,schedule=true){
+ if(saved&&view.block<saved.block||holderReport&&view.holders.block<holderReport.block)return false;
+ current=view;saved={...view,_compact:true};compactKey=key;holderReport={...view.holders,_compact:true};holderMap=new Map(holderReport.rows.map(row=>[row.address,row]));lastTradeSource=lastHolderSource='realtime';render(schedule);return true;
+}
 async function loadPage(){
+ try{await loadPageRequest();return true;}catch(error){$('status').textContent=error.message||'筛选结果暂时无法更新，保留已显示的数据。';$('status').className='notice';return false;}
+}
+async function loadPageRequest(){
  const seq=++generation,key=datasetKey();clearTimeout(timer);
+ if(compactViewsEnabled(manual)&&compactAvailable){
+  const o=options(),viewKey=JSON.stringify(o);$('rows').setAttribute('aria-busy','true');
+  try{
+   const cached=await cachedView('sellers',o);
+   if(cached&&seq===generation&&compactViewsEnabled(manual))applyCompact(cached.data,viewKey,false);
+   const view=await readView('sellers',o,{current:compactKey===viewKey?current:null,balances:['esim','usdt','bnb'].includes(o.sort)?Object.fromEntries(balances):undefined});
+   if(seq!==generation||!compactViewsEnabled(manual))return;
+   applyCompact(view,viewKey);showSnapshotStatus($('status'),$('refresh'),[['交易',current],['持仓',holderReport]]);return;
+  }catch{
+   if(seq!==generation)return;compactAvailable=false;
+   $('status').textContent='正在读取备用快照…';
+  }finally{if(seq===generation)$('rows').removeAttribute('aria-busy');}
+ }
+ if(!saved||saved._compact){
+  const [next]=await Promise.all([loadSaved(),loadHolders()]);if(seq!==generation)return;saved=next;
+ }
  if(saved){current=localPage();render(false);}
- if(endpoint&&!datasets.has(key))try{const result=await json(url(),{signal:AbortSignal.timeout(25000)});if(seq!==generation)return;datasets.set(key,newerSnapshot(datasets.get(key),result.report));current=localPage();render();}
+ if(endpoint&&!realtimeHost()&&!datasets.has(key))try{const result=await json(url(),{signal:AbortSignal.timeout(25000)});if(seq!==generation)return;datasets.set(key,newerSnapshot(datasets.get(key),result.report));current=localPage();render();}
  catch{if(seq!==generation)return;$('status').textContent='接口暂不可用，显示已保存的排名。';$('status').className='notice';}
  else if(endpoint)render();
 }
@@ -86,7 +111,7 @@ async function fetchBalances(manual=false){
    $('balance-status').textContent=`正在查询本页余额… ${i+1} / ${batches.length}`;
    const result=await json(endpoint,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'balances',addresses:batch}),signal:AbortSignal.timeout(55000)});
    for(const[address,value]of Object.entries(result.balances||{}))balances.set(address,value);
-  }current=localPage();render(false);
+  }if(saved?._compact){if(['esim','usdt','bnb'].includes($('sort').value))await loadPage();else render(false);}else{current=localPage();render(false);}
  }catch(e){$('balance-status').textContent=e.name==='TimeoutError'?'余额查询超时，请稍后重试。':e.message;}
  finally{balanceBusy=false;$('balances').disabled=!endpoint||!current.rows.length;if(!['esim','usdt','bnb'].includes($('sort').value)&&current.rows.map(r=>r.address).join(',')!==requested){clearTimeout(timer);timer=setTimeout(()=>fetchBalances(),400);}}
 }
@@ -101,13 +126,14 @@ $('prev').addEventListener('click',()=>{page--;loadPage();});$('next').addEventL
 $('refresh').addEventListener('click',async()=>{
  if(busy)return false;busy=true;++generation;$('refresh').disabled=true;$('refresh').textContent='正在刷新…';$('status').textContent='正在读取交易和持仓…';const seq=generation,requestedKey=datasetKey(),requestedURL=url();
  try{
-  const trading=async()=>{if(endpoint){const result=await json(requestedURL,{method:'POST',headers:{'Content-Type':'application/json'},body:'{}',signal:AbortSignal.timeout(260000)});datasets.set(requestedKey,newerSnapshot(datasets.get(requestedKey),result.report));lastTradeSource='live';return;}saved=await loadSaved();};
+  if(compactViewsEnabled(manual)){compactAvailable=true;await loadPage();return;}
+  const trading=async()=>{if(endpoint&&!realtimeHost()){const result=await json(requestedURL,{method:'POST',headers:{'Content-Type':'application/json'},body:'{}',signal:AbortSignal.timeout(260000)});datasets.set(requestedKey,newerSnapshot(datasets.get(requestedKey),result.report));lastTradeSource='live';return;}saved=await loadSaved();};
   await Promise.all([trading(),loadHolders()]);current=localPage();render();
   const partial=lastTradeSource==='retained'||lastHolderSource==='retained';showSnapshotStatus($('status'),$('refresh'),[['交易',current||saved],['持仓',holderReport]],{retained:partial});
  }catch(e){$('status').textContent=e.name==='TimeoutError'?'更新超时，保留上次数据。':e.message;$('status').className='notice';}
- finally{busy=false;$('refresh').disabled=false;$('refresh').textContent=refreshButtonLabel($('refresh'));}
+ finally{busy=false;$('refresh').disabled=false;$('refresh').textContent=refreshButtonLabel($('refresh'));if(reloadForTags){reloadForTags=false;void loadPage().catch(()=>{});}}
 });
-window.addEventListener('storage',e=>{if(e.key===TAG_KEY){manual=readManual(e.newValue);tagFilter.refresh();page=0;if(saved){current=localPage();render(false);}}});
+window.addEventListener('storage',e=>{if(e.key===TAG_KEY){manual=readManual(e.newValue);tagFilter.refresh();page=0;if(busy)reloadForTags=true;else void loadPage().catch(()=>{$('status').textContent='本地标签已保留，持仓数据正在重试。';});}});
 tagFilter.refresh();
 const query=new URLSearchParams(location.search);
 if(['today','yesterday','history'].includes(query.get('period')))period=query.get('period');
@@ -119,10 +145,10 @@ if(['asc','desc'].includes(query.get('direction')))$('sort-direction').value=que
 for(const input of $('filter').querySelectorAll('input'))input.checked=(query.get('tags')||'').split(',').includes(input.value);
 tagFilter.refresh();
 try{const config=await json('./data/esim-config.json');endpoint=esimEndpoint(config);}catch{endpoint=null;}
-try{await Promise.all([loadSaved().then(data=>{saved=data;}),loadHolders()]);await loadPage();showSnapshotStatus($('status'),$('refresh'),[['交易',current||saved],['持仓',holderReport]],{retained:lastTradeSource==='retained'||lastHolderSource==='retained'});}catch{$('status').textContent='地址数据暂时无法读取，请点击刷新重试。';$('status').className='notice';}
+try{await loadPage();showSnapshotStatus($('status'),$('refresh'),[['交易',current||saved],['持仓',holderReport]],{retained:lastTradeSource==='retained'||lastHolderSource==='retained'});}catch{$('status').textContent='地址数据暂时无法读取，请点击刷新重试。';$('status').className='notice';}
 
 startSnapshotPolling(async()=>{
  if(busy)return false;busy=true;
- try{const [next]=await Promise.all([loadSaved(),loadHolders()]);saved=next;current=localPage();render(false);showSnapshotStatus($('status'),$('refresh'),[['交易',current],['持仓',holderReport]],{retained:lastTradeSource==='retained'||lastHolderSource==='retained'});}
- finally{busy=false;}
+ try{if(compactViewsEnabled(manual)){compactAvailable=true;return await loadPage();}const [next]=await Promise.all([loadSaved(),loadHolders()]);saved=next;current=localPage();render(false);showSnapshotStatus($('status'),$('refresh'),[['交易',current],['持仓',holderReport]],{retained:lastTradeSource==='retained'||lastHolderSource==='retained'});}
+ finally{busy=false;if(reloadForTags){reloadForTags=false;void loadPage().catch(()=>{});}}
 });

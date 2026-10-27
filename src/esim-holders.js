@@ -6,6 +6,7 @@ import {TAG_KEY,TAG_KINDS,validateManual,readManual,rowTags,changePercent,owners
 import {HOLDER_SORT_KEYS} from './holder-ranking.mjs';
 import {createTagFilter} from './tag-filter-control.mjs';
 import {HOLDER_IMPORT} from './holder-labels.mjs';
+import {compactViewsEnabled,readView,cachedView} from './view-client.mjs';
 const $=id=>document.getElementById(id),escape=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const number=(n,d=2)=>Number(n).toLocaleString('zh-CN',{minimumFractionDigits:d,maximumFractionDigits:d});
 const units=s=>Number(BigInt(s))/1e18,quantity=s=>s==null?'暂缺':number(units(s),2),short=a=>a.slice(0,8)+'…'+a.slice(-6);
@@ -13,6 +14,24 @@ const compact=s=>{const n=units(s);return n>=1e8?number(n/1e8)+'亿':n>=1e4?numb
 const date=s=>new Date(s*1000).toLocaleString('zh-CN',{timeZone:'Asia/Shanghai',hour12:false,month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'});
 let report,manual={},page=0,pageSize=100,chartMode='groups',busy=false,pending=null,returnFocus=null,cohort=null,excludeOwn=false;
 let scope='all';
+let compactAvailable=true,lastCompact=null,lastCompactKey='',pageGeneration=0,searchTimer,reloadForTags=false;
+const compactOptions=()=>({scope,minimum:(BigInt($('minimum').value)*10n**18n).toString(),search:$('search').value,tags:selectedFilters(),cohort,excludeOwn:excludeOwn?'1':'0',includeZero:$('include-zero').checked?'1':'0',page,pageSize,sort:$('sort').value,direction:$('sort-direction').value});
+function applyCompact(view,key){
+ if(report&&view.report.block<report.block)return false;
+ lastCompact=view;lastCompactKey=key;report={...view.report,rows:view.selected.rows,_compact:true};renderView(view);return true;
+}
+async function loadCompact(force=false){
+ const options=compactOptions(),key=JSON.stringify(options),seq=++pageGeneration;
+ if(!force&&lastCompact&&key===lastCompactKey){renderView(lastCompact);return;}
+ $('rows').setAttribute('aria-busy','true');
+ try{
+  const cached=await cachedView('holders',options);
+  if(cached&&seq===pageGeneration&&compactViewsEnabled(manual))applyCompact(cached.data,key);
+  const view=await readView('holders',options,{current:key===lastCompactKey?lastCompact:null});
+  if(seq!==pageGeneration||!compactViewsEnabled(manual))return;
+  applyCompact(view,key);showSnapshotStatus($('status'),$('refresh'),[['持仓',report],['持仓内交易',{cutoff:report.tradeCutoff}]]);
+ }finally{if(seq===pageGeneration)$('rows').removeAttribute('aria-busy');}
+}
 const UI_KEY='esim:holders:view:v1';
 let viewPrefs={};try{viewPrefs=JSON.parse(localStorage.getItem(UI_KEY)||'{}')||{};}catch{}
 const saveView=()=>{try{localStorage.setItem(UI_KEY,JSON.stringify(viewPrefs));}catch{}};
@@ -33,8 +52,8 @@ function syncSort(){
  $('holder-sort-note').textContent=`当前排序：${$('sort').selectedOptions[0].textContent} · ${ascending?'从小到大':'从大到小'}；按完整筛选结果排序，暂缺数据排在末尾。`;
 }
 function pair(stats,key){return ['buy','sell'].map(side=>{const value=stats?.[side+key];return `<span class="${side}">${side==='buy'?'买':'卖'} ${value==null?'暂缺':key==='Count'?number(value,0):quantity(value)}</span>`;}).join('');}
-function drawChart(rows){
- const model=holderOverviewCharts(rows,manual),{total,count,groups,countGroups,top}=model;
+function drawChart(rows,prepared){
+ const model=prepared||holderOverviewCharts(rows,manual),{total,count,groups,countGroups,top}=model;
  $('chart').setAttribute('aria-label',`已筛选 ${count} 个有持仓地址，共 ${quantity(total)} ESIM`);
  if(!count){$('chart').innerHTML='<p class="empty">当前筛选没有持仓。</p>';return;}
  const panel=(title,note,body)=>`<section class="distribution-panel"><h3>${title}</h3><p class="distribution-note">${note}</p>${body}</section>`;
@@ -52,12 +71,18 @@ function drawChart(rows){
 }
 function render(){
  if(!report)return;
- const selected=selectHolderView(report,{scope,minimum:(BigInt($('minimum').value)*10n**18n).toString(),search:$('search').value,filter:selectedFilters(),cohort,excludeOwn,includeZero:$('include-zero').checked,page,pageSize,sort:$('sort').value,direction:$('sort-direction').value},manual);page=selected.page;syncSort();
+ if(compactViewsEnabled(manual)&&compactAvailable){void loadCompact().catch(()=>{$('status').textContent='筛选结果暂时无法更新，保留已显示的数据。';$('status').className='notice';});return;}
+ if(report._compact){if(busy)reloadForTags=true;else void refresh();return;}
+ renderView();
+}
+function renderView(prepared){
+ if(!report)return;
+ const selected=prepared?.selected||selectHolderView(report,{scope,minimum:(BigInt($('minimum').value)*10n**18n).toString(),search:$('search').value,filter:selectedFilters(),cohort,excludeOwn,includeZero:$('include-zero').checked,page,pageSize,sort:$('sort').value,direction:$('sort-direction').value},manual);page=selected.page;syncSort();
  for(const button of document.querySelectorAll('[data-scope]'))button.setAttribute('aria-pressed',String(button.dataset.scope===scope));
  const scopeNote=scope==='external-stat'?'外部流通：从已索引持仓中扣除我方份额、币安活动预留和底池（共享 Vault）；混合钱包仅显示外部份额。':scope==='own'?'我方地址：包含混合归属钱包，行内展示钱包总额及两方份额；仅已确认的我方部分计入我方持仓。':scope==='received'?'领币地址：按领取记录筛选，包含我方；领币不等同于当前余额全部来自分发。':scope==='excluded'?'统计排除：币安活动预留与底池（共享 Vault）计入非外部流通；不据此认定共享 Vault 全部归属我方。':'全部地址：钱包余额完整展示，混合钱包另列份额；非外部流通包含我方、活动预留与底池，不等同于我方持仓。';
  $('filter-context').textContent=[cohort?`来自合约报告：${cohortNames[cohort]}`:'',excludeOwn?'合约报告带入的非我方范围；混合钱包仅显示外部份额':'',scopeNote].filter(Boolean).join(' · ');
  $('cutoff').textContent=`余额截至 ${date(report.cutoff)} · 北京时间 · 区块 ${number(report.block,0)}`;
- const ledger=holderLedger(report,manual),totalSupply=Number(BigInt(report.totalSupply));
+ const ledger=prepared?.ledger||holderLedger(report,manual),totalSupply=Number(BigInt(report.totalSupply));
  const metrics=[{label:'非外部流通数量',balance:ledger.nonExternal,tone:'own',note:'我方持仓 + 币安活动预留 + 底池（共享 Vault）'},
   {label:'外部流通数量',balance:ledger.external,tone:'external',note:'已索引持仓 − 非外部流通数量；含混合钱包的外部份额'}];
  const externalDetails=`<div class="external-breakdown" role="group" aria-label="外部流通构成">${[
@@ -72,7 +97,7 @@ function render(){
  $('exclusion-count').textContent=`${components.length} 项`;
  $('exclusion-values').innerHTML=components.map(r=>`<div><span>${escape(r.label)}</span><strong>${quantity(r.balance)} <em>ESIM</em></strong><small>${number(Number(BigInt(r.balance))/totalSupply*100)}% 总供应量</small></div>`).join('');
  $('ledger-meta').innerHTML=`<span>总账 · 全部已索引地址</span><span>有持仓 ${number(report.coverage.holding,0)} 个</span><span>覆盖供应量 ${number(Number(BigInt(ledger.indexed))/totalSupply*100)}%</span><span>未索引 ${quantity(ledger.unindexed)} ESIM</span><span>参考价格 ${number(report.price,6)} U</span><span>24h 对比 ${report.priorCutoff?date(report.priorCutoff):'暂缺'}</span>`;
- const selectedBalance=selected.all.reduce((sum,r)=>sum+BigInt(r.balance),0n).toString();
+ const selectedBalance=prepared?selected.balance:selected.all.reduce((sum,r)=>sum+BigInt(r.balance),0n).toString();
  $('selection-summary').textContent=`${HOLDER_SCOPES[scope]} · ${number(selected.total,0)} 个地址 · ${quantity(selectedBalance)} ESIM · ${number(Number(BigInt(selectedBalance))/totalSupply*100)}% 总供应量`;
  $('trade-cutoff').textContent=`24h 买卖 ${date(report.tradeWindowStart)} — ${date(report.tradeCutoff)}；累计自 ${date(report.historyStart)} 起。按交易发起地址统计成交币量，买绿 / 卖红。`;
  $('rows').innerHTML=selected.rows.map((r,i)=>{
@@ -85,7 +110,7 @@ function render(){
  }).join('')||'<tr><td colspan="10" class="empty">没有符合条件的地址。可切换标签，或显示零持仓地址。</td></tr>';
  $('row-count').textContent=`${number(selected.total,0)} 个地址`;$('page').textContent=`${selected.total?page+1:0} / ${Math.ceil(selected.total/pageSize)}`;$('prev').disabled=page===0;$('next').disabled=(page+1)*pageSize>=selected.total;
  $('coverage').innerHTML=`<p>名单来源：<a href="${escape(report.coverage.source)}" target="_blank" rel="noopener noreferrer">OKLink 前 ${report.coverage.seedTop} 名</a>（${escape(report.coverage.seedAt.slice(0,10))}），并补入已知领币、交易、交互地址和新增 ESIM 转账地址。本表是已索引地址排名，不是全链完整持有人名单。余额、24h 变化来自固定区块的链上读取。</p><p>补充名单：${escape(HOLDER_IMPORT.source)}，${escape(date(Date.parse(HOLDER_IMPORT.capturedAt)/1000))}（北京时间），共 ${HOLDER_IMPORT.count} 个地址。同步地址归属及类型；表格持仓快照不覆盖链上余额。标签的“依据”可查看来源。</p>`;
- drawChart(selected.all);
+ drawChart(selected.all,selected.charts);
 }
 function openTag(address=''){
  returnFocus=document.activeElement;pending=null;$('tag-form').reset();$('tag-address').value=address;$('tag-kind').value=manual[address]?.kind||'own';$('tag-text').value=manual[address]?.text||'';
@@ -98,7 +123,7 @@ function stageTag(remove=false){
  pending={value,remove};$('tag-edit').hidden=true;$('tag-confirm').hidden=false;$('tag-back').hidden=false;$('tag-remove').hidden=true;$('tag-submit').textContent=remove?'确认删除':'确认保存';
  $('tag-confirm').innerHTML=`<p>请核对要${remove?'删除':'保存'}的标签：</p><code>${escape(address)}</code><p>分类：${escape(TAG_KINDS[value.kind])}</p><p>标签：<strong>${escape(value.text)}</strong></p><p>仅保存在当前浏览器。</p>`;$('tag-submit').focus();
 }
-$('tag-form').addEventListener('submit',e=>{e.preventDefault();$('tag-error').textContent='';try{if(!pending){stageTag();return;}const next={...manual};if(pending.remove)delete next[pending.value.address];else next[pending.value.address]=pending.value;localStorage.setItem(TAG_KEY,JSON.stringify(next));manual=next;const included=report?.rows.some(r=>r.address===pending.value.address),removed=pending.remove;closeTag();renderCustomFilters();updateFilters();$('status').textContent=removed?'标签已删除。':included?'标签已保存到当前浏览器。':'标签已保存；该地址尚未进入当前索引名单。';}catch(e){$('tag-error').textContent=e.name==='QuotaExceededError'?'浏览器存储空间不足，标签未保存。':e.message;}});
+$('tag-form').addEventListener('submit',e=>{e.preventDefault();$('tag-error').textContent='';try{if(!pending){stageTag();return;}const next={...manual};if(pending.remove)delete next[pending.value.address];else next[pending.value.address]=pending.value;localStorage.setItem(TAG_KEY,JSON.stringify(next));manual=next;const included=report?._compact?null:report?.rows.some(r=>r.address===pending.value.address),removed=pending.remove;closeTag();renderCustomFilters();updateFilters();$('status').textContent=removed?'标签已删除。':included!==false?'标签已保存到当前浏览器。':'标签已保存；该地址尚未进入当前索引名单。';}catch(e){$('tag-error').textContent=e.name==='QuotaExceededError'?'浏览器存储空间不足，标签未保存。':e.message;}});
 $('tag-remove').addEventListener('click',()=>{try{stageTag(true);}catch(e){$('tag-error').textContent=e.message;}});$('tag-cancel').addEventListener('click',closeTag);$('tag-back').addEventListener('click',()=>{pending=null;$('tag-edit').hidden=false;$('tag-confirm').hidden=true;$('tag-back').hidden=true;$('tag-remove').hidden=!manual[$('tag-address').value.toLowerCase()];$('tag-submit').textContent='下一步：核对';});
 $('add-tag').addEventListener('click',()=>openTag());$('rows').addEventListener('click',e=>{
  const toggle=e.target.closest('[data-mobile-toggle]');
@@ -114,7 +139,7 @@ $('manage-tags').addEventListener('click',()=>{renderLabelManager();$('label-man
 $('label-manager-close').addEventListener('click',()=>$('label-manager').close());
 $('label-manager-add').addEventListener('click',()=>{$('label-manager').close();openTag();});
 $('label-manager-list').addEventListener('click',e=>{const button=e.target.closest('[data-edit-label],[data-delete-label]');if(!button)return;const address=button.dataset.editLabel||button.dataset.deleteLabel;$('label-manager').close();openTag(address);if(button.dataset.deleteLabel)stageTag(true);});
-$('search').addEventListener('input',()=>{page=0;render();});$('include-zero').addEventListener('change',()=>{page=0;render();});
+$('search').addEventListener('input',()=>{page=0;++pageGeneration;clearTimeout(searchTimer);searchTimer=setTimeout(render,250);});$('include-zero').addEventListener('change',()=>{page=0;render();});
 $('sort').addEventListener('change',()=>{page=0;render();});$('sort-direction').addEventListener('change',()=>{page=0;render();});
 for(const button of document.querySelectorAll('[data-sort]'))button.addEventListener('click',()=>{const key=button.dataset.sort;$('sort-direction').value=$('sort').value===key?$('sort-direction').value==='desc'?'asc':'desc':key==='address'?'asc':'desc';$('sort').value=key;page=0;render();});
 $('page-size').addEventListener('change',()=>{pageSize=Number($('page-size').value);page=0;render();});$('prev').addEventListener('click',()=>{page--;render();});$('next').addEventListener('click',()=>{page++;render();});
@@ -130,10 +155,12 @@ for(const b of document.querySelectorAll('[data-chart]'))b.addEventListener('cli
 window.addEventListener('storage',e=>{if(e.key===TAG_KEY){manual=readManual(e.newValue);renderCustomFilters();updateFilters();if($('label-manager').open)renderLabelManager();}});
 async function refresh(){
  if(busy)return false;busy=true;$('refresh').disabled=true;$('refresh').textContent='正在刷新…';$('status').textContent='正在读取最新持仓…';
- try{const result=await readSnapshot('holders',{current:report});report=validate(result.data);render();
+ try{
+  if(compactViewsEnabled(manual))try{compactAvailable=true;await loadCompact(true);return;}catch{compactAvailable=false;}
+  const result=await readSnapshot('holders',{current:report?._compact?null:report});report=validate(result.data);renderView();
   showSnapshotStatus($('status'),$('refresh'),[['持仓',report],['持仓内交易',{cutoff:report.tradeCutoff}]],{retained:result.source==='retained'});
  }catch(e){$('status').textContent=e.message;$('status').className='notice';if(!report)$('rows').innerHTML='<tr><td colspan="10" class="empty">暂时无法读取持仓，请点击刷新重试。</td></tr>';}
- finally{busy=false;$('refresh').disabled=false;$('refresh').textContent=refreshButtonLabel($('refresh'));}
+ finally{busy=false;$('refresh').disabled=false;$('refresh').textContent=refreshButtonLabel($('refresh'));if(reloadForTags){reloadForTags=false;void refresh();}}
 }
 renderCustomFilters();
 const query=new URLSearchParams(location.search);

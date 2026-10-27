@@ -326,3 +326,15 @@ test('An empty protocol group clears previous values and can switch back without
   assert.match(a.elements.get('chart-empty').textContent,/没有所选版本/);
   a.listeners.get('pool-scope-all:click')();assert.equal(a.read('state.depth.price'),5);assert.equal(a.pending.length,0);
 });
+
+
+test('A complete shared snapshot paints and finishes automatic reads without starting browser RPC scans', async()=>{
+ const a=app();a.context.shared=live(106n,6);a.context.readSharedCache=async()=>a.context.shared;
+ await a.read('refresh()');assert.equal(a.pending.length,0);assert.equal(a.read('state.live.blockNumber'),106n);assert.equal(a.read('state.depth.price'),6);assert.equal(a.read('state.busy'),false);assert.match(a.elements.get('status').textContent,/后台目标每小时/);
+ const manual=a.listeners.get('refresh:click')();await settle();assert.equal(a.pending.length,1);await a.finish(live(107n,7));await manual;assert.equal(a.read('state.depth.price'),7);
+});
+test('Partial shared snapshots still trigger RPC verification and never mask incomplete coverage',async()=>{
+ const a=app();a.context.shared={...live(106n,6),failed:[{...pool,id:'another'}]};a.context.readSharedCache=async()=>a.context.shared;
+ const update=a.read('refresh()');await settle();assert.equal(a.pending.length,1);await a.finish(live(107n,7));await update;
+ assert.equal(a.read('state.live.blockNumber'),107n);
+});

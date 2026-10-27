@@ -47,6 +47,10 @@ export async function readRealtime(kind,sql=realtimeSQL()){
  if(!['report','addresses','holders'].includes(kind))throw Error('INVALID_SNAPSHOT_KIND');
  const [row]=await sql.query('SELECT block,cutoff,body,etag FROM esim_realtime_snapshots WHERE kind=$1',[kind]);return row;
 }
+export async function readRealtimeMetadata(kind,sql=realtimeSQL()){
+ if(!['report','addresses','holders'].includes(kind))throw Error('INVALID_SNAPSHOT_KIND');
+ const [row]=await sql.query('SELECT block,cutoff,etag FROM esim_realtime_snapshots WHERE kind=$1',[kind]);return row;
+}
 export async function markRealtimeError(code,sql=realtimeSQL()){
  await sql.query('UPDATE esim_realtime_control SET last_error=$1 WHERE id=1',[/^[A-Z_]{3,80}$/.test(code)?code:'UPDATE_FAILED']);
 }
