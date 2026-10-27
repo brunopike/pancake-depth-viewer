@@ -1,3 +1,4 @@
+import { gzipSync } from 'node:zlib';
 import { makeRpc } from '../server/esim/rpc.mjs';
 import { refreshState } from '../server/esim/collector.mjs';
 import { loadState } from '../server/esim/store.mjs';
@@ -44,7 +45,8 @@ export default async function handler(req, res) {
     if (process.env.ESIM_REALTIME_DATABASE_URL) {
       const {data}=await readViewSnapshot(q.view==='addresses'?'addresses':'report');
       const report=q.view==='addresses'?snapshotAddressResponse(data,options,q.dataset==='1'):data;
-      return res.status(200).json({report,configured:!!process.env.ALCHEMY_API_KEY,cached:true,catchingUp:Date.now()/1000-data.cutoff>120});
+      res.setHeader('Content-Type','application/json; charset=utf-8');res.setHeader('Content-Encoding','gzip');
+      return res.status(200).send(gzipSync(JSON.stringify({report,configured:!!process.env.ALCHEMY_API_KEY,cached:true,catchingUp:Date.now()/1000-data.cutoff>120})));
     }
     if (!current || Date.now() - loadedAt > 300000) {
       const saved = await loadState();
