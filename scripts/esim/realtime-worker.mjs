@@ -45,7 +45,7 @@ async function main(){
   try{const pending=run(process.execPath,[`scripts/esim/${file}.mjs`],{timeout:1500000,maxBuffer:1048576,env:{...process.env,ESIM_REMOTE_START:'true',ESIM_RPC_BUDGET:'600'}});pending.child.stdout.on('data',chunk=>process.stdout.write(chunk));await pending;}
   catch(error){throw Error(workerFailureCode(error));}
  };
- let lastRun=0,lastCoreArchive=0,lastHolderArchive=0,block=0,cutoff=0,holderCutoff=0,flow=null,lastFlow=0,lastCleanup=0,retryAt=0;
+ let lastRun=0,lastCoreArchive=0,lastHolderArchive=0,block=0,cutoff=0,holderCutoff=0,lastCleanup=0,retryAt=0;
  const outstanding=new Set();
  const coreArchive=async()=>{await command('publish');lastCoreArchive=Date.now();};
  const holderArchive=async()=>{await command('holders-publish');lastHolderArchive=Date.now();};
@@ -66,7 +66,10 @@ async function main(){
    if(coreReady&&state&&state.block===block){
     await attempt('core-publish',async()=>{await publishCore(state);console.log(JSON.stringify({phase:'realtime-core-published',block,cutoff,pendingBlock}));});
     // Core archive must survive a holder or live database outage.
-    if(Date.now()-lastCoreArchive>=ARCHIVE_INTERVAL)await attempt('core-archive',coreArchive);
+    if(Date.now()-lastCoreArchive>=ARCHIVE_INTERVAL){
+     const archived=await attempt('core-archive',coreArchive);
+     if(archived&&!partial)await attempt('provenance-dispatch',()=>dispatchNextWorker({repo:process.env.GITHUB_REPOSITORY,token:process.env.GITHUB_TOKEN,workflowId:'esim-claim-flow.yml'}));
+    }
     // Catch up the canonical ledger first. Rebuilding all holders and provenance
     // for every partial prefix needlessly delays recovery and consumes RPC quota.
     if(!partial)await attempt('holders-refresh',async()=>{
@@ -76,10 +79,8 @@ async function main(){
      await attempt('holders-publish',async()=>{await publishRealtime([{kind:'holders',data:holders}]);holderCutoff=Math.min(holders.cutoff,holders.tradeCutoff);console.log(JSON.stringify({phase:'realtime-holders-published',block:holders.block,cutoff:holders.cutoff,tradeCutoff:holders.tradeCutoff}));});
      if(Date.now()-lastHolderArchive>=ARCHIVE_INTERVAL)await attempt('holders-archive',holderArchive);
     });
-    // Provenance runs independently and retains its own cutoff.
-    if(!partial&&!flow&&Date.now()-lastFlow>=ARCHIVE_INTERVAL){
-     lastFlow=Date.now();flow=(async()=>{await attempt('provenance',async()=>{await command('claim-flow-refresh');await command('claim-flow-publish');});flow=null;})();
-    }
+    // The separately scheduled provenance runner consumes the hourly ledger
+    // archive. Its full-history CPU work cannot delay live balances or handoff.
    }
    if(partial)failures.push('BACKFILL_IN_PROGRESS');
    if(failures.some(code=>['CHAIN_OR_CHECKPOINT_CHANGED','SOURCE_INFLOW_CHECKPOINT_CHANGED'].includes(code))){
@@ -95,7 +96,6 @@ async function main(){
   }
   await sleep(Math.min(30000,Math.max(0,end-Date.now())));
  }
- if(flow)await flow;
  try{if(block){await coreArchive();outstanding.delete('core-archive');}}catch{outstanding.add('core-archive');console.warn('Final core archive deferred; next runner replays from the prior prefix.');}
  try{if(holderCutoff){await holderArchive();outstanding.delete('holders-archive');}}catch{outstanding.add('holders-archive');console.warn('Final holder archive deferred.');}
  for(let attempt=0;attempt<3;attempt++){

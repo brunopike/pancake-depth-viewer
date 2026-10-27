@@ -6,10 +6,14 @@ const ensure=(ok,code)=>{if(!ok)throw Error(code);};
 const key=lot=>(lot.root||'')+'|'+(lot.payer||'');
 function add(lots,lot){if(!lot.amount)return;const k=key(lot),old=lots.get(k);if(old)old.amount+=lot.amount;else lots.set(k,{...lot});}
 function shares(lots,value,total){
- const parts=[...lots.values()].map(lot=>({...lot,amount:lot.amount*value/total,remainder:lot.amount*value%total}));
+ // A full-balance move preserves every lot exactly. Otherwise multiply once;
+ // remainder ranking is needed only when division actually leaves wei to split.
+ const parts=[...lots.values()].map(lot=>{const product=value===total?null:lot.amount*value;return {...lot,amount:product===null?lot.amount:product/total,remainder:product===null?0n:product%total};});
  let remaining=value-parts.reduce((n,p)=>n+p.amount,0n);
- const ranked=[...parts].sort((a,b)=>a.remainder===b.remainder?key(a).localeCompare(key(b)):a.remainder>b.remainder?-1:1);
- for(const p of ranked){if(!remaining)break;p.amount++;remaining--;}
+ if(remaining){
+  const ranked=[...parts].sort((a,b)=>a.remainder===b.remainder?key(a).localeCompare(key(b)):a.remainder>b.remainder?-1:1);
+  for(const p of ranked){if(!remaining)break;p.amount++;remaining--;}
+ }
  ensure(remaining===0n,'FLOW_ROUNDING');return parts.filter(p=>p.amount);
 }
 export function traceClaimFlow({source,marketAddresses,openingBalances,transfers,trades,unsafeTransactions=[],zero=ZERO}){

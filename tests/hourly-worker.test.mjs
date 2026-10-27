@@ -80,3 +80,9 @@ test('The ESIM worker hands off to its own bounded session without changing the 
  assert.deepEqual(api.requests.at(-1).body,{ref:'main',inputs:{session_minutes:'300'}});
  await assert.rejects(dispatchNextWorker({repo:'owner/viewer',token:'test-only',workflowId:'unrelated.yml',fetch:api.fetch}),/Invalid worker workflow/);
 });
+test('Provenance uses its independent workflow without passing live-worker session inputs',async()=>{
+ const api=handoffAPI();
+ assert.equal(await dispatchNextWorker({repo:'owner/viewer',token:'test-only',workflowId:'esim-claim-flow.yml',fetch:api.fetch}),true);
+ assert.match(api.requests.at(-1).url,/esim-claim-flow.yml\/dispatches$/);
+ assert.deepEqual(api.requests.at(-1).body,{ref:'main'});
+});

@@ -7,6 +7,8 @@ on:
         default: '600'
         required: false
         type: string
+  schedule:
+    - cron: '17 * * * *'
 permissions:
   contents: write
 concurrency:
@@ -16,15 +18,17 @@ jobs:
   backfill:
     if: github.event.repository.private == false
     runs-on: ubuntu-latest
-    timeout-minutes: 40
+    timeout-minutes: 120
     steps:
       - uses: actions/checkout@v4
-      - name: Load the latest verified checkpoint directly
+      - name: Load the verified ledger and provenance checkpoint
         uses: actions/checkout@v4
         with:
           ref: esim-cache
           path: .goodway/checkpoint
-          sparse-checkout: state.json.gz
+          sparse-checkout: |
+            state.json.gz
+            claim-flow-state.json.gz
           sparse-checkout-cone-mode: false
       - uses: actions/setup-node@v4
         with:
@@ -36,13 +40,14 @@ jobs:
           path: .goodway/claim-flow/rpc-cache
           key: esim-claim-flow-rpc-v1-${{ github.run_id }}
           restore-keys: esim-claim-flow-rpc-v1-
-      - name: Read only ESIM transfers and reconcile proposed sales
+      - name: Reconcile transfers, sale receipts and closing balances
         env:
           ESIM_CHECKPOINT_FILE: .goodway/checkpoint/state.json.gz
+          ESIM_FLOW_CHECKPOINT_FILE: .goodway/checkpoint/claim-flow-state.json.gz
           ALCHEMY_API_KEY: ${{ secrets.ALCHEMY_API_KEY }}
-          ESIM_REMOTE_START: 'true'
           ESIM_RPC_BUDGET: ${{ inputs.rpc_budget || '600' }}
-        run: node scripts/esim/claim-flow-refresh.mjs
+          ESIM_FLOW_TIMEOUT_MS: '5400000'
+        run: node --max-old-space-size=6144 scripts/esim/claim-flow-refresh.mjs
       - name: Publish verified provenance without overwriting the core checkpoint
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

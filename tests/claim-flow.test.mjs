@@ -40,3 +40,10 @@ test('large integers remain exact, and incomplete opening balances stop the mode
  assert.throws(()=>run([edge(1,'a','b',1)]),/FLOW_BALANCE/);
  assert.throws(()=>run([edge(1,source,'a',1),edge(1,source,'a',1)]),/DUPLICATE/);
 });
+test('equal remainders allocate exact wei deterministically across partial and full-wallet moves',()=>{
+ const r=run([edge(1,source,'c',1),edge(2,source,'b',1),edge(3,source,'a',1),edge(4,'c',router,1),edge(5,'b',router,1),edge(6,'a',router,1),edge(7,router,pool,1),edge(8,router,pool,2)],[sale('tx7',router,1),sale('tx8',router,2)]);
+ assert.deepEqual(r.sales.map(row=>row.relay_wei),['1','2']);
+ assert.deepEqual(r.sales[0].examples.map(row=>row.root),['a']);
+ assert.deepEqual(r.sales[1].examples.map(row=>row.root),['c','b']);
+ assert.equal(r.totals.remaining_wei,'0');assert.equal(r.totals.issued_wei,r.totals.sold_wei);
+});

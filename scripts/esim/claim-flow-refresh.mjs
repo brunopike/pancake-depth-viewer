@@ -6,13 +6,14 @@ import {makeRpc} from '../../server/esim/rpc.mjs';
 const work='.goodway/claim-flow',url='https://raw.githubusercontent.com/brunopike/pancake-depth-viewer/esim-cache/claim-flow-state.json.gz';
 await mkdir(work,{recursive:true});
 try{
- let state;try{state=parseState(await readFile('.goodway/esim-monitor/state.json.gz'));}catch{state=await loadState();}
+ let state;try{state=parseState(await readFile('.goodway/esim-monitor/state.json.gz'));}catch{state=await loadState({includeRemote:!process.env.ESIM_FLOW_CHECKPOINT_FILE});}
  if(process.env.ESIM_REMOTE_START==='true'){const remote=await loadState();if(remote.block>state.block)state=remote;}
- let previous;try{previous=JSON.parse(gunzipSync(await readFile(`${work}/state.json.gz`)));}catch{}
- try{const response=await fetch(url,{cache:'no-store',signal:AbortSignal.timeout(30000)});if(response.ok){const remote=JSON.parse(gunzipSync(Buffer.from(await response.arrayBuffer())));if(!previous||remote.throughBlock>previous.throughBlock)previous=remote;}}catch{}
+ let previous;try{previous=JSON.parse(gunzipSync(await readFile(process.env.ESIM_FLOW_CHECKPOINT_FILE||`${work}/state.json.gz`)));}catch{if(process.env.ESIM_FLOW_CHECKPOINT_FILE)throw Error('FLOW_CHECKPOINT_UNAVAILABLE');}
+ if(!process.env.ESIM_FLOW_CHECKPOINT_FILE)try{const response=await fetch(url,{cache:'no-store',signal:AbortSignal.timeout(30000)});if(response.ok){const remote=JSON.parse(gunzipSync(Buffer.from(await response.arrayBuffer())));if(!previous||remote.throughBlock>previous.throughBlock)previous=remote;}}catch{}
  if(previous?.throughBlock>state.block)throw Error('FLOW_CORE_BEHIND');
  const budget=Number(process.env.ESIM_RPC_BUDGET||600);if(!Number.isInteger(budget)||budget<1||budget>2000)throw Error('BAD_BUDGET');
- const transport=makeRpc({budget,timeoutMs:1500000,cacheDir:`${work}/rpc-cache`,progress:e=>{if(e.phase!=='rpc'||e.physical%10===0)console.log(JSON.stringify(e));}});
+ const timeoutMs=Number(process.env.ESIM_FLOW_TIMEOUT_MS||1500000);if(!Number.isInteger(timeoutMs)||timeoutMs<60000||timeoutMs>5400000)throw Error('BAD_TIMEOUT');
+ const transport=makeRpc({budget,timeoutMs,cacheDir:`${work}/rpc-cache`,progress:e=>{if(e.phase!=='rpc'||e.physical%10===0)console.log(JSON.stringify(e));}});
  const next=await collectClaimFlow(state,transport,{previous,progress:e=>console.log(JSON.stringify(e))});
  if(!validClaimFlow(state,next.report))throw Error('FLOW_REPORT_INVALID');
  await writeFile(`${work}/state.tmp`,gzipSync(JSON.stringify(next)));await rename(`${work}/state.tmp`,`${work}/state.json.gz`);
