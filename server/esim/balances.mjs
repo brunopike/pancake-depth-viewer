@@ -3,7 +3,9 @@ import { knownTradingAddresses } from './addresses.mjs';
 const USDT = '0x55d398326f99059ff775485246999027b3197955';
 const cache = new Map();
 export async function queryBalances(state, addresses, transport) {
-  const known = knownTradingAddresses(state);
+  return queryVerifiedBalances(knownTradingAddresses(state), addresses, transport);
+}
+export async function queryVerifiedBalances(known, addresses, transport) {
   if (!Array.isArray(addresses) || !addresses.length || addresses.length > 25 || new Set(addresses).size !== addresses.length || addresses.some(a => !known.has(a))) throw new Error('INVALID_BALANCE_ADDRESSES');
   const result = {}, missing = [];
   for (const a of addresses) { const saved = cache.get(a); if (saved && Date.now() - saved.checkedAt < 60000) result[a] = saved; else missing.push(a); }
