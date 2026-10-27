@@ -27,3 +27,16 @@ test('quota, malformed response and an unrecoverable child abort rather than ret
  await assert.rejects(collectNativeTraces({rpc:async()=>null},1,1),/TRACE_INCOMPLETE/);
  await assert.rejects(collectNativeTraces({rpc:async(_, [q])=>{if(Number(q.toBlock)>=2)throw Error('RPC_QUERY_TIMEOUT');return [{block:1}];}},1,2),/RPC_QUERY_TIMEOUT/);
 });
+test('bounded concurrent windows retain order and wait for all requests before failing',async()=>{
+ let active=0,peak=0;const finished=[];
+ const rpc=async(_,[q])=>{
+  const block=Number(q.fromBlock);active++;peak=Math.max(peak,active);
+  await new Promise(resolve=>setTimeout(resolve,block===1?10:1));active--;finished.push(block);
+  return [{block}];
+ };
+ assert.deepEqual(await collectNativeTraces({rpc},1,1000),Array.from({length:10},(_,i)=>({block:i*100+1})));
+ assert.equal(peak,4);assert.equal(active,0);assert.equal(finished.length,10);
+ let pending=0;
+ await assert.rejects(collectNativeTraces({rpc:async(_, [q])=>{if(Number(q.fromBlock)===1)throw Error('QUERY_LIMIT');pending++;await new Promise(resolve=>setTimeout(resolve,5));pending--;return [];}},1,400),/QUERY_LIMIT/);
+ assert.equal(pending,0);
+});
