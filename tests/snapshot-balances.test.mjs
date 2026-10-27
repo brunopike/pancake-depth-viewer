@@ -15,3 +15,15 @@ test('balance API reads only the compact trading snapshot and queries all three 
  await assert.rejects(readSnapshotBalances([a,a],transport,{read}),/INVALID_BALANCE_ADDRESSES/);
  await assert.rejects(readSnapshotBalances([c],transport,{read:async()=>{throw Error('SNAPSHOT_UNAVAILABLE');}}),/SNAPSHOT_UNAVAILABLE/);
 });
+
+test('legacy API dataset and pagination are identical to full-ledger reports without loading the ledger',async()=>{
+ const {snapshotAddressResponse}=await import('../server/esim/snapshot-balances.mjs');
+ const {buildAddressReport,buildAddressDataset,buildAddressPage,addressOptions}=await import('../server/esim/addresses.mjs');
+ const now=1793119000,state={origin:now-3*86400,cutoff:now,block:123,blockHash:'hash',firstRecipient:{[a]:{timestamp:now-100}},trades:Array.from({length:70},(_,i)=>({tx:'t'+i,address:'0x'+(i+100).toString(16).padStart(40,'0'),initiator:i%2?a:b,timestamp:now-1-i*3600,amount_wei:String(i+1),side:i%3?'sell':'buy',group:'other_wallet_candidates'}))};
+ const snapshot=buildAddressReport(state,now);
+ for(const period of ['today','yesterday','history'])for(const mode of ['initiator','funding'])for(const filter of ['all','own','received','other','frequency']){
+  const options=addressOptions({period,mode,filter,page:'1'});
+  assert.deepEqual(snapshotAddressResponse(snapshot,options,true),buildAddressDataset(state,options,now));
+  assert.deepEqual(snapshotAddressResponse(snapshot,options),buildAddressPage(state,options,now));
+ }
+});

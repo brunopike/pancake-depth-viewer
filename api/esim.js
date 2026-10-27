@@ -4,7 +4,8 @@ import { loadState } from '../server/esim/store.mjs';
 import { buildReport } from '../server/esim/metrics.mjs';
 import { buildAddressPage, buildAddressDataset, addressOptions } from '../server/esim/addresses.mjs';
 import { queryBalances } from '../server/esim/balances.mjs';
-import { readSnapshotBalances } from '../server/esim/snapshot-balances.mjs';
+import { readSnapshotBalances, snapshotAddressResponse } from '../server/esim/snapshot-balances.mjs';
+import { readViewSnapshot } from '../server/esim/view-cache.mjs';
 
 let current, pending, checkedAt = 0, lastAttempt = 0, loadedAt = 0;
 export const config = { maxDuration: 300 };
@@ -39,6 +40,11 @@ export default async function handler(req, res) {
       if (!process.env.ALCHEMY_API_KEY) return res.status(503).json({ message:'后台尚未配置 Alchemy，当前显示已保存的数据。' });
       try { return res.status(200).json({balances:await readSnapshotBalances(body.addresses,makeRpc({budget:8,timeoutMs:45000}))}); }
       catch(error) { if(error.message==='INVALID_BALANCE_ADDRESSES')return res.status(400).json({message:'仅可查询本页已识别的交易地址，每次最多 25 个。'});throw error; }
+    }
+    if (process.env.ESIM_REALTIME_DATABASE_URL) {
+      const {data}=await readViewSnapshot(q.view==='addresses'?'addresses':'report');
+      const report=q.view==='addresses'?snapshotAddressResponse(data,options,q.dataset==='1'):data;
+      return res.status(200).json({report,configured:!!process.env.ALCHEMY_API_KEY,cached:true,catchingUp:Date.now()/1000-data.cutoff>120});
     }
     if (!current || Date.now() - loadedAt > 300000) {
       const saved = await loadState();
