@@ -3,7 +3,7 @@ import { gzipSync, gunzipSync } from 'node:zlib';
 import { makeRpc } from '../../server/esim/rpc.mjs';
 import { refreshState } from '../../server/esim/collector.mjs';
 import { buildReport } from '../../server/esim/metrics.mjs';
-import { loadState } from '../../server/esim/store.mjs';
+import { loadState,mergeCheckpointState } from '../../server/esim/store.mjs';
 const work = '.goodway/esim-monitor';
 await mkdir(work, { recursive: true });
 try {
@@ -11,7 +11,7 @@ try {
   try { state = JSON.parse(gunzipSync(await readFile(`${work}/state.json.gz`))); }
   catch { state = JSON.parse(gunzipSync(await readFile('server/esim/bootstrap.json.gz'))); }
   if (process.env.ESIM_REMOTE_START === 'true') {
-    const saved = await loadState(); if (saved.block > state.block) state = saved;
+    state = mergeCheckpointState(state,await loadState());
   }
   const budget = Number(process.env.ESIM_RPC_BUDGET || 600), targetBlock = process.env.ESIM_TARGET_BLOCK ? Number(process.env.ESIM_TARGET_BLOCK) : undefined;
   if (!Number.isInteger(budget) || budget < 1 || budget > 2000) throw new Error('BAD_BUDGET');

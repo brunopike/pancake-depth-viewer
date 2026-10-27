@@ -25,6 +25,11 @@ export function attachClaimFlow(state,flow){
   }
   return state;
 }
+// The trading ledger can already be ahead while the slower provenance job has
+// just published. Merge that verified evidence without regressing core trades.
+export function mergeCheckpointState(current,candidate){
+  return candidate.block>current.block?candidate:attachClaimFlow(current,candidate.claimFlow);
+}
 export function parseState(bytes) {
   const state = JSON.parse(gunzipSync(bytes));
   if (state.version !== 1 || state.token !== TOKEN || state.source !== SOURCE || !Number.isSafeInteger(state.block) || !/^0x[0-9a-f]{64}$/.test(state.blockHash)) throw new Error('INVALID_CHECKPOINT');
