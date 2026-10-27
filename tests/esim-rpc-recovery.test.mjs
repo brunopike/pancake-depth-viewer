@@ -39,3 +39,14 @@ test('each concurrent chunk receives its own full transient retry allowance',asy
  const values=await rpc.batch(Array.from({length:120},(_,i)=>['eth_getTransactionReceipt',[String(i)]]));
  assert.equal(values.length,120);assert.deepEqual([...attempts.values()],[3,3,3]);assert.equal(rpc.stats.physical,9);
 });
+test('trace timeouts allow range recovery but preserve quota and keep provider text private',async()=>{
+ for(const mode of ['provider','transport']){
+  const progress=[];
+  const rpc=makeRpc({endpoint:'https://example.invalid/private',progress:e=>progress.push(e),fetch:async()=>{
+   if(mode==='transport')throw new DOMException('private','TimeoutError');
+   return {ok:true,status:200,json:async()=>[{id:0,error:{code:-32002,message:'Execution timed out at https://example.invalid/private'}}]};
+  }});
+  await assert.rejects(rpc.rpc('trace_filter',[{}]),/RPC_QUERY_TIMEOUT/);
+  assert(!JSON.stringify(progress).includes('private'));
+ }
+});

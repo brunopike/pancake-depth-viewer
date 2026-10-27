@@ -34,22 +34,24 @@ export function makeRpc({ key = process.env.ALCHEMY_API_KEY, endpoint, budget = 
       if(exhausted)throw new Error('RPC_CAPACITY_EXCEEDED');
       if(Date.now()>=deadline||stats.physical>=budget)throw new Error('QUERY_LIMIT');
       stats.physical++; stats.logical += chunk.length;
+      const traceFilter=chunk.length===1&&chunk[0].method==='trace_filter';
       let response, envelopes;
       try {
         response = await request(url, { method: 'POST', headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(chunk.map((c, id) => ({ jsonrpc: '2.0', id, method: c.method, params: c.params }))),
-          signal: AbortSignal.timeout(Math.min(55000, deadline - Date.now())) });
+          signal: AbortSignal.timeout(Math.min(traceFilter?20000:55000, deadline - Date.now())) });
         envelopes = await response.json();
       } catch (e) {
         progress({ phase: 'transport-failed', methods: [...new Set(chunk.map(c => c.method))], status: response?.status,
           reason: e.name === 'TimeoutError' ? 'timeout' : 'request-failed' });
-        throw new Error('RPC_UNAVAILABLE');
+        throw new Error(traceFilter&&e.name==='TimeoutError'?'RPC_QUERY_TIMEOUT':'RPC_UNAVAILABLE');
       }
       const errors=(Array.isArray(envelopes)?envelopes:[envelopes]).flatMap(e=>e?.error?[e.error]:[]);
       // Inspect provider text only for classification. Never log/return it or the private URL.
       if(errors.some(e=>/monthly.*(?:capacity|limit)|(?:capacity|limit).*monthly/i.test(String(e.message)))){
         exhausted=true;throw new Error('RPC_CAPACITY_EXCEEDED');
       }
+      if(traceFilter&&errors.some(e=>/timeout|timed out|deadline exceeded|execution aborted/i.test(String(e.message))))throw new Error('RPC_QUERY_TIMEOUT');
       const limited=response.status===429||errors.some(e=>Number(e.code)===429);
       if(limited||response.status>=500){
         if(attempt>=2)throw new Error(limited?'RPC_RATE_LIMITED':'RPC_UNAVAILABLE');
@@ -64,7 +66,10 @@ export function makeRpc({ key = process.env.ALCHEMY_API_KEY, endpoint, budget = 
       const byId = new Map(envelopes.map(e => [e.id, e]));
       for (const [i, c] of chunk.entries()) {
         const e = byId.get(i);
-        if (!e || !Object.hasOwn(e, 'result') || e.error) throw new Error('RPC_MEMBER_FAILED');
+        if (!e || !Object.hasOwn(e, 'result') || e.error) {
+          progress({phase:'rpc-member-failed',method:c.method,code:Number.isFinite(Number(e?.error?.code))?Number(e.error.code):null});
+          throw new Error('RPC_MEMBER_FAILED');
+        }
         results[c.i] = e.result;
         if (c.file && e.result !== null) { await mkdir(cacheDir, { recursive: true }); await writeFile(c.file, gzipSync(JSON.stringify(e.result))); }
       }

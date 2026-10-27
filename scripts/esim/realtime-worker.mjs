@@ -42,8 +42,8 @@ async function main(){
  if(!process.env.ESIM_REALTIME_DATABASE_URL||!process.env.GITHUB_TOKEN||!process.env.ALCHEMY_API_KEY||!Number.isInteger(minutes)||minutes<1||minutes>300)throw Error('INVALID_WORKER_CONFIGURATION');
  const end=Date.now()+minutes*60000,run=promisify(execFile),stateFile='.goodway/esim-monitor/state.json.gz';
  const command=async file=>{
-  try{const {stdout}=await run(process.execPath,[`scripts/esim/${file}.mjs`],{timeout:1500000,maxBuffer:1048576,env:{...process.env,ESIM_REMOTE_START:'true',ESIM_RPC_BUDGET:'600'}});process.stdout.write(stdout);}
-  catch(error){if(error.stdout)process.stdout.write(error.stdout);throw Error(workerFailureCode(error));}
+  try{const pending=run(process.execPath,[`scripts/esim/${file}.mjs`],{timeout:1500000,maxBuffer:1048576,env:{...process.env,ESIM_REMOTE_START:'true',ESIM_RPC_BUDGET:'600'}});pending.child.stdout.on('data',chunk=>process.stdout.write(chunk));await pending;}
+  catch(error){throw Error(workerFailureCode(error));}
  };
  let lastRun=0,lastCoreArchive=0,lastHolderArchive=0,block=0,cutoff=0,holderCutoff=0,flow=null,lastFlow=0,lastCleanup=0,retryAt=0;
  const outstanding=new Set();

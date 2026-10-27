@@ -1,5 +1,6 @@
 import { TOKEN, SOURCE } from './metrics.mjs';
 import {collectSourceInflow} from './source-inflow-collector.mjs';
+import {collectNativeTraces} from './native-traces.mjs';
 import { TRANSFER, V2, V3, V4, PCS, UNI, SWAPS, signature, topic, addr, order, before, eventKey,
   decodeLeg, attributionCandidates, attributedRows } from './attribution.mjs';
 const hex = n => `0x${n.toString(16)}`;
@@ -60,17 +61,7 @@ export async function refreshState(state, transport, { maxBlocks = 24000, target
   const distributionLogs = allEvents.filter(e => e.address.toLowerCase() === TOKEN && e.topics[0] === TRANSFER && BigInt(e.data) > 0n);
   const swaps = allEvents.filter(e => V3.has(e.topics[0]) || V4.has(e.topics[0]) || e.topics[0] === V2);
 
-  const traceQueries = [];
-  for (let a = start; a <= end; a += 500) traceQueries.push(['trace_filter', [{ fromBlock: hex(a), toBlock: hex(Math.min(a + 499, end)), fromAddress: [SOURCE], toAddress: [SOURCE], mode: 'union', count: 1000, after: 0 }]]);
-  const tracePages = await batch(traceQueries), traces = [];
-  for (const [i, page] of tracePages.entries()) {
-    ensure(Array.isArray(page), 'TRACE_INCOMPLETE'); traces.push(...page);
-    let next = page;
-    for (let offset = page.length; next.length === 1000; offset += next.length) {
-      ensure(offset < 100000, 'TRACE_PAGE_LIMIT');
-      next = await rpc('trace_filter', [{ ...traceQueries[i][1][0], after: offset }]); traces.push(...next);
-    }
-  }
+  const traces = await collectNativeTraces(transport,start,end);
   const indexed = []; let pageKey;
   do {
     const page = await rpc('alchemy_getAssetTransfers', [{ fromBlock: hex(start), toBlock: hex(end), toAddress: SOURCE,
