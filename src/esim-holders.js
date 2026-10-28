@@ -1,3 +1,5 @@
+import {readContractCohort} from './cohort-client.mjs';
+import {withHolderCohort,EXTERNAL_HOLDER_GROUPS} from './holder-cohort.mjs';
 import {startSnapshotPolling} from './snapshot-poll.mjs';
 import {readSnapshot} from './snapshot-client.mjs';
 import {showSnapshotStatus,refreshButtonLabel} from './snapshot-status.mjs';
@@ -13,9 +15,9 @@ const units=s=>Number(BigInt(s))/1e18,quantity=s=>s==null?'暂缺':number(units(
 const compact=s=>{const n=units(s);return n>=1e8?number(n/1e8)+'亿':n>=1e4?number(n/1e4)+'万':number(n,2);};
 const date=s=>new Date(s*1000).toLocaleString('zh-CN',{timeZone:'Asia/Shanghai',hour12:false,month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'});
 let report,manual={},page=0,pageSize=100,chartMode='groups',busy=false,pending=null,returnFocus=null,cohort=null,excludeOwn=false;
-let scope='all';
+let scope='all',externalRole='all';
 let compactAvailable=true,lastCompact=null,lastCompactKey='',pageGeneration=0,searchTimer,reloadForTags=false;
-const compactOptions=()=>({scope,minimum:(BigInt($('minimum').value)*10n**18n).toString(),search:$('search').value,tags:selectedFilters(),cohort,excludeOwn:excludeOwn?'1':'0',includeZero:$('include-zero').checked?'1':'0',page,pageSize,sort:$('sort').value,direction:$('sort-direction').value});
+const compactOptions=()=>({scope,externalRole,minimum:(BigInt($('minimum').value)*10n**18n).toString(),search:$('search').value,tags:selectedFilters(),cohort,excludeOwn:excludeOwn?'1':'0',includeZero:$('include-zero').checked?'1':'0',page,pageSize,sort:$('sort').value,direction:$('sort-direction').value});
 function applyCompact(view,key){
  if(report&&view.report.block<report.block)return false;
  lastCompact=view;lastCompactKey=key;report={...view.report,rows:view.selected.rows,_compact:true};renderView(view);return true;
@@ -77,28 +79,27 @@ function render(){
 }
 function renderView(prepared){
  if(!report)return;
- const selected=prepared?.selected||selectHolderView(report,{scope,minimum:(BigInt($('minimum').value)*10n**18n).toString(),search:$('search').value,filter:selectedFilters(),cohort,excludeOwn,includeZero:$('include-zero').checked,page,pageSize,sort:$('sort').value,direction:$('sort-direction').value},manual);page=selected.page;syncSort();
+ const selected=prepared?.selected||selectHolderView(report,{scope,externalRole,minimum:(BigInt($('minimum').value)*10n**18n).toString(),search:$('search').value,filter:selectedFilters(),cohort,excludeOwn,includeZero:$('include-zero').checked,page,pageSize,sort:$('sort').value,direction:$('sort-direction').value},manual);page=selected.page;syncSort();
  for(const button of document.querySelectorAll('[data-scope]'))button.setAttribute('aria-pressed',String(button.dataset.scope===scope));
- const scopeNote=scope==='external-stat'?'外部流通：从已索引持仓中扣除我方份额、币安活动预留和底池（共享 Vault）；混合钱包仅显示外部份额。':scope==='own'?'我方地址：包含混合归属钱包，行内展示钱包总额及两方份额；仅已确认的我方部分计入我方持仓。':scope==='received'?'领币地址：按领取记录筛选，包含我方；领币不等同于当前余额全部来自分发。':scope==='excluded'?'统计排除：币安活动预留与底池（共享 Vault）计入非外部流通；不据此认定共享 Vault 全部归属我方。':'全部地址：钱包余额完整展示，混合钱包另列份额；非外部流通包含我方、活动预留与底池，不等同于我方持仓。';
+ const scopeNote=scope==='external-stat'?'外部流通：从已索引持仓中扣除我方份额、币安活动预留和底池（共享 Vault 及已核验池）；混合钱包仅显示外部份额。':scope==='own'?'我方地址：包含混合归属钱包，行内展示钱包总额及两方份额；仅已确认的我方部分计入我方持仓。':scope==='received'?'领币地址：按领取记录筛选，包含我方；领币不等同于当前余额全部来自分发。':scope==='excluded'?'统计排除：币安活动预留与底池（共享 Vault 及已核验池）计入非外部流通；不据此认定共享 Vault 全部归属我方。':'全部地址：钱包余额完整展示，混合钱包另列份额；非外部流通包含我方、活动预留与底池，不等同于我方持仓。';
  $('filter-context').textContent=[cohort?`来自合约报告：${cohortNames[cohort]}`:'',excludeOwn?'合约报告带入的非我方范围；混合钱包仅显示外部份额':'',scopeNote].filter(Boolean).join(' · ');
  $('cutoff').textContent=`余额截至 ${date(report.cutoff)} · 北京时间 · 区块 ${number(report.block,0)}`;
  const ledger=prepared?.ledger||holderLedger(report,manual),totalSupply=Number(BigInt(report.totalSupply));
- const metrics=[{label:'非外部流通数量',balance:ledger.nonExternal,tone:'own',note:'我方持仓 + 币安活动预留 + 底池（共享 Vault）'},
+ const metrics=[{label:'非外部流通数量',balance:ledger.nonExternal,tone:'own',note:'我方持仓 + 币安活动预留 + 已核验底池'},
   {label:'外部流通数量',balance:ledger.external,tone:'external',note:'已索引持仓 − 非外部流通数量；含混合钱包的外部份额'}];
- const externalDetails=`<div class="external-breakdown" role="group" aria-label="外部流通构成">${[
-  {id:'participants',label:'领币 / 合约交互地址持仓',tone:'received'},
-  {id:'other',label:'其他外部地址持仓',tone:'external'},
- ].map(group=>{
+ const externalDetails=report.externalClassification?`<div class="external-breakdown" role="group" aria-label="外部流通构成">${EXTERNAL_HOLDER_GROUPS.map(group=>{
   const part=ledger.externalBreakdown[group.id],share=BigInt(ledger.external)>0n?number(Number(BigInt(part.balance)*1000000n/BigInt(ledger.external))/10000):'0.00';
-  return `<div class="external-breakdown-item" data-tone="${group.tone}"><span>${group.label}</span><strong title="${quantity(part.balance)} ESIM">${compact(part.balance)} <em>ESIM</em></strong><small>${number(part.addresses,0)} 个地址 · 占外部 ${share}%</small></div>`;
- }).join('')}</div><p class="external-breakdown-note">两项合计为外部总量，按地址当前外部份额分类；领币与成功交互地址去重，不代表当前持仓全部来自分发。其他外部未识别上述记录，不等同于全部为个人散户。</p>`;
- $('summary').innerHTML=metrics.map(m=>`<div data-tone="${m.tone}"><span>${escape(m.label)}</span><strong title="${quantity(m.balance)} ESIM">${compact(m.balance)} <em>ESIM</em></strong><small>${number(Number(BigInt(m.balance))/totalSupply*100)}% 总供应量 · 已索引口径</small><p>${m.note}</p>${m.tone==='external'?externalDetails:''}</div>`).join('');
- const components=[{label:'我方持仓',balance:ledger.own},...ledger.exclusions.map(r=>({...r,label:r.label==='共享 Vault'?'底池（共享 Vault）':r.label}))];
+  return `<button type="button" class="external-breakdown-item" data-external-role="${group.role}" data-tone="${group.tone}" aria-pressed="${scope==='external-stat'&&externalRole===group.role}"><span>${group.label}</span><strong>${quantity(part.balance)} <em>ESIM</em></strong><small>${number(part.addresses,0)} 个有余额地址 · ${share}%</small><small>查看地址 →</small></button>`;
+ }).join('')}</div><p class="external-breakdown-note">三项互不重复，合计等于外部总量（两位小数显示可能有 0.01 ESIM 尾差）。余额截至 ${date(report.cutoff)}；关联范围与合约报告共用，核验至 ${date(report.externalClassification.cutoff)}。新增关联会随核验更新；“其他外部”不等同于全部为个人散户。</p>`:'<p class="external-breakdown-note">外部余额已显示；关联分类读取后再展示明细。</p>';
+ const roleControls=$('external-role-controls');roleControls.hidden=scope!=='external-stat'||!report.externalClassification;
+ for(const button of roleControls.querySelectorAll('[data-external-role]'))button.setAttribute('aria-pressed',String(button.dataset.externalRole===externalRole));
+ $('summary').innerHTML=metrics.map(m=>`<div data-tone="${m.tone}"><span>${escape(m.label)}</span><strong title="${quantity(m.balance)} ESIM">${quantity(m.balance)} <em>ESIM</em></strong><small>${number(Number(BigInt(m.balance))/totalSupply*100)}% 总供应量 · 已索引口径</small><p>${m.note}</p>${m.tone==='external'?externalDetails:''}</div>`).join('');
+ const components=[{label:'我方持仓',balance:ledger.own},...ledger.exclusions.map(r=>({...r,label:r.label==='共享 Vault'?'底池（共享 Vault 及已核验池）':r.label}))];
  $('exclusion-count').textContent=`${components.length} 项`;
  $('exclusion-values').innerHTML=components.map(r=>`<div><span>${escape(r.label)}</span><strong>${quantity(r.balance)} <em>ESIM</em></strong><small>${number(Number(BigInt(r.balance))/totalSupply*100)}% 总供应量</small></div>`).join('');
  $('ledger-meta').innerHTML=`<span>总账 · 全部已索引地址</span><span>有持仓 ${number(report.coverage.holding,0)} 个</span><span>覆盖供应量 ${number(Number(BigInt(ledger.indexed))/totalSupply*100)}%</span><span>未索引 ${quantity(ledger.unindexed)} ESIM</span><span>参考价格 ${number(report.price,6)} U</span><span>24h 对比 ${report.priorCutoff?date(report.priorCutoff):'暂缺'}</span>`;
  const selectedBalance=prepared?selected.balance:selected.all.reduce((sum,r)=>sum+BigInt(r.balance),0n).toString();
- $('selection-summary').textContent=`${HOLDER_SCOPES[scope]} · ${number(selected.total,0)} 个地址 · ${quantity(selectedBalance)} ESIM · ${number(Number(BigInt(selectedBalance))/totalSupply*100)}% 总供应量`;
+ $('selection-summary').textContent=`${HOLDER_SCOPES[scope]}${scope==='external-stat'&&externalRole!=='all'?' / '+EXTERNAL_HOLDER_GROUPS.find(g=>g.role===externalRole)?.label:''} · ${number(selected.total,0)} 个地址 · ${quantity(selectedBalance)} ESIM · ${number(Number(BigInt(selectedBalance))/totalSupply*100)}% 总供应量`;
  $('trade-cutoff').textContent=`24h 买卖 ${date(report.tradeWindowStart)} — ${date(report.tradeCutoff)}；累计自 ${date(report.historyStart)} 起。按交易发起地址统计成交币量，买绿 / 卖红。`;
  $('rows').innerHTML=selected.rows.map((r,i)=>{
   const pct=changePercent(r.balance,r.priorBalance),change=r.change24h,positive=change!==null&&BigInt(change)>0n;
@@ -148,16 +149,21 @@ for(const b of document.querySelectorAll('[data-columns]'))b.addEventListener('c
 $('holder-chart').open=viewPrefs.chartOpen===true;
 $('holder-chart').addEventListener('toggle',()=>{viewPrefs.chartOpen=$('holder-chart').open;saveView();});
 setColumns(['all','holdings','trades'].includes(viewPrefs.columns)?viewPrefs.columns:'all');
-for(const b of document.querySelectorAll('[data-scope]'))b.addEventListener('click',()=>{scope=b.dataset.scope;excludeOwn=false;cohort=null;page=0;render();});
+for(const b of document.querySelectorAll('[data-scope]'))b.addEventListener('click',()=>{scope=b.dataset.scope;externalRole='all';excludeOwn=false;cohort=null;page=0;render();});
+document.addEventListener('click',event=>{
+ const button=event.target.closest('[data-external-role]');if(!button)return;
+ externalRole=button.dataset.externalRole;scope='external-stat';cohort=null;excludeOwn=false;page=0;
+ if(button.closest('#summary')){$('minimum').value='0';$('search').value='';$('include-zero').checked=false;for(const input of $('filter').querySelectorAll('input'))input.checked=false;updateFilters();}else render();
+});
 $('minimum').addEventListener('change',()=>{page=0;render();});
-$('reset-view').addEventListener('click',()=>{cohort=null;excludeOwn=false;scope='all';$('minimum').value='0';$('search').value='';$('include-zero').checked=false;for(const input of $('filter').querySelectorAll('input'))input.checked=false;updateFilters();});
+$('reset-view').addEventListener('click',()=>{cohort=null;excludeOwn=false;scope='all';externalRole='all';$('minimum').value='0';$('search').value='';$('include-zero').checked=false;for(const input of $('filter').querySelectorAll('input'))input.checked=false;updateFilters();});
 for(const b of document.querySelectorAll('[data-chart]'))b.addEventListener('click',()=>{chartMode=b.dataset.chart;for(const t of document.querySelectorAll('[data-chart]'))t.setAttribute('aria-pressed',String(t===b));render();});
 window.addEventListener('storage',e=>{if(e.key===TAG_KEY){manual=readManual(e.newValue);renderCustomFilters();updateFilters();if($('label-manager').open)renderLabelManager();}});
 async function refresh(){
  if(busy)return false;busy=true;$('refresh').disabled=true;$('refresh').textContent='正在刷新…';$('status').textContent='正在读取最新持仓…';
  try{
   if(compactViewsEnabled(manual))try{compactAvailable=true;await loadCompact(true);return;}catch{compactAvailable=false;}
-  const result=await readSnapshot('holders',{current:report?._compact?null:report});report=validate(result.data);renderView();
+  const result=await readSnapshot('holders',{current:report?._compact?null:report});const data=validate(result.data),related=await readContractCohort(data);report=withHolderCohort(data,related.cohort);renderView();
   showSnapshotStatus($('status'),$('refresh'),[['持仓',report],['持仓内交易',{cutoff:report.tradeCutoff}]],{retained:result.source==='retained'});
  }catch(e){$('status').textContent=e.message;$('status').className='notice';if(!report)$('rows').innerHTML='<tr><td colspan="10" class="empty">暂时无法读取持仓，请点击刷新重试。</td></tr>';}
  finally{busy=false;$('refresh').disabled=false;$('refresh').textContent=refreshButtonLabel($('refresh'));if(reloadForTags){reloadForTags=false;void refresh();}}
@@ -170,6 +176,7 @@ if(['asc','desc'].includes(query.get('direction')))$('sort-direction').value=que
 cohort=Object.hasOwn(cohortNames,query.get('cohort'))?query.get('cohort'):null;
 excludeOwn=query.get('scope')==='external';
 if(Object.hasOwn(HOLDER_SCOPES,query.get('scope')))scope=query.get('scope');
+if(['direct','downstream','other'].includes(query.get('externalRole'))){externalRole=query.get('externalRole');scope='external-stat';}
 if(['0','10000','100000','1000000'].includes(query.get('minimum')))$('minimum').value=query.get('minimum');
 if(query.get('chart')==='top'){$('holder-chart').open=true;chartMode='top';for(const b of document.querySelectorAll('[data-chart]'))b.setAttribute('aria-pressed',String(b.dataset.chart==='top'));}
 $('include-zero').checked=query.get('zero')==='1'||!!cohort?.endsWith('zero');

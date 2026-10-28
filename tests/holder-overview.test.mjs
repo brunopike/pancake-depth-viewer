@@ -64,7 +64,7 @@ test('participant union counts receipts and successful interactions once, exclud
   row('0x'+'4'.repeat(40),0,[tag('received')]),row('0x'+'5'.repeat(40),40,[tag('own'),tag('interaction')]),
   row(reserve,50,[tag('received')]),row(vault,60,[tag('interaction')])];
  const ledger=holderLedger({...report,rows:testRows});
- assert.deepEqual(ledger.externalBreakdown,{participants:{balance:(30n*W).toString(),addresses:2},other:{balance:(30n*W).toString(),addresses:1}});
+ assert.deepEqual(ledger.externalBreakdown,{participants:{balance:(30n*W).toString(),addresses:2},downstream:{balance:'0',addresses:0},other:{balance:(30n*W).toString(),addresses:1}});
  assert.equal(ledger.external,(60n*W).toString());
 });
 test('external breakdown follows browser ownership labels and never absorbs a mixed wallet own share',()=>{
@@ -79,5 +79,13 @@ test('external breakdown retains wei precision and explicit empty buckets',()=>{
  assert.equal(ledger.externalBreakdown.participants.balance,'1000000000000000001');
  assert.equal(ledger.externalBreakdown.other.balance,'999999999999999999');
  assert.equal(ledger.external,(2n*W).toString());
- assert.deepEqual(holderLedger({...report,rows:[]}).externalBreakdown,{participants:{balance:'0',addresses:0},other:{balance:'0',addresses:0}});
+ assert.deepEqual(holderLedger({...report,rows:[]}).externalBreakdown,{participants:{balance:'0',addresses:0},downstream:{balance:'0',addresses:0},other:{balance:'0',addresses:0}});
+});
+
+test('verified pool balances are excluded while public router wallets remain external',()=>{
+ const pool={...row(a,100),tags:[{id:'pool',kind:'dex',text:'流动性池'}]},router={...row(b,200),tags:[{id:'router',kind:'dex',text:'公共交易路由'}]};
+ const r={...report,rows:[pool,router]},ledger=holderLedger(r);
+ assert.equal(ledger.external,(200n*W).toString());assert.equal(ledger.nonExternal,(100n*W).toString());assert.equal(ledger.own,'0');
+ assert.deepEqual(selectHolderView(r,{scope:'external-stat'}).all.map(r=>r.address),[b]);assert.equal(holderAppearance(pool),'excluded');
+ assert.equal(ledger.exclusions.find(x=>x.address===a).balance,(100n*W).toString());
 });

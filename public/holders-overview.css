@@ -86,3 +86,19 @@
  .holder-page #rows tr[data-tone]>th,.holder-page #rows tr[data-tone]>td,.holder-page #rows tr[data-tone]:hover>th,.holder-page #rows tr[data-tone]:hover>td{background:transparent;box-shadow:none}
  .holder-page #rows tr>th>.address-tools{margin:4px 0 0;width:100%;justify-content:space-between}
 }
+
+/* External relationship groups match the contract report. */
+.holder-page [data-tone=downstream]{--tone:#82bada;--row-bg:#14232b;--row-hover:#1b303a}
+.holder-page .external-breakdown{grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.holder-page .external-breakdown-item{display:block;text-align:left;padding:10px 12px;background:transparent;border:0;border-left:2px solid var(--tone);border-radius:0;cursor:pointer;color:var(--text)}
+.holder-page .external-breakdown-item:hover{background:#ffffff08}
+.holder-page .holder-summary .external-breakdown-item>strong{font-size:18px}
+.external-role-controls{display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding:14px 20px;border-bottom:1px solid var(--line)}
+.external-role-controls[hidden]{display:none}.external-role-controls>span{font-size:13px;color:var(--muted);margin-right:4px}
+.external-role-controls button{font-size:13px;padding:7px 11px}
+@media(max-width:1100px){.holder-page .external-breakdown{grid-template-columns:1fr}.holder-page .external-breakdown-item{display:grid;grid-template-columns:1fr auto;gap:3px 12px}.holder-page .external-breakdown-item>span{grid-column:1}.holder-page .holder-summary .external-breakdown-item>strong{grid-column:2;grid-row:1/3;margin:0;align-self:center}.holder-page .external-breakdown-item>small:last-child{grid-column:1/-1}}
+@media(max-width:480px){.holder-page .external-breakdown-item{display:block}.holder-page .holder-summary .external-breakdown-item>strong{font-size:20px;margin:6px 0}.external-role-controls{padding:12px}}
+
+.holder-page .holder-main #summary button.external-breakdown-item{padding:12px 14px;border:1px solid var(--line);border-left:3px solid var(--tone);border-radius:6px;background:#ffffff03;color:var(--text);box-shadow:none}
+.holder-page .holder-main #summary button.external-breakdown-item:hover{background:#ffffff08}
+.holder-page .holder-main #summary button.external-breakdown-item[aria-pressed=true]{border-color:var(--tone);background:#ffffff0b;color:var(--text)}

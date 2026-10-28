@@ -78,3 +78,11 @@ test('switching seller periods retries an older CDN response instead of leaving 
  assert.equal(result.block,110);assert.equal(result.holders.block,111);assert.equal(calls.length,2);assert.notEqual(calls[0].url,calls[1].url);
  await assert.rejects(readView('sellers',{...options,search:'still-stale'},{minimum:{block:110,holderBlock:111},fetch:async()=>new Response(JSON.stringify(old))}),/尚未同步/);
 });
+
+test('holder API enriches relationships before filtering and changes ETag with classification revision',async()=>{
+ let relationBlock=90;
+ const handler=createViewHandler(async()=>({data:holders,etag:'same-holder-snapshot'}),async r=>({...r,externalClassification:{block:relationBlock,cutoff:900},rows:r.rows.map((row,i)=>({...row,externalRole:i===1?'downstream':'other'}))}));
+ const req={method:'GET',query:{kind:'holders',scope:'external-stat',externalRole:'downstream'},headers:{}};
+ const first=response();await handler(req,first);assert.equal(first.code,200);const view=JSON.parse(gunzipSync(first.body));assert.equal(view.selected.total,1);assert.equal(view.selected.rows[0].address,rows[1].address);assert.equal(view.report.externalClassification.block,90);
+ relationBlock=91;const next=response();await handler({...req,headers:{'if-none-match':first.headers.ETag}},next);assert.equal(next.code,200);assert.notEqual(next.headers.ETag,first.headers.ETag);
+});
