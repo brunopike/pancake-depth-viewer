@@ -31,6 +31,6 @@ try{
  const after=await t.rpc('eth_getBlockByNumber',[hex(s.block),false],{fresh:true});if(after.hash!==s.blockHash||!validCohort(cohort,cohort))throw Error('COHORT_INVALID');
  cohort.sourceAllocation='proportional-origin-pool-v1';
  await mkdir('.goodway/cohort',{recursive:true});await writeFile('.goodway/cohort/cohort.json',JSON.stringify(cohort));
- for(let attempt=0;attempt<3;attempt++)try{await publishReportFiles([['cohort.json.gz',gzipSync(JSON.stringify(cohort))]],{message:`Verify external ESIM wallet balances at block ${cohort.throughBlock}`,skip:prior=>prior&&prior.external?.version===1&&prior.throughBlock>=cohort.throughBlock});break;}catch(e){if(attempt===2||e.message!=='CHECKPOINT_PUBLISH_PUSH_FAILED')throw e;}
+ for(let attempt=0;attempt<3;attempt++)try{await publishReportFiles([['cohort.json.gz',gzipSync(JSON.stringify(cohort))]],{message:`Verify external ESIM wallet balances at block ${cohort.throughBlock}`,skip:prior=>prior&&prior.external?.scopeRevision===2&&prior.throughBlock>=cohort.throughBlock});break;}catch(e){if(attempt===2||e.message!=='CHECKPOINT_PUBLISH_PUSH_FAILED')throw e;}
  const {rows,external,...summary}=cohort,{rows:externalRows,...externalSummary}=external;console.log(JSON.stringify({phase:'cohort-published',...summary,external:externalSummary,rpc:t.stats}));
 }catch(e){console.error('COHORT_REFRESH_FAILED',/^[A-Z_]+$/.test(e.message)?e.message:'QUERY_FAILED');process.exitCode=1;}
