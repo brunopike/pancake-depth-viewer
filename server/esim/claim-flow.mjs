@@ -17,7 +17,7 @@ function shares(lots,value,total){
  ensure(remaining===0n,'FLOW_ROUNDING');return parts.filter(p=>p.amount);
 }
 export function traceClaimFlow({source,marketAddresses,openingBalances,transfers,trades,unsafeTransactions=[],zero=ZERO}){
- const markets=new Set(marketAddresses),wallets=new Map(),sales=[],unconfirmedFlows=[],returnedFlows=[],byTx=new Map(),seen=new Set(),unsafe=new Set(unsafeTransactions),times=new Map();
+ const markets=new Set(marketAddresses),wallets=new Map(),sales=[],unconfirmedFlows=[],byTx=new Map(),seen=new Set(),unsafe=new Set(unsafeTransactions),times=new Map();
  for(const t of trades){times.set(t.tx,t.timestamp);if(t.side==='buy')unsafe.add(t.tx);}
  const totals={issued:0n,direct:0n,relay:0n,pool:0n,returned:0n,burned:0n,matchedGross:0n};
  for(const t of trades)if(t.side==='sell'&&t.address){if(!byTx.has(t.tx))byTx.set(t.tx,new Map());const m=byTx.get(t.tx),old=m.get(t.address);if(old)old.amount+=BigInt(t.amount_wei);else m.set(t.address,{...t,amount:BigInt(t.amount_wei)});}
@@ -67,7 +67,7 @@ export function traceClaimFlow({source,marketAddresses,openingBalances,transfers
    parts=parts.map(p=>({...p,payer:p.payer??(owners.has(e.from)?e.from:null),path:p.root?[...p.path,e.to].slice(-8):[],txs:p.root?[...p.txs,e.tx].slice(-8):[],hops:p.root?p.hops+1:0}));
   }
   const tracked=parts.filter(p=>p.root).reduce((n,p)=>n+p.amount,0n);
-  if(e.to===source){totals.returned+=tracked;returnedFlows.push({id:e.id,tx:e.tx,order:e.order,address:e.from,value_wei:e.value,source_wei:tracked.toString()});continue;}
+  if(e.to===source){totals.returned+=tracked;continue;}
   if(e.to===zero){totals.burned+=tracked;continue;}
   if(markets.has(e.to)){
    totals.pool+=tracked;
@@ -80,7 +80,7 @@ export function traceClaimFlow({source,marketAddresses,openingBalances,transfers
  for(const w of wallets.values()){const all=[...w.lots.values()];ensure(all.reduce((n,p)=>n+p.amount,0n)===w.balance,'FLOW_LEDGER_MISMATCH');remaining+=all.filter(p=>p.root).reduce((n,p)=>n+p.amount,0n);}
  const sold=totals.direct+totals.relay,unconfirmed=totals.pool-sold;
  ensure(unconfirmed>=0n&&totals.issued===remaining+sold+unconfirmed+totals.returned+totals.burned,'FLOW_CONSERVATION');
- return {version:1,modelRevision:2,method:'proportional-v1',sales,unconfirmedFlows,returnedFlows,totals:{issued_wei:totals.issued.toString(),direct_wei:totals.direct.toString(),relay_wei:totals.relay.toString(),sold_wei:sold.toString(),remaining_wei:remaining.toString(),unconfirmed_pool_wei:unconfirmed.toString(),returned_wei:totals.returned.toString(),burned_wei:totals.burned.toString(),matched_gross_wei:totals.matchedGross.toString()},closingBalances:Object.fromEntries([...wallets].map(([a,w])=>[a,w.balance.toString()])),sourceBalances:Object.fromEntries([...wallets].map(([a,w])=>[a,[...w.lots.values()].filter(p=>p.root).reduce((n,p)=>n+p.amount,0n).toString()]))};
+ return {version:1,modelRevision:2,method:'proportional-v1',sales,unconfirmedFlows,totals:{issued_wei:totals.issued.toString(),direct_wei:totals.direct.toString(),relay_wei:totals.relay.toString(),sold_wei:sold.toString(),remaining_wei:remaining.toString(),unconfirmed_pool_wei:unconfirmed.toString(),returned_wei:totals.returned.toString(),burned_wei:totals.burned.toString(),matched_gross_wei:totals.matchedGross.toString()},closingBalances:Object.fromEntries([...wallets].map(([a,w])=>[a,w.balance.toString()]))};
 }
 export function claimFlowWindow(flow,start,end){
  if(!flow)return null;const rows=flow.sales.filter(s=>s.timestamp>=start&&s.timestamp<end),direct=sum(rows,'direct_wei'),relay=sum(rows,'relay_wei');

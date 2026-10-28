@@ -5,7 +5,7 @@ const date=s=>new Date(s*1000).toLocaleString('zh-CN',{timeZone:'Asia/Shanghai',
 const link=a=>`<a class="cohort-address" href="https://bscscan.com/address/${escape(a)}" target="_blank" rel="noopener noreferrer">${escape(a)} ↗</a>`;
 export function renderCohort(c,reportCutoff){
  if(!c)return '<div class="cohort-pending"><h3>关联钱包持仓与回流质押</h3><p>正在补齐逐笔质押核验。完成后在这里显示直接交互及下游钱包、当前持仓和实际质押数量；尚未核验的数据不显示为 0。</p></div>';
- return `<div class="cohort-head"><div><h3>这些钱包现在还持有多少，又质押了多少</h3><p>${integer(c.directCount)} 个直接交互 / 收币地址 → ${integer(c.downstreamCount)} 个下游地址 · 合计 ${integer(c.addressCount)} 个，已去重</p></div><span>同一区块核验<br>${date(c.cutoff)} · ${integer(c.throughBlock)}</span></div>
+ return `<div class="cohort-head"><div><h3>这些钱包现在还持有多少，又质押了多少</h3><p>${integer(c.directCount)} 个直接交互 / 收币地址 → ${integer(c.downstreamCount)} 个下游地址 · 合计 ${integer(c.addressCount)} 个，已去重</p></div><span>每小时核验 · 同一区块<br>${date(c.cutoff)} · ${integer(c.throughBlock)}</span></div>
  <div class="cohort-metrics"><div class="cohort-metric"><span>当前钱包持仓合计</span><strong>${amount(c.balance_wei)} <em>ESIM</em></strong><p>直接地址 ${amount(c.direct_balance_wei)}<br>下游地址 ${amount(c.downstream_balance_wei)}</p><small>含我方及外部；包含买入和其他来源，不等于外部流通量</small></div>
  <div class="cohort-metric"><span>实际转回质押 · 累计</span><strong>${amount(c.stake_wei)} <em>ESIM</em></strong><p>${integer(c.stakeAddresses)} 个地址 · ${integer(c.stakeTransactions)} 笔交易<br>其中分发来源约 ${amount(c.source_stake_wei)}</p><small>质押调用 + 质押事件 + 实际转账核验；重复质押会累计，不是当前锁仓余额</small></div>
  <div class="cohort-metric cohort-estimate"><span>持仓中：分发来源仍持有 · 估算</span><strong>${amount(c.source_balance_wei)} <em>ESIM</em></strong><p>这是左侧持仓合计的一部分，不能再相加</p><small>混币按余额比例追踪；钱包间转手不重复计算当前余额</small></div></div>

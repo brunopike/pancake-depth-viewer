@@ -27,7 +27,7 @@ test('source gross inflow enrichment pins the seed hash and independently reconc
  const requests=[],transport={batch:async calls=>calls.map(([method,p])=>{requests.push([method,p]);return method==='eth_chainId'?'0x38':method==='eth_getBlockByNumber'?{hash:h(Number(BigInt(p[0])))}:[log(100,SOURCE,a(1),100)];}),rpc:async()=>({hash:h(100)})};
  const balances=async(addresses,block)=>addresses.map(addr=>addr===SOURCE?'200':block==='0x63'?'0':'100');
  const result=await collectClaimFlow(state(100),transport,{readBalances:balances,sourceInflowSeed:checkpoint});
- assert.equal(result.report.sourceInflow.total_wei,'300');assert.equal(result.report.sourceInflow.transfer_events,1);assert.equal(result.report.sourceInflow.balance_wei,'200');assert.equal(result.report.modelRevision,4);
+ assert.equal(result.report.sourceInflow.total_wei,'300');assert.equal(result.report.sourceInflow.transfer_events,1);assert.equal(result.report.sourceInflow.balance_wei,'200');assert.equal(result.report.modelRevision,3);
  assert(requests.some(([method,p])=>method==='eth_getBlockByNumber'&&p[0]==='0x63'));
  await assert.rejects(()=>collectClaimFlow(state(100),transport,{readBalances:async(addresses,block)=>addresses.map(addr=>addr===SOURCE?'199':block==='0x63'?'0':'100'),sourceInflowSeed:checkpoint}),/SOURCE_INFLOW_BALANCE_MISMATCH/);
  await assert.rejects(()=>collectClaimFlow(state(100),transport,{readBalances:balances,sourceInflowSeed:{...checkpoint,blockHash:h(1)}}),/SOURCE_INFLOW_CHECKPOINT_CHANGED/);

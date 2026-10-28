@@ -1,6 +1,8 @@
 name: Verify ESIM cohort balances
 on:
   workflow_dispatch:
+  schedule:
+    - cron: '32 * * * *'
 permissions:
   contents: write
 concurrency:

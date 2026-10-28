@@ -1,11 +1,8 @@
-import {cohortBalances} from './cohort-balances.mjs';
 import {TOKEN,SOURCE} from './metrics.mjs';
 import {TRANSFER,PCS,UNI,VAULT,addr,order,eventKey,signature} from './attribution.mjs';
 import {readHolderBalances} from './holders.mjs';
 import {traceClaimFlow} from './claim-flow.mjs';
 import {SOURCE_INFLOW_SEED,buildSourceInflow} from './source-inflows.mjs';
-import {collectReturnStakes} from './return-stakes.mjs';
-import {buildContractCohort} from './contract-cohort.mjs';
 const ZERO='0x0000000000000000000000000000000000000000',hex=n=>'0x'+n.toString(16);
 const ensure=(ok,code)=>{if(!ok)throw Error(code);};
 const lpEvents=new Set(['Mint(address,address,int24,int24,uint128,uint256,uint256)','Burn(address,int24,int24,uint128,uint256,uint256)','Collect(address,address,int24,int24,uint128,uint128)','Mint(address,uint256,uint256)','Burn(address,uint256,uint256,address)','ModifyLiquidity(bytes32,address,int24,int24,int256,bytes32)'].map(signature));
@@ -34,7 +31,7 @@ export async function collectClaimFlow(state,transport,{previous,progress=()=>{}
  const transfers=[...(previous?.transfers||[]),...added];ensure(transfers.length<=1000000,'FLOW_EVENT_LIMIT');
  const sourceEvents=new Map(transfers.filter(e=>e.from===SOURCE&&BigInt(e.value)>0n).map(e=>[e.id,e]));
  ensure(sourceEvents.size===state.distributions.length&&state.distributions.every(d=>{const e=sourceEvents.get(d.id);return e&&e.to===d.recipient&&e.value===d.value;}),'FLOW_DISTRIBUTION_MISMATCH');
- const addresses=[...new Set([...transfers.flatMap(e=>[e.from,e.to]),...(state.calls||[]).map(c=>c.from)].filter(normal))].sort();ensure(addresses.length<=30000,'FLOW_ADDRESS_LIMIT');
+ const addresses=[...new Set(transfers.flatMap(e=>[e.from,e.to]).filter(normal))].sort();ensure(addresses.length<=30000,'FLOW_ADDRESS_LIMIT');
  const openingBalances={...(previous?.openingBalances||{})},missing=addresses.filter(a=>!Object.hasOwn(openingBalances,a));
  progress({phase:'claim-opening-balances',addresses:missing.length,openingBlock});
  const initial=await readBalances(missing,hex(openingBlock),transport);for(const [i,a]of missing.entries())openingBalances[a]=initial[i];
@@ -67,14 +64,10 @@ export async function collectClaimFlow(state,transport,{previous,progress=()=>{}
   const [balance]=await readBalances([SOURCE],hex(state.block),transport);
   sourceInflow=buildSourceInflow({transfers,startBlock,throughBlock:state.block,blockHash:state.blockHash,cutoff:state.cutoff,balance,checkpoint:sourceInflowSeed});
  }
- const returns=await collectReturnStakes(transfers,transport,{previous:previous?.returnProof,progress});
  const after=await transport.rpc('eth_getBlockByNumber',[hex(state.block),false],{fresh:true});ensure(after?.hash===end.hash,'FLOW_END_CHANGED');
- const {closingBalances,sourceBalances,returnedFlows,...report}=traced;
- const aggregate=cohortBalances({source:SOURCE,marketAddresses:[...markets],openingBalances,transfers});
- const cohort=buildContractCohort({state,transfers,marketAddresses:[...markets],openingBalances,closingBalances,sourceBalances:aggregate.sourceBalances,returnedFlows:aggregate.returnedFlows,returnStakes:returns.rows});
- cohort.sourceAllocation='proportional-origin-pool-v1';
- // Revision 4 separates verified stake transfers from ordinary returns, and
- // current address balances from repeated gross distribution turnover.
- Object.assign(report,{modelRevision:4,token:TOKEN,source:SOURCE,startBlock,openingBlock,openingBlockHash:opening.hash,throughBlock:state.block,blockHash:state.blockHash,cutoff:state.cutoff,sourceInflow,cohort,transferCount:transfers.length,addressCount:addresses.length,receiptCount:Object.keys(proof).length,coverage:'single-token-rpc-logs; sale-and-stake-receipts-and-wallet-balances-reconciled; unknown-net-zero-transfers-depend-on-rpc-completeness'});
- return {version:1,token:TOKEN,source:SOURCE,startBlock,openingBlock,openingBlockHash:opening.hash,throughBlock:state.block,blockHash:state.blockHash,cutoff:state.cutoff,openingBalances,transfers,receiptProof:proof,returnProof:returns.proof,blockTimes,report};
+ const {closingBalances,...report}=traced;
+ // Revision 3 adds the reconciled all-history source inflow counter; the
+ // proportional sale-attribution algorithm is unchanged.
+ Object.assign(report,{modelRevision:3,token:TOKEN,source:SOURCE,startBlock,openingBlock,openingBlockHash:opening.hash,throughBlock:state.block,blockHash:state.blockHash,cutoff:state.cutoff,sourceInflow,transferCount:transfers.length,addressCount:addresses.length,receiptCount:Object.keys(proof).length,coverage:'single-token-rpc-logs; sale-receipts-and-wallet-balances-reconciled; unknown-net-zero-transfers-depend-on-rpc-completeness'});
+ return {version:1,token:TOKEN,source:SOURCE,startBlock,openingBlock,openingBlockHash:opening.hash,throughBlock:state.block,blockHash:state.blockHash,cutoff:state.cutoff,openingBalances,transfers,receiptProof:proof,blockTimes,report};
 }
