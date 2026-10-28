@@ -1,6 +1,7 @@
 import {validCohort} from './cohort-validation.mjs';
-import { readFile, writeFile, mkdir, rename } from 'node:fs/promises';
-import { gunzipSync, gzipSync } from 'node:zlib';
+import { readFile } from 'node:fs/promises';
+import { gunzipSync } from 'node:zlib';
+import {writeCheckpoint} from './state-writer.mjs';
 import { TOKEN, SOURCE } from './metrics.mjs';
 import {validSourceInflow,newerSourceInflow} from './source-inflows.mjs';
 export const CHECKPOINT_URL = 'https://raw.githubusercontent.com/brunopike/pancake-depth-viewer/esim-cache/state.json.gz';
@@ -61,7 +62,5 @@ export async function loadState({ fetch: request = fetch, includeRemote = true, 
   return local;
 }
 export async function saveState(state, dir) {
-  await mkdir(dir, { recursive: true });
-  await writeFile(`${dir}/state.tmp`, gzipSync(JSON.stringify(state)));
-  await rename(`${dir}/state.tmp`, `${dir}/state.json.gz`);
+  await writeCheckpoint(state,dir);
 }

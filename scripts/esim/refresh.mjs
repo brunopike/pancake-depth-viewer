@@ -1,9 +1,9 @@
-import { readFile, writeFile, mkdir, rename } from 'node:fs/promises';
-import { gzipSync, gunzipSync } from 'node:zlib';
+import { readFile, writeFile, mkdir } from 'node:fs/promises';
+import { gunzipSync } from 'node:zlib';
 import { makeRpc } from '../../server/esim/rpc.mjs';
 import { refreshState } from '../../server/esim/collector.mjs';
 import { buildReport } from '../../server/esim/metrics.mjs';
-import { loadState,mergeCheckpointState } from '../../server/esim/store.mjs';
+import { loadState,mergeCheckpointState,saveState } from '../../server/esim/store.mjs';
 const work = '.goodway/esim-monitor';
 await mkdir(work, { recursive: true });
 try {
@@ -22,8 +22,7 @@ try {
     const next = await refreshState(state, transport, { maxBlocks:5000,targetBlock, progress: e => console.log(JSON.stringify(e)) });
     const advanced=next.block>state.block;
     state = next;
-    await writeFile(`${work}/state.tmp`, gzipSync(JSON.stringify(state)));
-    await rename(`${work}/state.tmp`, `${work}/state.json.gz`);
+    await saveState(state,work);
     await writeFile(`${work}/latest.json`, JSON.stringify(buildReport(state)));
     console.log(JSON.stringify({ phase: 'checkpoint', block: state.block, cutoff: state.cutoff, calls: state.calls.length, trades: state.trades.length, ...transport.stats }));
     if (!advanced) break;
