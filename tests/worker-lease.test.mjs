@@ -7,7 +7,7 @@ import {tmpdir} from 'node:os';
 import {join} from 'node:path';
 import {acquireLease,renewLease,renewLeaseWithRetry,releaseLease,requireLease} from '../server/esim/worker-lease.mjs';
 import {publishRealtime} from '../server/esim/realtime-store.mjs';
-import {dueTask,recoverVmCheckpoint,restoredSchedule} from '../scripts/esim/vm-worker.mjs';
+import {dueTask,recoverVmCheckpoint,restoredSchedule,remoteBootstrapNeeded} from '../scripts/esim/vm-worker.mjs';
 
 // Explicitly opt in to an isolated local PostgreSQL cluster, never DATABASE_URL.
 const psql=process.env.ESIM_TEST_PSQL,run=promisify(execFile);
@@ -71,6 +71,13 @@ test('live cutover never inherits unpublished dry-run archive and snapshot timer
  assert.deepEqual(restoredSchedule(dry,false),{dryRun:false,core:0});
  assert.deepEqual(restoredSchedule(dry,true),{...dry,core:0});
  assert.equal(dry.core,100);
+});
+test('a restart reuses a recent local prefix while a missing or old prefix bootstraps remotely',()=>{
+ const fresh={first:true,hasCheckpoint:true,block:100,cutoff:9000,now:10000000};
+ assert.equal(remoteBootstrapNeeded(fresh),false);
+ assert.equal(remoteBootstrapNeeded({...fresh,hasCheckpoint:false}),true);
+ assert.equal(remoteBootstrapNeeded({...fresh,cutoff:1000}),true);
+ assert.equal(remoteBootstrapNeeded({...fresh,first:false,hasCheckpoint:false}),false);
 });
 
 test('VM reorg recovery restores the prior prefix and quarantines orphaned RPC cache',async()=>{

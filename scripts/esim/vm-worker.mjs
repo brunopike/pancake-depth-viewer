@@ -1,5 +1,5 @@
 import {spawn} from 'node:child_process';
-import {readFile,writeFile,mkdir,rename,copyFile} from 'node:fs/promises';
+import {readFile,writeFile,mkdir,rename,copyFile,access} from 'node:fs/promises';
 import {setTimeout as sleep} from 'node:timers/promises';
 import {startLease} from '../../server/esim/worker-lease.mjs';
 import {realtimeStatus,realtimeSQL} from '../../server/esim/realtime-store.mjs';
@@ -21,6 +21,9 @@ export function restoredSchedule(saved,dryRun){
  // A dry-run archive was deliberately not published. Do not carry its timer
  // into live mode, where an immediate complete archive is required.
  return saved?.dryRun===dryRun?{...saved,core:0}:{dryRun,core:0};
+}
+export function remoteBootstrapNeeded({first,hasCheckpoint,block,cutoff,now}){
+ return first&&(!hasCheckpoint||!block||now/1000-cutoff>=3600);
 }
 async function json(file,fallback={}){try{return JSON.parse(await readFile(file,'utf8'));}catch{return fallback;}}
 async function save(file,value){await writeFile(file+'.tmp',JSON.stringify(value));await rename(file+'.tmp',file);}
@@ -55,6 +58,7 @@ export async function main(){
   const lost=leaseLost('depth');
   depthGuard=await startLease(dryRun?'shadow-depth':'depth',{onLost:lost});
   const last=restoredSchedule(await json(`${local}/schedule.json`),dryRun),core=await json(`${local}/core.json`);
+  const hasCheckpoint=await access('.goodway/esim-monitor/state.json.gz').then(()=>true,()=>false);
   let block=core.block||0,cutoff=core.cutoff||0,first=true,retryAt=0;
   // A new owner always verifies the canonical chain, even if local timing is recent.
   last.core=0;
@@ -72,7 +76,10 @@ export async function main(){
       // independently verified provenance. Normal cycles use the local prefix.
       const remote=first||now-(last.merge||0)>=3600000;
       let partial=false;
-      try{await command('scripts/esim/refresh.mjs',[],{extra:{ESIM_REMOTE_START:String(remote),ESIM_REMOTE_BOOTSTRAP:String(first)}});}
+      // A recent local prefix is revalidated against the chain. Do not keep
+      // two full ledgers in RAM merely to restart this persistent worker.
+      const bootstrap=remoteBootstrapNeeded({first,hasCheckpoint,block,cutoff,now});
+      try{await command('scripts/esim/refresh.mjs',[],{extra:{ESIM_REMOTE_START:String(remote),ESIM_REMOTE_BOOTSTRAP:String(bootstrap)}});}
       catch(error){if(error.message!=='QUERY_LIMIT')throw error;partial=true;}
       if(remote)last.merge=now;first=false;
       await command('scripts/esim/vm-task.mjs',['core'],{extra:{ESIM_MIN_BLOCK:String(block+(partial?1:0))}});
