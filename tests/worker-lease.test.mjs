@@ -7,7 +7,7 @@ import {tmpdir} from 'node:os';
 import {join} from 'node:path';
 import {acquireLease,renewLease,renewLeaseWithRetry,releaseLease,requireLease} from '../server/esim/worker-lease.mjs';
 import {publishRealtime} from '../server/esim/realtime-store.mjs';
-import {dueTask,recoverVmCheckpoint} from '../scripts/esim/vm-worker.mjs';
+import {dueTask,recoverVmCheckpoint,restoredSchedule} from '../scripts/esim/vm-worker.mjs';
 
 // Explicitly opt in to an isolated local PostgreSQL cluster, never DATABASE_URL.
 const psql=process.env.ESIM_TEST_PSQL,run=promisify(execFile);
@@ -65,6 +65,12 @@ test('VM scheduler prioritizes canonical catch-up and retains a notification-fre
  assert.equal(dueTask({now,last,cutoff:now/1000-301,block:10,pendingBlock:0}),'core');
  assert.equal(dueTask({now,last:{...last,holders:now-180001},cutoff:now/1000,block:10,pendingBlock:10}),'holders');
  assert.equal(dueTask({now,last,cutoff:now/1000,block:10,pendingBlock:10}),null);
+});
+test('live cutover never inherits unpublished dry-run archive and snapshot timers',()=>{
+ const dry={dryRun:true,core:100,holders:200,archive:300,depth:400};
+ assert.deepEqual(restoredSchedule(dry,false),{dryRun:false,core:0});
+ assert.deepEqual(restoredSchedule(dry,true),{...dry,core:0});
+ assert.equal(dry.core,100);
 });
 
 test('VM reorg recovery restores the prior prefix and quarantines orphaned RPC cache',async()=>{

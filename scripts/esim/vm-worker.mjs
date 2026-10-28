@@ -17,6 +17,11 @@ export function dueTask({now,last,cutoff,pendingBlock,block}){
  return null;
 }
 const local='.goodway/vm';
+export function restoredSchedule(saved,dryRun){
+ // A dry-run archive was deliberately not published. Do not carry its timer
+ // into live mode, where an immediate complete archive is required.
+ return saved?.dryRun===dryRun?{...saved,core:0}:{dryRun,core:0};
+}
 async function json(file,fallback={}){try{return JSON.parse(await readFile(file,'utf8'));}catch{return fallback;}}
 async function save(file,value){await writeFile(file+'.tmp',JSON.stringify(value));await rename(file+'.tmp',file);}
 export async function recoverVmCheckpoint(root='.goodway/esim-monitor'){
@@ -49,7 +54,7 @@ export async function main(){
   if(!guard)return;
   const lost=leaseLost('depth');
   depthGuard=await startLease(dryRun?'shadow-depth':'depth',{onLost:lost});
-  const last=await json(`${local}/schedule.json`),core=await json(`${local}/core.json`);
+  const last=restoredSchedule(await json(`${local}/schedule.json`),dryRun),core=await json(`${local}/core.json`);
   let block=core.block||0,cutoff=core.cutoff||0,first=true,retryAt=0;
   // A new owner always verifies the canonical chain, even if local timing is recent.
   last.core=0;
