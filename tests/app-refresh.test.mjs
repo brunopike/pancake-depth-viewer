@@ -46,10 +46,10 @@ function app(search = '') {
     async finish(data = live(101n, 5)) { pending.shift()(data); await settle(); } };
 }
 
-test('Automatic refresh defaults to ten minutes and runs only when due', async () => {
+test('Automatic refresh defaults to two minutes and runs only when due', async () => {
   const a = app();
-  assert.equal(a.read('state.refreshMinutes'), 10);
-  assert.equal(Number(a.elements.get('refresh-minutes').value), 10);
+  assert.equal(a.read('state.refreshMinutes'), 2);
+  assert.equal(Number(a.elements.get('refresh-minutes').value), 2);
   a.timers[0](); await settle();
   assert.equal(a.pending.length, 0);
   a.read('state.nextRefreshAt = Date.now() - 1');
@@ -244,7 +244,7 @@ test('Manual refresh and interval edits restart the full minute countdown', asyn
   a.read('state.nextRefreshAt = Date.now() + 10');
   a.listeners.get('refresh:click')(); await settle();
   let remaining = a.read('state.nextRefreshAt - Date.now()');
-  assert.ok(remaining > 599000 && remaining <= 600000);
+  assert.ok(remaining > 119000 && remaining <= 120000);
   await a.finish();
   a.elements.get('refresh-minutes').value = '3'; a.listeners.get('refresh-minutes:change')();
   remaining = a.read('state.nextRefreshAt - Date.now()');
