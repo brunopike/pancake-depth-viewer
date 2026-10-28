@@ -41,7 +41,7 @@ test('internal staking only counts a successful trace and does not inherit a fai
 });
 test('report uses full exact decimal numbers; cohort table filters and export contain every selected full address',()=>{
  assert.equal(reportAmount('1000000000000000000000000000'),'1,000,000,000.00');assert.equal(reportAmount('1999999999999999999'),'2.00');assert.equal(reportAmount('-1250000000000000000'),'−1.25');
- const c=cohort(),html=renderCohort(c,110);assert(!html.includes('万'));assert(html.includes('不是当前锁仓余额'));assert(html.includes('不能再相加'));assert(html.includes('早于页面交易时间'));
+ const c=cohort(),html=renderCohort(c,110);assert(!html.includes('万'));assert(html.includes('旧汇总已撤下'));assert(!html.includes('实际转回质押 · 累计'));
  assert.equal(filterCohort(c,{role:'downstream'}).length,2);assert.equal(filterCohort(c,{search:a(3)}).length,1);assert.equal(filterCohort(c,{sort:'stake_wei'})[0].address,a(2));const csv=cohortCSV(c.rows);for(const r of c.rows)assert(csv.includes(r.address));assert.equal(csv.split('\r\n').length,4);
 });
 test('cohort snapshot is accepted only with reconciled rows at the same source block and never regresses newer evidence',()=>{

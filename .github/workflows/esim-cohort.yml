@@ -22,6 +22,12 @@ jobs:
             state.json.gz
             claim-flow-state.json.gz
           sparse-checkout-cone-mode: false
+      - uses: actions/checkout@v4
+        with:
+          ref: holder-cache
+          path: .goodway/holder-checkpoint
+          sparse-checkout: holders.json
+          sparse-checkout-cone-mode: false
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
@@ -36,6 +42,7 @@ jobs:
         env:
           ESIM_CHECKPOINT_FILE: .goodway/checkpoint/state.json.gz
           ESIM_FLOW_CHECKPOINT_FILE: .goodway/checkpoint/claim-flow-state.json.gz
+          ESIM_HOLDERS_FILE: .goodway/holder-checkpoint/holders.json
           ALCHEMY_API_KEY: ${{ secrets.ALCHEMY_API_KEY }}
           ESIM_REALTIME_DATABASE_URL: ${{ secrets.ESIM_REALTIME_DATABASE_URL }}
           NODE_OPTIONS: '--max-old-space-size=6144'

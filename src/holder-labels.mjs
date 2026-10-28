@@ -40,6 +40,10 @@ export const CONFIRMED_HOLDER_LABELS = {
     source:`用户指定做市账本地址库（${marketMaking.confirmedAt}）；${row.number?`地址编号 ${row.number}`:'执行钱包组'}。归属来自确认名单，不以路由或资金往来推断。`,
   }])),
   ...importedLabels,
+  '0x857627e285d4dde7f4882d21e806432f8649e601': {
+    kind:'own',label:'我方地址（用户确认）',
+    source:'用户确认（2026-10-28）：此地址属于我方，外部统计排除。',
+  },
   '0xea4bd4aad512ca4dccda821e8693b6b38b51fc68': {
     kind:'own',label:'我方地址（用户确认）',
     source:'用户确认（2026-10-17）：该地址属于我方。',
