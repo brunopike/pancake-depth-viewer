@@ -1,6 +1,6 @@
 import {validCohort} from '../server/esim/cohort-validation.mjs';
 const mirrored=globalThis.location?.hostname==='esimonchain.imstark.site'||globalThis.location?.hostname?.endsWith('.vercel.app');
-const directURL='https://raw.githubusercontent.com/brunopike/pancake-depth-viewer/esim-cache/cohort.json.gz';
+const directURL='https://raw.githubusercontent.com/brunopike/pancake-depth-viewer/refs/heads/esim-cache/cohort.json.gz';
 export const COHORT_URL=mirrored?'./data/current-esim-cohort.json.gz':directURL;
 const fits=(c,s)=>validCohort(c,c)&&c.throughBlock<=s.block&&c.cutoff<=s.cutoff&&(c.throughBlock!==s.block||c.blockHash===s.blockHash);
 const cache=new WeakMap();
