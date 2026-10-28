@@ -29,10 +29,12 @@ export async function realtimeStatus(sql=realtimeSQL()){
  return row||{pending_block:0,processed_block:0};
 }
 export function encodeSnapshot(kind,data){
- if(!['report','addresses','holders'].includes(kind)||!Number.isSafeInteger(data?.block)||!Number.isFinite(data.cutoff))throw Error('INVALID_REALTIME_SNAPSHOT');
+ const depth=kind==='depth',block=depth?Number(data?.blockNumber):data?.block,cutoff=depth?data?.timestamp/1000:data?.cutoff;
+ if(!['report','addresses','holders','depth'].includes(kind)||!Number.isSafeInteger(block)||block<1||!Number.isFinite(cutoff))throw Error('INVALID_REALTIME_SNAPSHOT');
+ if(depth&&(data.version!==1||data.chainId!==56||data.base!=='0x7765a659c5b0cfbfd9fbc2ef2298b75a598f2d2d'||data.quote!=='0x55d398326f99059ff775485246999027b3197955'||!/^0x[0-9a-f]{64}$/i.test(data.blockHash)||!data.pools?.length||!Array.isArray(data.failed)))throw Error('INVALID_REALTIME_DEPTH');
  const bytes=gzipSync(JSON.stringify(data));
  if(bytes.length>4*1024*1024)throw Error('REALTIME_SNAPSHOT_TOO_LARGE');
- return {kind,block:data.block,cutoff:data.cutoff,hash:createHash('sha256').update(bytes).digest('hex'),body:bytes.toString('base64')};
+ return {kind,block,cutoff,hash:createHash('sha256').update(bytes).digest('hex'),body:bytes.toString('base64')};
 }
 export async function publishRealtime(snapshots,{processedBlock,sql=realtimeSQL(),lease=leaseFromEnvironment()}={}){
  const queries=snapshots.map(({kind,data})=>{
@@ -47,11 +49,11 @@ export async function publishRealtime(snapshots,{processedBlock,sql=realtimeSQL(
  await sql.transaction(lease?[leaseStatement(lease,sql),...queries]:queries);
 }
 export async function readRealtime(kind,sql=realtimeSQL()){
- if(!['report','addresses','holders'].includes(kind))throw Error('INVALID_SNAPSHOT_KIND');
+ if(!['report','addresses','holders','depth'].includes(kind))throw Error('INVALID_SNAPSHOT_KIND');
  const [row]=await sql.query('SELECT block,cutoff,body,etag FROM esim_realtime_snapshots WHERE kind=$1',[kind]);return row;
 }
 export async function readRealtimeMetadata(kind,sql=realtimeSQL()){
- if(!['report','addresses','holders'].includes(kind))throw Error('INVALID_SNAPSHOT_KIND');
+ if(!['report','addresses','holders','depth'].includes(kind))throw Error('INVALID_SNAPSHOT_KIND');
  const [row]=await sql.query('SELECT block,cutoff,etag FROM esim_realtime_snapshots WHERE kind=$1',[kind]);return row;
 }
 export async function markRealtimeError(code,sql=realtimeSQL()){

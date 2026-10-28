@@ -2,6 +2,7 @@ import { snapshotName } from '../src/background-markets.mjs';
 import { readFile } from 'node:fs/promises';
 import {leaseFromEnvironment,requireLease} from '../server/esim/worker-lease.mjs';
 import {publishReportFiles} from './esim/publish-report-files.mjs';
+import {publishRealtime} from '../server/esim/realtime-store.mjs';
 const token = process.env.GITHUB_TOKEN, repo = process.env.GITHUB_REPOSITORY;
 if ((!token&&process.env.ESIM_GIT_PUBLISH!=='true') || !repo) throw new Error('Missing GitHub publishing environment');
 const manifest = JSON.parse(await readFile('.goodway/snapshot-manifest.json', 'utf8'));
@@ -12,6 +13,12 @@ for (const item of manifest) {
   const file = await readFile(`public/data/${item.filename}`, 'utf8'), payload = JSON.parse(file);
   if (payload.source !== 'Alchemy' || !payload.blockHash || !payload.pools?.length || payload.base !== item.base || payload.quote !== item.quote) throw new Error('Invalid server snapshot');
   snapshots.push({ ...item, file, payload });
+}
+// The default depth page reads the same durable snapshot service as the reports.
+// Keep the independently published GitHub copy as the fallback and history.
+if(process.env.ESIM_REALTIME_DATABASE_URL){
+ const depth=snapshots.find(s=>s.filename==='esim-usdt.json');
+ if(depth)await publishRealtime([{kind:'depth',data:depth.payload}]);
 }
 if(process.env.ESIM_GIT_PUBLISH==='true'){
  for(const {filename,file,payload} of snapshots)await publishReportFiles([[filename,file]],{branch:'depth-cache',message:`Refresh market snapshot at block ${payload.blockNumber}`,skip:prior=>prior&&BigInt(prior.blockNumber)>=BigInt(payload.blockNumber)});

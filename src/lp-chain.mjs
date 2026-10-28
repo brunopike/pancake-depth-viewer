@@ -1,6 +1,6 @@
 import { parseAbi, parseAbiItem } from 'viem';
 import { OWNERS, CL_POSITION_MANAGER, V3_POSITION_MANAGER, CL_POOL_MANAGER, validateOwnership, validateOwnershipIndex, poolKeyHash, ownedPoolMeta } from './ownership.mjs';
-import { latestSharedURL } from './snapshot.mjs';
+import {readSharedDepth} from './shared-depth.mjs';
 
 const nftAbi = parseAbi(['function balanceOf(address) view returns (uint256)', 'function ownerOf(uint256) view returns (address)', 'function tokenOfOwnerByIndex(address,uint256) view returns (uint256)']);
 const clAbi = parseAbi(['function clPoolManager() view returns (address)', 'function getPoolAndPositionInfo(uint256) view returns ((address currency0,address currency1,address hooks,address poolManager,uint24 fee,bytes32 parameters),uint256)', 'function getPositionLiquidity(uint256) view returns (uint128)']);
@@ -35,11 +35,8 @@ async function checkpoint(options) {
   for (const candidate of candidates) if (await canonical(candidate)) return candidate;
   // A viewer opened long after the bundled checkpoint can use the latest public worker index.
   if (browser) try {
-    const signal = AbortSignal.timeout(6000), r = await fetch(await latestSharedURL(signal), { cache: 'no-store', signal });
-    if (r.ok) {
-      const data = JSON.parse(await r.text(), (key, value) => key === 'blockNumber' && typeof value === 'string' ? BigInt(value) : value);
-      if (await canonical(data.ownershipIndex)) return data.ownershipIndex;
-    }
+    const signal=AbortSignal.timeout(6000),data=await readSharedDepth({signal,parse:text=>JSON.parse(text,(key,value)=>key==='blockNumber'&&typeof value==='string'?BigInt(value):value)});
+    if(data&&await canonical(data.ownershipIndex))return data.ownershipIndex;
   } catch { /* No unverified index is used. */ }
 }
 

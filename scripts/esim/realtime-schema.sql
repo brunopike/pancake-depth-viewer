@@ -10,6 +10,9 @@ CREATE TABLE IF NOT EXISTS esim_realtime_control (
 );
 INSERT INTO esim_realtime_control(id) VALUES(1) ON CONFLICT DO NOTHING;
 CREATE TABLE IF NOT EXISTS esim_realtime_snapshots (
- kind text PRIMARY KEY CHECK(kind IN ('report','addresses','holders')),block bigint NOT NULL,cutoff double precision NOT NULL,
+ kind text PRIMARY KEY CHECK(kind IN ('report','addresses','holders','depth')),block bigint NOT NULL,cutoff double precision NOT NULL,
  body text NOT NULL,etag text NOT NULL,updated_at timestamptz NOT NULL DEFAULT now()
 );
+ALTER TABLE esim_realtime_snapshots
+ DROP CONSTRAINT IF EXISTS esim_realtime_snapshots_kind_check,
+ ADD CONSTRAINT esim_realtime_snapshots_kind_check CHECK(kind IN ('report','addresses','holders','depth'));

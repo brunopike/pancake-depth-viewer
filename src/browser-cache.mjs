@@ -1,6 +1,7 @@
 import config from '../public/data/background-markets.json';
 import { configuredMarkets, snapshotName } from './background-markets.mjs';
-import { parseSnapshot, serializeSnapshot, latestSharedURL } from './snapshot.mjs';
+import { parseSnapshot, serializeSnapshot } from './snapshot.mjs';
+import {readSharedDepth} from './shared-depth.mjs';
 const key = market => `pancake-depth:v1:${market.key}`;
 export function readBrowserCache(market) {
   try { return parseSnapshot(localStorage.getItem(key(market)), market.pools, market.base.id, market.quote.id); } catch { return null; }
@@ -16,9 +17,10 @@ export async function readSharedCache(market, seed = false) {
   try {
     const signal = AbortSignal.timeout(6000);
     const filename = snapshotName(market.base.id, market.quote.id);
-    const url = seed ? `./data/${filename}` : await latestSharedURL(signal, filename);
-    const response = await fetch(url, { cache: 'no-store', signal });
+    const parse=text=>parseSnapshot(text,market.pools,market.base.id,market.quote.id);
+    if(!seed)return await readSharedDepth({signal,filename,parse});
+    const response = await fetch(`./data/${filename}`, { cache: 'no-store', signal });
     if (!response.ok) return null;
-    return parseSnapshot(await response.text(), market.pools, market.base.id, market.quote.id);
+    return parse(await response.text());
   } catch { return null; }
 }
