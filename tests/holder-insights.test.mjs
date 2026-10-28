@@ -6,6 +6,19 @@ import {selectHolders} from '../src/holder-model.mjs';
 const a=n=>'0x'+n.toString(16).padStart(40,'0');
 const tag=(id,kind=id)=>({id,kind,text:id});
 const row=(n,balance,tags=[])=>({address:a(n),balance:String(balance),tags});
+test('report external circulation uses the holder-page exclusions and mixed-wallet split',()=>{
+ const unit=10n**18n,rows=[
+  {address:'0x588177775e6fba9e752d0c9dfd5bbb562e8f016a',balance:String(500000n*unit),tags:[]},
+  {address:'0xa7d81e889f2df910389c95fa0f9d6092220edf87',balance:String(15000000n*unit),tags:[]},
+  {address:'0x238a358808379702088667322f80ac48bad5e6c4',balance:String(4000000n*unit),tags:[]},
+  row(1,String(100n*unit)),
+ ];
+ const x=holderInsights({rows,totalSupply:String(20000000n*unit),cutoff:1});
+ assert.equal(x.circulation.external,String(410024n*unit));
+ assert.equal(x.circulation.nonExternal,String(19090076n*unit));
+ assert.equal(x.circulation.top10,100);
+ assert.equal(new URL(holderViewURL({scope:'external-stat'})).searchParams.get('scope'),'external-stat');
+});
 test('recipient states partition addresses and balances; wallet stock is not inferred from sells',()=>{
  const rows=[row(1,100,[tag('received')]),row(2,60,[tag('received'),tag('received-sold','sold')]),row(3,0,[tag('received'),tag('cleared')]),row(4,0,[tag('received'),tag('received-zero','cleared')]),row(5,800,[tag('own-lp','lp'),tag('known','own')]),row(6,40)];
  const before=structuredClone(rows),x=holderInsights({rows,cutoff:5,block:1,price:.06});

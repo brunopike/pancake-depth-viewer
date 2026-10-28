@@ -1,6 +1,7 @@
 import {rowTags,recipientState,ownershipAmounts} from './holder-model.mjs';
 import {holderCharts} from './holder-charts.mjs';
-import {HOLDER_BALANCE_SPLITS} from './holder-labels.mjs';
+import {HOLDER_BALANCE_SPLITS,HOLDER_CIRCULATION_EXCLUSIONS} from './holder-labels.mjs';
+import {holderLedger} from './holder-overview.mjs';
 
 export function holderInsights(report, manual = {}) {
   const states = [
@@ -22,10 +23,13 @@ export function holderInsights(report, manual = {}) {
   }
   const total=report.rows.reduce((n,r)=>n+BigInt(r.balance),0n);
   const outside=holderCharts(external,manual);
+  const circulation=holderLedger({...report,totalSupply:report.totalSupply??total.toString()},manual);
+  const circulating=holderCharts(external.filter(row=>!Object.hasOwn(HOLDER_CIRCULATION_EXCLUSIONS,row.address)),manual);
   return {cutoff:report.cutoff,block:report.block,price:report.price,total:total.toString(),own:own.toString(),ownCount,
     external:(total-own).toString(),received:received.toString(),receivedCount,robots:{balance:robotBalance.toString(),count:robotCount},
     states:states.map(s=>({...s,balance:s.balance.toString()})),
     externalTop10:outside.top.at(-1)?.cumulativeShare??null,
+    circulation:{...circulation,top10:circulating.top.at(-1)?.cumulativeShare??null},
     source:report.rows.find(r=>r.address==='0x67b97c3845438f264965ca154ba13051c6c73416')?.balance??null,
     manualCount:Object.keys(manual).filter(a=>report.rows.some(r=>r.address===a)).length};
 }
@@ -55,13 +59,14 @@ export function sellerProfile(row, holder, manual = {}) {
   return {own,frequency,received,tags:visible,balance:holder?.balance??null};
 }
 
-export function holderViewURL({tags=[],search='',zero=false,cohort,excludeOwn=false,chart}={},pageURL=globalThis.location?.href) {
+export function holderViewURL({tags=[],search='',zero=false,cohort,excludeOwn=false,scope,chart}={},pageURL=globalThis.location?.href) {
   const q=new URLSearchParams({view:'holders'});
   if(tags.length)q.set('tags',tags.join(','));
   if(search)q.set('search',search);
   if(zero)q.set('zero','1');
   if(cohort)q.set('cohort',cohort);
   if(excludeOwn)q.set('scope','external');
+  if(scope==='external-stat')q.set('scope',scope);
   if(chart)q.set('chart',chart);
   const target=pageURL?new URL('./esim-holders.html',pageURL):new URL('https://starkweng.github.io/esim-onchain/');
   target.search=q.toString();

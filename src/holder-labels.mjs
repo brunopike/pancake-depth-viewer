@@ -1,4 +1,5 @@
 import workbook from './holder-import.json' with {type:'json'};
+import marketMaking from './mm-own-addresses.json' with {type:'json'};
 
 // Import identity and address types only. Workbook balances and behavioral tags
 // are snapshots; fresh balances and trading/claim activity still come from RPC.
@@ -34,6 +35,10 @@ const importedLabels = Object.fromEntries(workbook.records.flatMap(row => {
 // Shared classifications apply to cached snapshots and future reports. Explicit
 // user confirmations take precedence over supplemental workbook descriptions.
 export const CONFIRMED_HOLDER_LABELS = {
+  ...Object.fromEntries(marketMaking.records.map(row=>[row.address,{
+    kind:'own',label:row.number?`我方做市钱包 · ${row.number}号`:'我方执行钱包',
+    source:`用户指定做市账本地址库（${marketMaking.confirmedAt}）；${row.number?`地址编号 ${row.number}`:'执行钱包组'}。归属来自确认名单，不以路由或资金往来推断。`,
+  }])),
   ...importedLabels,
   '0xea4bd4aad512ca4dccda821e8693b6b38b51fc68': {
     kind:'own',label:'我方地址（用户确认）',
