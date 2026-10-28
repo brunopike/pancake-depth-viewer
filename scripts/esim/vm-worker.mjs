@@ -28,7 +28,7 @@ export async function recoverVmCheckpoint(root='.goodway/esim-monitor'){
 }
 export async function main(){
  const dryRun=process.env.ESIM_WORKER_DRY_RUN==='true';
- if(!process.env.ESIM_REALTIME_DATABASE_URL||!process.env.ALCHEMY_API_KEY||(!dryRun&&!process.env.GITHUB_TOKEN))throw Error('INVALID_WORKER_CONFIGURATION');
+ if(!process.env.ESIM_REALTIME_DATABASE_URL||!process.env.ALCHEMY_API_KEY||(!dryRun&&!process.env.GITHUB_TOKEN&&process.env.ESIM_GIT_PUBLISH!=='true'))throw Error('INVALID_WORKER_CONFIGURATION');
  await mkdir(local,{recursive:true});
  let stopping=false,child,guard,depthGuard;
  const stopChild=()=>{if(child?.pid)try{process.kill(-child.pid,'SIGTERM');}catch{}};

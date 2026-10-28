@@ -30,6 +30,7 @@ fi
 export PATH=/opt/esim-worker/node/bin:$PATH
 (cd "$release" && npm ci --omit=dev --no-audit --no-fund)
 [[ ! -e "$release/.goodway" ]] && ln -s /var/lib/esim-worker "$release/.goodway"
+git -C "$release" remote set-url --push origin git@github.com:brunopike/pancake-depth-viewer.git
 chown -R esim-worker:esim-worker "$release/.git" "$release/public/data"
 cat > /opt/esim-worker/git-credential-env <<'CREDENTIAL'
 #!/bin/sh

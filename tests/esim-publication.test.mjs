@@ -27,5 +27,16 @@ test('binary publication preserves the working branch, staged user edits and unr
   assert.equal(git(['show',`${flow}:claim-flow.json`]),'{"throughBlock":1}','legacy copy remains available to old readers');
   assert.equal(await publishReportFiles([['claim-flow-state.json.gz',bytes],['claim-flow.json.gz',packed]],{cwd,message:'stale flow',skip:prior=>prior.throughBlock>=2}),false);
   assert.equal(git(['rev-parse','HEAD']),head);assert.equal(git(['diff','--cached']),staged);
+  for(const [branch,file] of [['holder-cache','holders.json'],['depth-cache','esim-usdt.json']]){
+   git(['push','origin',`HEAD:refs/heads/${branch}`]);
+   const first=await publishReportFiles([[file,'{"block":2,"blockNumber":"2"}']],{cwd,branch,message:'repository-key snapshot',skip:prior=>prior?.block>=2});
+   assert.equal(git(['show',`${first}:keep.txt`]),'preserve');
+   assert.equal(git(['show',`${first}:${file}`]),'{"block":2,"blockNumber":"2"}');
+   const old=await publishReportFiles([[file,'{"block":1,"blockNumber":"1"}']],{cwd,branch,message:'older snapshot',skip:prior=>prior?.block>=1});
+   assert.equal(old,false);
+  }
+  await assert.rejects(publishReportFiles([['holders.json','{}']],{cwd,branch:'main'}),/INVALID_PUBLICATION_BRANCH/);
+  await assert.rejects(publishReportFiles([['../secret','{}']],{cwd,branch:'depth-cache'}),/INVALID_PUBLICATION_FILES/);
+  assert.equal(git(['rev-parse','HEAD']),head);assert.equal(git(['diff','--cached']),staged);
  }finally{await rm(dir,{recursive:true,force:true});}
 });

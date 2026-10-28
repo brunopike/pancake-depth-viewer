@@ -7,7 +7,7 @@ import {publishReportFiles} from './publish-report-files.mjs';
 import { PROJECT_REPOSITORY,projectRepository } from '../../server/esim/repository.mjs';
 const token = process.env.GITHUB_TOKEN;
 const repo = projectRepository(process.env.GITHUB_REPOSITORY || PROJECT_REPOSITORY);
-if (!token || !repo) throw new Error('Invalid publication configuration');
+if ((!token&&process.env.ESIM_GIT_PUBLISH!=='true') || !repo) throw new Error('Invalid publication configuration');
 const bytes = await readFile('.goodway/esim-monitor/state.json.gz');
 const state = parseState(bytes);
 const report=buildReport(state);

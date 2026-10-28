@@ -1,7 +1,12 @@
 import {readFile} from 'node:fs/promises';
 import {validateHolders} from '../../server/esim/holders.mjs';
 import {leaseFromEnvironment,requireLease} from '../../server/esim/worker-lease.mjs';
+import {publishReportFiles} from './publish-report-files.mjs';
 const content=await readFile('.goodway/esim-holders/holders.json','utf8'),report=validateHolders(JSON.parse(content));
+if(process.env.ESIM_GIT_PUBLISH==='true'){
+ const commit=await publishReportFiles([['holders.json',content]],{branch:'holder-cache',message:`ESIM holders at block ${report.block}`,skip:prior=>prior&&(prior.block>report.block||prior.block===report.block&&prior.tradeCutoff>=report.tradeCutoff)});
+ console.log(commit?`Published holders at ${report.block}`:'Holder checkpoint already current.');process.exit(0);
+}
 const token=process.env.GITHUB_TOKEN;if(!token)throw new Error('NO_GITHUB_TOKEN');
 const root='https://api.github.com/repos/brunopike/pancake-depth-viewer/git';
 async function api(path,body,method=body?'POST':'GET'){

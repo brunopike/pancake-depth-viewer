@@ -1,0 +1,26 @@
+name: Prepare encrypted ESIM worker configuration
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  seal:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Encrypt existing credentials for the authorized worker only
+        env:
+          ESIM_REALTIME_DATABASE_URL: ${{ secrets.ESIM_REALTIME_DATABASE_URL }}
+          ALCHEMY_API_KEY: ${{ secrets.ALCHEMY_API_KEY }}
+        run: node scripts/esim/deploy/worker-config-envelope.mjs seal scripts/esim/deploy/worker-config-public.pem worker-config.encrypted.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: esim-worker-encrypted-configuration
+          path: worker-config.encrypted.json
+          retention-days: 1
+          if-no-files-found: error

@@ -18,8 +18,21 @@ needed by the application; browsers must not call the VM.
    and validates the release checksum.
 4. Install `/etc/esim-worker/worker.env` as `root:root`, mode `0600`, using the
    existing ESIM realtime DB and Alchemy credentials. Do not use the separate MM
-   ledger database. The publishing token must be restricted to this repository
-   with Contents read/write; a broad personal token must not be copied here.
+   ledger database. Register a dedicated write-enabled SSH deploy public key
+   only on `brunopike/pancake-depth-viewer`. Keep its private key at
+   `/etc/esim-worker/github_ed25519` (root:esim-worker, 0640), with GitHub host
+   keys from the official HTTPS metadata API in `github_known_hosts`. The VM
+   uses `ESIM_GIT_PUBLISH=true`; no personal GitHub token is copied here. The
+   installer does not create or authorize this key automatically.
+   For browser-only server access, the manual `esim-worker-config.yml` workflow
+   can seal the two existing Actions secrets to this VM's pinned RSA public
+   key. Its one-day artifact contains only authenticated ciphertext. Keep the
+   corresponding private key root-only on the VM, then run
+   `worker-config-envelope.mjs open <ciphertext-file> /etc/esim-worker/worker.env`
+   as root. This writes a root-only environment file and defaults to dry run;
+   neither the workflow nor the decrypt command prints credentials. Do not
+   dispatch this workflow or authorize the deploy key without the deployment
+   owner's approval for the specific destination.
 5. Keep `ESIM_WORKER_DRY_RUN=true` and start the service. This takes separate
    `shadow-core` / `shadow-depth` leases. It reads live source data and builds
    results, but does not publish snapshots, archive commits or inbox cleanup.
