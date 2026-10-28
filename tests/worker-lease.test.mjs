@@ -60,11 +60,12 @@ test('an expired PostgreSQL publisher cannot modify either snapshot or acknowled
 });
 
 test('VM scheduler prioritizes canonical catch-up and retains a notification-free fallback',()=>{
- const now=1000000,last={core:now-60001,holders:now-50000,archive:now,depth:now};
+ const now=1000000,last={core:now-60001,holders:now-50000,archive:now,depth:now,mm:now};
  assert.equal(dueTask({now,last,cutoff:now/1000,block:10,pendingBlock:11}),'core');
  assert.equal(dueTask({now,last,cutoff:now/1000-301,block:10,pendingBlock:0}),'core');
  assert.equal(dueTask({now,last:{...last,holders:now-180001},cutoff:now/1000,block:10,pendingBlock:10}),'holders');
  assert.equal(dueTask({now,last,cutoff:now/1000,block:10,pendingBlock:10}),null);
+ assert.equal(dueTask({now,last:{...last,mm:now-60001},cutoff:now/1000,block:10,pendingBlock:10}),'mm');
 });
 test('live cutover never inherits unpublished dry-run archive and snapshot timers',()=>{
  const dry={dryRun:true,core:100,holders:200,archive:300,depth:400};

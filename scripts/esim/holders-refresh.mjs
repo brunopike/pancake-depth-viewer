@@ -1,8 +1,10 @@
+import {loadSharedRegistry} from '../../server/esim/shared-data.mjs';
 import { readFile,writeFile,mkdir,rename } from 'node:fs/promises';
 import { collectHolders,loadHolders } from '../../server/esim/holders.mjs';
 import { loadState,parseState } from '../../server/esim/store.mjs';
 import { makeRpc } from '../../server/esim/rpc.mjs';
 try{
+ await loadSharedRegistry();
  let state;
  if(process.env.ESIM_PERSISTENT_WORKER==='true')state=parseState(await readFile('.goodway/esim-monitor/state.json.gz'));
  else state=await loadState();

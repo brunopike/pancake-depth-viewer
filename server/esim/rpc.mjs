@@ -1,14 +1,15 @@
+import {sharedCache,sharedRpcKey,fixedRead} from './shared-data.mjs';
 import { createHash } from 'node:crypto';
 import { readFile, writeFile, mkdir } from 'node:fs/promises';
 import { gzipSync, gunzipSync } from 'node:zlib';
 import {setTimeout as sleep} from 'node:timers/promises';
 
 export function makeRpc({ key = process.env.ALCHEMY_API_KEY, endpoint, budget = 500, timeoutMs = 230000,
-  cacheDir, fetch: request = fetch, progress = () => {}, sleep:wait=sleep, minIntervalMs=250 } = {}) {
+  cacheDir, fetch: request = fetch, progress = () => {}, sleep:wait=sleep, minIntervalMs=250, shared = process.env.ESIM_REALTIME_DATABASE_URL ? sharedCache() : null } = {}) {
   if (!key && !endpoint) throw new Error('ALCHEMY_NOT_CONFIGURED');
   const url = endpoint || `https://bnb-mainnet.g.alchemy.com/v2/${key}`;
   const deadline = Date.now() + timeoutMs;
-  const stats = { physical: 0, logical: 0, cacheHits: 0 };
+  const stats = { physical: 0, logical: 0, cacheHits: 0, sharedHits: 0 };
   let exhausted=false;
   let nextRequestAt=0;
   const cacheKey = (method, params) => createHash('sha256').update(JSON.stringify([method, params])).digest('hex');
@@ -20,8 +21,9 @@ export function makeRpc({ key = process.env.ALCHEMY_API_KEY, endpoint, budget = 
         && !/"(?:latest|pending|safe|finalized)"/.test(JSON.stringify(params));
       const file = cacheable ? `${cacheDir}/${cacheKey(method, params)}.json.gz` : null;
       if (file) try { results[i] = JSON.parse(gunzipSync(await readFile(file))); stats.cacheHits++; continue; } catch {}
-      missing.push({ i, method, params, file });
+      missing.push({ i, method, params, file, persistent:!fresh&&fixedRead(method,params) });
     }
+    if(shared){try{const found=await shared.read(missing.filter(c=>c.persistent));for(let j=missing.length-1;j>=0;j--){const c=missing[j],key=sharedRpcKey(c.method,c.params);if(c.persistent&&found.has(key)&&found.get(key)!==null){results[c.i]=found.get(key);stats.sharedHits++;missing.splice(j,1);}}}catch{progress({phase:"shared-cache-read-unavailable"});}}
     const batchSize = calls.some(([method]) => method.startsWith('trace_')) ? 1 : calls.some(([method]) => method === 'eth_getLogs') ? 6 : 40;
     const chunks = [];
     for (let start = 0; start < missing.length; start += batchSize) chunks.push(missing.slice(start, start + batchSize));
@@ -74,6 +76,7 @@ export function makeRpc({ key = process.env.ALCHEMY_API_KEY, endpoint, budget = 
         results[c.i] = e.result;
         if (c.file && e.result !== null) { await mkdir(cacheDir, { recursive: true }); await writeFile(c.file, gzipSync(JSON.stringify(e.result))); }
       }
+      if(shared)try{await shared.write(chunk.filter(c=>c.persistent&&results[c.i]!==null).map(c=>({...c,result:results[c.i]})));}catch{progress({phase:'shared-cache-write-unavailable'});}
       progress({ phase: 'rpc', ...stats });
     }
     const concurrency = batchSize === 1 ? 1 : batchSize === 6 ? 2 : 3;

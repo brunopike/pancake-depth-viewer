@@ -17,8 +17,8 @@ needed by the application; browsers must not call the VM.
    The installer does not start the service. It uses official Node 22 packages
    and validates the release checksum.
 4. Install `/etc/esim-worker/worker.env` as `root:root`, mode `0600`, using the
-   existing ESIM realtime DB and Alchemy credentials. Do not use the separate MM
-   ledger database. Register a dedicated write-enabled SSH deploy public key
+   existing ESIM realtime DB and Alchemy credentials. The shared database also contains the `esim_ledger` schema for the MM
+   ledger; the server reuses this connection without another credential. Register a dedicated write-enabled SSH deploy public key
    only on `brunopike/pancake-depth-viewer`. Keep its private key at
    `/etc/esim-worker/github_ed25519` (root:esim-worker, 0640), with GitHub host
    keys from the official HTTPS metadata API in `github_known_hosts`. The VM

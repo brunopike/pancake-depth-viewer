@@ -1,3 +1,4 @@
+import {loadSharedRegistry} from '../../server/esim/shared-data.mjs';
 import {execFile} from 'node:child_process';
 import {promisify} from 'node:util';
 import {readFile,writeFile,copyFile,access} from 'node:fs/promises';
@@ -17,6 +18,7 @@ export function refreshNeeded({now,lastRun,cutoff,pendingBlock,block}){
  return pendingBlock>block||now-cutoff*1000>=FALLBACK_INTERVAL;
 }
 export async function publishCore(state,publish=publishRealtime){
+ await loadSharedRegistry();
  const report=buildReport(state);
  if(!isSourceInflowAligned(report.sourceInflow,report))throw Error('SOURCE_INFLOW_NOT_SYNCHRONIZED');
  await publish([{kind:'report',data:report},{kind:'addresses',data:buildAddressReport(state)}],{processedBlock:state.block});

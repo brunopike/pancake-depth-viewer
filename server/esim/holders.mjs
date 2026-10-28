@@ -131,7 +131,7 @@ export async function collectHolders(state, transport, {previous,incremental=fal
   assert(await rpc('eth_chainId',[])==='0x38','WRONG_CHAIN');
   const latest=num(await rpc('eth_blockNumber',[])), block=await rpc('eth_getBlockByNumber',[hex(latest-20),false]);
   const cutoff=num(block.timestamp),end=num(block.number),priorBlock=await blockAtOrBefore(rpc,cutoff-86400,block);
-  const known=new Set([...SEED.addresses,...Object.keys(SEED.labels),...SEED.lpAddresses,SOURCE,OWN_EXECUTOR,...Object.keys(state.firstRecipient),...state.calls.map(c=>c.from),...state.trades.flatMap(t=>[t.address,t.initiator]),...(previous?.rows||[]).map(r=>r.address)].filter(valid));
+  const known=new Set([...SEED.addresses,...Object.keys(SEED.labels),...Object.keys(CONFIRMED_HOLDER_LABELS),...SEED.lpAddresses,SOURCE,OWN_EXECUTOR,...Object.keys(state.firstRecipient),...state.calls.map(c=>c.from),...state.trades.flatMap(t=>[t.address,t.initiator]),...(previous?.rows||[]).map(r=>r.address)].filter(valid));
   // ESIM Transfer only; discover new participants without a whole-chain scan.
   const start=previous?.block&&previous.block<end?previous.block+1:num(priorBlock.number)+1;
   assert(end-start<800000,'HOLDER_DISCOVERY_GAP');

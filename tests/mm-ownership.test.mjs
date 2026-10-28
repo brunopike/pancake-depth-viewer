@@ -9,13 +9,13 @@ import {addressRanking} from '../server/esim/addresses.mjs';
 import {EXECUTION_LABELS} from '../server/esim/execution-categories.mjs';
 
 test('confirmed MM registry reaches backend, cached-holder classification and sell rankings without importing balances',()=>{
- assert.equal(registry.records.length,245);
- assert.equal(new Set(registry.records.map(r=>r.address)).size,245);
- assert.equal(registry.records.filter(r=>r.number).length,45);
+ assert.equal(registry.records.length,246);
+ assert.equal(new Set(registry.records.map(r=>r.address)).size,246);
+ assert.equal(registry.records.filter(r=>r.number).length,46);
  const trades=registry.records.map((r,i)=>({address:r.address,initiator:r.address,side:'sell',amount_wei:String(i+1),tx:String(i),timestamp:10}));
  const state={trades,firstRecipient:{},claimFlow:null};
  const ranking=addressRanking(state,0,20);
- assert.equal(ranking.rows.length,245);
+ assert.equal(ranking.rows.length,246);
  for(const r of registry.records){
   assert.match(r.address,/^0x[0-9a-f]{40}$/);
   assert(!('balance' in r));assert(['own','lp'].includes(SEED.labels[r.address].kind));

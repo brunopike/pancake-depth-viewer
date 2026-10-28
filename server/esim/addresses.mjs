@@ -4,7 +4,7 @@ import {CONFIRMED_HOLDER_LABELS} from '../../src/holder-labels.mjs';
 import {OWN_EXECUTORS,ownTradingInitiators} from './execution-categories.mjs';
 const tags = JSON.parse(await readFile(new URL('./address-tags.json', import.meta.url)));
 const holderSeed=JSON.parse(await readFile(new URL('./holder-seed.json',import.meta.url)));
-const knownLabels={...holderSeed.labels,...CONFIRMED_HOLDER_LABELS};
+const knownLabels=new Proxy(holderSeed.labels,{get:(target,key)=>CONFIRMED_HOLDER_LABELS[key]??target[key]});
 const lp = new Set(tags.lpAddresses);
 export const OWN_EXECUTOR = tags.ownExecutor;
 function ownProgramAddresses(state) { return ownTradingInitiators(state.trades); }

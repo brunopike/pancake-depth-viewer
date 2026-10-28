@@ -14,6 +14,7 @@ export function dueTask({now,last,cutoff,pendingBlock,block}){
  if(now-(last.holders||0)>=180000)return 'holders';
  if(now-(last.archive||0)>=3600000)return 'archive';
  if(now-(last.depth||0)>=300000)return 'depth';
+ if(now-(last.mm||0)>=60000)return 'mm';
  return null;
 }
 const local='.goodway/vm';
@@ -94,6 +95,8 @@ export async function main(){
        await command('scripts/esim/publish.mjs');await command('scripts/esim/holders-publish.mjs');
        await guard.check();await realtimeSQL().query("DELETE FROM esim_webhook_receipts WHERE received_at < now()-interval '7 days'");
       }
+     }else if(task==='mm'){
+      if(!dryRun)await command('server/mm-ledger/worker.mjs',[],{timeout:210000});
      }else if(task==='depth'){
       if(!depthGuard)depthGuard=await startLease(dryRun?'shadow-depth':'depth',{onLost:lost});
       if(depthGuard){await command('scripts/snapshot.mjs',[],{lease:depthGuard,extra:{ESIM_SNAPSHOT_INTERVAL_MS:'300000'},timeout:600000});if(!dryRun)await command('scripts/publish-snapshot.mjs',[],{lease:depthGuard,timeout:120000});}
@@ -103,7 +106,7 @@ export async function main(){
     }catch(error){
      if(stopping)break;
      if(['CHAIN_OR_CHECKPOINT_CHANGED','SOURCE_INFLOW_CHECKPOINT_CHANGED','END_HASH_CHANGED','BOUNDARY_CHANGED'].includes(error.message)){
-      try{await recoverVmCheckpoint();}catch{console.error('VM_REORG_REQUIRES_REVIEW');}
+      try{await realtimeSQL().query('UPDATE esim_ledger.rpc_cache_epoch SET valid_after=now() WHERE id=1');await recoverVmCheckpoint();}catch{console.error('VM_REORG_REQUIRES_REVIEW');}
       first=false;last.merge=Date.now();
      }
      retryAt=Date.now()+60000;

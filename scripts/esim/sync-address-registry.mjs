@@ -1,0 +1,10 @@
+import {readFile,writeFile} from 'node:fs/promises';
+import {neon} from '@neondatabase/serverless';
+import seed from '../../server/esim/holder-seed.json' with {type:'json'};
+import {CONFIRMED_HOLDER_LABELS} from '../../src/holder-labels.mjs';
+const sql=neon(process.env.ESIM_REALTIME_DATABASE_URL||process.env.DATABASE_URL);
+const rows=Object.entries({...seed.labels,...CONFIRMED_HOLDER_LABELS}).map(([address,x])=>({address,label:x.label,kind:x.kind,evidence:x.source||'既有已核验地址库',source:'onchain'}));
+await sql.query(`INSERT INTO esim_ledger.address_labels(address,label,kind,evidence,source) SELECT address,label,kind,evidence,source FROM jsonb_to_recordset($1::jsonb) x(address text,label text,kind text,evidence text,source text) ON CONFLICT(address) DO UPDATE SET label=excluded.label,kind=excluded.kind,evidence=excluded.evidence,updated_at=now()`,[JSON.stringify(rows)]);
+const mm=await sql.query('SELECT a.address,n.report_number AS number,a.mode AS role FROM esim_ledger.addresses a LEFT JOIN esim_ledger.numbered_addresses n USING(address) ORDER BY a.ordinal');
+const old=JSON.parse(await readFile('src/mm-own-addresses.json','utf8'));await writeFile('src/mm-own-addresses.json',JSON.stringify({...old,confirmedAt:new Date().toISOString(),source:'共同 Neon 地址库；做市核算成员来自 esim_ledger.addresses，用户确认归属，保留原编号。',records:mm.map(x=>({...x,...(x.number?{}:{number:undefined})}))},null,2)+'\n');
+console.log(JSON.stringify((await sql.query("SELECT count(*)::int total,count(*) FILTER(WHERE mm_included)::int mm,count(*) FILTER(WHERE kind IN ('own','lp'))::int own FROM esim_ledger.address_registry"))[0]));

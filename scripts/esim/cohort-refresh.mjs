@@ -1,3 +1,4 @@
+import {loadSharedRegistry} from '../../server/esim/shared-data.mjs';
 import {readFile,writeFile,mkdir} from 'node:fs/promises';import {gunzipSync,gzipSync} from 'node:zlib';
 import {TOKEN,SOURCE} from '../../server/esim/metrics.mjs';
 import {makeRpc} from '../../server/esim/rpc.mjs';import {readHolderBalances} from '../../server/esim/holders.mjs';
@@ -6,6 +7,7 @@ import {collectReturnStakes} from '../../server/esim/return-stakes.mjs';import {
 import {publishReportFiles} from './publish-report-files.mjs';
 import {buildExternalCohort} from '../../server/esim/external-cohort.mjs';
 try{
+ await loadSharedRegistry();
  const read=async file=>JSON.parse(gunzipSync(await readFile(file))),state=await read(process.env.ESIM_CHECKPOINT_FILE),p=await read(process.env.ESIM_FLOW_CHECKPOINT_FILE);
  if(p.version!==1||p.token!==TOKEN||p.source!==SOURCE||state.token!==TOKEN||state.source!==SOURCE||p.throughBlock>state.block)throw Error('COHORT_CORE_BEHIND');
  const s=state;
