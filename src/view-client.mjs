@@ -2,7 +2,7 @@ import {realtimeHost} from './snapshot-client.mjs';
 import {cachedData,cacheData} from './data-cache.mjs';
 export const compactViewsEnabled=(manual={})=>realtimeHost()&&Object.keys(manual).length===0;
 const queryFor=(kind,options={})=>new URLSearchParams({kind,...Object.fromEntries(Object.entries(options).filter(([,v])=>v!==null&&v!==undefined).map(([k,v])=>[k,Array.isArray(v)?v.join(','):String(v)]))});
-const keyFor=(kind,options)=>(kind==='holders'?'holder-cohort-v1:':'view-v1:')+queryFor(kind,options).toString();
+const keyFor=(kind,options)=>(kind==='holders'?'holder-cohort-v2:':'view-v1:')+queryFor(kind,options).toString();
 export const viewBlock=data=>data?.report?.block??data?.block??0;
 const holderBlock=data=>data?.holders?.block??data?.report?.block??data?.block??0;
 export function validView(kind,data){

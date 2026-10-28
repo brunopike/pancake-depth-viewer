@@ -26,7 +26,7 @@ export function createViewHandler(read=readViewSnapshot,enrich=async report=>rep
   const freshness={fresh:typeof req.query?._fresh==='string'};
   const [holders,sellers]=await Promise.all([read('holders',freshness),kind==='sellers'?read('addresses',freshness):null]);
   const holderData=kind==='holders'?await enrich(holders.data):holders.data;
-  const etag='"'+createHash('sha256').update(JSON.stringify(['holder-cohort-v1',kind,holders.etag,holderData.externalClassification,sellers?.etag,options,addresses,body.balances||{}])).digest('hex')+'"';
+  const etag='"'+createHash('sha256').update(JSON.stringify(['holder-cohort-v2',kind,holders.etag,holderData.externalClassification,sellers?.etag,options,addresses,body.balances||{}])).digest('hex')+'"';
   res.setHeader('ETag',etag);
   if(String(req.headers?.['if-none-match']||'').split(',').some(v=>[etag,'W/'+etag].includes(v.trim())))return res.status(304).end();
   const data=kind==='holders'?buildHolderView(holderData,options):kind==='sellers'?buildSellerView(sellers.data,holders.data,options,balanceValues):buildHolderSummary(holders.data,addresses);

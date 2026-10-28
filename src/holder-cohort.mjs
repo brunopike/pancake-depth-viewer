@@ -1,3 +1,4 @@
+import {cohortPathSummary} from './cohort-paths.mjs';
 import {validExternalCohort} from '../server/esim/external-cohort-validation.mjs';
 
 export const EXTERNAL_HOLDER_GROUPS=[
@@ -13,10 +14,11 @@ export function withHolderCohort(report,cohort){
  if(!c||!validExternalCohort(c,c)||c.throughBlock>report.block||c.cutoff>report.cutoff||c.throughBlock===report.block&&c.blockHash!==report.blockHash)return report;
  const cached=enriched.get(report);if(cached?.cohort===c)return cached.report;
  const related=new Map(c.rows.map(r=>[r.address,r]));
+ const {depths,...tracking}=cohortPathSummary(c.rows);
  const rows=report.rows.map(row=>{
   const relation=related.get(row.address);
-  return {...row,externalRole:relation?.role||null,externalVia:relation?.via||null,externalViaTx:relation?.viaTx||null};
+  return {...row,externalRole:relation?.role||null,externalVia:relation?.via||null,externalViaTx:relation?.viaTx||null,externalDepth:depths.get(row.address)??null};
  });
- const result={...report,rows,externalClassification:{block:c.throughBlock,blockHash:c.blockHash,cutoff:c.cutoff}};
+ const result={...report,rows,externalClassification:{block:c.throughBlock,blockHash:c.blockHash,cutoff:c.cutoff,tracking}};
  enriched.set(report,{cohort:c,report:result});return result;
 }
