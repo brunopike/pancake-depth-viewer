@@ -2,7 +2,7 @@ import {spawn} from 'node:child_process';
 import {startLease} from '../../server/esim/worker-lease.mjs';
 
 const [job,file]=process.argv.slice(2);
-const allowed={core:['scripts/esim/realtime-worker.mjs','scripts/esim/holders-job.mjs'],depth:['scripts/hourly-worker.mjs'],provenance:['scripts/esim/claim-flow-job.mjs']};
+const allowed={cohort:['scripts/esim/cohort-refresh.mjs'],core:['scripts/esim/realtime-worker.mjs','scripts/esim/holders-job.mjs'],depth:['scripts/hourly-worker.mjs'],provenance:['scripts/esim/claim-flow-job.mjs']};
 if(!allowed[job]?.includes(file))throw Error('INVALID_WORKER_COMMAND');
 let guard,child;
 const stop=()=>{if(child?.pid)try{process.kill(-child.pid,'SIGTERM');}catch{}};

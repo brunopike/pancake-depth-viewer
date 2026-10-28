@@ -42,6 +42,10 @@
     {
       "source": "/data/current-esim-holders.json",
       "destination": "https://raw.githubusercontent.com/brunopike/pancake-depth-viewer/holder-cache/holders.json"
+    },
+    {
+      "source": "/data/current-esim-cohort.json.gz",
+      "destination": "https://raw.githubusercontent.com/brunopike/pancake-depth-viewer/esim-cache/cohort.json.gz"
     }
   ],
   "redirects": [

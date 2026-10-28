@@ -1,3 +1,4 @@
+import {cohortBalances} from './cohort-balances.mjs';
 import {TOKEN,SOURCE} from './metrics.mjs';
 import {TRANSFER,PCS,UNI,VAULT,addr,order,eventKey,signature} from './attribution.mjs';
 import {readHolderBalances} from './holders.mjs';
@@ -69,7 +70,9 @@ export async function collectClaimFlow(state,transport,{previous,progress=()=>{}
  const returns=await collectReturnStakes(transfers,transport,{previous:previous?.returnProof,progress});
  const after=await transport.rpc('eth_getBlockByNumber',[hex(state.block),false],{fresh:true});ensure(after?.hash===end.hash,'FLOW_END_CHANGED');
  const {closingBalances,sourceBalances,returnedFlows,...report}=traced;
- const cohort=buildContractCohort({state,transfers,marketAddresses:[...markets],openingBalances,closingBalances,sourceBalances,returnedFlows,returnStakes:returns.rows});
+ const aggregate=cohortBalances({source:SOURCE,marketAddresses:[...markets],openingBalances,transfers});
+ const cohort=buildContractCohort({state,transfers,marketAddresses:[...markets],openingBalances,closingBalances,sourceBalances:aggregate.sourceBalances,returnedFlows:aggregate.returnedFlows,returnStakes:returns.rows});
+ cohort.sourceAllocation='proportional-origin-pool-v1';
  // Revision 4 separates verified stake transfers from ordinary returns, and
  // current address balances from repeated gross distribution turnover.
  Object.assign(report,{modelRevision:4,token:TOKEN,source:SOURCE,startBlock,openingBlock,openingBlockHash:opening.hash,throughBlock:state.block,blockHash:state.blockHash,cutoff:state.cutoff,sourceInflow,cohort,transferCount:transfers.length,addressCount:addresses.length,receiptCount:Object.keys(proof).length,coverage:'single-token-rpc-logs; sale-and-stake-receipts-and-wallet-balances-reconciled; unknown-net-zero-transfers-depend-on-rpc-completeness'});

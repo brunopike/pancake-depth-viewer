@@ -4,7 +4,7 @@ const uint=v=>typeof v==='string'&&/^(0|[1-9][0-9]{0,77})$/.test(v);
 const count=v=>Number.isSafeInteger(v)&&v>=0;
 export function validCohort(c,flow){
  try{
-  if(!c||c.version!==1||c.method!=='interaction-recipient-downstream-v1'||c.throughBlock!==flow.throughBlock||c.cutoff!==flow.cutoff||c.blockHash!==flow.blockHash||!Array.isArray(c.rows)||c.rows.length>30000)return false;
+  if(!c||!Number.isSafeInteger(c.throughBlock)||c.throughBlock<0||!hash(c.blockHash)||!Number.isFinite(c.cutoff)||c.cutoff<0||c.version!==1||c.method!=='interaction-recipient-downstream-v1'||c.throughBlock!==flow.throughBlock||c.cutoff!==flow.cutoff||c.blockHash!==flow.blockHash||!Array.isArray(c.rows)||c.rows.length>30000)return false;
   const seen=new Set(),fields=['balance_wei','source_balance_wei','stake_wei','source_stake_wei','other_return_wei'];
   for(const r of c.rows){
    if(!address(r.address)||seen.has(r.address)||!['direct','downstream'].includes(r.role)||typeof r.interacted!=='boolean'||typeof r.received!=='boolean'||!fields.every(k=>uint(r[k]))||!count(r.stake_transactions))return false;

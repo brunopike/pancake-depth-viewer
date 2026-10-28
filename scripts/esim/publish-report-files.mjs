@@ -10,9 +10,10 @@ import {leaseFromEnvironment,requireLease} from '../../server/esim/worker-lease.
 // A private temporary index keeps the active branch and user's staging untouched.
 export async function publishReportFiles(files,{cwd=process.cwd(),skip=()=>false,message,branch='esim-cache'}={}){
  if(!['esim-cache','holder-cache','depth-cache'].includes(branch))throw Error('INVALID_PUBLICATION_BRANCH');
+ const cohortOnly=branch==='esim-cache'&&files.length===1&&files[0][0]==='cohort.json.gz';
  const single=branch!=='esim-cache';
  const core=files.some(([path])=>path==='report.json');
- const allowed=branch==='holder-cache'?['holders.json']:branch==='depth-cache'&&files.length===1&&/^(?:esim-usdt|0x[0-9a-f]{40}-0x[0-9a-f]{40})\.json$/.test(files[0][0])?[files[0][0]]:branch==='esim-cache'?(core?['state.json.gz','report.json','addresses.json']:['claim-flow-state.json.gz','claim-flow.json.gz']):[];
+ const allowed=cohortOnly?['cohort.json.gz']:branch==='holder-cache'?['holders.json']:branch==='depth-cache'&&files.length===1&&/^(?:esim-usdt|0x[0-9a-f]{40}-0x[0-9a-f]{40})\.json$/.test(files[0][0])?[files[0][0]]:branch==='esim-cache'?(core?['state.json.gz','report.json','addresses.json']:['claim-flow-state.json.gz','claim-flow.json.gz',...(files.some(([path])=>path==='cohort.json.gz')?['cohort.json.gz']:[])]):[];
  if(!allowed.length||files.length!==allowed.length||new Set(files.map(([path])=>path)).size!==allowed.length||files.some(([path])=>!allowed.includes(path)))throw Error('INVALID_PUBLICATION_FILES');
  if(files.some(([,content])=>Buffer.byteLength(content)>100*1024*1024))throw Error('CHECKPOINT_FILE_TOO_LARGE');
  const run=promisify(execFile),dir=await mkdtemp(join(tmpdir(),'esim-publish-'));
@@ -23,7 +24,8 @@ export async function publishReportFiles(files,{cwd=process.cwd(),skip=()=>false
   stage='BUILD';
   const parent=await git(['rev-parse','FETCH_HEAD']);
   let prior;
-  if(single){
+  if(cohortOnly){const names=await git(['ls-tree','--name-only',parent,'cohort.json.gz']);if(names){const {stdout}=await run('git',['show',`${parent}:cohort.json.gz`],{cwd,encoding:'buffer',maxBuffer:134217728,timeout:120000});prior=JSON.parse(gunzipSync(stdout));}}
+  else if(single){
    const names=await git(['ls-tree','--name-only',parent,files[0][0]]);
    if(names)prior=JSON.parse(await git(['show',`${parent}:${files[0][0]}`]));
   }else if(core)prior=JSON.parse(await git(['show',`${parent}:report.json`]));
