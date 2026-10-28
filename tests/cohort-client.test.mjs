@@ -1,7 +1,13 @@
 import test from 'node:test';import assert from 'node:assert/strict';import {gzipSync} from 'node:zlib';
-import {readContractCohort} from '../src/cohort-client.mjs';
+import {readContractCohort,retainContractCohort} from '../src/cohort-client.mjs';
 const hash='0x'+'1'.repeat(64),snapshot={block:100,blockHash:hash,cutoff:200};
 const empty={version:1,method:'interaction-recipient-downstream-v1',throughBlock:100,blockHash:hash,cutoff:200,rows:[],addressCount:0,directCount:0,downstreamCount:0,interactedCount:0,receivedCount:0,holdingCount:0,balance_wei:'0',direct_balance_wei:'0',downstream_balance_wei:'0',source_balance_wei:'0',stake_wei:'0',source_stake_wei:'0',other_return_wei:'0',stakeTransactions:0,stakeAddresses:0};
+test('refresh keeps compatible cohort before the asynchronous request and rejects reorg or future evidence',()=>{
+ const next={...snapshot,block:101,cutoff:201};assert.equal(retainContractCohort(next,empty).cohort,empty);
+ assert.equal(retainContractCohort({...snapshot,blockHash:'0x'+'2'.repeat(64)},empty).cohort,undefined);
+ assert.equal(retainContractCohort({...snapshot,block:99},empty).cohort,undefined);
+ const old={...empty,throughBlock:99,cutoff:199};assert.equal(retainContractCohort({...snapshot,cohort:empty},old).cohort,empty);
+});
 test('small cohort snapshot is pinned, validated, cached and cannot replace newer evidence',async()=>{
  let calls=0;const fetch=async()=>{calls++;return new Response(gzipSync(JSON.stringify(empty)));};
  const result=await readContractCohort(snapshot,{fetch});assert.deepEqual(result.cohort,empty);

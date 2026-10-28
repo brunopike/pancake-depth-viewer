@@ -1,4 +1,4 @@
-import {readContractCohort} from './cohort-client.mjs';
+import {readContractCohort,retainContractCohort} from './cohort-client.mjs';
 import {reportAmount as amount} from './report-number.mjs';
 import {renderCohort,bindCohort,rememberCohort} from './report-cohort.mjs';
 import {startSnapshotPolling} from './snapshot-poll.mjs';
@@ -115,7 +115,7 @@ async function refresh(live=true) {
   if(busy)return false;busy=true;$('refresh').disabled=true;$('refresh').textContent='正在刷新…';$('status').textContent='正在读取交易和持仓…';$('status').className='working';
   try{
     const trading=()=>readTradingReport({current:report,live:!!endpoint&&live&&!realtimeHost(),queryLive:endpoint?async()=>{const result=await json(endpoint,{method:'POST',headers:{'Content-Type':'application/json'},body:'{}',signal:AbortSignal.timeout(260000)});if(!result.report)throw Error('交易查询未返回完整数据。');return result.report;}:null});
-    const tradeRequest=trading().then(async result=>{if(!report||result.data.block>=report.block)render(result.data);const enriched=await readContractCohort({...result.data,...(report?.cohort&&report.cohort.throughBlock<=result.data.block&&report.cohort.cutoff<=result.data.cutoff?{cohort:report.cohort}:{})});if(enriched!==result.data&&(!report||enriched.block>=report.block))render(enriched);return {...result,data:enriched};});
+    const tradeRequest=trading().then(async result=>{const base=retainContractCohort(result.data,report?.cohort);if(!report||base.block>=report.block)render(base);const enriched=await readContractCohort(base);if(enriched!==base&&(!report||enriched.block>=report.block))render(enriched);return {...result,data:enriched};});
     const holdings=async()=>{
      if(compactViewsEnabled(manual))try{return {data:await readView('summary',{addresses:(report?.top||[]).map(row=>row.address)},{current:holderReport}),source:'realtime'};}catch{}
      return readSnapshot('holders',{current:holderReport?.insights?null:holderReport});
