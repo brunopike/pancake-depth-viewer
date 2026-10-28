@@ -109,7 +109,9 @@ export async function main(){
       try{await realtimeSQL().query('UPDATE esim_ledger.rpc_cache_epoch SET valid_after=now() WHERE id=1');await recoverVmCheckpoint();}catch{console.error('VM_REORG_REQUIRES_REVIEW');}
       first=false;last.merge=Date.now();
      }
-     retryAt=Date.now()+60000;
+     // An MM accounting failure must not pause the live chain feed.
+     if(task==='mm'){last.mm=Date.now();await save(`${local}/schedule.json`,last);}
+     else retryAt=Date.now()+60000;
      const code=/^[A-Z_]{3,80}$/.test(error.message)?error.message:'VM_TASK_FAILED';
      await save(`${local}/health.json`,{at:new Date().toISOString(),dryRun,task,block,cutoff,error:code});
      console.error(JSON.stringify({phase:'vm-task-deferred',task,error:code}));
