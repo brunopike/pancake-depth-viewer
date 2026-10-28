@@ -1,0 +1,15 @@
+{
+  "source": "esim-daily-ledger/web",
+  "inputs": {
+    "scripts/server-backfill.js": "1f191d4a826b37fa0dd49bdcc19fff82ba0a17074d5544e599aa4e3efceed06d",
+    "lib/worker-loop.js": "b593885adb93fb223b967f450590d93cc0b5a0ba4fa5f8a642012f3a522699b1",
+    "lib/db.js": "deb52d9734e3baf1959177a5b18b233d020e3bdb9bc853a015188a36e18606cc",
+    "lib/collector.js": "b23695caa959415653903ef9148799c7582251d1a4c7b8e5980e5c8a46783f86",
+    "lib/rpc.js": "e71384b3793fd4dba9dc6c1e97192a9a56a9c3525f0ecf3bc4d37a8f794b03da",
+    "lib/write-snapshot.js": "0600d2a85387a407feab8b330efbf9239937f4d17d09efcd93122efa045a6305",
+    "lib/transfer-fees.js": "74ed740a9ba8099516907eb0e037f8116bdaf23e61c266f8918defb7d88b0b0a",
+    "lib/verified-exchange.js": "e98186303f6cb811c3192fb90362b7949f5e52c5ccd992b9dc2a8c9221a6d7f5",
+    "lib/sync-plan.js": "1bfc90a88c70ef8dd01c634dcbe9c58e63459ed5ae84bb953389759598c40c63",
+    "vendor/engine.cjs": "f9dda54ea5f5914ccc38f9c36eac418c2880499af5bd0f60e73f85de4a79ff20"
+  }
+}
