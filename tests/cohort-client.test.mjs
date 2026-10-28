@@ -18,3 +18,7 @@ test('bad sums, future blocks, mismatched hashes and network failures preserve t
  for(const c of [{...empty,balance_wei:'1'},{...empty,throughBlock:101},{...empty,blockHash:'0x'+'2'.repeat(64)},{...empty,throughBlock:'100'},{...empty,cutoff:-1}])assert.equal(await readContractCohort(snapshot,{fetch:async()=>new Response(gzipSync(JSON.stringify(c)))}),snapshot);
  assert.equal(await readContractCohort(snapshot,{fetch:async()=>{throw Error('offline');}}),snapshot);
 });
+test('production mirror failures use the public checkpoint fallback',async()=>{
+ const before=globalThis.location;globalThis.location={hostname:'esimonchain.imstark.site'};
+ try{const {readContractCohort:read}=await import('../src/cohort-client.mjs?mirror-fallback');let calls=0;const result=await read(snapshot,{fetch:async url=>{calls++;if(url.startsWith('./'))return new Response('',{status:503});return new Response(gzipSync(JSON.stringify(empty)));}});assert.equal(calls,2);assert.deepEqual(result.cohort,empty);}finally{if(before===undefined)delete globalThis.location;else globalThis.location=before;}
+});
