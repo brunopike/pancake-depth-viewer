@@ -1,5 +1,6 @@
 import { snapshotName } from '../src/background-markets.mjs';
 import { readFile } from 'node:fs/promises';
+import {leaseFromEnvironment,requireLease} from '../server/esim/worker-lease.mjs';
 const token = process.env.GITHUB_TOKEN, repo = process.env.GITHUB_REPOSITORY;
 if (!token || !repo) throw new Error('Missing GitHub publishing environment');
 const manifest = JSON.parse(await readFile('.goodway/snapshot-manifest.json', 'utf8'));
@@ -29,6 +30,7 @@ for (const { filename, file } of snapshots) {
 }
 const tree = await api('trees', { ...(previous ? { base_tree: previous.tree.sha } : {}), tree: entries });
 const commit = await api('commits', { message: `Refresh ${snapshots.length} selected market snapshot(s)`, tree: tree.sha, parents: previous ? [ref.object.sha] : [] });
+const lease=leaseFromEnvironment();if(lease)await requireLease(lease);
 if (!ref) await api('refs', { ref: 'refs/heads/depth-cache', sha: commit.sha });
 else {
   const response = await fetch(`${root}/refs/heads/depth-cache`, { method: 'PATCH',

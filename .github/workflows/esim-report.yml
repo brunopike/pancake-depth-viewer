@@ -8,8 +8,9 @@ on:
         required: false
         type: string
   schedule:
-    # Recovery only; the active worker owns the hourly timer and session handoff.
-    - cron: '41 */6 * * *'
+    # Standby exits without chain reads while the VM owns the database lease.
+    # If the VM stops, this provides independent recovery after lease expiry.
+    - cron: '7,17,27,37,47,57 * * * *'
 permissions:
   contents: write
   actions: write
@@ -45,7 +46,7 @@ jobs:
           SESSION_MINUTES: ${{ inputs.session_minutes || '300' }}
         run: |
           if [ -n "$ESIM_REALTIME_DATABASE_URL" ]; then
-            node scripts/esim/realtime-worker.mjs
+            node scripts/esim/run-with-lease.mjs core scripts/esim/realtime-worker.mjs
           else
             node scripts/esim/hourly-worker.mjs
           fi

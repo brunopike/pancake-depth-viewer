@@ -4,6 +4,7 @@ import {mkdtemp,writeFile,rm} from 'node:fs/promises';
 import {tmpdir} from 'node:os';
 import {join} from 'node:path';
 import {gunzipSync} from 'node:zlib';
+import {leaseFromEnvironment,requireLease} from '../../server/esim/worker-lease.mjs';
 
 // Git's binary transport avoids the REST blob endpoint's JSON input-size limit.
 // A private temporary index keeps the active branch and user's staging untouched.
@@ -37,6 +38,7 @@ export async function publishReportFiles(files,{cwd=process.cwd(),skip=()=>false
   const commit=await git(['-c','user.name=ESIM Snapshot Worker','-c','user.email=41898282+github-actions[bot]@users.noreply.github.com','commit-tree',tree,'-p',parent,'-m',message]);
   // No force: a concurrent publication is preserved by the normal fast-forward check.
   stage='PUSH';
+  const lease=leaseFromEnvironment();if(lease)await requireLease(lease);
   await git(['push','origin',`${commit}:refs/heads/esim-cache`]);
   return commit;
  }catch(error){throw Error(stage==='PUSH'&&/exceeds GitHub's file size limit|exceeds.*100.*MB|GH001/.test(String(error.stderr))?'CHECKPOINT_FILE_TOO_LARGE':`CHECKPOINT_PUBLISH_${stage}_FAILED`);}

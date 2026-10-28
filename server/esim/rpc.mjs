@@ -16,7 +16,8 @@ export function makeRpc({ key = process.env.ALCHEMY_API_KEY, endpoint, budget = 
     const results = [], missing = [];
     for (const [i, [method, params]] of calls.entries()) {
       // Only cache immutable fixed-block reads; latest/head is always fresh.
-      const cacheable = cacheDir && !fresh && !JSON.stringify(params).includes('latest');
+      const cacheable = cacheDir && !fresh && method!=='eth_blockNumber'
+        && !/"(?:latest|pending|safe|finalized)"/.test(JSON.stringify(params));
       const file = cacheable ? `${cacheDir}/${cacheKey(method, params)}.json.gz` : null;
       if (file) try { results[i] = JSON.parse(gunzipSync(await readFile(file))); stats.cacheHits++; continue; } catch {}
       missing.push({ i, method, params, file });

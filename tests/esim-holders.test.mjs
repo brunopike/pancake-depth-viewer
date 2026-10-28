@@ -1,7 +1,23 @@
 import test from 'node:test';import assert from 'node:assert/strict';
-import {buildHolderReport,holderBehavior,blockAtOrBefore,preserveHolderTrades,SEED} from '../server/esim/holders.mjs';
+import {buildHolderReport,holderBehavior,blockAtOrBefore,preserveHolderTrades,readChangedHolderBalances,SEED} from '../server/esim/holders.mjs';
+import {parseAbi,decodeFunctionData,encodeFunctionResult} from 'viem';
 const a='0x'+'1'.repeat(40),b='0x'+'2'.repeat(40),c='0x'+'3'.repeat(40),end=200000;
 const state={origin:1,cutoff:end,trades:[],calls:[],pools:{},firstRecipient:{}};
+test('incremental balances query transfers, new rows and unknown history while preserving untouched exact integers',async()=>{
+ const abi=parseAbi(['function aggregate3((address target,bool allowFailure,bytes callData)[] calls) payable returns ((bool success,bytes returnData)[] returnData)']);
+ const d='0x'+'4'.repeat(40),values={[b]:'0',[c]:'5',[d]:'9007199254740992999'},queried=[];
+ const transport={batch:async calls=>calls.map(([method,[call,block]])=>{
+  assert.equal(method,'eth_call');assert.equal(block,'0x64');
+  const args=decodeFunctionData({abi,data:call.data}).args[0];
+  return encodeFunctionResult({abi,functionName:'aggregate3',result:args.map(v=>{
+   const address='0x'+v.callData.slice(-40);queried.push(address);assert(address in values);
+   return {success:true,returnData:'0x'+BigInt(values[address]).toString(16).padStart(64,'0')};
+  })});
+ })};
+ const result=await readChangedHolderBalances([a,b,c,d],[{address:a,balance:'9007199254740992002'},{address:b,balance:'88'},{address:c,balance:null}], 'balance', [{topics:['topic','0x'+b.slice(2).padStart(64,'0'),'0x'+d.slice(2).padStart(64,'0')]}],'0x64',transport);
+ assert.deepEqual(queried,[b,c,d]);assert.equal(result.reads,3);
+ assert.deepEqual(result.balances,['9007199254740992002','0','5','9007199254740992999']);
+});
 const seed={labels:{},lpAddresses:[a],seedLimit:1000,capturedAt:'2026-10-13',source:'OKLink',reportedHolders:10000};
 const report=(extra={})=>buildHolderReport({state,addresses:[a,b,c],balances:['9007199254740992002','9007199254740992001','0'],priorBalances:['9007199254740992000','0','1'],block:{number:'0x64',timestamp:'0x'+end.toString(16),hash:'hash'},priorBlock:{number:'0x32',timestamp:'0x'+(end-86400).toString(16)},totalSupply:'1000000000000000000000',price:.06,seed,...extra});
 test('a newer balance read cannot roll verified trading history back to an older report',()=>{

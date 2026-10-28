@@ -1,6 +1,7 @@
 import {neon} from '@neondatabase/serverless';
 import {gzipSync} from 'node:zlib';
 import {createHash} from 'node:crypto';
+import {leaseStatement,leaseFromEnvironment} from './worker-lease.mjs';
 
 let client;
 export function realtimeSQL(){
@@ -33,7 +34,7 @@ export function encodeSnapshot(kind,data){
  if(bytes.length>4*1024*1024)throw Error('REALTIME_SNAPSHOT_TOO_LARGE');
  return {kind,block:data.block,cutoff:data.cutoff,hash:createHash('sha256').update(bytes).digest('hex'),body:bytes.toString('base64')};
 }
-export async function publishRealtime(snapshots,{processedBlock,sql=realtimeSQL()}={}){
+export async function publishRealtime(snapshots,{processedBlock,sql=realtimeSQL(),lease=leaseFromEnvironment()}={}){
  const queries=snapshots.map(({kind,data})=>{
   const s=encodeSnapshot(kind,data);
   return sql.query(`INSERT INTO esim_realtime_snapshots (kind,block,cutoff,body,etag)
@@ -41,7 +42,9 @@ export async function publishRealtime(snapshots,{processedBlock,sql=realtimeSQL(
    WHERE excluded.block>=esim_realtime_snapshots.block`,[s.kind,s.block,s.cutoff,s.body,s.hash]);
  });
  if(processedBlock!==undefined)queries.push(sql.query(`UPDATE esim_realtime_control SET processed_block=greatest(processed_block,$1),last_processed=now(),last_error=NULL WHERE id=1`,[processedBlock]));
- await sql.transaction(queries);
+ // The check and all writes share one transaction and lock. Checking only
+ // before an HTTP write would let a paused former owner overwrite its successor.
+ await sql.transaction(lease?[leaseStatement(lease,sql),...queries]:queries);
 }
 export async function readRealtime(kind,sql=realtimeSQL()){
  if(!['report','addresses','holders'].includes(kind))throw Error('INVALID_SNAPSHOT_KIND');

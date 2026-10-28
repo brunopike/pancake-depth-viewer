@@ -10,7 +10,9 @@ import { discoverOwnedInfinity } from './alchemy-ownership.mjs';
 const key = process.env.ALCHEMY_API_KEY;
 await mkdir('.goodway', { recursive: true });
 await writeFile('.goodway/snapshot-manifest.json', '[]');
-let nextRefreshAt = Date.now() + 3600000;
+const refreshInterval=Number(process.env.ESIM_SNAPSHOT_INTERVAL_MS||3600000);
+if(!Number.isInteger(refreshInterval)||refreshInterval<300000||refreshInterval>3600000)throw Error('INVALID_SNAPSHOT_INTERVAL');
+let nextRefreshAt = Date.now() + refreshInterval;
 try {
   let config = JSON.parse(await readFile('public/data/background-markets.json', 'utf8'));
   if (process.env.GITHUB_REPOSITORY) {
@@ -40,9 +42,9 @@ try {
       } catch { /* Missing/invalid public cache needs a fresh selected-pair scan. */ }
       if (!previous) try { previous = parseSnapshot(await readFile(file, 'utf8'), metas, base, quote); } catch {}
       // Worker handoffs and recovery schedules must not buy duplicate hourly reads.
-      if (previous?.source === 'Alchemy' && Date.now() - previous.timestamp < 3600000) {
-        nextRefreshAt = Math.min(nextRefreshAt, previous.timestamp + 3600000);
-        console.log(`${name}: snapshot less than 60 minutes old; no paid reads.`); continue;
+      if (previous?.source === 'Alchemy' && Date.now() - previous.timestamp < refreshInterval) {
+        nextRefreshAt = Math.min(nextRefreshAt, previous.timestamp + refreshInterval);
+        console.log(`${name}: snapshot is within the configured interval; no paid reads.`); continue;
       }
       const started = Date.now();
       if (!ownershipSeed) {
@@ -60,7 +62,7 @@ try {
       await mkdir('public/data', { recursive: true });
       await writeFile(`${file}.tmp`, text); await rename(`${file}.tmp`, file);
       manifest.push({ filename, base, quote });
-      nextRefreshAt = Math.min(nextRefreshAt, started + 3600000);
+      nextRefreshAt = Math.min(nextRefreshAt, started + refreshInterval);
       console.log(JSON.stringify({ pair: name, source: key ? 'Alchemy' : '公共节点', block: String(live.blockNumber), pools: live.pools.length,
         incrementalPools: live.pools.filter(p => p.incremental).length, elapsedMs: Date.now() - started }));
     }

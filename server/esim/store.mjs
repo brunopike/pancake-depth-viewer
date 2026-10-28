@@ -35,8 +35,8 @@ export function parseState(bytes) {
   if (state.version !== 1 || state.token !== TOKEN || state.source !== SOURCE || !Number.isSafeInteger(state.block) || !/^0x[0-9a-f]{64}$/.test(state.blockHash)) throw new Error('INVALID_CHECKPOINT');
   return state;
 }
-export async function loadState({ fetch: request = fetch, includeRemote = true, checkpointFile=process.env.ESIM_CHECKPOINT_FILE, currentCheckpointFile='.goodway/esim-monitor/state.json.gz' } = {}) {
-  let local = parseState(await readFile(new URL('./bootstrap.json.gz', import.meta.url)));
+export async function loadState({ fetch: request = fetch, includeRemote = true, includeRemoteCore=true, currentState, checkpointFile=process.env.ESIM_CHECKPOINT_FILE, currentCheckpointFile='.goodway/esim-monitor/state.json.gz' } = {}) {
+  let local = currentState||parseState(await readFile(new URL('./bootstrap.json.gz', import.meta.url)));
   if(checkpointFile){
     let checked;try{checked=parseState(await readFile(checkpointFile));}catch{throw Error('WORKER_CHECKPOINT_UNAVAILABLE');}
     if(checked.block>local.block)local=checked;
@@ -44,7 +44,7 @@ export async function loadState({ fetch: request = fetch, includeRemote = true, 
     let currentBytes;try{currentBytes=await readFile(currentCheckpointFile);}catch(error){if(error.code!=='ENOENT')throw Error('WORKER_CHECKPOINT_UNAVAILABLE');}
     if(currentBytes){const current=parseState(currentBytes);if(current.block>local.block)local=current;}
   }
-  if (includeRemote&&!checkpointFile) try {
+  if (includeRemote&&includeRemoteCore&&!checkpointFile) try {
     const response = await request(`${CHECKPOINT_URL}?t=${Date.now()}`, { cache: 'no-store', signal: AbortSignal.timeout(15000) });
     if (response.ok) {
       const remote = parseState(Buffer.from(await response.arrayBuffer()));

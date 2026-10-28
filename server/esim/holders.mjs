@@ -3,6 +3,7 @@ import { encodeFunctionData, decodeFunctionResult, parseAbi } from 'viem';
 import { TOKEN, SOURCE, beijingDate } from './metrics.mjs';
 import { OWN_EXECUTOR } from './addresses.mjs';
 import {OWN_EXECUTORS} from './execution-categories.mjs';
+import {canReuseHolderBalances} from './holder-balance-guard.mjs';
 import { TRANSFER } from './attribution.mjs';
 import { CONFIRMED_HOLDER_LABELS, HOLDER_IMPORT, applyHolderLabels } from '../../src/holder-labels.mjs';
 const seedFile = JSON.parse(await readFile(new URL('./holder-seed.json', import.meta.url)));
@@ -35,6 +36,17 @@ export async function readHolderBalances(addresses, block, transport) {
     assert(values.length===chunks[i].length&&values.every(v=>v.success&&/^0x[0-9a-f]{64}$/i.test(v.returnData)),'HOLDER_BALANCE_INCOMPLETE');
     return values.map(v=>BigInt(v.returnData).toString());
   });
+}
+// Reuse a balance only when a complete Transfer scan proves that address did
+// not change between two canonical blocks. Changed/new/unknown rows are read
+// with balanceOf; no floating-point arithmetic or inferred zero balances.
+export async function readChangedHolderBalances(addresses, previousRows, field, logs, block, transport){
+ const prior=new Map(previousRows.map(r=>[r.address,r[field]]));
+ const changed=new Set(logs.flatMap(e=>e.topics.slice(1,3).map(t=>`0x${t.slice(-40)}`.toLowerCase())));
+ const required=addresses.filter(a=>changed.has(a)||!/^\d+$/.test(prior.get(a)??''));
+ const values=await readHolderBalances(required,block,transport);
+ const fresh=new Map(required.map((a,i)=>[a,values[i]]));
+ return {balances:addresses.map(a=>fresh.get(a)??prior.get(a)),reads:required.length};
 }
 const blankStats=()=>({buyAmount:0n,sellAmount:0n,buys:new Set(),sells:new Set()});
 const packed=s=>({buyAmount:s.buyAmount.toString(),sellAmount:s.sellAmount.toString(),buyCount:s.buys.size,sellCount:s.sells.size});
@@ -91,7 +103,7 @@ export function buildHolderReport({state,addresses,balances,priorBalances,contra
       history:packed(r?.history||blankStats()),day:packed(r?.day||blankStats()),peakDailyTrades:peak};
   }).sort((a,b)=>BigInt(a.balance)===BigInt(b.balance)?a.address.localeCompare(b.address):BigInt(a.balance)>BigInt(b.balance)?-1:1);
   const sum=rows.reduce((n,r)=>n+BigInt(r.balance),0n);assert(sum<=BigInt(totalSupply),'HOLDER_SUPPLY_MISMATCH');
-  return {version:1,token:TOKEN,decimals:18,cutoff,block:num(block.number),blockHash:block.hash,priorCutoff:priorBlock?num(priorBlock.timestamp):null,priorBlock:priorBlock?num(priorBlock.number):null,
+  return {version:1,token:TOKEN,decimals:18,cutoff,block:num(block.number),blockHash:block.hash,priorCutoff:priorBlock?num(priorBlock.timestamp):null,priorBlock:priorBlock?num(priorBlock.number):null,priorBlockHash:priorBlock?.hash??null,
     totalSupply,price,priceSource:'Pancake Infinity ESIM/USDT 池现价',pricePool:PRICE_POOL,tradeCutoff,tradeWindowStart:tradeCutoff-86400,historyStart:state.origin,
     coverage:{seedTop:seed.seedLimit,seedAt:seed.capturedAt,source:seed.source,reportedHolders:seed.reportedHolders,supplement:seed.supplement,tracked:rows.length,holding:rows.filter(r=>BigInt(r.balance)>0n).length,balance:sum.toString(),exhaustive:false,discovery},contracts,rows};
 }
@@ -114,7 +126,7 @@ export function preserveHolderTrades(next,previous){
    return {...row,history:prior.history,day:prior.day,peakDailyTrades:prior.peakDailyTrades,tags:applyHolderLabels(row.address,tags)};
   })};
 }
-export async function collectHolders(state, transport, {previous,progress=()=>{}}={}) {
+export async function collectHolders(state, transport, {previous,incremental=false,fullIntervalSeconds=21600,progress=()=>{}}={}) {
   const {rpc,batch}=transport;
   assert(await rpc('eth_chainId',[])==='0x38','WRONG_CHAIN');
   const latest=num(await rpc('eth_blockNumber',[])), block=await rpc('eth_getBlockByNumber',[hex(latest-20),false]);
@@ -133,8 +145,27 @@ export async function collectHolders(state, transport, {previous,progress=()=>{}
   const sqrt=decodeFunctionResult({abi:clABI,functionName:'getSlot0',data:slot})[0];
   // Verified pool has USDT token0 and ESIM token1, both 18 decimals.
   const price=1/(Number(sqrt)/2**96)**2;assert(Number.isFinite(price)&&price>0,'INVALID_HOLDER_PRICE');
-  const balances=await readHolderBalances(addresses,hex(end),transport);
-  let priorBalances=null;try{priorBalances=await readHolderBalances(addresses,priorBlock.number,transport);}catch{progress({phase:'historical-balances-unavailable'});}
+  const lastFullCutoff=previous?.balanceAudit?.lastFullCutoff??previous?.cutoff??0;
+  const reuse=!!(incremental&&previous?.block<end&&previous.priorBlockHash&&previous.priorBlock<=num(priorBlock.number)&&cutoff-lastFullCutoff<fullIntervalSeconds
+    &&await canReuseHolderBalances(transport,previous,end,num(priorBlock.number)));
+  let balances,priorBalances=null,currentReads=addresses.length,priorReads=addresses.length;
+  if(reuse){
+    const old=await rpc('eth_getBlockByNumber',[hex(previous.block),false],{fresh:true});
+    const oldPrior=await rpc('eth_getBlockByNumber',[hex(previous.priorBlock),false],{fresh:true});
+    assert(old?.hash===previous.blockHash&&oldPrior?.hash===previous.priorBlockHash,'HOLDER_CHECKPOINT_CHANGED');
+    const current=await readChangedHolderBalances(addresses,previous.rows,'balance',logs,hex(end),transport);
+    balances=current.balances;currentReads=current.reads;
+    try{
+      const priorCalls=[];for(let a=previous.priorBlock+1;a<=num(priorBlock.number);a+=3000)priorCalls.push(['eth_getLogs',[{address:TOKEN,topics:[TRANSFER],fromBlock:hex(a),toBlock:hex(Math.min(a+2999,num(priorBlock.number)))}]]);
+      const priorLogs=(await batch(priorCalls)).flat();
+      assert(priorLogs.every(e=>!e.removed&&e.address.toLowerCase()===TOKEN&&e.topics[0]===TRANSFER&&num(e.blockNumber)>previous.priorBlock&&num(e.blockNumber)<=num(priorBlock.number)),'INVALID_TRANSFER_DISCOVERY');
+      const prior=await readChangedHolderBalances(addresses,previous.rows,'priorBalance',priorLogs,priorBlock.number,transport);
+      priorBalances=prior.balances;priorReads=prior.reads;
+    }catch{progress({phase:'historical-balances-unavailable'});}
+  }else{
+    balances=await readHolderBalances(addresses,hex(end),transport);
+    try{priorBalances=await readHolderBalances(addresses,priorBlock.number,transport);}catch{progress({phase:'historical-balances-unavailable'});}
+  }
   const contracts={...(previous?.contracts||{})};
   // Type lookup is supplementary. Prioritize the largest holders, cap cost, and
   // leave unknown types unclassified rather than discarding verified balances.
@@ -147,7 +178,9 @@ export async function collectHolders(state, transport, {previous,progress=()=>{}
   }
   const after=await rpc('eth_getBlockByNumber',[hex(end),false],{fresh:true});assert(after?.hash===block.hash,'HOLDER_BLOCK_CHANGED');
   if(previous?.block&&start===previous.block+1){const old=await rpc('eth_getBlockByNumber',[hex(previous.block),false],{fresh:true});assert(old?.hash===previous.blockHash,'HOLDER_CHECKPOINT_CHANGED');}
-  return preserveHolderTrades(buildHolderReport({state,addresses,balances,priorBalances,contracts,block,priorBlock:priorBalances?priorBlock:null,totalSupply:BigInt(supply).toString(),price,discovery:{fromBlock:start,toBlock:end,transfers:logs.length}}),previous);
+  const report=preserveHolderTrades(buildHolderReport({state,addresses,balances,priorBalances,contracts,block,priorBlock:priorBalances?priorBlock:null,totalSupply:BigInt(supply).toString(),price,discovery:{fromBlock:start,toBlock:end,transfers:logs.length}}),previous);
+  report.balanceAudit={mode:reuse?'incremental':'full',lastFullCutoff:reuse?lastFullCutoff:cutoff,currentReads,priorReads:priorBalances?priorReads:null};
+  return report;
 }
 export function validateHolders(report){
   assert(report?.version===1&&report.token===TOKEN&&Number.isSafeInteger(report.block)&&Array.isArray(report.rows)&&report.rows.length<=30000,'INVALID_HOLDER_REPORT');return report;

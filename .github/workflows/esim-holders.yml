@@ -29,8 +29,6 @@ jobs:
         env:
           ESIM_CHECKPOINT_FILE: .goodway/checkpoint/state.json.gz
           ALCHEMY_API_KEY: ${{ secrets.ALCHEMY_API_KEY }}
-        run: node scripts/esim/holders-refresh.mjs
-      - name: Publish verified holder snapshot
-        env:
+          ESIM_REALTIME_DATABASE_URL: ${{ secrets.ESIM_REALTIME_DATABASE_URL }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: node scripts/esim/holders-publish.mjs
+        run: node scripts/esim/run-with-lease.mjs core scripts/esim/holders-job.mjs

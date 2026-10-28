@@ -47,9 +47,8 @@ jobs:
           ALCHEMY_API_KEY: ${{ secrets.ALCHEMY_API_KEY }}
           ESIM_RPC_BUDGET: ${{ inputs.rpc_budget || '600' }}
           ESIM_FLOW_TIMEOUT_MS: '5400000'
-        run: node --max-old-space-size=6144 scripts/esim/claim-flow-refresh.mjs
-      - name: Publish verified provenance without overwriting the core checkpoint
-        env:
+          ESIM_REALTIME_DATABASE_URL: ${{ secrets.ESIM_REALTIME_DATABASE_URL }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_REPOSITORY: ${{ github.repository }}
-        run: node scripts/esim/claim-flow-publish.mjs
+          NODE_OPTIONS: '--max-old-space-size=6144'
+        run: node scripts/esim/run-with-lease.mjs provenance scripts/esim/claim-flow-job.mjs

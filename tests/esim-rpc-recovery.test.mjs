@@ -1,6 +1,22 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {makeRpc} from '../server/esim/rpc.mjs';
+import {mkdtemp,rm} from 'node:fs/promises';
+import {tmpdir} from 'node:os';
+import {join} from 'node:path';
+
+test('persistent RPC cache never freezes a moving block head or dynamic block tag',async()=>{
+ const cacheDir=await mkdtemp(join(tmpdir(),'esim-rpc-cache-'));let count=0;
+ try{
+  const rpc=makeRpc({endpoint:'https://example.invalid',cacheDir,minIntervalMs:0,fetch:async()=>({ok:true,status:200,json:async()=>[{id:0,result:'0x'+(++count).toString(16)}]})});
+  for(const [method,params] of [['eth_blockNumber',[]],...['latest','pending','safe','finalized'].map(tag=>['eth_getBlockByNumber',[tag,false]])]){
+   const before=await rpc.rpc(method,params),after=await rpc.rpc(method,params);assert.notEqual(before,after);
+  }
+  const fixed=await rpc.rpc('eth_getBlockByNumber',['0x123',false]);
+  assert.equal(await rpc.rpc('eth_getBlockByNumber',['0x123',false]),fixed);
+  assert.equal(rpc.stats.cacheHits,1);
+ }finally{await rm(cacheDir,{recursive:true,force:true});}
+});
 
 test('a transient HTTP 429 retries within the physical request budget',async()=>{
  let calls=0;const delays=[];

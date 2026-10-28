@@ -1,0 +1,41 @@
+[Unit]
+Description=ESIM verified on-chain collector
+After=network-online.target
+Wants=network-online.target
+StartLimitIntervalSec=0
+
+[Service]
+Type=simple
+User=esim-worker
+Group=esim-worker
+WorkingDirectory=/opt/esim-worker/current
+EnvironmentFile=/etc/esim-worker/worker.env
+Environment=PATH=/opt/esim-worker/node/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+Environment=GIT_TERMINAL_PROMPT=0
+Environment=GIT_CONFIG_COUNT=2
+Environment=GIT_CONFIG_KEY_0=credential.helper
+Environment=GIT_CONFIG_VALUE_0=/opt/esim-worker/git-credential-env
+Environment=GIT_CONFIG_KEY_1=safe.directory
+Environment=GIT_CONFIG_VALUE_1=@RELEASE_PATH@
+ExecStart=/opt/esim-worker/node/bin/node scripts/esim/vm-worker.mjs
+Restart=always
+RestartSec=15
+TimeoutStopSec=40
+KillMode=control-group
+MemoryHigh=2500M
+MemoryMax=3000M
+MemorySwapMax=512M
+CPUQuota=100%
+Nice=5
+TasksMax=128
+UMask=0077
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectHome=true
+ProtectSystem=strict
+ReadWritePaths=/var/lib/esim-worker /var/log/esim-worker /opt/esim-worker/current/.git /opt/esim-worker/current/public/data
+StandardOutput=append:/var/log/esim-worker/worker.log
+StandardError=append:/var/log/esim-worker/worker.log
+
+[Install]
+WantedBy=multi-user.target

@@ -47,6 +47,7 @@ jobs:
         env:
           ALCHEMY_API_KEY: ${{ secrets.ALCHEMY_API_KEY }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ESIM_REALTIME_DATABASE_URL: ${{ secrets.ESIM_REALTIME_DATABASE_URL }}
           GITHUB_REPOSITORY: ${{ github.repository }}
           SESSION_MINUTES: ${{ inputs.session_minutes || '330' }}
-        run: node scripts/hourly-worker.mjs
+        run: node scripts/esim/run-with-lease.mjs depth scripts/hourly-worker.mjs
