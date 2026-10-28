@@ -1,4 +1,5 @@
 import {randomUUID} from 'node:crypto';
+import {setTimeout as sleep} from 'node:timers/promises';
 import {realtimeSQL} from './realtime-store.mjs';
 
 export const LEASE_SECONDS=120;
@@ -28,6 +29,17 @@ export async function renewLease(lease,{sql=realtimeSQL(),ttlSeconds=LEASE_SECON
  WHERE job=$1 AND owner=$2 AND fence=$3 AND expires_at>clock_timestamp() RETURNING fence`,[lease.job,lease.owner,lease.fence,ttlSeconds]);
  return rows.length===1;
 }
+// Three bounded attempts fit inside the 120-second lease even after the
+// 20-second heartbeat interval. An authoritative ownership loss is not retried.
+export async function renewLeaseWithRetry(lease,{renew=()=>renewLease(lease),wait=sleep,timeoutMs=15000,onRetry=()=>{}}={}){
+ for(let attempt=0;attempt<3;attempt++){
+  let timer;
+  try{return await Promise.race([renew(),new Promise((_,reject)=>{timer=setTimeout(()=>reject(Error('WORKER_LEASE_TIMEOUT')),timeoutMs);})]);}
+  catch{if(attempt===2)throw Error('WORKER_LEASE_UNAVAILABLE');onRetry(attempt+1);}
+  finally{clearTimeout(timer);}
+  await wait(1000);
+ }
+}
 export async function releaseLease(lease,{sql=realtimeSQL()}={}){
  const rows=await sql.query(`UPDATE esim_worker_leases SET expires_at=clock_timestamp(),updated_at=clock_timestamp()
  WHERE job=$1 AND owner=$2 AND fence=$3 RETURNING fence`,[lease.job,lease.owner,lease.fence]);return rows.length===1;
@@ -43,10 +55,9 @@ export async function startLease(job,{sql=realtimeSQL(),onLost=()=>{},owner=`${p
  const controller=new AbortController();
  const timer=setInterval(async()=>{
   if(renewing||lost)return;renewing=true;
-  let deadline;
-  try{if(!await Promise.race([renewLease(lease,{sql}),new Promise((_,reject)=>{deadline=setTimeout(()=>reject(Error('WORKER_LEASE_TIMEOUT')),15000);})]))throw Error('WORKER_LEASE_LOST');}
-  catch{lost=true;controller.abort();onLost();}
-  finally{clearTimeout(deadline);renewing=false;}
+  try{if(!await renewLeaseWithRetry(lease,{renew:()=>renewLease(lease,{sql}),onRetry:attempt=>console.warn(JSON.stringify({phase:'lease-renewal-retry',job,attempt}))}))throw Error('WORKER_LEASE_LOST');}
+  catch(error){lost=true;controller.abort();onLost(error.message==='WORKER_LEASE_LOST'?'WORKER_LEASE_LOST':'WORKER_LEASE_UNAVAILABLE');}
+  finally{renewing=false;}
  },20000);timer.unref();
  return {lease,signal:controller.signal,
   env:{ESIM_LEASE_JOB:lease.job,ESIM_LEASE_OWNER:lease.owner,ESIM_LEASE_FENCE:lease.fence},

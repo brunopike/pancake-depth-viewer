@@ -5,7 +5,7 @@ import {promisify} from 'node:util';
 import {readFile,writeFile,mkdtemp,mkdir,readdir,rm} from 'node:fs/promises';
 import {tmpdir} from 'node:os';
 import {join} from 'node:path';
-import {acquireLease,renewLease,releaseLease,requireLease} from '../server/esim/worker-lease.mjs';
+import {acquireLease,renewLease,renewLeaseWithRetry,releaseLease,requireLease} from '../server/esim/worker-lease.mjs';
 import {publishRealtime} from '../server/esim/realtime-store.mjs';
 import {dueTask,recoverVmCheckpoint} from '../scripts/esim/vm-worker.mjs';
 
@@ -35,6 +35,15 @@ test('lease coordinates are validated before any database operation',async()=>{
  const sql={query:()=>assert.fail('invalid coordinates must not query')};
  await assert.rejects(acquireLease('', 'worker',{sql}),/INVALID_WORKER_LEASE/);
  await assert.rejects(acquireLease('core','worker',{sql,ttlSeconds:0}),/INVALID_WORKER_LEASE/);
+});
+test('lease heartbeat tolerates bounded network failures but never retries lost ownership',async()=>{
+ let attempts=0,waits=0;
+ assert.equal(await renewLeaseWithRetry({}, {renew:async()=>{if(++attempts<3)throw Error('network');return true;},wait:async()=>{waits++;}}),true);
+ assert.equal(attempts,3);assert.equal(waits,2);
+ attempts=0;
+ assert.equal(await renewLeaseWithRetry({}, {renew:async()=>{attempts++;return false;},wait:async()=>assert.fail('ownership loss must not wait')}),false);
+ assert.equal(attempts,1);
+ await assert.rejects(renewLeaseWithRetry({}, {renew:()=>new Promise(()=>{}),wait:async()=>{},timeoutMs:2}),/WORKER_LEASE_UNAVAILABLE/);
 });
 
 test('an expired PostgreSQL publisher cannot modify either snapshot or acknowledgement',{skip:!enabled},async()=>{

@@ -32,6 +32,7 @@ export async function main(){
  await mkdir(local,{recursive:true});
  let stopping=false,child,guard,depthGuard;
  const stopChild=()=>{if(child?.pid)try{process.kill(-child.pid,'SIGTERM');}catch{}};
+ const leaseLost=job=>error=>{console.error(JSON.stringify({phase:'vm-lease-lost',job,error}));stopping=true;stopChild();};
  for(const signal of ['SIGINT','SIGTERM'])process.once(signal,()=>{stopping=true;stopChild();});
  const command=async(file,args=[],{lease=guard,extra={},timeout=1500000}={})=>{
   await lease.check();const started=Date.now();
@@ -44,9 +45,9 @@ export async function main(){
   console.log(JSON.stringify({phase:'vm-task-finished',task:file,elapsedMs:Date.now()-started}));
  };
  try{
-  while(!stopping&&!guard){guard=await startLease(dryRun?'shadow-core':'core',{onLost:()=>{stopping=true;stopChild();}});if(!guard){console.log('Core lease is owned by another worker; standing by.');await sleep(30000);}}
+  while(!stopping&&!guard){guard=await startLease(dryRun?'shadow-core':'core',{onLost:leaseLost('core')});if(!guard){console.log('Core lease is owned by another worker; standing by.');await sleep(30000);}}
   if(!guard)return;
-  const lost=()=>{stopping=true;stopChild();};
+  const lost=leaseLost('depth');
   depthGuard=await startLease(dryRun?'shadow-depth':'depth',{onLost:lost});
   const last=await json(`${local}/schedule.json`),core=await json(`${local}/core.json`);
   let block=core.block||0,cutoff=core.cutoff||0,first=true,retryAt=0;
