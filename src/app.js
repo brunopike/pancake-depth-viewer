@@ -251,7 +251,7 @@ async function refresh(liveQuery = false) {
     // the explicit same-block pool/LP RPC verification for users who need it now.
     if (!liveQuery && displayed && usable(shared) && shared.failed.length === 0) {
       show(previous);
-      $('status').textContent = snapshotStatus(' · 自动检查快照；后台目标每小时更新');
+      $('status').textContent = snapshotStatus(' · 已读取最新可用快照');
       setError(Date.now() - previous.timestamp > 90 * 60000 ? '后台深度快照较旧，可点“刷新数据”直接核验链上。' : '');
       return;
     }
