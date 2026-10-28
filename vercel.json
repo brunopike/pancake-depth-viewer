@@ -81,5 +81,10 @@
       "destination": "/esim-holders.html",
       "permanent": false
     }
-  ]
+  ],
+  "git": {
+    "deploymentEnabled": {
+      "codex/cohort-audit-20261028": false
+    }
+  }
 }

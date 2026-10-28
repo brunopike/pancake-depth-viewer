@@ -1,3 +1,4 @@
+import {validContractCohort} from './cohort-validation.mjs';
 import {validCohort} from './cohort-validation.mjs';
 import { readFile, writeFile, mkdir, rename } from 'node:fs/promises';
 import { gunzipSync, gzipSync } from 'node:zlib';
@@ -10,6 +11,7 @@ export function validClaimFlow(state,flow){
     const address=a=>/^0x[0-9a-f]{40}$/.test(a||''),hash=h=>/^0x[0-9a-f]{64}$/.test(h||''),uint=n=>typeof n==='string'&&/^\d+$/.test(n);
     if(!(flow?.version===1&&flow.method==='proportional-v1'&&flow.token===TOKEN&&flow.source===SOURCE&&hash(flow.blockHash)&&Number.isSafeInteger(flow.throughBlock)&&flow.throughBlock<=state.block&&Number.isFinite(flow.cutoff)&&flow.cutoff<=state.cutoff&&Array.isArray(flow.sales)&&Array.isArray(flow.unconfirmedFlows)))return false;
     if(flow.throughBlock===state.block&&flow.blockHash!==state.blockHash)return false;
+    if((flow.cohort||flow.modelRevision>=4)&&!validContractCohort(flow.cohort,flow))return false;
     if(flow.sourceInflow&&!validSourceInflow(flow.sourceInflow,flow))return false;
     if((flow.cohort||(flow.modelRevision??1)>=4)&&!validCohort(flow.cohort,flow))return false;
     if(!flow.sales.every(r=>address(r.address)&&hash(r.tx)&&Number.isFinite(r.timestamp)&&r.timestamp<flow.cutoff&&Number.isSafeInteger(r.block)&&r.block<=flow.throughBlock&&['amount_wei','direct_wei','relay_wei'].every(k=>uint(r[k]))&&BigInt(r.direct_wei)+BigInt(r.relay_wei)<=BigInt(r.amount_wei)&&Array.isArray(r.examples)))return false;

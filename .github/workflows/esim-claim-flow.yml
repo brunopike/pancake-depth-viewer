@@ -1,30 +1,17 @@
 name: Refresh ESIM claim flow
 on:
   workflow_dispatch:
-    inputs:
-      rpc_budget:
-        description: 'One-off recovery budget (1–2000); regular updates use 600'
-        default: '600'
-        required: false
-        type: string
-  schedule:
-    - cron: '17 * * * *'
 permissions:
-  contents: write
-concurrency:
-  group: esim-claim-flow-checkpoint
-  cancel-in-progress: false
+  contents: read
 jobs:
-  backfill:
-    if: github.event.repository.private == false
+  audit:
     runs-on: ubuntu-latest
-    timeout-minutes: 120
+    timeout-minutes: 60
     steps:
       - uses: actions/checkout@v4
-      - name: Load the verified ledger and provenance checkpoint
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
         with:
-          ref: esim-cache
+          ref: 03d95f8300353c74a11ee302e4b787bb533fa1e8
           path: .goodway/checkpoint
           sparse-checkout: |
             state.json.gz
@@ -35,20 +22,18 @@ jobs:
           node-version: '22'
           cache: npm
       - run: npm ci --no-audit --no-fund
+      - run: node --test tests/contract-cohort.test.mjs tests/claim-flow-collector.test.mjs
       - uses: actions/cache@v4
         with:
           path: .goodway/claim-flow/rpc-cache
-          key: esim-claim-flow-rpc-v1-${{ github.run_id }}
+          key: esim-cohort-audit-20261028
           restore-keys: esim-claim-flow-rpc-v1-
-      - name: Reconcile transfers, sale receipts and closing balances
+      - run: node scripts/esim/cohort-audit.mjs
         env:
-          ESIM_CHECKPOINT_FILE: .goodway/checkpoint/state.json.gz
-          ESIM_FLOW_CHECKPOINT_FILE: .goodway/checkpoint/claim-flow-state.json.gz
           ALCHEMY_API_KEY: ${{ secrets.ALCHEMY_API_KEY }}
-          ESIM_RPC_BUDGET: ${{ inputs.rpc_budget || '600' }}
-          ESIM_FLOW_TIMEOUT_MS: '5400000'
-          ESIM_REALTIME_DATABASE_URL: ${{ secrets.ESIM_REALTIME_DATABASE_URL }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GITHUB_REPOSITORY: ${{ github.repository }}
           NODE_OPTIONS: '--max-old-space-size=6144'
-        run: node scripts/esim/run-with-lease.mjs provenance scripts/esim/claim-flow-job.mjs
+      - uses: actions/upload-artifact@v4
+        with:
+          name: verified-contract-cohort
+          path: .goodway/cohort-result
+          retention-days: 7
