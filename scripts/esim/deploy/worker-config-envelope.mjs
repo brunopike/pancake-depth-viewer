@@ -1,5 +1,6 @@
 import {randomBytes,createCipheriv,createDecipheriv,publicEncrypt,privateDecrypt,createPublicKey,createHash,constants} from 'node:crypto';
 import {readFile,writeFile,chmod,rename} from 'node:fs/promises';
+import {realpathSync} from 'node:fs';
 import {pathToFileURL} from 'node:url';
 
 const TARGET='sdweb3/asia-southeast1-c/esim-data-worker';
@@ -22,7 +23,7 @@ export function openConfig(envelope,privateKey){
  const cipher=createDecipheriv('aes-256-gcm',key,decode(envelope.iv));cipher.setAAD(Buffer.from(TARGET));cipher.setAuthTag(decode(envelope.tag));
  try{return validate(JSON.parse(Buffer.concat([cipher.update(decode(envelope.payload)),cipher.final()]).toString()));}finally{key.fill(0);}
 }
-if(process.argv[1]&&import.meta.url===pathToFileURL(process.argv[1]).href){
+if(process.argv[1]&&import.meta.url===pathToFileURL(realpathSync(process.argv[1])).href){
  try{
   const [mode,input,output]=process.argv.slice(2);
   if(mode==='seal')await writeFile(output,JSON.stringify(sealConfig(process.env,await readFile(input))),{mode:0o600});

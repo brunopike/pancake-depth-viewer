@@ -18,7 +18,7 @@ Environment=GIT_CONFIG_VALUE_0=/opt/esim-worker/git-credential-env
 Environment=GIT_CONFIG_KEY_1=safe.directory
 Environment=GIT_CONFIG_VALUE_1=@RELEASE_PATH@
 Environment="GIT_SSH_COMMAND=/usr/bin/ssh -i /etc/esim-worker/github_ed25519 -o IdentitiesOnly=yes -o UserKnownHostsFile=/etc/esim-worker/github_known_hosts -o StrictHostKeyChecking=yes"
-ExecStart=/opt/esim-worker/node/bin/node scripts/esim/vm-worker.mjs
+ExecStart=/opt/esim-worker/node/bin/node @RELEASE_PATH@/scripts/esim/vm-worker.mjs
 Restart=always
 RestartSec=15
 TimeoutStopSec=40
