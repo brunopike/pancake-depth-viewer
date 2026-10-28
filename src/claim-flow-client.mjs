@@ -1,3 +1,4 @@
+import {validCohort} from '../server/esim/cohort-validation.mjs';
 import {claimFlowWindow} from '../server/esim/claim-flow.mjs';
 import {newerSourceInflow} from '../server/esim/source-inflows.mjs';
 
@@ -14,6 +15,7 @@ const compatibleSnapshot=data=>data?.version===1&&integer(data.block)&&hash(data
 export function validClaimFlow(flow,snapshot){
  if(!compatibleSnapshot(snapshot)||flow?.version!==1||flow.method!=='proportional-v1'||flow.token!==TOKEN||flow.source!==SOURCE||!hash(flow.blockHash)||!integer(flow.throughBlock)||flow.throughBlock>snapshot.block||!Number.isFinite(flow.cutoff)||flow.cutoff<0||flow.cutoff>snapshot.cutoff||!Array.isArray(flow.sales)||flow.sales.length>1000000)return false;
  if(flow.throughBlock===snapshot.block&&flow.blockHash!==snapshot.blockHash)return false;
+ if((flow.cohort||(flow.modelRevision??1)>=4)&&!validCohort(flow.cohort,flow))return false;
  const seen=new Set();
  const evidence=example=>example&&address(example.root)&&Array.isArray(example.path)&&example.path.length<=8&&example.path.every(address)&&Array.isArray(example.txs)&&example.txs.length<=8&&example.txs.every(hash)&&integer(example.hops)&&(example.truncated===undefined||typeof example.truncated==='boolean');
  const validSale=sale=>{
@@ -72,8 +74,9 @@ export function enrichClaimFlowSnapshot(kind,snapshot,flow){
   return [key,next];
  }));
  const history=kind==='report'&&Array.isArray(snapshot.history)?snapshot.history.map(enrichReportWindow):snapshot.history;
+ const cohort=kind==='report'&&flow.cohort&&(!snapshot.cohort||snapshot.cohort.throughBlock<=flow.cohort.throughBlock)?flow.cohort:snapshot.cohort;
  const sourceInflow=kind==='report'?newerSourceInflow(snapshot.sourceInflow,flow.sourceInflow,snapshot):null;
- return changed||sourceInflow&&sourceInflow!==snapshot.sourceInflow?{...snapshot,windows,...(kind==='report'?{sourceInflow,...(history?{history}:{})}: {})}:snapshot;
+ return cohort!==snapshot.cohort||changed||sourceInflow&&sourceInflow!==snapshot.sourceInflow?{...snapshot,windows,...(kind==='report'?{sourceInflow,...(cohort?{cohort}:{}),...(history?{history}:{})}: {})}:snapshot;
 }
 
 const flowCache=new WeakMap();
