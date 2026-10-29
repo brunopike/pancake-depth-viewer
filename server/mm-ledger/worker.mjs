@@ -8796,10 +8796,22 @@ import { createHash as createHash2 } from "node:crypto";
 
 // ../../../../ESIM市值统计/工程/esim-daily-ledger/web/lib/sync-plan.js
 import { createHash } from "node:crypto";
-var cohortHash = (addresses) => createHash("sha256").update(JSON.stringify(addresses.map((a) => typeof a === "string" ? a : a.address))).digest("hex");
+function cohortHash(addresses) {
+  const entries = /* @__PURE__ */ new Map();
+  for (const value of addresses) {
+    const address2 = (typeof value === "string" ? value : value.address).toLowerCase(), mode = typeof value === "string" ? "wallet" : value.mode || "wallet";
+    if (!["wallet", "robot", "balance_only"].includes(mode)) throw Error("\u5730\u5740\u91C7\u96C6\u6A21\u5F0F\u65E0\u6548");
+    if (entries.has(address2) && entries.get(address2) !== mode) throw Error("\u540C\u4E00\u5730\u5740\u7684\u91C7\u96C6\u6A21\u5F0F\u51B2\u7A81");
+    entries.set(address2, mode);
+  }
+  return "v2:" + createHash("sha256").update(JSON.stringify([...entries].sort(([a], [b]) => a.localeCompare(b)))).digest("hex");
+}
 var plus = (day, n) => new Date(Date.parse(day + "T00:00:00Z") + n * 864e5).toISOString().slice(0, 10);
 function buildSyncPlan(addresses, periods, { now = /* @__PURE__ */ new Date(), source = "automatic", start = "2026-09-30" } = {}) {
-  const today = now.toISOString().slice(0, 10), hash = cohortHash(addresses), known = new Map(periods.map((p) => [p.day, p])), plan = [];
+  if (!(now instanceof Date) || !Number.isFinite(now.getTime())) throw Error("\u7EDF\u8BA1\u65E5\u671F\u65E0\u6548");
+  const today = now.toISOString().slice(0, 10), stamp = Date.parse(start + "T00:00:00Z");
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(start) || !Number.isFinite(stamp) || new Date(stamp).toISOString().slice(0, 10) !== start || start > today) throw Error("\u7EDF\u8BA1\u5F00\u59CB\u65E5\u671F\u65E0\u6548");
+  const hash = cohortHash(addresses), known = new Map(periods.map((p) => [p.day, p])), plan = [];
   for (let day = start; day < today; day = plus(day, 1)) {
     const p = known.get(day);
     if (!p || p.status !== "complete" || p.cohort_hash !== hash) plan.push({ day, partial: false });
@@ -8813,8 +8825,9 @@ function isTransientSyncError(error) {
   if (error?.contractRevert) return false;
   return ["TimeoutError", "AbortError"].includes(error?.name) || [429, -32005].includes(error?.code) || /timeout|timed out|operation was aborted|fetch failed|ECONNRESET|ETIMEDOUT|链上接口暂不可用|Internal error/i.test(error?.message || "");
 }
-function canResumeFailed(run, hash) {
-  return run?.state?.cohortHash === hash && Number(run.state.retryCount || 0) < 8 && (run.state.retryable === true || isTransientSyncError({ message: run.error }));
+function canResumeFailed(run, hash, now = /* @__PURE__ */ new Date()) {
+  const state = run?.state, count = Number(state?.retryCount ?? 0), after = state?.retryAfter === void 0 ? 0 : Date.parse(state.retryAfter);
+  return state?.cohortHash === hash && Number.isInteger(count) && count >= 0 && count < 8 && Number.isFinite(after) && after <= now.getTime() && (run.state.retryable === true || isTransientSyncError({ message: run.error }));
 }
 
 // ../../../../ESIM市值统计/工程/esim-daily-ledger/web/lib/rpc.js
@@ -8839,6 +8852,16 @@ async function fill(calls, cache2, trim = (m, x) => x) {
   for (const group of batchPlan(persistent).chunks) {
     const old = (await db().query("SELECT key,method,result FROM esim_ledger.rpc_cache WHERE key=ANY($1::text[]) AND created_at>=(SELECT valid_after FROM esim_ledger.rpc_cache_epoch WHERE id=1) AND (method NOT IN ('alchemy_getAssetTransfers','eth_getLogs') OR created_at>now()-interval '1 hour')", [group.map(key)])).rows;
     for (const x of old) cache2[x.key] = trim(x.method, x.result);
+  }
+  for (const q of absent) {
+    const filter = q[0] === "eth_getLogs" && q[1][0];
+    if (cache2[key(q)] !== void 0 || !/^0x[0-9a-f]+$/i.test(filter?.fromBlock || "") || !/^0x[0-9a-f]+$/i.test(filter?.toBlock || "")) continue;
+    const start = BigInt(filter.fromBlock), end = BigInt(filter.toBlock);
+    if (end - start < 5000n) continue;
+    const parts = [];
+    for (let lo = start; lo <= end; lo += 5000n) parts.push(["eth_getLogs", [{ ...filter, fromBlock: "0x" + lo.toString(16), toBlock: "0x" + (lo + 4999n < end ? lo + 4999n : end).toString(16) }]]);
+    await fill(parts, cache2, trim);
+    cache2[key(q)] = parts.flatMap((part) => cache2[key(part)]);
   }
   const missing = absent.filter((q) => cache2[key(q)] === void 0), { chunks, concurrency } = batchPlan(missing);
   async function worker() {
@@ -8906,8 +8929,8 @@ async function publish(snapshot2, lease) {
   return transaction(async (c) => {
     await c.query("SELECT pg_advisory_xact_lock(7693201)");
     if (lease && !(await c.query("SELECT 1 FROM esim_ledger.sync_runs WHERE id=$1 AND lease_version=$2 AND lease_until>now() FOR UPDATE", [lease.id, lease.version])).rowCount) throw Error("SYNC_LEASE_LOST");
-    const addresses = (await c.query("SELECT address FROM esim_ledger.addresses ORDER BY ordinal")).rows.map((r) => r.address);
-    if (JSON.stringify(addresses) !== JSON.stringify(snapshot2.addresses)) throw Error("\u5730\u5740\u5E93\u5DF2\u53D8\u5316\uFF0C\u672C\u8F6E\u7ED3\u679C\u4E0D\u53D1\u5E03\uFF0C\u8BF7\u91CD\u65B0\u66F4\u65B0");
+    const addresses = (await c.query("SELECT address,mode FROM esim_ledger.addresses ORDER BY ordinal")).rows;
+    if (cohortHash(addresses) !== snapshot2.cohortHash || cohortHash(addresses.map((r) => r.address)) !== cohortHash(snapshot2.addresses)) throw Error("\u5730\u5740\u5E93\u5DF2\u53D8\u5316\uFF0C\u672C\u8F6E\u7ED3\u679C\u4E0D\u53D1\u5E03\uFF0C\u8BF7\u91CD\u65B0\u66F4\u65B0");
     const old = (await c.query("SELECT end_at FROM esim_ledger.periods WHERE day=$1 FOR UPDATE", [snapshot2.day])).rows[0];
     if (old && new Date(old.end_at) > new Date(snapshot2.end)) throw Error("\u5DF2\u6709\u66F4\u665A\u6570\u636E\uFF0C\u672C\u8F6E\u4E0D\u80FD\u8986\u76D6");
     await c.query("INSERT INTO esim_ledger.periods(day,start_at,end_at,status,start_block,end_block,close_price,cohort_hash,source_hash,verified_at)VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,now())ON CONFLICT(day)DO UPDATE SET start_at=excluded.start_at,end_at=excluded.end_at,status=excluded.status,start_block=excluded.start_block,end_block=excluded.end_block,close_price=excluded.close_price,cohort_hash=excluded.cohort_hash,source_hash=excluded.source_hash,verified_at=now()", [snapshot2.day, snapshot2.start, snapshot2.end, snapshot2.partial ? "in_progress" : "complete", snapshot2.startBlock, snapshot2.endBlock, snapshot2.price, snapshot2.cohortHash, snapshot2.hash]);
@@ -9057,16 +9080,20 @@ async function startSync(source = "manual") {
 }
 async function enqueueSync(c, source = "automatic") {
   await c.query("SELECT pg_advisory_xact_lock(7693201)");
-  const active = (await c.query("SELECT id,status,stage FROM esim_ledger.sync_runs WHERE status IN ('queued','running') LIMIT 1")).rows[0];
-  if (active) return active;
   const all = (await c.query("SELECT address,mode,backfill_pending FROM esim_ledger.addresses ORDER BY ordinal")).rows, dates = (await c.query("SELECT day,status,cohort_hash FROM esim_ledger.periods ORDER BY day")).rows;
   const { plan, hash } = buildSyncPlan(all, dates, { source });
+  const active = (await c.query("SELECT id,status,stage,state->>'cohortHash' AS cohort_hash FROM esim_ledger.sync_runs WHERE status IN ('queued','running') LIMIT 1 FOR UPDATE")).rows[0];
+  if (active?.cohort_hash === hash) return active;
+  if (active) await c.query("UPDATE esim_ledger.sync_runs SET status='failed',stage='\u5730\u5740\u5E93\u53D8\u5316\uFF0C\u5DF2\u7531\u65B0\u56DE\u6EAF\u66FF\u4EE3',error='\u5730\u5740\u5E93\u53D8\u5316\uFF0C\u65E7\u4EFB\u52A1\u5DF2\u5931\u6548',lease_version=lease_version+1,lease_until=NULL,finished_at=now(),updated_at=now() WHERE id=$1", [active.id]);
   const latest = (await c.query("SELECT id,status,state,error FROM esim_ledger.sync_runs ORDER BY updated_at DESC LIMIT 1")).rows[0], failed = latest?.status === "failed" ? latest : null;
   if (canResumeFailed(failed, hash)) return (await c.query("UPDATE esim_ledger.sync_runs SET status='queued',stage='\u4ECE\u65AD\u70B9\u7EE7\u7EED\u56DE\u6EAF',lease_until=NULL,finished_at=NULL,updated_at=now() WHERE id=$1 RETURNING id,status,stage", [failed.id])).rows[0];
   if (failed?.state?.cohortHash === hash && source !== "manual") return { id: failed.id, status: "failed", stage: "\u56DE\u6EAF\u4E2D\u65AD\uFF0C\u9700\u8981\u6838\u5BF9", error: failed.error };
   if (!plan.length) return { id: null, status: "complete", stage: "\u4ECA\u65E5\u5DF2\u66F4\u65B0" };
   const state = { addresses: all.map((x) => x.address), wallets: all.filter((a) => a.mode === "wallet").map((a) => a.address), balanceOnly: all.filter((a) => a.mode !== "wallet").map((a) => a.address), plan, index: 0, cache: {}, nfts: null, wallet: null, stage: "\u51C6\u5907", cohortHash: hash };
   return (await c.query("INSERT INTO esim_ledger.sync_runs(status,source,state)VALUES('queued',$1,$2)RETURNING id,status,stage", [source, JSON.stringify(state)])).rows[0];
+}
+async function syncStatus(id) {
+  return (await db().query("SELECT id,status,stage,error,verified_days,lease_until,state->>'retryAfter' AS retry_after FROM esim_ledger.sync_runs WHERE id=$1", [id])).rows[0];
 }
 async function getNftHistory(state) {
   if (state.nfts) return;
@@ -9154,11 +9181,11 @@ async function snapshot(state, j, engine) {
 }
 async function runSync(id, budget = 45e3) {
   const claimed = (await db().query("UPDATE esim_ledger.sync_runs SET status='running',lease_version=lease_version+1,lease_until=now()+interval '6 minutes',updated_at=now() WHERE id=$1 AND status IN ('queued','running') AND (lease_until IS NULL OR lease_until<now()) AND (state->>'retryAfter' IS NULL OR (state->>'retryAfter')::timestamptz<=now()) RETURNING *", [id])).rows[0];
-  if (!claimed) return (await db().query("SELECT id,status,stage,error,verified_days,lease_until FROM esim_ledger.sync_runs WHERE id=$1", [id])).rows[0];
+  if (!claimed) return syncStatus(id);
   const s = claimed.state, endAt = Date.now() + budget, engine = (0, import_engine.createEngine)();
   engine.config = { ...engine.config, addresses: s.wallets, inputAddresses: s.wallets };
   try {
-    const current = (await db().query("SELECT address FROM esim_ledger.addresses ORDER BY ordinal")).rows;
+    const current = (await db().query("SELECT address,mode FROM esim_ledger.addresses ORDER BY ordinal")).rows;
     if (cohortHash(current) !== s.cohortHash) throw Error("\u5730\u5740\u5E93\u5DF2\u53D8\u5316\uFF0C\u672C\u8F6E\u7ED3\u679C\u4E0D\u53D1\u5E03\uFF0C\u8BF7\u91CD\u65B0\u66F4\u65B0");
     delete s.retryAfter;
     const today = dayOf(/* @__PURE__ */ new Date());
@@ -9234,12 +9261,14 @@ async function runSync(id, budget = 45e3) {
     }
     const done = s.index >= s.plan.length;
     return await transaction(async (c) => {
+      await c.query("SELECT pg_advisory_xact_lock(7693201)");
       const owned = (await c.query("SELECT 1 FROM esim_ledger.sync_runs WHERE id=$1 AND lease_version=$2 AND lease_until>now() FOR UPDATE", [id, claimed.lease_version])).rowCount;
       if (!owned) throw Error("SYNC_LEASE_LOST");
       if (done) {
-        await c.query("SELECT pg_advisory_xact_lock(7693201)");
-        const current2 = (await c.query("SELECT address FROM esim_ledger.addresses ORDER BY ordinal")).rows;
+        const current2 = (await c.query("SELECT address,mode FROM esim_ledger.addresses ORDER BY ordinal")).rows;
         if (cohortHash(current2) !== s.cohortHash) throw Error("\u5730\u5740\u5E93\u5DF2\u53D8\u5316\uFF0C\u672C\u8F6E\u7ED3\u679C\u4E0D\u53D1\u5E03\uFF0C\u8BF7\u91CD\u65B0\u66F4\u65B0");
+        const periods = (await c.query("SELECT day,status,cohort_hash FROM esim_ledger.periods ORDER BY day")).rows;
+        if (buildSyncPlan(current2, periods).plan.length) throw Error("\u5386\u53F2\u56DE\u6EAF\u8986\u76D6\u4E0D\u5B8C\u6574\uFF0C\u5F85\u56DE\u6EAF\u6807\u8BB0\u4FDD\u7559");
         await c.query("UPDATE esim_ledger.addresses SET backfill_pending=false WHERE address=ANY($1::text[])", [s.addresses]);
       }
       return (await c.query("UPDATE esim_ledger.sync_runs SET state=$2,status=$3,stage=$4,verified_days=$5,error=NULL,updated_at=now(),lease_until=NULL,finished_at=CASE WHEN $3='complete' THEN now() ELSE NULL END WHERE id=$1 AND lease_version=$6 RETURNING id,status,stage,error,verified_days", [id, JSON.stringify(s), done ? "complete" : "running", done ? "\u66F4\u65B0\u5B8C\u6210" : s.stage, s.index, claimed.lease_version])).rows[0];
@@ -9250,7 +9279,7 @@ async function runSync(id, budget = 45e3) {
     s.retryCount = Number(s.retryCount || 0) + 1;
     const retry = s.retryable && s.retryCount < 8;
     if (retry) s.retryAfter = new Date(Date.now() + 3e4).toISOString();
-    return (await db().query("UPDATE esim_ledger.sync_runs SET state=$2,status=$3,stage=$4,error=$5,verified_days=$6,lease_until=NULL,updated_at=now() WHERE id=$1 AND lease_version=$7 RETURNING id,status,stage,error,verified_days", [id, JSON.stringify(s), retry ? "queued" : "failed", retry ? "\u63A5\u53E3\u6682\u65F6\u5931\u8D25\uFF0C\u81EA\u52A8\u4ECE\u65AD\u70B9\u7EE7\u7EED" : "\u66F4\u65B0\u672A\u5B8C\u6210\uFF0C\u539F\u6570\u636E\u4FDD\u7559", message, s.index, claimed.lease_version])).rows[0];
+    return (await db().query("UPDATE esim_ledger.sync_runs SET state=$2,status=$3,stage=$4,error=$5,verified_days=$6,lease_until=NULL,updated_at=now() WHERE id=$1 AND lease_version=$7 RETURNING id,status,stage,error,verified_days,state->>'retryAfter' AS retry_after", [id, JSON.stringify(s), retry ? "queued" : "failed", retry ? "\u63A5\u53E3\u6682\u65F6\u5931\u8D25\uFF0C\u81EA\u52A8\u4ECE\u65AD\u70B9\u7EE7\u7EED" : "\u66F4\u65B0\u672A\u5B8C\u6210\uFF0C\u539F\u6570\u636E\u4FDD\u7559", message, s.index, claimed.lease_version])).rows[0] || syncStatus(id);
   }
 }
 
