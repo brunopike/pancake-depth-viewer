@@ -8956,10 +8956,12 @@ var TRANSFER = "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3
 var WITHDRAW = "0x7fcf532c15f0a6db0bd6d0e038bea71d30d808c7d98cb3bf7268a95bf5081b65";
 var addr = (t) => "0x" + t.slice(-40).toLowerCase();
 var sha = (x) => createHash3("sha256").update(JSON.stringify(x)).digest("hex");
+var ROUTER_SWAP = "0x2251435bd151cd72851a82be055bf6d1c3d7f34d08d56493dddf874229b8e897";
 function verifyGasExchange({ wallet, esim, tx, receipt, trace }) {
   try {
     let walk = function(x) {
       if (x.error) return;
+      if (x.type === "CALL" && x.from === wallet && x.to === ENTRY) routed = true;
       if (["CALL", "CREATE", "CREATE2", "SELFDESTRUCT"].includes(x.type)) {
         const n = BigInt(x.value || "0x0");
         if (x.to === wallet) native += n;
@@ -8969,9 +8971,9 @@ function verifyGasExchange({ wallet, esim, tx, receipt, trace }) {
       if (x.to === W && owners.has(x.from) && /^0x2e1a7d4d[0-9a-f]{64}$/.test(x.input || "")) called += BigInt("0x" + x.input.slice(10));
       for (const child of x.calls || []) walk(child);
     };
-    if (!tx || !receipt || !trace || receipt.status !== "0x1" || tx.from !== wallet || tx.to !== ENTRY || trace.from !== wallet || trace.to !== ENTRY || trace.error || receipt.transactionHash !== tx.hash || !/^0x[0-9a-f]{64}$/.test(receipt.blockHash)) return null;
-    let debit = 0n, withdrawn = 0n, native = 0n, called = 0n, unwrapped = 0n;
-    const owners = /* @__PURE__ */ new Set();
+    if (!tx || !receipt || !trace || receipt.status !== "0x1" || tx.from !== wallet || ![ENTRY, wallet].includes(tx.to) || trace.from !== wallet || trace.to !== tx.to || trace.error || receipt.transactionHash !== tx.hash || !/^0x[0-9a-f]{64}$/.test(receipt.blockHash)) return null;
+    let debit = 0n, withdrawn = 0n, native = 0n, called = 0n, unwrapped = 0n, routed = false;
+    const owners = /* @__PURE__ */ new Set(), swaps = [];
     for (const l of receipt.logs) {
       if (l.removed) return null;
       const t = l.topics || [];
@@ -8990,10 +8992,13 @@ function verifyGasExchange({ wallet, esim, tx, receipt, trace }) {
         withdrawn += BigInt(l.data);
         owners.add(addr(t[1]));
       }
+      if (l.address === ENTRY && t[0] === ROUTER_SWAP && t.length === 4 && addr(t[1]) === U && addr(t[2]) === "0x" + "0".repeat(40) && addr(t[3]) === wallet && /^0x[0-9a-f]{128,}$/.test(l.data)) swaps.push([BigInt("0x" + l.data.slice(2, 66)), BigInt("0x" + l.data.slice(66, 130))]);
     }
     walk(trace);
-    if (debit <= 0n || withdrawn <= 0n || withdrawn !== native || withdrawn !== called || withdrawn !== unwrapped) return null;
-    return { hash: tx.hash, wallet, chainId: 56, blockHash: receipt.blockHash, blockNumber: Number(BigInt(receipt.blockNumber)), expectedUSDTraw: String(-debit), expectedBNBraw: String(native), type: "\u975EESIM\u5151\u6362", reason: "\u5DF2\u6838\u5BF9\u6210\u529F\u56DE\u6267\u3001USDT\u652F\u51FA\u3001WBNB\u64A4\u56DE\u4E8B\u4EF6\u548CBNB\u8FD4\u56DE\u94B1\u5305\u7684\u6210\u529F\u8C03\u7528\u8DEF\u5F84\uFF1B\u5C5E\u4E8EUSDT\u6362BNB\uFF0C\u4E0D\u662FESIM\u4E70\u5356\u6216\u8D44\u91D1\u8F6C\u5165\u3002\u8DEF\u7531\u8D39\u7528\u5305\u542B\u5728USDT\u603B\u652F\u51FA\u5185\uFF0CGas\u53E6\u8BA1\u3002", evidence: [{ source: "captured-raw-rpc", methods: ["eth_getTransactionByHash", "eth_getTransactionReceipt", "debug_traceTransaction"], receiptSHA256: sha(receipt), traceSHA256: sha(trace), grossUSDTraw: String(debit), receivedBNBraw: String(native), scope: "Exact transaction, wallet, block and raw amounts; one configured RPC provider." }] };
+    const wrapped = withdrawn > 0n && withdrawn === native && withdrawn === called && withdrawn === unwrapped;
+    const direct = swaps.length === 1 && swaps[0][0] === debit && swaps[0][1] === native && routed && BigInt(tx.value || "0x0") === 0n;
+    if (debit <= 0n || native <= 0n || !wrapped && !direct) return null;
+    return { hash: tx.hash, wallet, chainId: 56, blockHash: receipt.blockHash, blockNumber: Number(BigInt(receipt.blockNumber)), expectedUSDTraw: String(-debit), expectedBNBraw: String(native), type: "\u975EESIM\u5151\u6362", reason: "\u5DF2\u6838\u5BF9\u6210\u529F\u56DE\u6267\u3001USDT\u652F\u51FA\u3001\u8DEF\u7531\u5151\u6362\u6216WBNB\u64A4\u56DE\u4E8B\u4EF6\uFF0C\u4EE5\u53CABNB\u8FD4\u56DE\u94B1\u5305\u7684\u6210\u529F\u8C03\u7528\u8DEF\u5F84\uFF1B\u5C5E\u4E8EUSDT\u6362BNB\uFF0C\u4E0D\u662FESIM\u4E70\u5356\u6216\u8D44\u91D1\u8F6C\u5165\u3002\u8DEF\u7531\u8D39\u7528\u5305\u542B\u5728USDT\u603B\u652F\u51FA\u5185\uFF0CGas\u53E6\u8BA1\u3002", evidence: [{ source: "captured-raw-rpc", methods: ["eth_getTransactionByHash", "eth_getTransactionReceipt", "debug_traceTransaction"], receiptSHA256: sha(receipt), traceSHA256: sha(trace), grossUSDTraw: String(debit), receivedBNBraw: String(native), directNativeRoute: direct, scope: "Exact transaction, wallet, block and raw amounts; one configured RPC provider." }] };
   } catch {
     return null;
   }
