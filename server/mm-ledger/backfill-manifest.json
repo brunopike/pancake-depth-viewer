@@ -2,14 +2,14 @@
   "source": "esim-daily-ledger/web",
   "inputs": {
     "scripts/server-backfill.js": "1f191d4a826b37fa0dd49bdcc19fff82ba0a17074d5544e599aa4e3efceed06d",
-    "lib/worker-loop.js": "b593885adb93fb223b967f450590d93cc0b5a0ba4fa5f8a642012f3a522699b1",
-    "lib/collector.js": "edc2437603c6560ac6416969f237d7cc19f51eaddcbe0a417da365c2ea17d0d8",
+    "lib/collector.js": "95a891782dbbd4c25b3717767afc9bd0fa69768add23b9e33f03892e53722861",
     "lib/db.js": "deb52d9734e3baf1959177a5b18b233d020e3bdb9bc853a015188a36e18606cc",
-    "lib/rpc.js": "8aca4f6f4e911e776bedbc85f203fe792217875cccf8f5417b417efbc39c49db",
-    "lib/verified-exchange.js": "70cbb1aeb8a93b2493c5c18d4646d0538453c2debd871c7afb5832300c6d7a13",
-    "lib/sync-plan.js": "df351a61d20126274441a67a658e2449d4d5dffcbb88b551823af59775b11d5f",
+    "lib/worker-loop.js": "b593885adb93fb223b967f450590d93cc0b5a0ba4fa5f8a642012f3a522699b1",
     "lib/write-snapshot.js": "4763c57543a84237f3af03c1a5609e2d124fa9853aa4144a9b56f48ccf2720b1",
-    "lib/transfer-fees.js": "74ed740a9ba8099516907eb0e037f8116bdaf23e61c266f8918defb7d88b0b0a",
-    "vendor/engine.cjs": "f9dda54ea5f5914ccc38f9c36eac418c2880499af5bd0f60e73f85de4a79ff20"
+    "lib/verified-exchange.js": "70cbb1aeb8a93b2493c5c18d4646d0538453c2debd871c7afb5832300c6d7a13",
+    "lib/rpc.js": "8aca4f6f4e911e776bedbc85f203fe792217875cccf8f5417b417efbc39c49db",
+    "lib/sync-plan.js": "df351a61d20126274441a67a658e2449d4d5dffcbb88b551823af59775b11d5f",
+    "vendor/engine.cjs": "f9dda54ea5f5914ccc38f9c36eac418c2880499af5bd0f60e73f85de4a79ff20",
+    "lib/transfer-fees.js": "74ed740a9ba8099516907eb0e037f8116bdaf23e61c266f8918defb7d88b0b0a"
   }
 }

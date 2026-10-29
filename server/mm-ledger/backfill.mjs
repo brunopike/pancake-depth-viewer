@@ -8740,6 +8740,7 @@ import { setTimeout as sleep } from "node:timers/promises";
 
 // ../../../../ESIM市值统计/工程/esim-daily-ledger/web/lib/collector.js
 import { createHash as createHash4 } from "node:crypto";
+import { isDeepStrictEqual } from "node:util";
 
 // ../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/pg/esm/index.mjs
 var import_lib = __toESM(require_lib2(), 1);
@@ -9084,8 +9085,33 @@ async function syncStatus(id) {
 }
 async function getNftHistory(state) {
   if (state.nfts) return;
-  const seed = (await db().query("SELECT result FROM esim_ledger.rpc_cache WHERE key='nft-history-v1'")).rows[0]?.result || [];
-  state.nfts = seed;
+  const seed = (await db().query("SELECT result FROM esim_ledger.rpc_cache WHERE key='nft-history-v2'")).rows[0]?.result;
+  if (seed?.cohortHash === state.cohortHash && Array.isArray(seed.events)) {
+    state.nfts = seed.events;
+    return;
+  }
+  const head = await rpc("eth_getBlockByNumber", ["latest", false], state.cache, (m, b) => ({ number: b.number, hash: b.hash })), end = hex(BigInt(head.number) - 64n), queries = state.wallets.flatMap((a) => ["fromAddress", "toAddress"].map((dir) => ["alchemy_getAssetTransfers", [{ fromBlock: "0x0", toBlock: end, category: ["erc721"], excludeZeroValue: false, withMetadata: true, maxCount: "0x3e8", order: "asc", [dir]: a, contractAddresses: ["0x55f4c8aba71a1e923edc303eb4feff14608cc226", "0x46a15b0b27311cedf172ab29e4f4766fbe7f4364"] }]]));
+  for (let i = 0; i < queries.length; i += 20) await fill(queries.slice(i, i + 20), state.cache);
+  const events = /* @__PURE__ */ new Map();
+  for (const q of queries) {
+    let page = null;
+    const seen = /* @__PURE__ */ new Set();
+    do {
+      const params = { ...q[1][0], ...page ? { pageKey: page } : {} }, r = await rpc(q[0], [params], state.cache);
+      if (!Array.isArray(r.transfers)) throw Error("LP NFT\u5386\u53F2\u5206\u9875\u4E0D\u5B8C\u6574");
+      for (const t of r.transfers) {
+        if (!t.uniqueId || !t.hash || !t.blockNum || events.has(t.uniqueId) && !isDeepStrictEqual(events.get(t.uniqueId), t)) throw Error("LP NFT\u5386\u53F2\u6807\u8BC6\u7F3A\u5931\u6216\u51B2\u7A81");
+        events.set(t.uniqueId, t);
+      }
+      page = r.pageKey || null;
+      if (page && (seen.has(page) || seen.size >= 100)) throw Error("LP NFT\u5386\u53F2\u5206\u9875\u91CD\u590D\u6216\u8FC7\u591A");
+      if (page) seen.add(page);
+    } while (page);
+  }
+  state.nfts = [...events.values()];
+}
+function walletTransferQueries(wallets, j) {
+  return wallets.flatMap((a) => ["fromAddress", "toAddress"].map((dir) => ["alchemy_getAssetTransfers", [{ fromBlock: hex(j.state.startBlock), toBlock: hex(j.state.endBlock), category: ["external", "erc20", "erc721", "erc1155"], excludeZeroValue: false, withMetadata: true, maxCount: "0x3e8", order: "asc", [dir]: a }]]));
 }
 async function robotModel(state, wallet, engine) {
   const start = wallet.state.boundaries[0], end = wallet.state.boundaries[1], cache2 = state.cache, group = new Set(state.balanceOnly), cohort = new Set(state.addresses), tokens = [engine.config.token, engine.config.usdt];
@@ -9211,6 +9237,10 @@ async function runSync(id, budget = 45e3) {
       engine.setJob(j);
       s.stage = `${s.index + 1}/${s.plan.length}\u5929 \xB7 ${planned.day} \xB7 ${labels[j.stage] || j.stage}`;
       try {
+        if (j.stage === "transfers" && j.index === 0) {
+          const qs = walletTransferQueries(s.wallets, j);
+          for (let i = 0; i < qs.length; i += 20) await fill(qs.slice(i, i + 20), s.cache, (m, x) => engine.trim(m, x));
+        }
         if (j.stage === "nfts") {
           j.nftTransfers = [...new Map(s.nfts.concat(j.transfers.filter((t) => t.category === "erc721")).map((t) => [t.uniqueId, t])).values()];
           j.index = s.wallets.length * 2;
@@ -9228,7 +9258,7 @@ async function runSync(id, budget = 45e3) {
           const result = await snapshot(s, j, engine);
           await publish(result, { id, version: claimed.lease_version });
           s.nfts = j.nftTransfers;
-          await db().query("INSERT INTO esim_ledger.rpc_cache(key,method,result)VALUES('nft-history-v1','metadata',$1)ON CONFLICT(key)DO UPDATE SET result=excluded.result", [JSON.stringify(s.nfts)]);
+          await db().query("INSERT INTO esim_ledger.rpc_cache(key,method,result)VALUES('nft-history-v2','metadata',$1)ON CONFLICT(key)DO UPDATE SET result=excluded.result", [JSON.stringify({ cohortHash: s.cohortHash, events: s.nfts })]);
           s.index++;
           s.wallet = null;
           s.cache = {};
