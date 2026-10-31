@@ -8825,6 +8825,11 @@ function buildSyncPlan(addresses, periods, { now = /* @__PURE__ */ new Date(), s
     plan.push({ day: today, partial: true, end: new Date(now.getTime() - 65e3).toISOString() });
   return { plan, hash };
 }
+function extendSyncPlan(plan, addresses, periods, options = {}) {
+  const last = plan.at(-1)?.day;
+  if (!last) return plan;
+  return plan.concat(buildSyncPlan(addresses, periods, options).plan.filter((p) => p.day > last));
+}
 var isBoundaryPending = (error) => error?.code === "ESIM_YIELD" || error?.message === "\u7EDF\u8BA1\u7ED3\u675F\u533A\u5757\u5C1A\u672A\u786E\u8BA4\uFF0C\u4E0B\u6B21\u81EA\u52A8\u7EE7\u7EED";
 function isTransientSyncError(error) {
   if (error?.contractRevert) return false;
@@ -9254,7 +9259,9 @@ async function runSync(id, budget = 45e3) {
       const partial = plan.find((p) => p.partial);
       if (partial && !s.plan.some((p) => p.day === partial.day)) s.plan.push(partial);
     }
-    const saved = new Map((await db().query("SELECT day,status,end_at FROM esim_ledger.periods WHERE cohort_hash=$1", [s.cohortHash])).rows.map((p) => [p.day, p]));
+    const published = (await db().query("SELECT day,status,end_at,cohort_hash FROM esim_ledger.periods")).rows;
+    s.plan = extendSyncPlan(s.plan, current, published, { source: claimed.source });
+    const saved = new Map(published.filter((p) => p.cohort_hash === s.cohortHash).map((p) => [p.day, p]));
     while (s.index < s.plan.length) {
       const p = s.plan[s.index], v = saved.get(p.day);
       if (!v || !p.partial && v.status !== "complete" || p.partial && new Date(v.end_at) < new Date(p.end)) break;

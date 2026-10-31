@@ -3,12 +3,12 @@
   "inputs": {
     "scripts/server-step.js": "8b254d5c6c8575cd13f9c817713b24ac8a76f7807d6befd7e7945e0d15671841",
     "lib/db.js": "deb52d9734e3baf1959177a5b18b233d020e3bdb9bc853a015188a36e18606cc",
-    "lib/collector.js": "53448dfcd9405d4d015fd9414ab5c0b0b2268090c27dbf4f9e5d9af7e749499d",
-    "lib/rpc.js": "8aca4f6f4e911e776bedbc85f203fe792217875cccf8f5417b417efbc39c49db",
+    "lib/collector.js": "674fe9840650b100cd2729f5ed0a884ddd7501381adb3feb4d779c8b14513987",
     "lib/transfer-fees.js": "74ed740a9ba8099516907eb0e037f8116bdaf23e61c266f8918defb7d88b0b0a",
-    "lib/verified-exchange.js": "70cbb1aeb8a93b2493c5c18d4646d0538453c2debd871c7afb5832300c6d7a13",
-    "lib/write-snapshot.js": "4763c57543a84237f3af03c1a5609e2d124fa9853aa4144a9b56f48ccf2720b1",
+    "lib/rpc.js": "8aca4f6f4e911e776bedbc85f203fe792217875cccf8f5417b417efbc39c49db",
     "vendor/engine.cjs": "f9dda54ea5f5914ccc38f9c36eac418c2880499af5bd0f60e73f85de4a79ff20",
-    "lib/sync-plan.js": "23ae45d71b407e8ec29d5ac37bac170a9924102c6819584975b675030d402a74"
+    "lib/write-snapshot.js": "4763c57543a84237f3af03c1a5609e2d124fa9853aa4144a9b56f48ccf2720b1",
+    "lib/verified-exchange.js": "70cbb1aeb8a93b2493c5c18d4646d0538453c2debd871c7afb5832300c6d7a13",
+    "lib/sync-plan.js": "707694734110e974d4199172497a5d0fa48e02450b3bc4985b0501acd8db5aed"
   }
 }
