@@ -9297,6 +9297,7 @@ async function runSync(id, budget = 45e3) {
     const message = String(e.message || "\u66F4\u65B0\u5931\u8D25").replace(/https?:\/\/\S+/g, "[\u63A5\u53E3]").slice(0, 180);
     const pending = isBoundaryPending(e);
     s.retryable = isTransientSyncError(e);
+    s.retryErrorCode = e.code || null;
     s.retryCount = pending ? 0 : Number(s.retryCount || 0) + 1;
     const retry = s.retryable && s.retryCount < 8;
     if (s.retryable) s.retryAfter = new Date(Date.now() + (retry ? 3e4 : 3e5)).toISOString();

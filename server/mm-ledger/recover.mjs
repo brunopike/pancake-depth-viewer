@@ -8832,7 +8832,7 @@ function isTransientSyncError(error) {
 }
 function canResumeFailed(run, hash, now = /* @__PURE__ */ new Date()) {
   const state = run?.state, count = Number(state?.retryCount ?? 0), after = state?.retryAfter === void 0 ? 0 : Date.parse(state.retryAfter);
-  return state?.cohortHash === hash && Number.isInteger(count) && count >= 0 && (count < 8 || isBoundaryPending({ message: run.error }) || state?.retryable === true && state?.retryAfter !== void 0 && isTransientSyncError({ message: run.error })) && Number.isFinite(after) && after <= now.getTime() && (run.state.retryable === true || isTransientSyncError({ message: run.error }));
+  return state?.cohortHash === hash && Number.isInteger(count) && count >= 0 && (count < 8 || isBoundaryPending({ message: run.error }) || state?.retryable === true && state?.retryAfter !== void 0 && isTransientSyncError({ message: run.error, code: state.retryErrorCode })) && Number.isFinite(after) && after <= now.getTime() && (run.state.retryable === true || isTransientSyncError({ message: run.error }));
 }
 function backfillSummary(addresses, periods, run, { now = /* @__PURE__ */ new Date(), start = "2026-09-30" } = {}) {
   const { hash, plan } = buildSyncPlan(addresses.map((a) => ({ ...a, backfill_pending: false })), periods, { now, start });
@@ -9333,6 +9333,7 @@ async function runSync(id, budget = 45e3) {
     const message = String(e.message || "\u66F4\u65B0\u5931\u8D25").replace(/https?:\/\/\S+/g, "[\u63A5\u53E3]").slice(0, 180);
     const pending = isBoundaryPending(e);
     s.retryable = isTransientSyncError(e);
+    s.retryErrorCode = e.code || null;
     s.retryCount = pending ? 0 : Number(s.retryCount || 0) + 1;
     const retry = s.retryable && s.retryCount < 8;
     if (s.retryable) s.retryAfter = new Date(Date.now() + (retry ? 3e4 : 3e5)).toISOString();
