@@ -8822,13 +8822,14 @@ function buildSyncPlan(addresses, periods, { now = /* @__PURE__ */ new Date(), s
     plan.push({ day: today, partial: true, end: new Date(now.getTime() - 65e3).toISOString() });
   return { plan, hash };
 }
+var isBoundaryPending = (error) => error?.code === "ESIM_YIELD" || error?.message === "\u7EDF\u8BA1\u7ED3\u675F\u533A\u5757\u5C1A\u672A\u786E\u8BA4\uFF0C\u4E0B\u6B21\u81EA\u52A8\u7EE7\u7EED";
 function isTransientSyncError(error) {
   if (error?.contractRevert) return false;
-  return ["TimeoutError", "AbortError"].includes(error?.name) || [429, -32005].includes(error?.code) || /timeout|timed out|operation was aborted|fetch failed|ECONNRESET|ETIMEDOUT|链上接口暂不可用|Internal error/i.test(error?.message || "");
+  return isBoundaryPending(error) || ["TimeoutError", "AbortError"].includes(error?.name) || [429, -32005].includes(error?.code) || /timeout|timed out|operation was aborted|fetch failed|ECONNRESET|ETIMEDOUT|链上接口暂不可用|Internal error/i.test(error?.message || "");
 }
 function canResumeFailed(run, hash, now = /* @__PURE__ */ new Date()) {
   const state = run?.state, count = Number(state?.retryCount ?? 0), after = state?.retryAfter === void 0 ? 0 : Date.parse(state.retryAfter);
-  return state?.cohortHash === hash && Number.isInteger(count) && count >= 0 && count < 8 && Number.isFinite(after) && after <= now.getTime() && (run.state.retryable === true || isTransientSyncError({ message: run.error }));
+  return state?.cohortHash === hash && Number.isInteger(count) && count >= 0 && (count < 8 || isBoundaryPending({ message: run.error }) || state?.retryable === true && state?.retryAfter !== void 0 && isTransientSyncError({ message: run.error })) && Number.isFinite(after) && after <= now.getTime() && (run.state.retryable === true || isTransientSyncError({ message: run.error }));
 }
 
 // ../../../../ESIM市值统计/工程/esim-daily-ledger/web/lib/rpc.js
@@ -9218,7 +9219,9 @@ async function runSync(id, budget = 45e3) {
   try {
     const current = (await db().query("SELECT address,mode FROM esim_ledger.addresses ORDER BY ordinal")).rows;
     if (cohortHash(current) !== s.cohortHash) throw Error("\u5730\u5740\u5E93\u5DF2\u53D8\u5316\uFF0C\u672C\u8F6E\u7ED3\u679C\u4E0D\u53D1\u5E03\uFF0C\u8BF7\u91CD\u65B0\u66F4\u65B0");
+    if (s.retryable && s.retryCount >= 8) s.retryCount = 0;
     delete s.retryAfter;
+    delete s.cache[key(["eth_getBlockByNumber", ["latest", false]])];
     const today = dayOf(/* @__PURE__ */ new Date());
     for (const planned of s.plan) if (planned.partial && planned.day < today) {
       planned.partial = false;
@@ -9246,7 +9249,7 @@ async function runSync(id, budget = 45e3) {
       s.cacheVersion = 2;
       if (s.wallet) for (const [h, r] of Object.entries(s.wallet.receipts || {})) s.wallet.receipts[h] = engine.trim("eth_getTransactionReceipt", r);
     }
-    await getNftHistory(s);
+    if (s.index < s.plan.length) await getNftHistory(s);
     while (s.index < s.plan.length && Date.now() < endAt) {
       const planned = s.plan[s.index];
       if (!s.wallet) s.wallet = { day: planned.day, partial: planned.partial, endIso: planned.end, stage: "init", index: 0, rpc: {} };
@@ -9310,11 +9313,12 @@ async function runSync(id, budget = 45e3) {
     });
   } catch (e) {
     const message = String(e.message || "\u66F4\u65B0\u5931\u8D25").replace(/https?:\/\/\S+/g, "[\u63A5\u53E3]").slice(0, 180);
+    const pending = isBoundaryPending(e);
     s.retryable = isTransientSyncError(e);
-    s.retryCount = Number(s.retryCount || 0) + 1;
+    s.retryCount = pending ? 0 : Number(s.retryCount || 0) + 1;
     const retry = s.retryable && s.retryCount < 8;
-    if (retry) s.retryAfter = new Date(Date.now() + 3e4).toISOString();
-    return (await db().query("UPDATE esim_ledger.sync_runs SET state=$2,status=$3,stage=$4,error=$5,verified_days=$6,lease_until=NULL,updated_at=now() WHERE id=$1 AND lease_version=$7 RETURNING id,status,stage,error,verified_days,state->>'retryAfter' AS retry_after", [id, JSON.stringify(s), retry ? "queued" : "failed", retry ? "\u63A5\u53E3\u6682\u65F6\u5931\u8D25\uFF0C\u81EA\u52A8\u4ECE\u65AD\u70B9\u7EE7\u7EED" : "\u66F4\u65B0\u672A\u5B8C\u6210\uFF0C\u539F\u6570\u636E\u4FDD\u7559", message, s.index, claimed.lease_version])).rows[0] || syncStatus(id);
+    if (s.retryable) s.retryAfter = new Date(Date.now() + (retry ? 3e4 : 3e5)).toISOString();
+    return (await db().query("UPDATE esim_ledger.sync_runs SET state=$2,status=$3,stage=$4,error=$5,verified_days=$6,lease_until=NULL,updated_at=now() WHERE id=$1 AND lease_version=$7 RETURNING id,status,stage,error,verified_days,state->>'retryAfter' AS retry_after", [id, JSON.stringify(s), retry ? "queued" : "failed", retry ? pending ? "\u7B49\u5F85\u7ED3\u675F\u533A\u5757\u786E\u8BA4\uFF0C\u81EA\u52A8\u7EE7\u7EED" : "\u63A5\u53E3\u6682\u65F6\u5931\u8D25\uFF0C\u81EA\u52A8\u4ECE\u65AD\u70B9\u7EE7\u7EED" : "\u66F4\u65B0\u672A\u5B8C\u6210\uFF0C\u539F\u6570\u636E\u4FDD\u7559", message, s.index, claimed.lease_version])).rows[0] || syncStatus(id);
   }
 }
 

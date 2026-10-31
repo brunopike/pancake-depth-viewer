@@ -1,0 +1,25 @@
+name: MM ledger recovery
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '4,14,24,34,44,54 * * * *'
+permissions:
+  contents: read
+concurrency:
+  group: mm-ledger-recovery
+  cancel-in-progress: false
+jobs:
+  recover:
+    if: github.event.repository.private == false
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Resume stale MM checkpoints under the existing fenced database lease
+        env:
+          ESIM_REALTIME_DATABASE_URL: ${{ secrets.ESIM_REALTIME_DATABASE_URL }}
+          ALCHEMY_API_KEY: ${{ secrets.ALCHEMY_API_KEY }}
+        run: node server/mm-ledger/recover.mjs

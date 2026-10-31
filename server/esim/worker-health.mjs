@@ -17,3 +17,11 @@ export function snapshotIssues(status,now=Date.now()){
  if(!Number.isFinite(delivered)||now-delivered>3600000)issues.push('webhook:SILENT');
  return issues;
 }
+export function ledgerIssues(health,now=Date.now()){
+ const issues=[...(health?.issues||[])],cutoff=Date.parse(health?.latest?.end_at);
+ if(!Number.isFinite(cutoff))issues.push('MISSING_SNAPSHOT');
+ else if(now-cutoff>STALE_PROGRESS_SECONDS*1000)issues.push('STALE_SNAPSHOT');
+ else if(cutoff-now>60000)issues.push('FUTURE_CUTOFF');
+ if(health?.ok!==true&&!issues.length)issues.push('INVALID_HEALTH');
+ return [...new Set(issues)];
+}

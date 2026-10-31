@@ -22,3 +22,12 @@ test('only full standby collectors can replace a stalled VM, never manual holder
  assert.equal(standbyMayTakeover('core','scripts/esim/holders-job.mjs','true'),false);
  assert.equal(standbyMayTakeover('core','scripts/esim/realtime-worker.mjs',undefined),false);
 });
+
+test('MM health rejects static health responses and independently checks the data cutoff',async()=>{
+ const {ledgerIssues}=await import('../server/esim/worker-health.mjs');
+ assert(ledgerIssues({app:'esim-ledger'},now).includes('MISSING_SNAPSHOT'));
+ const health={ok:true,issues:[],latest:{end_at:new Date(now-30000).toISOString()}};
+ assert.deepEqual(ledgerIssues(health,now),[]);
+ health.latest.end_at=new Date(now-901000).toISOString();assert(ledgerIssues(health,now).includes('STALE_SNAPSHOT'));
+ health.issues=['BALANCE_CHECK_FAILED'];assert(ledgerIssues(health,now).includes('BALANCE_CHECK_FAILED'));
+});
