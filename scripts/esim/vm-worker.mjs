@@ -23,8 +23,12 @@ export function restoredSchedule(saved,dryRun){
  // into live mode, where an immediate complete archive is required.
  return saved?.dryRun===dryRun?{...saved,core:0}:{dryRun,core:0};
 }
-export function remoteBootstrapNeeded({first,hasCheckpoint,block,cutoff,now}){
- return first&&(!hasCheckpoint||!block||now/1000-cutoff>=3600);
+export function remoteBootstrapNeeded({first,hasCheckpoint,block,cutoff,now,remoteBlock}){
+ if(!first)return false;
+ if(!hasCheckpoint||!block)return true;
+ // Check lightweight published metadata before loading a second full ledger.
+ if(Number.isSafeInteger(remoteBlock)&&remoteBlock>=0)return remoteBlock>block;
+ return now/1000-cutoff>=3600;
 }
 async function json(file,fallback={}){try{return JSON.parse(await readFile(file,'utf8'));}catch{return fallback;}}
 async function save(file,value){await writeFile(file+'.tmp',JSON.stringify(value));await rename(file+'.tmp',file);}
@@ -80,7 +84,7 @@ export async function main(){
       let partial=false;
       // A recent local prefix is revalidated against the chain. Do not keep
       // two full ledgers in RAM merely to restart this persistent worker.
-      const bootstrap=remoteBootstrapNeeded({first,hasCheckpoint,block,cutoff,now});
+      const bootstrap=remoteBootstrapNeeded({first,hasCheckpoint,block,cutoff,now,remoteBlock:Number(status.processed_block)});
       try{await command('scripts/esim/refresh.mjs',[],{extra:{ESIM_REMOTE_START:String(remote),ESIM_REMOTE_BOOTSTRAP:String(bootstrap)}});}
       catch(error){if(error.message!=='QUERY_LIMIT')throw error;partial=true;}
       if(remote)last.merge=now;first=false;

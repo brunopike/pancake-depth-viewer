@@ -86,6 +86,9 @@ test('a restart reuses a recent local prefix while a missing or old prefix boots
  assert.equal(remoteBootstrapNeeded({...fresh,hasCheckpoint:false}),true);
  assert.equal(remoteBootstrapNeeded({...fresh,cutoff:1000}),true);
  assert.equal(remoteBootstrapNeeded({...fresh,first:false,hasCheckpoint:false}),false);
+ assert.equal(remoteBootstrapNeeded({...fresh,cutoff:1000,remoteBlock:100}),false);
+ assert.equal(remoteBootstrapNeeded({...fresh,remoteBlock:101}),true);
+ assert.equal(remoteBootstrapNeeded({...fresh,hasCheckpoint:false,remoteBlock:100}),true);
 });
 
 test('VM reorg recovery restores the prior prefix and quarantines orphaned RPC cache',async()=>{
