@@ -2,19 +2,19 @@ import {spawn} from 'node:child_process';
 import {readFile,writeFile,mkdir,rename,copyFile,access} from 'node:fs/promises';
 import {setTimeout as sleep} from 'node:timers/promises';
 import {startLease} from '../../server/esim/worker-lease.mjs';
-import {realtimeStatus,realtimeSQL} from '../../server/esim/realtime-store.mjs';
+import {realtimeStatus,realtimeSQL,markRealtimeError} from '../../server/esim/realtime-store.mjs';
 import {workerFailureCode} from './hourly-worker.mjs';
 import {pathToFileURL} from 'node:url';
 
 // One heavy child at a time on the 4 GB VM. Provenance retains its independent
 // GitHub job; a multi-minute attribution rebuild cannot block live processing.
-export function dueTask({now,last,cutoff,pendingBlock,block}){
- if(!last.core)return 'core';
- if(now-(last.core||0)>=60000&&(pendingBlock>block||now-cutoff*1000>=300000))return 'core';
- if(now-(last.holders||0)>=180000)return 'holders';
- if(now-(last.archive||0)>=3600000)return 'archive';
- if(now-(last.depth||0)>=300000)return 'depth';
- if(now-(last.mm||0)>=60000)return 'mm';
+export function dueTask({now,last,cutoff,pendingBlock,block,retryAt={}}){
+ const ready=task=>now>=(retryAt[task]||0);
+ if(ready('core')&&(!last.core||now-last.core>=60000&&(pendingBlock>block||now-cutoff*1000>=300000)))return 'core';
+ if(ready('holders')&&now-(last.holders||0)>=180000)return 'holders';
+ if(ready('archive')&&now-(last.archive||0)>=3600000)return 'archive';
+ if(ready('depth')&&now-(last.depth||0)>=300000)return 'depth';
+ if(ready('mm')&&now-(last.mm||0)>=60000)return 'mm';
  return null;
 }
 const local='.goodway/vm';
@@ -60,12 +60,13 @@ export async function main(){
   depthGuard=await startLease(dryRun?'shadow-depth':'depth',{onLost:lost});
   const last=restoredSchedule(await json(`${local}/schedule.json`),dryRun),core=await json(`${local}/core.json`);
   const hasCheckpoint=await access('.goodway/esim-monitor/state.json.gz').then(()=>true,()=>false);
-  let block=core.block||0,cutoff=core.cutoff||0,first=true,retryAt=0;
+  let block=core.block||0,cutoff=core.cutoff||0,first=true;
+  const retryAt={};
   // A new owner always verifies the canonical chain, even if local timing is recent.
   last.core=0;
   while(!stopping){
    const now=Date.now();let status={};try{status=await realtimeStatus();}catch{}
-   const task=now>=retryAt?dueTask({now,last,block,cutoff,pendingBlock:Number(status.pending_block)||0}):null;
+   const task=dueTask({now,last,block,cutoff,pendingBlock:Number(status.pending_block)||0,retryAt});
    if(task){
     const started=Date.now();
     try{
@@ -111,8 +112,9 @@ export async function main(){
      }
      // An MM accounting failure must not pause the live chain feed.
      if(task==='mm'){last.mm=Date.now();await save(`${local}/schedule.json`,last);}
-     else retryAt=Date.now()+60000;
+     else retryAt[task]=Date.now()+60000;
      const code=/^[A-Z_]{3,80}$/.test(error.message)?error.message:'VM_TASK_FAILED';
+     if(task==='core')try{await markRealtimeError(code);}catch{}
      await save(`${local}/health.json`,{at:new Date().toISOString(),dryRun,task,block,cutoff,error:code});
      console.error(JSON.stringify({phase:'vm-task-deferred',task,error:code}));
     }

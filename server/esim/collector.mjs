@@ -1,6 +1,7 @@
 import { TOKEN, SOURCE } from './metrics.mjs';
 import {collectSourceInflow} from './source-inflow-collector.mjs';
 import {collectNativeTraces} from './native-traces.mjs';
+import {discoverClassicPools} from './classic-pools.mjs';
 import { TRANSFER, V2, V3, V4, PCS, UNI, SWAPS, signature, topic, addr, order, before, eventKey,
   decodeLeg, attributionCandidates, attributedRows } from './attribution.mjs';
 const hex = n => `0x${n.toString(16)}`;
@@ -77,12 +78,11 @@ export async function refreshState(state, transport, { maxBlocks = 24000, target
   const headers = Object.fromEntries((await batch(blocks.map(b => ['eth_getBlockByNumber', [hex(b), false]]))).map(h => [num(h.number), h]));
   for (const r of fetchedReceipts) { const h = headers[num(r.blockNumber)]; ensure(h?.hash === r.blockHash && h.transactions[num(r.transactionIndex)] === r.transactionHash, 'RECEIPT_CANONICAL'); }
   for (const e of allEvents) { const r = receipts[e.transactionHash]; ensure(r.status === '0x1' && r.blockHash === e.blockHash && r.logs.some(l => eventKey(l) === eventKey(e) && l.data === e.data && l.address === e.address), 'EVENT_RECEIPT_MISMATCH'); }
-  // Inspect only receipts already touched by the fixed ESIM scan. If another
-  // ESIM classic pool appears, stop rather than publish incomplete totals.
-  const unknown = [...new Set(fetchedReceipts.flatMap(r => r.logs).filter(e => (V3.has(e.topics[0]) || e.topics[0] === V2) && !pools[e.address.toLowerCase()]).map(e => e.address.toLowerCase()))];
-  if (unknown.length) {
-    const currencies = await batch(unknown.flatMap(a => [['eth_call', [{ to: a, data: '0x0dfe1681' }, hex(end)]], ['eth_call', [{ to: a, data: '0xd21220a7' }, hex(end)]]]));
-    ensure(!unknown.some((a, i) => [addr(currencies[i * 2]), addr(currencies[i * 2 + 1])].includes(TOKEN)), 'NEW_ESIM_POOL_REQUIRES_SYNC');
+  const added=await discoverClassicPools(fetchedReceipts.flatMap(r=>r.logs),pools,transport,state.block,end);
+  if(Object.keys(added).length){
+    progress({phase:'new-classic-pools',pools:Object.keys(added),replayFrom:start});
+    // Replay the complete interval, including all new-pool swaps and receipts.
+    return refreshState({...state,pools:{...pools,...added}},transport,{maxBlocks,targetBlock,progress});
   }
   const time = block => timestamp(headers[block]);
   const firstRecipient = structuredClone(state.firstRecipient);

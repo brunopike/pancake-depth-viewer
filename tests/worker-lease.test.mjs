@@ -73,6 +73,13 @@ test('live cutover never inherits unpublished dry-run archive and snapshot timer
  assert.deepEqual(restoredSchedule(dry,true),{...dry,core:0});
  assert.equal(dry.core,100);
 });
+test('a failing core task yields to overdue independent jobs until its retry is due',()=>{
+ const now=1000000,last={core:now-60001,holders:now-180001,archive:now,depth:now-300001,mm:now};
+ const input={now,last,cutoff:now/1000-301,block:10,pendingBlock:11,retryAt:{core:now+60000}};
+ assert.equal(dueTask(input),'holders');
+ assert.equal(dueTask({...input,last:{...last,holders:now}}),'depth');
+ assert.equal(dueTask({...input,now:now+60001}),'core');
+});
 test('a restart reuses a recent local prefix while a missing or old prefix bootstraps remotely',()=>{
  const fresh={first:true,hasCheckpoint:true,block:100,cutoff:9000,now:10000000};
  assert.equal(remoteBootstrapNeeded(fresh),false);
