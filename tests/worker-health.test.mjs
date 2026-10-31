@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {snapshotIssues,checkpointPassComplete} from '../server/esim/worker-health.mjs';
+import {snapshotIssues,checkpointPassComplete,standbyMayTakeover} from '../server/esim/worker-health.mjs';
 const now=2_000_000_000_000;
 const healthy=()=>({snapshots:Object.fromEntries(['report','addresses','holders','depth'].map(kind=>[kind,{block:100,cutoff:now/1000-60,updatedAt:new Date(now-30000).toISOString()}])),lastDelivery:new Date(now-30000).toISOString(),error:null});
 test('independent health checks use chain cutoff rather than recent database writes',()=>{
@@ -15,4 +15,10 @@ test('missing snapshots, mismatched core views and silent notifications are visi
 test('persistent catch-up yields only after a complete checkpoint and keeps ordinary batch behavior',()=>{
  assert.equal(checkpointPassComplete(1000,90999,true),false);assert.equal(checkpointPassComplete(1000,91000,true),true);
  assert.equal(checkpointPassComplete(1000,1_000_000,false),false);
+});
+test('only full standby collectors can replace a stalled VM, never manual holders or local jobs',()=>{
+ assert.equal(standbyMayTakeover('core','scripts/esim/realtime-worker.mjs','true'),true);
+ assert.equal(standbyMayTakeover('depth','scripts/hourly-worker.mjs','true'),true);
+ assert.equal(standbyMayTakeover('core','scripts/esim/holders-job.mjs','true'),false);
+ assert.equal(standbyMayTakeover('core','scripts/esim/realtime-worker.mjs',undefined),false);
 });

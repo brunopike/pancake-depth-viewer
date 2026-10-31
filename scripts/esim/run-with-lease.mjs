@@ -1,5 +1,6 @@
 import {spawn} from 'node:child_process';
 import {startLease} from '../../server/esim/worker-lease.mjs';
+import {standbyMayTakeover} from '../../server/esim/worker-health.mjs';
 
 const [job,file]=process.argv.slice(2);
 const allowed={cohort:['scripts/esim/cohort-refresh.mjs'],core:['scripts/esim/realtime-worker.mjs','scripts/esim/holders-job.mjs'],depth:['scripts/hourly-worker.mjs'],provenance:['scripts/esim/claim-flow-job.mjs']};
@@ -7,7 +8,7 @@ if(!allowed[job]?.includes(file))throw Error('INVALID_WORKER_COMMAND');
 let guard,child;
 const stop=()=>{if(child?.pid)try{process.kill(-child.pid,'SIGTERM');}catch{}};
 try{
- guard=await startLease(job,{onLost:stop,allowStaleVm:process.env.GITHUB_ACTIONS==='true'&&['core','depth'].includes(job)});
+ guard=await startLease(job,{onLost:stop,allowStaleVm:standbyMayTakeover(job,file,process.env.GITHUB_ACTIONS)});
  if(!guard)console.log(`Another ${job} worker owns the lease; scheduled fallback remains available.`);
  else{
   child=spawn(process.execPath,[file],{detached:true,stdio:'inherit',env:{...process.env,...guard.env},signal:guard.signal});

@@ -1,5 +1,7 @@
 export const STALE_PROGRESS_SECONDS=15*60;
 export const checkpointPassComplete=(startedAt,now,persistent)=>persistent&&now-startedAt>=90000;
+export const standbyMayTakeover=(job,file,githubActions)=>githubActions==='true'&&
+ (job==='core'&&file==='scripts/esim/realtime-worker.mjs'||job==='depth'&&file==='scripts/hourly-worker.mjs');
 
 export function snapshotIssues(status,now=Date.now()){
  const issues=[],snapshots=status?.snapshots||{};
