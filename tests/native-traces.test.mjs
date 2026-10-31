@@ -34,8 +34,8 @@ test('bounded concurrent windows retain order and wait for all requests before f
   await new Promise(resolve=>setTimeout(resolve,block===1?10:1));active--;finished.push(block);
   return [{block}];
  };
- assert.deepEqual(await collectNativeTraces({rpc},1,1000),Array.from({length:10},(_,i)=>({block:i*100+1})));
- assert.equal(peak,4);assert.equal(active,0);assert.equal(finished.length,10);
+ assert.deepEqual(await collectNativeTraces({rpc},1,2000),Array.from({length:20},(_,i)=>({block:i*100+1})));
+ assert.equal(peak,12);assert.equal(active,0);assert.equal(finished.length,20);
  let pending=0;
  await assert.rejects(collectNativeTraces({rpc:async(_, [q])=>{if(Number(q.fromBlock)===1)throw Error('QUERY_LIMIT');pending++;await new Promise(resolve=>setTimeout(resolve,5));pending--;return [];}},1,400),/QUERY_LIMIT/);
  assert.equal(pending,0);

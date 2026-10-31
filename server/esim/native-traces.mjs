@@ -22,10 +22,10 @@ export async function collectNativeTraces({rpc},start,end){
  }
  const traces=[],ranges=[];
  for(let from=start;from<=end;from+=100)ranges.push([from,Math.min(from+99,end)]);
- // Four independent windows hide historical-query latency. makeRpc still
+ // Twelve independent windows hide historical-query latency. makeRpc still
  // paces starts and enforces the shared request/deadline budget.
- for(let i=0;i<ranges.length;i+=4){
-  const settled=await Promise.allSettled(ranges.slice(i,i+4).map(([from,to])=>range(from,to)));
+ for(let i=0;i<ranges.length;i+=12){
+  const settled=await Promise.allSettled(ranges.slice(i,i+12).map(([from,to])=>range(from,to)));
   const failed=settled.find(r=>r.status==='rejected');if(failed)throw failed.reason;
   traces.push(...settled.flatMap(r=>r.value));
  }
