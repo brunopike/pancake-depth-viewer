@@ -10,12 +10,13 @@ import {pathToFileURL} from 'node:url';
 // GitHub job; a multi-minute attribution rebuild cannot block live processing.
 export function dueTask({now,last,cutoff,pendingBlock,block,retryAt={}}){
  const ready=task=>now>=(retryAt[task]||0);
- if(ready('core')&&(!last.core||now-last.core>=60000&&(pendingBlock>block||now-cutoff*1000>=300000)))return 'core';
- if(ready('holders')&&now-(last.holders||0)>=180000)return 'holders';
- if(ready('archive')&&now-(last.archive||0)>=3600000)return 'archive';
- if(ready('depth')&&now-(last.depth||0)>=300000)return 'depth';
- if(ready('mm')&&now-(last.mm||0)>=60000)return 'mm';
- return null;
+ if(ready('core')&&!last.core)return 'core';
+ const due=[
+  ['core',now-(last.core||0)>=60000&&(pendingBlock>block||now-cutoff*1000>=300000)],
+  ['holders',now-(last.holders||0)>=180000],['archive',now-(last.archive||0)>=3600000],
+  ['depth',now-(last.depth||0)>=300000],['mm',now-(last.mm||0)>=60000]
+ ].filter(([task,needed])=>needed&&ready(task)).map(([task])=>task);
+ return due.sort((a,b)=>(last[a]||0)-(last[b]||0))[0]||null;
 }
 const local='.goodway/vm';
 export function restoredSchedule(saved,dryRun){
@@ -28,7 +29,7 @@ export function remoteBootstrapNeeded({first,hasCheckpoint,block,cutoff,now,remo
  if(!hasCheckpoint||!block)return true;
  // Check lightweight published metadata before loading a second full ledger.
  if(Number.isSafeInteger(remoteBlock)&&remoteBlock>=0)return remoteBlock>block;
- return now/1000-cutoff>=3600;
+ return false;
 }
 async function json(file,fallback={}){try{return JSON.parse(await readFile(file,'utf8'));}catch{return fallback;}}
 async function save(file,value){await writeFile(file+'.tmp',JSON.stringify(value));await rename(file+'.tmp',file);}

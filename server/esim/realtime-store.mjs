@@ -25,7 +25,7 @@ export async function saveWebhook(hint,digest,sql=realtimeSQL()){
  return result.inserted;
 }
 export async function realtimeStatus(sql=realtimeSQL()){
- const [row]=await sql.query("SELECT pending_block,processed_block,last_delivery,last_processed,last_error,(SELECT block FROM esim_realtime_snapshots WHERE kind='holders') AS holder_block FROM esim_realtime_control WHERE id=1");
+ const [row]=await sql.query("SELECT pending_block,processed_block,last_delivery,last_processed,last_error,(SELECT block FROM esim_realtime_snapshots WHERE kind='holders') AS holder_block,(SELECT json_object_agg(kind,json_build_object('block',block,'cutoff',cutoff,'updatedAt',updated_at)) FROM esim_realtime_snapshots) AS snapshots FROM esim_realtime_control WHERE id=1");
  return row||{pending_block:0,processed_block:0};
 }
 export function encodeSnapshot(kind,data){

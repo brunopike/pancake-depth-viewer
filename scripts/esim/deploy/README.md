@@ -88,3 +88,23 @@ unknown addresses always use `balanceOf`. An unknown upgrade forces full reads.
 No VM deployment or production cutover is implied by the presence of these
 files. Record the installed commit, dry-run results and production readback in
 the task evidence before marking deployment complete.
+
+## Stale-data guardrails
+
+The independent `ESIM data freshness` workflow runs every five minutes without
+RPC or database credentials. It checks chain cutoffs for report, addresses,
+holders and depth, their core consistency, and an hour of webhook silence.
+Failures produce GitHub Actions errors and a job summary; delivery of GitHub
+notifications follows the repository/account notification settings.
+
+Core and depth standby workflows run every ten minutes. They normally leave an
+active VM lease alone. If a VM owns the lease but its relevant snapshots have
+had no publication progress for 15 minutes, the standby can atomically acquire
+a newer fencing token. The previous owner then cannot renew or publish.
+An active GitHub fallback is not preempted by this rule.
+
+The VM selects the oldest overdue job after its first core verification.
+Persistent catch-up yields after a complete checkpoint once a pass exceeds 90
+seconds. It never publishes an incomplete interval or suppresses reconciliation
+errors. A local checkpoint remains usable when remote metadata is temporarily
+unavailable; the next chain read still verifies its canonical hash.

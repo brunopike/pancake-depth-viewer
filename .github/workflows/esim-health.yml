@@ -1,0 +1,21 @@
+name: ESIM data freshness
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '*/5 * * * *'
+permissions:
+  contents: read
+concurrency:
+  group: esim-independent-health
+  cancel-in-progress: false
+jobs:
+  health:
+    if: github.event.repository.private == false
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node scripts/esim/check-freshness.mjs

@@ -7,7 +7,7 @@ if(!allowed[job]?.includes(file))throw Error('INVALID_WORKER_COMMAND');
 let guard,child;
 const stop=()=>{if(child?.pid)try{process.kill(-child.pid,'SIGTERM');}catch{}};
 try{
- guard=await startLease(job,{onLost:stop});
+ guard=await startLease(job,{onLost:stop,allowStaleVm:process.env.GITHUB_ACTIONS==='true'&&['core','depth'].includes(job)});
  if(!guard)console.log(`Another ${job} worker owns the lease; scheduled fallback remains available.`);
  else{
   child=spawn(process.execPath,[file],{detached:true,stdio:'inherit',env:{...process.env,...guard.env},signal:guard.signal});

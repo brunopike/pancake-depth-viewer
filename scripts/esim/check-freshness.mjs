@@ -1,0 +1,10 @@
+import {appendFile} from 'node:fs/promises';
+import {snapshotIssues} from '../../server/esim/worker-health.mjs';
+const response=await fetch('https://esimonchain.imstark.site/api/esim-snapshot?kind=status&_fresh='+Date.now(),{signal:AbortSignal.timeout(30000)});
+if(!response.ok)throw Error('STATUS_HTTP_'+response.status);
+const status=await response.json(),issues=snapshotIssues(status);
+const summary={at:new Date().toISOString(),snapshots:status.snapshots,lastDelivery:status.lastDelivery,issues};
+console.log(JSON.stringify(summary));
+if(process.env.GITHUB_STEP_SUMMARY)await appendFile(process.env.GITHUB_STEP_SUMMARY,'## ESIM 数据巡检\n\n```json\n'+JSON.stringify(summary,null,2)+'\n```\n');
+for(const issue of issues)console.error('::error title=ESIM 数据更新异常::'+issue);
+if(issues.length)process.exitCode=1;

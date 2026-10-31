@@ -18,6 +18,7 @@ const literal=v=>v===null?'NULL':typeof v==='number'?String(v):"'"+String(v).rep
 const sql={query:async(q,p=[])=>{const stmt=q.replace(/\$(\d+)/g,(_,n)=>literal(p[Number(n)-1]));const out=await exec(`WITH result AS (${stmt}) SELECT coalesce(json_agg(result),'[]') FROM result`);return JSON.parse(out);}};
 
 test('PostgreSQL leases allow one writer, fence stale owners, and preserve ownership on stale release',{skip:!enabled},async()=>{
+ await exec(await readFile(new URL('../scripts/esim/realtime-schema.sql',import.meta.url),'utf8'));
  await exec(await readFile(new URL('../scripts/esim/worker-schema.sql',import.meta.url),'utf8'));
  const job='test-core-'+Date.now();
  const contenders=await Promise.all(['runner-a','runner-b'].map(owner=>acquireLease(job,owner,{sql,ttlSeconds:60})));
@@ -76,19 +77,37 @@ test('live cutover never inherits unpublished dry-run archive and snapshot timer
 test('a failing core task yields to overdue independent jobs until its retry is due',()=>{
  const now=1000000,last={core:now-60001,holders:now-180001,archive:now,depth:now-300001,mm:now};
  const input={now,last,cutoff:now/1000-301,block:10,pendingBlock:11,retryAt:{core:now+60000}};
- assert.equal(dueTask(input),'holders');
- assert.equal(dueTask({...input,last:{...last,holders:now}}),'depth');
- assert.equal(dueTask({...input,now:now+60001}),'core');
+ assert.equal(dueTask(input),'depth');
+ assert.equal(dueTask({...input,last:{...last,depth:now}}),'holders');
+ assert.equal(dueTask({...input,last:{...last,holders:now,depth:now},now:now+60001}),'core');
+});
+test('successful but busy core cannot starve older overdue depth and holder work',()=>{
+ const now=10000000,last={core:now-60001,holders:now-200000,depth:now-600000,archive:now,mm:now};
+ assert.equal(dueTask({now,last,cutoff:now/1000-3600,block:10,pendingBlock:100}),'depth');
 });
 test('a restart reuses a recent local prefix while a missing or old prefix bootstraps remotely',()=>{
  const fresh={first:true,hasCheckpoint:true,block:100,cutoff:9000,now:10000000};
  assert.equal(remoteBootstrapNeeded(fresh),false);
  assert.equal(remoteBootstrapNeeded({...fresh,hasCheckpoint:false}),true);
- assert.equal(remoteBootstrapNeeded({...fresh,cutoff:1000}),true);
+ assert.equal(remoteBootstrapNeeded({...fresh,cutoff:1000}),false);
  assert.equal(remoteBootstrapNeeded({...fresh,first:false,hasCheckpoint:false}),false);
  assert.equal(remoteBootstrapNeeded({...fresh,cutoff:1000,remoteBlock:100}),false);
  assert.equal(remoteBootstrapNeeded({...fresh,remoteBlock:101}),true);
  assert.equal(remoteBootstrapNeeded({...fresh,hasCheckpoint:false,remoteBlock:100}),true);
+});
+test('PostgreSQL fallback fences a stalled VM but cannot steal recent progress or another fallback',{skip:!enabled},async()=>{
+ await exec(await readFile(new URL('../scripts/esim/realtime-schema.sql',import.meta.url),'utf8'));
+ await exec(await readFile(new URL('../scripts/esim/worker-schema.sql',import.meta.url),'utf8'));
+ await exec("DELETE FROM esim_worker_leases WHERE job='core'");
+ await exec("INSERT INTO esim_realtime_snapshots(kind,block,cutoff,body,etag) VALUES('report',100,1000,'test','test') ON CONFLICT(kind) DO UPDATE SET updated_at=now()");
+ const old=await acquireLease('core','vm:stalled',{sql});assert(old);
+ assert.equal(await acquireLease('core','github:standby',{sql,allowStaleVm:true}),null);
+ await exec("UPDATE esim_realtime_snapshots SET updated_at=now()-interval '16 minutes'");
+ const next=await acquireLease('core','github:standby',{sql,allowStaleVm:true});assert(next);assert(BigInt(next.fence)>BigInt(old.fence));
+ await assert.rejects(requireLease(old,{sql}),/WORKER_LEASE_LOST/);
+ assert.equal(await renewLease(old,{sql}),false);
+ assert.equal(await acquireLease('core','github:another',{sql,allowStaleVm:true}),null);
+ await releaseLease(next,{sql});
 });
 
 test('VM reorg recovery restores the prior prefix and quarantines orphaned RPC cache',async()=>{

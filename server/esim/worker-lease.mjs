@@ -1,18 +1,24 @@
 import {randomUUID} from 'node:crypto';
 import {setTimeout as sleep} from 'node:timers/promises';
 import {realtimeSQL} from './realtime-store.mjs';
+import {STALE_PROGRESS_SECONDS} from './worker-health.mjs';
 
 export const LEASE_SECONDS=120;
 function validate(job,owner,ttlSeconds=LEASE_SECONDS){
  if(!/^[a-z0-9-]{1,80}$/.test(job||'')||!/^[\w:-]{1,160}$/.test(owner||'')||!Number.isInteger(ttlSeconds)||ttlSeconds<30||ttlSeconds>900)throw Error('INVALID_WORKER_LEASE');
 }
-export async function acquireLease(job,owner,{sql=realtimeSQL(),ttlSeconds=LEASE_SECONDS}={}){
+export async function acquireLease(job,owner,{sql=realtimeSQL(),ttlSeconds=LEASE_SECONDS,allowStaleVm=false}={}){
  validate(job,owner,ttlSeconds);
+ if(typeof allowStaleVm!=='boolean'||allowStaleVm&&(!['core','depth'].includes(job)||!owner.startsWith('github:')))throw Error('INVALID_STALE_TAKEOVER');
  const [row]=await sql.query(`INSERT INTO esim_worker_leases(job,owner,fence,expires_at)
  VALUES($1,$2,1,clock_timestamp()+$3*interval '1 second')
  ON CONFLICT(job) DO UPDATE SET owner=excluded.owner,fence=esim_worker_leases.fence+1,
  expires_at=excluded.expires_at,updated_at=clock_timestamp()
- WHERE esim_worker_leases.expires_at<=clock_timestamp() RETURNING job,owner,fence`,[job,owner,ttlSeconds]);
+ WHERE esim_worker_leases.expires_at<=clock_timestamp() OR
+ ($4::boolean AND esim_worker_leases.owner LIKE 'vm:%' AND EXISTS(
+  SELECT 1 FROM esim_realtime_snapshots WHERE kind=ANY(CASE WHEN $1='core' THEN ARRAY['report','addresses','holders'] ELSE ARRAY['depth'] END)
+  AND updated_at<clock_timestamp()-$5*interval '1 second'))
+ RETURNING job,owner,fence`,[job,owner,ttlSeconds,allowStaleVm,STALE_PROGRESS_SECONDS]);
  return row?{job:row.job,owner:row.owner,fence:String(row.fence)}:null;
 }
 export function leaseStatement(lease,sql){
@@ -49,8 +55,8 @@ export function leaseFromEnvironment(){
  if(!job&&!owner&&!fence)return null;
  validate(job,owner);if(!/^[1-9][0-9]*$/.test(fence||''))throw Error('INVALID_WORKER_LEASE');return {job,owner,fence};
 }
-export async function startLease(job,{sql=realtimeSQL(),onLost=()=>{},owner=`${process.env.GITHUB_RUN_ID?'github':'vm'}:${randomUUID()}`}={}){
- const lease=await acquireLease(job,owner,{sql});if(!lease)return null;
+export async function startLease(job,{sql=realtimeSQL(),onLost=()=>{},owner=`${process.env.GITHUB_RUN_ID?'github':'vm'}:${randomUUID()}`,allowStaleVm=false}={}){
+ const lease=await acquireLease(job,owner,{sql,allowStaleVm});if(!lease)return null;
  let lost=false,renewing=false;
  const controller=new AbortController();
  const timer=setInterval(async()=>{
