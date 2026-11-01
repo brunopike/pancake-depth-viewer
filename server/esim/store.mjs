@@ -53,7 +53,7 @@ export async function loadState({ fetch: request = fetch, includeRemote = true, 
     try{const current=await readState(currentCheckpointFile);if(current.block>local.block)local=current;}catch(error){if(error.code!=='ENOENT')throw Error('WORKER_CHECKPOINT_UNAVAILABLE');}
   }
   if (includeRemote&&includeRemoteCore&&!checkpointFile) try {
-    const response = await request(`${CHECKPOINT_URL}?t=${Date.now()}`, { cache: 'no-store', signal: AbortSignal.timeout(15000) });
+    const response = await request(`${CHECKPOINT_URL}?t=${Date.now()}`, { cache: 'no-store', signal: AbortSignal.timeout(process.env.ESIM_PERSISTENT_WORKER==='true'?120000:15000) });
     if (response.ok) {
       const remote = validateState(await readCheckpoint(Readable.fromWeb(response.body)));
       if (remote.block > local.block) local=remote;
