@@ -12,8 +12,8 @@ test('missing and retained data are distinct from fresh complete snapshots',()=>
  assert.equal(snapshotStatus(entries,{now,retained:true}).warning,true);
  const missing=snapshotStatus([entries[0],['持仓',null]],{now});assert.equal(missing.warning,true);assert.match(missing.text,/持仓数据暂缺/);
 });
-test('minute updates warn at twenty minutes and expose capacity or backfill without raw errors',()=>{
- const now=1791918000000,entries=[['交易',{cutoff:now/1000-1200}]];
+test('minute updates warn at fifteen minutes and expose capacity or backfill without raw errors',()=>{
+ const now=1791918000000,entries=[['交易',{cutoff:now/1000-900}]];
  assert.equal(snapshotStatus(entries,{now,realtime:true}).warning,true);
  assert.equal(snapshotStatus(entries,{now,realtime:false}).warning,false);
  for(const [error,message] of [['RPC_CAPACITY_EXCEEDED','额度受限'],['BACKFILL_IN_PROGRESS','补齐停更'],['private details','自动重试']]){

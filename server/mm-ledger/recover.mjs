@@ -9349,6 +9349,16 @@ async function runSync(id, budget = 45e3) {
 }
 
 // ../../../../ESIM市值统计/工程/esim-daily-ledger/web/lib/ledger-health.js
+function syncFailureReason(error = "") {
+  if (/统计结束区块尚未确认/.test(error)) return "\u7B49\u5F85\u94FE\u4E0A\u533A\u5757\u786E\u8BA4";
+  if (/余额|差额|核对上/.test(error)) return "\u8D26\u76EE\u4F59\u989D\u6838\u9A8C\u672A\u901A\u8FC7";
+  if (/LP|NFT/.test(error)) return "LP \u5F52\u5C5E\u6216\u672C\u91D1\u6838\u9A8C\u672A\u901A\u8FC7";
+  if (/兑换|分类/.test(error)) return "\u5B58\u5728\u5C1A\u672A\u6838\u5B9E\u7684\u4EA4\u6613\u5206\u7C7B";
+  if (/历史回溯覆盖不完整/.test(error)) return "\u5386\u53F2\u65E5\u671F\u5C1A\u672A\u8865\u9F50";
+  if (/429|capacity|limit exceeded/i.test(error)) return "\u94FE\u4E0A\u6570\u636E\u6E90\u989D\u5EA6\u6216\u8BF7\u6C42\u9891\u7387\u53D7\u9650";
+  if (/timeout|fetch|接口暂不可用|aborted/i.test(error)) return "\u94FE\u4E0A\u6570\u636E\u63A5\u53E3\u6682\u65F6\u4E0D\u53EF\u7528";
+  return "\u540E\u53F0\u66F4\u65B0\u4EFB\u52A1\u4E2D\u65AD\uFF0C\u5177\u4F53\u539F\u56E0\u5F85\u6838\u67E5";
+}
 function ledgerHealth({ addresses, periods, job, checks, proof }, now = /* @__PURE__ */ new Date()) {
   const coverage = backfillSummary(addresses, periods, job, { now }), latest = periods.at(-1) || null, issues = [];
   const cutoff = Date.parse(latest?.end_at), ageSeconds = Number.isFinite(cutoff) ? Math.floor((now.getTime() - cutoff) / 1e3) : null;
@@ -9369,14 +9379,14 @@ function ledgerHealth({ addresses, periods, job, checks, proof }, now = /* @__PU
     registry: { addresses: addresses.length, pending: coverage.pending_addresses },
     history: { missingClosedDays: coverage.missing_closed_days },
     checks: { balanceRows: Number(checks?.rows || 0), errors: Number(checks?.errors || 0), evidenceComplete: !issues.includes("INCOMPLETE_EVIDENCE") },
-    job: job ? { status: job.status, stage: job.stage, updatedAt: job.updated_at } : null,
+    job: job ? { status: job.status, stage: job.stage, updatedAt: job.updated_at, reason: job.error ? syncFailureReason(job.error) : null, retryable: job.retryable === true || job.retryable === "true" } : null,
     issues
   };
 }
 async function readLedgerHealth(c, now = /* @__PURE__ */ new Date()) {
   const addresses = (await c.query("SELECT address,mode,backfill_pending FROM esim_ledger.addresses ORDER BY ordinal")).rows;
   const periods = (await c.query("SELECT day,status,end_at,end_block,verified_at,cohort_hash FROM esim_ledger.periods ORDER BY day")).rows;
-  const job = (await c.query("SELECT status,stage,updated_at FROM esim_ledger.sync_runs ORDER BY started_at DESC LIMIT 1")).rows[0];
+  const job = (await c.query("SELECT status,stage,error,updated_at,state->>'retryable' AS retryable FROM esim_ledger.sync_runs ORDER BY started_at DESC LIMIT 1")).rows[0];
   const latest = periods.at(-1)?.day;
   const checks = (await c.query("SELECT count(*)::int rows,count(*) FILTER(WHERE abs(difference)>0.0000001)::int errors FROM esim_ledger.balance_checks WHERE day=$1", [latest])).rows[0];
   const proof = (await c.query("SELECT source FROM esim_ledger.evidence WHERE day=$1", [latest])).rows[0]?.source;

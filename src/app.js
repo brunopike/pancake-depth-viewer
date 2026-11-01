@@ -6,6 +6,7 @@ import { lpDetails } from './lp-details.mjs';
 import { OWNERS, poolMetadata } from './ownership.mjs';
 import { readBrowserCache, readSharedCache, saveBrowserCache } from './browser-cache.mjs';
 import { weakLiquidityRanges, gapSettings } from './lp-gaps.mjs';
+import {renderDataAlert,depthDataAlert} from './data-alert.mjs';
 const $ = id => document.getElementById(id);
 const escape = value => String(value ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const number = (n, digits = 2) => !Number.isFinite(Number(n)) ? '无有限上限' : Number(n) !== 0 && Math.abs(n) < 10 ** -digits
@@ -182,6 +183,9 @@ function snapshotStatus(suffix = '') {
   const view = state.selection;
   return `${POOL_SCOPES[state.poolScope]} · 合并 ${view.pools.length}/${view.expectedPoolCount} 个池子${view.failed.length ? ` · ${view.failed.length} 个未计入` : ''}${suffix}`;
 }
+function updateDepthAlert(options={}){
+ renderDataAlert(depthDataAlert(state.live,{auto:$('auto').checked,...options}),$('data-alert'));
+}
 function rebuildDepthScope() {
   state.selection = scopedSnapshot(state.live, state.market.pools, state.poolScope);
   updateScopeControls();
@@ -228,6 +232,7 @@ async function refresh(liveQuery = false) {
     for (const p of [...live.pools, ...live.failed]) if (p.discoveredBy === 'ownedLP'
       && !market.pools.some(m => m.protocol === p.protocol && m.id.toLowerCase() === p.id.toLowerCase())) market.pools.push(poolMetadata(p));
     state.live = live;
+    updateDepthAlert({recovering:updating});
     rebuildDepthScope();
     $('status').textContent = snapshotStatus(updating ? ' · 正在更新…' : '');
     setError(Date.now() - live.timestamp > 180000 ? '显示的是较早的数据，正在检查更新。' : '');
@@ -263,6 +268,7 @@ async function refresh(liveQuery = false) {
     if (!live.pools.length) {
       if (displayed) throw new Error('暂时未读到新数据');
       state.live = live;
+      updateDepthAlert({failed:true});
       setError('这个代币暂时没有可用数据。点击“查看数据明细”了解原因，或换个代币再试。');
       $('status').textContent = '这次没有读到可用数据';
       ['bids', 'asks'].forEach(id => $(id).innerHTML = '<div class="empty">暂时没有可用数据</div>');
@@ -276,6 +282,7 @@ async function refresh(liveQuery = false) {
     if (Date.now() - newest.timestamp > 180000) setError('当前数据已超过 3 分钟，可能有变化，请点击“刷新数据”。');
   } catch (e) {
     if (request !== state.request) return;
+    updateDepthAlert({failed:true});
     const technical = e.shortMessage || e.message || '读取失败';
     if (displayed) {
       setError('暂时没能更新，继续显示上次数据。', technical);

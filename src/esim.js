@@ -4,7 +4,7 @@ import {renderCohort,bindCohort,rememberCohort} from './report-cohort.mjs';
 import {startSnapshotPolling} from './snapshot-poll.mjs';
 import {readSnapshot,readTradingReport,validSnapshot,realtimeHost} from './snapshot-client.mjs';
 import {esimEndpoint} from './site-runtime.mjs';
-import {showSnapshotStatus,refreshButtonLabel} from './snapshot-status.mjs';
+import {showSnapshotStatus,showSnapshotFailure,refreshButtonLabel} from './snapshot-status.mjs';
 import {holderInsights,holderViewURL} from './holder-insights.mjs';
 import {compactViewsEnabled,readView,cachedView} from './view-client.mjs';
 import {cachedData} from './data-cache.mjs';
@@ -127,7 +127,7 @@ async function refresh(live=true) {
     if(!report)throw Error('交易数据暂时无法读取，请重试。');
     const retained=trades.status==='rejected'||trades.value.source==='retained'||holders.status==='rejected'||holders.value.source==='retained';
     showSnapshotStatus($('status'),$('refresh'),[['交易',report],['持仓',holderReport]],{retained});
-  }catch(e){$('status').textContent=e.message;$('status').className='notice';}
+  }catch(e){$('status').textContent=e.message;$('status').className='notice';showSnapshotFailure();return false;}
   finally{busy=false;$('refresh').disabled=false;$('refresh').textContent=refreshButtonLabel($('refresh'));if(reloadForTags){reloadForTags=false;void refresh(false);}}
 }
 $('refresh').addEventListener('click',refresh);

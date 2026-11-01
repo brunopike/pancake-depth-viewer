@@ -3,7 +3,7 @@ import {readContractCohort} from './cohort-client.mjs';
 import {withHolderCohort,EXTERNAL_HOLDER_GROUPS} from './holder-cohort.mjs';
 import {startSnapshotPolling} from './snapshot-poll.mjs';
 import {readSnapshot} from './snapshot-client.mjs';
-import {showSnapshotStatus,refreshButtonLabel} from './snapshot-status.mjs';
+import {showSnapshotStatus,showSnapshotFailure,refreshButtonLabel} from './snapshot-status.mjs';
 import {holderLedger,holderAppearance,HOLDER_TONES,HOLDER_SCOPES,selectHolderView,holderOverviewCharts} from './holder-overview.mjs';
 import {TAG_KEY,TAG_KINDS,validateManual,readManual,rowTags,changePercent,ownershipAmounts} from './holder-model.mjs';
 import {HOLDER_SORT_KEYS} from './holder-ranking.mjs';
@@ -74,7 +74,7 @@ function drawChart(rows,prepared){
 }
 function render(){
  if(!report)return;
- if(compactViewsEnabled(manual)&&compactAvailable){void loadCompact().catch(()=>{$('status').textContent='筛选结果暂时无法更新，保留已显示的数据。';$('status').className='notice';});return;}
+ if(compactViewsEnabled(manual)&&compactAvailable){void loadCompact().catch(()=>{$('status').textContent='筛选结果暂时无法更新，保留已显示的数据。';$('status').className='notice';showSnapshotFailure();return false;});return;}
  if(report._compact){if(busy)reloadForTags=true;else void refresh();return;}
  renderView();
 }
@@ -167,7 +167,7 @@ async function refresh(){
   if(compactViewsEnabled(manual))try{compactAvailable=true;await loadCompact(true);return;}catch{compactAvailable=false;}
   const result=await readSnapshot('holders',{current:report?._compact?null:report});const data=validate(result.data),related=await readContractCohort(data);report=withHolderCohort(data,related.cohort);renderView();
   showSnapshotStatus($('status'),$('refresh'),[['持仓',report],['持仓内交易',{cutoff:report.tradeCutoff}]],{retained:result.source==='retained'});
- }catch(e){$('status').textContent=e.message;$('status').className='notice';if(!report)$('rows').innerHTML='<tr><td colspan="10" class="empty">暂时无法读取持仓，请点击刷新重试。</td></tr>';}
+ }catch(e){$('status').textContent=e.message;$('status').className='notice';if(!report)$('rows').innerHTML='<tr><td colspan="10" class="empty">暂时无法读取持仓，请点击刷新重试。</td></tr>';showSnapshotFailure();return false;}
  finally{busy=false;$('refresh').disabled=false;$('refresh').textContent=refreshButtonLabel($('refresh'));if(reloadForTags){reloadForTags=false;void refresh();}}
 }
 renderCustomFilters();

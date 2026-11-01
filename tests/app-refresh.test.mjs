@@ -1,4 +1,5 @@
 import { POOL_SCOPES, validPoolScope, scopedSnapshot } from '../src/pool-scope.mjs';
+import {renderDataAlert,depthDataAlert} from '../src/data-alert.mjs';
 import { intervalStats } from '../src/interval-stats.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
@@ -38,7 +39,7 @@ function app(search = '') {
     ResizeObserver: class { observe() {} }, setInterval: callback => timers.push(callback),
     fetch: () => new Promise(() => {}), buildDepth, settings, poolInventory, ownedInventory, inventorySplit, estimateTarget, priceAtTick, cumulative, priceOf, intervalStats, OWNERS, poolMetadata, lpDetails,
     readBrowserCache: selected => selected === market ? live() : null, saveBrowserCache() {}, readSharedCache: async () => null,
-    POOL_SCOPES, validPoolScope, scopedSnapshot,
+    POOL_SCOPES, validPoolScope, scopedSnapshot, renderDataAlert,depthDataAlert,
     loadPools: (_pools, _base, _range, onProgress) => { progress.push(onProgress); return new Promise(resolve => pending.push(resolve)); }, market });
   vm.runInContext(source, context);
   vm.runInContext('state.market = market;', context);

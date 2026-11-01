@@ -2,7 +2,7 @@ import {startSnapshotPolling} from './snapshot-poll.mjs';
 import {readSnapshot,newerSnapshot,realtimeHost} from './snapshot-client.mjs';
 import {compactViewsEnabled,readView,cachedView} from './view-client.mjs';
 import {esimEndpoint} from './site-runtime.mjs';
-import {showSnapshotStatus,refreshButtonLabel} from './snapshot-status.mjs';
+import {showSnapshotStatus,showSnapshotFailure,refreshButtonLabel} from './snapshot-status.mjs';
 import {sellerProfile,holderViewURL,displayEsimBalance} from './holder-insights.mjs';
 import {TAG_KEY,readManual} from './holder-model.mjs';
 import {createTagFilter} from './tag-filter-control.mjs';
@@ -78,7 +78,7 @@ function applyCompact(view,key,schedule=true){
  current=view;saved={...view,_compact:true};compactKey=key;holderReport={...view.holders,_compact:true};holderMap=new Map(holderReport.rows.map(row=>[row.address,row]));lastTradeSource=lastHolderSource='realtime';render(schedule);return true;
 }
 async function loadPage(){
- try{await loadPageRequest();return true;}catch(error){$('status').textContent=error.message||'筛选结果暂时无法更新，保留已显示的数据。';$('status').className='notice';return false;}
+ try{return await loadPageRequest()!==false;}catch(error){$('status').textContent=error.message||'筛选结果暂时无法更新，保留已显示的数据。';$('status').className='notice';showSnapshotFailure();return false;}
 }
 async function loadPageRequest(){
  const seq=++generation,key=datasetKey();clearTimeout(timer);
@@ -100,7 +100,7 @@ async function loadPageRequest(){
  }
  if(saved){current=localPage();render(false);}
  if(endpoint&&!realtimeHost()&&!datasets.has(key))try{const result=await json(url(),{signal:AbortSignal.timeout(25000)});if(seq!==generation)return;datasets.set(key,newerSnapshot(datasets.get(key),result.report));current=localPage();render();}
- catch{if(seq!==generation)return;$('status').textContent='接口暂不可用，显示已保存的排名。';$('status').className='notice';}
+ catch{if(seq!==generation)return;$('status').textContent='接口暂不可用，显示已保存的排名。';$('status').className='notice';showSnapshotFailure();return false;}
  else if(endpoint)render();
 }
 async function fetchBalances(manual=false){
@@ -130,7 +130,7 @@ $('refresh').addEventListener('click',async()=>{
   const trading=async()=>{if(endpoint&&!realtimeHost()){const result=await json(requestedURL,{method:'POST',headers:{'Content-Type':'application/json'},body:'{}',signal:AbortSignal.timeout(260000)});datasets.set(requestedKey,newerSnapshot(datasets.get(requestedKey),result.report));lastTradeSource='live';return;}saved=await loadSaved();};
   await Promise.all([trading(),loadHolders()]);current=localPage();render();
   const partial=lastTradeSource==='retained'||lastHolderSource==='retained';showSnapshotStatus($('status'),$('refresh'),[['交易',current||saved],['持仓',holderReport]],{retained:partial});
- }catch(e){$('status').textContent=e.name==='TimeoutError'?'更新超时，保留上次数据。':e.message;$('status').className='notice';}
+ }catch(e){$('status').textContent=e.name==='TimeoutError'?'更新超时，保留上次数据。':e.message;$('status').className='notice';showSnapshotFailure();return false;}
  finally{busy=false;$('refresh').disabled=false;$('refresh').textContent=refreshButtonLabel($('refresh'));if(reloadForTags){reloadForTags=false;void loadPage().catch(()=>{});}}
 });
 window.addEventListener('storage',e=>{if(e.key===TAG_KEY){manual=readManual(e.newValue);tagFilter.refresh();page=0;if(busy)reloadForTags=true;else void loadPage().catch(()=>{$('status').textContent='本地标签已保留，持仓数据正在重试。';});}});
@@ -145,7 +145,7 @@ if(['asc','desc'].includes(query.get('direction')))$('sort-direction').value=que
 for(const input of $('filter').querySelectorAll('input'))input.checked=(query.get('tags')||'').split(',').includes(input.value);
 tagFilter.refresh();
 try{const config=await json('./data/esim-config.json');endpoint=esimEndpoint(config);}catch{endpoint=null;}
-try{if(await loadPage())showSnapshotStatus($('status'),$('refresh'),[['交易',current||saved],['持仓',holderReport]],{retained:lastTradeSource==='retained'||lastHolderSource==='retained'});}catch{$('status').textContent='地址数据暂时无法读取，请点击刷新重试。';$('status').className='notice';}
+try{if(await loadPage())showSnapshotStatus($('status'),$('refresh'),[['交易',current||saved],['持仓',holderReport]],{retained:lastTradeSource==='retained'||lastHolderSource==='retained'});}catch{$('status').textContent='地址数据暂时无法读取，请点击刷新重试。';$('status').className='notice';showSnapshotFailure();}
 
 startSnapshotPolling(async()=>{
  if(busy)return false;busy=true;
