@@ -17,7 +17,7 @@ export async function loadSharedRegistry(sql){
  for(const row of rows){const prior=CONFIRMED_HOLDER_LABELS[row.address];
   // Local mixed/exclusion rules are never promoted to whole-wallet ownership.
   if(prior&&['mixed','dex','activity','reserve'].includes(prior.kind))continue;
-  CONFIRMED_HOLDER_LABELS[row.address]={...prior,label:row.label,kind:row.kind,source:row.evidence};
+  CONFIRMED_HOLDER_LABELS[row.address]={...prior,label:row.label,kind:row.kind,source:row.evidence,mm_included:row.mm_included===true};
   if(['own','lp'].includes(row.kind))EXECUTION_LABELS[row.address]={...EXECUTION_LABELS[row.address],label:row.label,category:'own',source:row.evidence};
  }
  return {loaded:true,count:rows.length,mm:rows.filter(r=>r.mm_included).length};

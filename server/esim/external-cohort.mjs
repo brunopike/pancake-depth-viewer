@@ -4,9 +4,10 @@ import {CONFIRMED_HOLDER_LABELS,HOLDER_BALANCE_SPLITS,HOLDER_CIRCULATION_EXCLUSI
 import marketMaking from '../../src/mm-own-addresses.json' with {type:'json'};
 
 export function externalScope(holderRows=[]){
- const own=new Set([...marketMaking.records.map(r=>r.address),...Object.entries(CONFIRMED_HOLDER_LABELS).filter(([,v])=>['own','lp'].includes(v.kind)).map(([a])=>a),...Object.entries(EXECUTION_LABELS).filter(([,v])=>v.category==='own').map(([a])=>a)]);
+ const mm=new Set([...marketMaking.records.map(r=>r.address),...Object.entries(CONFIRMED_HOLDER_LABELS).filter(([,v])=>v.mm_included).map(([a])=>a)]);
+ const own=new Set([...mm,...Object.entries(CONFIRMED_HOLDER_LABELS).filter(([,v])=>['own','lp'].includes(v.kind)).map(([a])=>a),...Object.entries(EXECUTION_LABELS).filter(([,v])=>v.category==='own').map(([a])=>a)]);
  for(const r of holderRows)if(!HOLDER_BALANCE_SPLITS[r.address]&&r.tags?.some(t=>['own','lp'].includes(t.kind)))own.add(r.address);
- return {own,excluded:new Set([...own,...Object.keys(HOLDER_CIRCULATION_EXCLUSIONS)]),mixed:new Set(Object.keys(HOLDER_BALANCE_SPLITS)),mmCount:new Set(marketMaking.records.map(r=>r.address)).size};
+ return {own,excluded:new Set([...own,...Object.keys(HOLDER_CIRCULATION_EXCLUSIONS)]),mixed:new Set(Object.keys(HOLDER_BALANCE_SPLITS)),mmCount:mm.size};
 }
 export function buildExternalCohort(inputs,holderRows=[]){
  const scope=externalScope(holderRows),c=buildContractCohort({...inputs,excludeAddresses:[...scope.excluded],terminalAddresses:[...scope.mixed]});
