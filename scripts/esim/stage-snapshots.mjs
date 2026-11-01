@@ -1,7 +1,7 @@
 import {readFile,writeFile} from 'node:fs/promises';
 import {gunzipSync} from 'node:zlib';
 import {validSnapshot,newerSnapshot} from '../../src/snapshot-client.mjs';
-import {parseState,attachClaimFlow,validClaimFlow} from '../../server/esim/store.mjs';
+import {readState,attachClaimFlow,validClaimFlow} from '../../server/esim/store.mjs';
 import {buildReport} from '../../server/esim/metrics.mjs';
 import {buildAddressReport} from '../../server/esim/addresses.mjs';
 let flow=null;try{flow=JSON.parse(gunzipSync(await readFile('.goodway/pages-report/claim-flow.json.gz')));}catch{try{flow=JSON.parse(await readFile('.goodway/pages-report/claim-flow.json','utf8'));}catch{}}
@@ -12,7 +12,7 @@ for(const [kind,source]of [['report','.goodway/pages-report/report.json'],['addr
  if(!validSnapshot(kind,latest)||!validSnapshot(kind,bundled))throw Error(`INVALID_${kind.toUpperCase()}_SNAPSHOT`);
  let selected=newerSnapshot(bundled,latest);
  if(kind==='report'||kind==='addresses'){
-  const state=attachClaimFlow(parseState(await readFile('.goodway/pages-report/state.json.gz')),flow);
+  const state=attachClaimFlow(await readState('.goodway/pages-report/state.json.gz'),flow);
   if(state.block===selected.block){
    const enriched=kind==='report'?buildReport(state,selected.generatedAt):buildAddressReport(state,selected.generatedAt);
    if(kind==='report')for(const key of ['today','yesterday','history'])if(JSON.stringify(enriched.windows[key].groups)!==JSON.stringify(selected.windows[key].groups))throw Error('REPORT_TOTALS_CHANGED');

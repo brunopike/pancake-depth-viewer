@@ -5,6 +5,7 @@ import {mkdtemp,writeFile,mkdir,rm,readFile} from 'node:fs/promises';
 import {tmpdir} from 'node:os';
 import {join} from 'node:path';
 import {gzipSync,gunzipSync} from 'node:zlib';
+import {createHash} from 'node:crypto';
 import {publishReportFiles} from '../scripts/esim/publish-report-files.mjs';
 
 test('binary publication preserves the working branch, staged user edits and unrelated cache files',async()=>{
@@ -26,6 +27,14 @@ test('binary publication preserves the working branch, staged user edits and unr
   assert.equal(gunzipSync(execFileSync('git',['show',`${flow}:claim-flow.json.gz`],{cwd})).toString(),gunzipSync(packed).toString());
   assert.equal(git(['show',`${flow}:claim-flow.json`]),'{"throughBlock":1}','legacy copy remains available to old readers');
   assert.equal(await publishReportFiles([['claim-flow-state.json.gz',bytes],['claim-flow.json.gz',packed]],{cwd,message:'stale flow',skip:prior=>prior.throughBlock>=2}),false);
+  const large=Buffer.alloc(65*1024*1024,7),largeCommit=await publishReportFiles([['state.json.gz',large],['report.json','{"block":3}'],['addresses.json','{}'],['archive-health.json','{"block":3}']],{cwd,message:'chunked checkpoint'});
+  const manifest=JSON.parse(gunzipSync(execFileSync('git',['show',`${largeCommit}:state.json.gz`],{cwd}))),digest=createHash('sha256');
+  assert.equal(manifest.parts.length,3);
+  for(const part of manifest.parts){const content=execFileSync('git',['show',`${largeCommit}:${part.path}`],{cwd,maxBuffer:40*1024*1024});assert.equal(content.length,part.bytes);digest.update(content);}
+  assert.equal(digest.digest('hex'),createHash('sha256').update(large).digest('hex'));
+  const smallCommit=await publishReportFiles([['state.json.gz',bytes],['report.json','{"block":4}'],['addresses.json','{}']],{cwd,message:'replacement checkpoint'});
+  assert.equal(git(['ls-tree','-r','--name-only',smallCommit,'checkpoint-parts/state.json.gz/']),'');
+  assert.equal(git(['show',`${smallCommit}:keep.txt`]),'preserve');
   assert.equal(git(['rev-parse','HEAD']),head);assert.equal(git(['diff','--cached']),staged);
   for(const [branch,file] of [['holder-cache','holders.json'],['depth-cache','esim-usdt.json']]){
    git(['push','origin',`HEAD:refs/heads/${branch}`]);

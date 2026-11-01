@@ -9,6 +9,11 @@ import {renderCohort,filterCohort,cohortCSV} from '../src/report-cohort.mjs';
 import {reportAmount} from '../src/report-number.mjs';
 import {enrichClaimFlowSnapshot,validClaimFlow} from '../src/claim-flow-client.mjs';
 const a=n=>'0x'+n.toString(16).padStart(40,'0'),h=n=>'0x'+n.toString(16).padStart(64,'0'),word=n=>BigInt(n).toString(16).padStart(64,'0');
+test('cohort validation keeps a verified relation network beyond thirty thousand addresses',()=>{
+ const calls=Array.from({length:30001},(_,i)=>({from:a(i+1)})),closingBalances=Object.fromEntries(calls.map(c=>[c.from,'0']));
+ const c=buildContractCohort({state:{source:SOURCE,block:99,blockHash:h(99),cutoff:100,calls,distributions:[]},transfers:[],marketAddresses:[],openingBalances:{},closingBalances,sourceBalances:{},returnedFlows:[],returnStakes:[]});
+ assert.equal(c.rows.length,30001);assert(validCohort(c,c));
+});
 function cohort(){
  const transfer=(id,from,to,value)=>({id:String(id),order:[id,0,0],tx:h(id),from,to,value:String(value)});
  return buildContractCohort({state:{source:SOURCE,block:99,blockHash:h(99),cutoff:100,calls:[{from:a(1)}],distributions:[{recipient:a(1)}]},transfers:[transfer(1,a(1),a(2),50),transfer(2,a(2),a(3),20),transfer(3,a(3),a(1),5),transfer(4,a(1),a(90),1),transfer(5,a(90),a(4),1)],marketAddresses:[a(90)],openingBalances:{},closingBalances:{[a(1)]:'100',[a(2)]:'30',[a(3)]:'15'},sourceBalances:{[a(1)]:'5',[a(2)]:'20',[a(3)]:'15'},returnedFlows:[{id:'8',source_wei:'20'},{id:'9',source_wei:'7'}],returnStakes:[{id:'8',address:a(2),tx:h(8),value_wei:'50',verifiedStake:true},{id:'9',address:a(2),tx:h(9),value_wei:'10',verifiedStake:false}]});

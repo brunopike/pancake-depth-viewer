@@ -1,21 +1,23 @@
 import {execFile} from 'node:child_process';
 import {promisify} from 'node:util';
-import {mkdtemp,writeFile,rm} from 'node:fs/promises';
+import {mkdtemp,writeFile,rm,mkdir} from 'node:fs/promises';
 import {tmpdir} from 'node:os';
-import {join} from 'node:path';
+import {join,dirname} from 'node:path';
 import {gunzipSync} from 'node:zlib';
 import {leaseFromEnvironment,requireLease} from '../../server/esim/worker-lease.mjs';
+import {packCheckpointFiles} from '../../server/esim/checkpoint-chunks.mjs';
 
 // Git's binary transport avoids the REST blob endpoint's JSON input-size limit.
 // A private temporary index keeps the active branch and user's staging untouched.
 export async function publishReportFiles(files,{cwd=process.cwd(),skip=()=>false,message,branch='esim-cache'}={}){
  if(!['esim-cache','holder-cache','depth-cache'].includes(branch))throw Error('INVALID_PUBLICATION_BRANCH');
- const cohortOnly=branch==='esim-cache'&&files.length===1&&files[0][0]==='cohort.json.gz';
+ const cohortOnly=branch==='esim-cache'&&files.some(([p])=>p==='cohort.json.gz')&&files.every(([p])=>['cohort.json.gz','cohort-health.json'].includes(p));
  const single=branch!=='esim-cache';
  const core=files.some(([path])=>path==='report.json');
- const allowed=cohortOnly?['cohort.json.gz']:branch==='holder-cache'?['holders.json']:branch==='depth-cache'&&files.length===1&&/^(?:esim-usdt|0x[0-9a-f]{40}-0x[0-9a-f]{40})\.json$/.test(files[0][0])?[files[0][0]]:branch==='esim-cache'?(core?['state.json.gz','report.json','addresses.json']:['claim-flow-state.json.gz','claim-flow.json.gz']):[];
+ const allowed=cohortOnly?['cohort.json.gz',...(files.some(([p])=>p==='cohort-health.json')?['cohort-health.json']:[])]:branch==='holder-cache'?['holders.json']:branch==='depth-cache'&&files.length===1&&/^(?:esim-usdt|0x[0-9a-f]{40}-0x[0-9a-f]{40})\.json$/.test(files[0][0])?[files[0][0]]:branch==='esim-cache'?(core?['state.json.gz','report.json','addresses.json',...(files.some(([p])=>p==='archive-health.json')?['archive-health.json']:[])]:['claim-flow-state.json.gz','claim-flow.json.gz',...(files.some(([p])=>p==='provenance-health.json')?['provenance-health.json']:[])]):[];
  if(!allowed.length||files.length!==allowed.length||new Set(files.map(([path])=>path)).size!==allowed.length||files.some(([path])=>!allowed.includes(path)))throw Error('INVALID_PUBLICATION_FILES');
- if(files.some(([,content])=>Buffer.byteLength(content)>100*1024*1024))throw Error('CHECKPOINT_FILE_TOO_LARGE');
+ const physical=files.flatMap(([path,content])=>['state.json.gz','claim-flow-state.json.gz'].includes(path)?packCheckpointFiles(path,content):[[path,content]]);
+ if(physical.some(([,content])=>Buffer.byteLength(content)>100*1024*1024))throw Error('CHECKPOINT_FILE_TOO_LARGE');
  const run=promisify(execFile),dir=await mkdtemp(join(tmpdir(),'esim-publish-'));
  let stage='FETCH';
  const git=async(args,isolated=false)=>(await run('git',args,{cwd,maxBuffer:134217728,timeout:120000,env:isolated?{...process.env,GIT_INDEX_FILE:join(dir,'index')}:process.env})).stdout.trim();
@@ -36,8 +38,12 @@ export async function publishReportFiles(files,{cwd=process.cwd(),skip=()=>false
   }
   if(skip(prior))return false;
   await git(['read-tree',parent],true);
-  for(const [path,content]of files){
-   const file=join(dir,path);await writeFile(file,content);
+  for(const [path]of files)if(['state.json.gz','claim-flow-state.json.gz'].includes(path)){
+   const old=await git(['ls-tree','-r','--name-only',parent,'checkpoint-parts/'+path+'/']);
+   for(const name of old.split('\n').filter(Boolean))await git(['update-index','--force-remove',name],true);
+  }
+  for(const [path,content]of physical){
+   const file=join(dir,path);await mkdir(dirname(file),{recursive:true});await writeFile(file,content);
    const sha=await git(['hash-object','-w',file]);
    await git(['update-index','--add','--cacheinfo',`100644,${sha},${path}`],true);
   }

@@ -1,3 +1,4 @@
+import {auxiliaryFile} from '../../server/esim/auxiliary-health.mjs';
 import {loadSharedRegistry} from '../../server/esim/shared-data.mjs';
 import { readFile } from 'node:fs/promises';
 import { readState } from '../../server/esim/store.mjs';
@@ -15,6 +16,7 @@ await loadSharedRegistry();
 const report=buildReport(state);
 if(!isSourceInflowAligned(report.sourceInflow,report))throw Error('SOURCE_INFLOW_NOT_SYNCHRONIZED');
 const commit=await publishReportFiles([
+ auxiliaryFile('archive',state.block,state.cutoff,{trades:state.trades.length,distributions:state.distributions.length}),
  ['state.json.gz',bytes],
  ['report.json',JSON.stringify(report)],
  ['addresses.json',JSON.stringify(buildAddressReport(state))],

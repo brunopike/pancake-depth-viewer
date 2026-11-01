@@ -36,3 +36,10 @@ test('all chain pages place the alert before the page header and main content',a
 test('known worker failure codes have useful reasons without exposing raw diagnostics',async()=>{
  const {chainFailureReason}=await import('../src/snapshot-status.mjs');assert.match(chainFailureReason('RPC_UNAVAILABLE'),/接口暂时不可用/);assert.match(chainFailureReason('NEW_ESIM_POOL_REQUIRES_SYNC'),/新的交易池/);assert.match(chainFailureReason('CHECKPOINT_PUBLISH_PUSH_FAILED'),/无法发布/);assert.doesNotMatch(chainFailureReason('private https://example.invalid?key=secret'),/private|secret|example/);
 });
+test('historical verification failures remain visible even while live snapshots advance',()=>{
+ const auxiliary=Object.fromEntries(['provenance','cohort','archive'].map(k=>[k,{cutoff:now/1000-60}])),entries=[['交易',{cutoff:now/1000-10}]];
+ auxiliary.provenance.cutoff=now/1000-7201;
+ assert.match(snapshotStatus(entries,{now,realtime:true,health:{auxiliary}}).alert.reason,/分发币跨地址追踪超过两小时/);
+ auxiliary.provenance.cutoff=now/1000-60;
+ assert.equal(snapshotStatus(entries,{now,realtime:true,health:{auxiliary}}).alert,null);
+});

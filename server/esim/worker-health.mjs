@@ -1,4 +1,11 @@
 export const STALE_PROGRESS_SECONDS=15*60;
+export function auxiliaryIssues(auxiliary,now=Date.now()){
+ if(!auxiliary)return [];
+ return ['provenance','cohort','archive'].flatMap(kind=>{
+  const row=auxiliary[kind];if(!Number.isFinite(row?.cutoff))return [kind+':PENDING'];
+  return row.cutoff*1000>now+60000?[kind+':FUTURE_TIME']:now-row.cutoff*1000>7200000?[kind+':STALE']:[];
+ });
+}
 export const checkpointPassComplete=(startedAt,now,persistent)=>persistent&&now-startedAt>=90000;
 export const standbyMayTakeover=(job,file,githubActions)=>githubActions==='true'&&
  (job==='core'&&file==='scripts/esim/realtime-worker.mjs'||job==='depth'&&file==='scripts/hourly-worker.mjs');
@@ -13,6 +20,7 @@ export function snapshotIssues(status,now=Date.now()){
  }
  if(snapshots.report&&snapshots.addresses&&(snapshots.report.block!==snapshots.addresses.block||snapshots.report.cutoff!==snapshots.addresses.cutoff))issues.push('core:VIEW_MISMATCH');
  if(status?.error)issues.push('core:'+status.error);
+ issues.push(...auxiliaryIssues(status?.auxiliary,now));
  const delivered=Date.parse(status?.lastDelivery);
  if(!Number.isFinite(delivered)||now-delivered>3600000)issues.push('webhook:SILENT');
  return issues;

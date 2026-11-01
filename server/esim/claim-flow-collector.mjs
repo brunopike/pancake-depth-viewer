@@ -3,6 +3,7 @@ import {TRANSFER,PCS,UNI,VAULT,addr,order,eventKey,signature} from './attributio
 import {readHolderBalances} from './holders.mjs';
 import {traceClaimFlow} from './claim-flow.mjs';
 import {SOURCE_INFLOW_SEED,buildSourceInflow} from './source-inflows.mjs';
+import {MAX_TRACKED_ADDRESSES,MAX_FLOW_TRANSFERS} from '../../src/data-capacity.mjs';
 const ZERO='0x0000000000000000000000000000000000000000',hex=n=>'0x'+n.toString(16);
 const ensure=(ok,code)=>{if(!ok)throw Error(code);};
 const lpEvents=new Set(['Mint(address,address,int24,int24,uint128,uint256,uint256)','Burn(address,int24,int24,uint128,uint256,uint256)','Collect(address,address,int24,int24,uint128,uint128)','Mint(address,uint256,uint256)','Burn(address,uint256,uint256,address)','ModifyLiquidity(bytes32,address,int24,int24,int256,bytes32)'].map(signature));
@@ -28,10 +29,11 @@ export async function collectClaimFlow(state,transport,{previous,progress=()=>{}
  ensure(raw.length<=500000&&raw.every(e=>!e.removed&&e.address.toLowerCase()===TOKEN&&e.topics[0]===TRANSFER&&e.topics.length===3&&order(e)[0]>=fromBlock&&order(e)[0]<=state.block),'FLOW_INVALID_LOGS');
  const seen=new Set(previous?.transfers.map(e=>e.id)||[]),added=[];
  for(const e of raw){const id=eventKey(e);ensure(!seen.has(id),'FLOW_DUPLICATE_LOG');seen.add(id);added.push({id,tx:e.transactionHash,blockHash:e.blockHash,order:order(e),timestamp:e.blockTimestamp?Number(BigInt(e.blockTimestamp)):null,from:addr(e.topics[1]),to:addr(e.topics[2]),value:BigInt(e.data).toString()});}
- const transfers=[...(previous?.transfers||[]),...added];ensure(transfers.length<=1000000,'FLOW_EVENT_LIMIT');
+ const transfers=[...(previous?.transfers||[]),...added];ensure(transfers.length<=MAX_FLOW_TRANSFERS,'FLOW_EVENT_LIMIT');
+ raw.length=0;seen.clear();
  const sourceEvents=new Map(transfers.filter(e=>e.from===SOURCE&&BigInt(e.value)>0n).map(e=>[e.id,e]));
  ensure(sourceEvents.size===state.distributions.length&&state.distributions.every(d=>{const e=sourceEvents.get(d.id);return e&&e.to===d.recipient&&e.value===d.value;}),'FLOW_DISTRIBUTION_MISMATCH');
- const addresses=[...new Set(transfers.flatMap(e=>[e.from,e.to]).filter(normal))].sort();ensure(addresses.length<=30000,'FLOW_ADDRESS_LIMIT');
+ const addresses=[...new Set(transfers.flatMap(e=>[e.from,e.to]).filter(normal))].sort();ensure(addresses.length<=MAX_TRACKED_ADDRESSES,'FLOW_ADDRESS_LIMIT');
  const openingBalances={...(previous?.openingBalances||{})},missing=addresses.filter(a=>!Object.hasOwn(openingBalances,a));
  progress({phase:'claim-opening-balances',addresses:missing.length,openingBlock});
  const initial=await readBalances(missing,hex(openingBlock),transport);for(const [i,a]of missing.entries())openingBalances[a]=initial[i];

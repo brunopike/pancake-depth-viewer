@@ -29,7 +29,9 @@ jobs:
         with:
           ref: esim-cache
           path: .goodway/checkpoint
-          sparse-checkout: state.json.gz
+          sparse-checkout: |
+            state.json.gz
+            checkpoint-parts/
           sparse-checkout-cone-mode: false
       - uses: actions/setup-node@v4
         with:

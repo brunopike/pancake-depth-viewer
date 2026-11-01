@@ -1,16 +1,27 @@
 import {createReadStream} from 'node:fs';
-import {Writable} from 'node:stream';
+import {readFile} from 'node:fs/promises';
+import {dirname,resolve} from 'node:path';
+import {fileURLToPath} from 'node:url';
+import {Writable,Readable} from 'node:stream';
 import {pipeline} from 'node:stream/promises';
 import {createGunzip} from 'node:zlib';
 import parser from 'stream-json';
 import Assembler from 'stream-json/assembler.js';
+import {checkpointParts} from './checkpoint-chunks.mjs';
 
 // Avoid holding the entire inflated JSON and its UTF-16 copy alongside the ledger.
-export async function readCheckpoint(file){
+async function parse(source){
  const assembler=new Assembler();
- await pipeline(typeof file==='string'||file instanceof URL?createReadStream(file):file,createGunzip(),parser({streamKeys:false,streamStrings:false,streamNumbers:false}),new Writable({objectMode:true,write(token,encoding,done){
+ await pipeline(source,createGunzip(),parser({streamKeys:false,streamStrings:false,streamNumbers:false}),new Writable({objectMode:true,write(token,encoding,done){
   try{if(assembler[token.name])assembler[token.name](token.value);done();}catch(error){done(error);}
  }}));
  if(!assembler.done||!assembler.current||Array.isArray(assembler.current))throw Error('INVALID_CHECKPOINT');
  return assembler.current;
+}
+export async function readCheckpoint(file,{loadPart}={}){
+ const local=typeof file==='string'||file instanceof URL,value=await parse(local?createReadStream(file):file);
+ if(value.format!=='esim-gzip-chunks-v1')return value;
+ if(!loadPart&&local){const root=dirname(file instanceof URL?fileURLToPath(file):file);loadPart=path=>readFile(resolve(root,path));}
+ if(!loadPart)throw Error('CHECKPOINT_PARTS_UNAVAILABLE');
+ return parse(Readable.from(checkpointParts(value,loadPart),{objectMode:false}));
 }

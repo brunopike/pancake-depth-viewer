@@ -55,7 +55,10 @@ export async function loadState({ fetch: request = fetch, includeRemote = true, 
   if (includeRemote&&includeRemoteCore&&!checkpointFile) try {
     const response = await request(`${CHECKPOINT_URL}?t=${Date.now()}`, { cache: 'no-store', signal: AbortSignal.timeout(process.env.ESIM_PERSISTENT_WORKER==='true'?120000:15000) });
     if (response.ok) {
-      const remote = validateState(await readCheckpoint(Readable.fromWeb(response.body)));
+      const remote = validateState(await readCheckpoint(Readable.fromWeb(response.body),{loadPart:async path=>{
+        const part=await request(new URL(path,CHECKPOINT_URL),{cache:'no-store',signal:AbortSignal.timeout(120000)});
+        if(!part.ok)throw Error('CHECKPOINT_PARTS_UNAVAILABLE');return Buffer.from(await part.arrayBuffer());
+      }}));
       if (remote.block > local.block) local=remote;
     }
   } catch { /* The bundled verified checkpoint remains usable. */ }
