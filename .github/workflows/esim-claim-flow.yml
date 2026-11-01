@@ -44,7 +44,7 @@ jobs:
           node-version: '22'
           cache: npm
       - run: npm ci --no-audit --no-fund
-      - uses: actions/cache@v4
+      - uses: actions/cache/restore@v4
         with:
           path: .goodway/claim-flow/rpc-cache
           key: esim-claim-flow-rpc-v1-${{ github.run_id }}
@@ -61,3 +61,8 @@ jobs:
           GITHUB_REPOSITORY: ${{ github.repository }}
           NODE_OPTIONS: '--max-old-space-size=6144'
         run: node scripts/esim/run-with-lease.mjs provenance scripts/esim/claim-flow-job.mjs
+      - uses: actions/cache/save@v4
+        if: always()
+        with:
+          path: .goodway/claim-flow/rpc-cache
+          key: esim-claim-flow-rpc-v1-${{ github.run_id }}
