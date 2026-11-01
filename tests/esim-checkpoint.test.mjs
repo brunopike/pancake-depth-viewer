@@ -27,11 +27,11 @@ test('checkpoint loads complete compressed claim evidence and falls back only du
  const flow={version:1,method:'proportional-v1',token:TOKEN,source:SOURCE,throughBlock:state.block,blockHash:state.blockHash,cutoff:200,sales:[],unconfirmedFlows:[],totals:{issued_wei:'7',sold_wei:'0',direct_wei:'0',relay_wei:'0',unconfirmed_pool_wei:'0',remaining_wei:'7',returned_wei:'0',burned_wei:'0'}};
  try{
   await writeFile(file,gzipSync(JSON.stringify(state)));
-  const result=await loadState({checkpointFile:file,fetch:async()=>new Response(gzipSync(JSON.stringify(flow)))});assert.deepEqual(result.claimFlow,flow);
+  const result=await loadState({checkpointFile:file,fetch:async url=>{assert.match(url,/claim-flow\.json\.gz\?t=\d+$/);return new Response(gzipSync(JSON.stringify(flow)));}});assert.deepEqual(result.claimFlow,flow);
   const newerCore={...state,block:state.block+10,cutoff:210,trades:['preserve newest trades']};
   const merged=mergeCheckpointState(newerCore,result);assert.equal(merged.block,newerCore.block);assert.equal(merged.trades,newerCore.trades);assert.deepEqual(merged.claimFlow,flow);
   assert.deepEqual(mergeCheckpointState(state,result).claimFlow,flow,'same-block provenance must also advance');
-  const calls=[],migrated=await loadState({checkpointFile:file,fetch:async url=>{calls.push(url);return url.endsWith('.gz')?new Response('',{status:404}):Response.json(flow);}});
+  const calls=[],migrated=await loadState({checkpointFile:file,fetch:async url=>{calls.push(url);return url.includes('.gz?')?new Response('',{status:404}):Response.json(flow);}});
   assert.deepEqual(migrated.claimFlow,flow);assert.equal(calls.length,2);
   await writeFile(file,gzipSync(JSON.stringify({...state,claimFlow:flow})));
   const retained=await loadState({checkpointFile:file,fetch:async()=>new Response('invalid gzip')});assert.deepEqual(retained.claimFlow,flow);

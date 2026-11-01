@@ -5,14 +5,16 @@ import {startLease} from '../../server/esim/worker-lease.mjs';
 import {realtimeStatus,realtimeSQL,markRealtimeError} from '../../server/esim/realtime-store.mjs';
 import {workerFailureCode} from './hourly-worker.mjs';
 import {pathToFileURL} from 'node:url';
+import {readAuxiliaryStatus} from '../../server/esim/auxiliary-health.mjs';
 
 // One heavy child at a time on the 4 GB VM. Provenance retains its independent
 // GitHub job; a multi-minute attribution rebuild cannot block live processing.
-export function dueTask({now,last,cutoff,pendingBlock,block,retryAt={},coreAvailable=true}){
+export const provenanceMergeNeeded=({now,last,publishedFlowBlock=0})=>publishedFlowBlock>(last.flowBlock||0)&&now-(last.merge||0)>=60000;
+export function dueTask({now,last,cutoff,pendingBlock,block,publishedFlowBlock=0,retryAt={},coreAvailable=true}){
  const ready=task=>now>=(retryAt[task]||0)&&(coreAvailable||!['core','holders','archive'].includes(task));
  if(ready('core')&&!last.core)return 'core';
  const due=[
-  ['core',now-(last.core||0)>=60000&&(pendingBlock>block||now-cutoff*1000>=300000)],
+  ['core',now-(last.core||0)>=60000&&(pendingBlock>block||now-cutoff*1000>=300000||provenanceMergeNeeded({now,last,publishedFlowBlock}))],
   ['holders',now-(last.holders||0)>=180000],['archive',now-(last.archive||0)>=3600000],
   ['depth',now-(last.depth||0)>=300000],['mm',now-(last.mm||0)>=60000]
  ].filter(([task,needed])=>needed&&ready(task)).map(([task])=>task);
@@ -72,8 +74,9 @@ export async function main(){
    if(depthLost){await depthGuard?.close();depthGuard=null;depthLost=false;}
    // Core standby must not suspend independent depth and MM recovery.
    if(!guard){guard=await startLease(dryRun?'shadow-core':'core',{onLost:leaseLost('core')});if(guard){last.core=0;first=true;}}
-   const now=Date.now();let status={};try{status=await realtimeStatus();}catch{}
-   const task=dueTask({now,last,block,cutoff,pendingBlock:Number(status.pending_block)||0,retryAt,coreAvailable:!!guard});
+   const now=Date.now(),[live,auxiliary]=await Promise.allSettled([realtimeStatus(),readAuxiliaryStatus()]);
+   const status=live.status==='fulfilled'?live.value:{},publishedFlowBlock=auxiliary.status==='fulfilled'?auxiliary.value.provenance?.block||0:0;
+   const task=dueTask({now,last,block,cutoff,pendingBlock:Number(status.pending_block)||0,publishedFlowBlock,retryAt,coreAvailable:!!guard});
    if(task){
     const started=Date.now();
     try{
@@ -81,9 +84,8 @@ export async function main(){
       // Keep the previous successful prefix until its successor is verified.
       // Copying over rollback before a reorg check would preserve the bad tip.
       try{await copyFile('.goodway/esim-monitor/state.json.gz','.goodway/esim-monitor/vm-candidate.json.gz');}catch{}
-      // Remote bootstrap/merge once per takeover, then hourly to attach the
-      // independently verified provenance. Normal cycles use the local prefix.
-      const remote=first||now-(last.merge||0)>=3600000;
+      // New verified provenance merges promptly; normal cycles keep the local prefix.
+      const remote=first||now-(last.merge||0)>=3600000||provenanceMergeNeeded({now,last,publishedFlowBlock});
       let partial=false;
       // A recent local prefix is revalidated against the chain. Do not keep
       // two full ledgers in RAM merely to restart this persistent worker.
@@ -93,6 +95,7 @@ export async function main(){
       if(remote)last.merge=now;first=false;
       await command('scripts/esim/vm-task.mjs',['core'],{extra:{ESIM_MIN_BLOCK:String(block+(partial?1:0))}});
       const next=await json(`${local}/core.json`);
+      last.flowBlock=next.flowBlock||0;
       if(next.block>block)try{await copyFile('.goodway/esim-monitor/vm-candidate.json.gz','.goodway/esim-monitor/vm-rollback.json.gz');}catch{}
       block=next.block;cutoff=next.cutoff;
      }else if(task==='holders'){

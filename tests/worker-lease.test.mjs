@@ -68,6 +68,15 @@ test('VM scheduler prioritizes canonical catch-up and retains a notification-fre
  assert.equal(dueTask({now,last,cutoff:now/1000,block:10,pendingBlock:10}),null);
  assert.equal(dueTask({now,last:{...last,mm:now-60001},cutoff:now/1000,block:10,pendingBlock:10}),'mm');
 });
+test('a new provenance publication wakes a quiet core without bypassing leases or retry limits',()=>{
+ const now=1000000,last={core:now-60001,holders:now,archive:now,depth:now,mm:now,merge:now-60001,flowBlock:10};
+ const input={now,last,cutoff:now/1000,block:100,pendingBlock:100,publishedFlowBlock:11};
+ assert.equal(dueTask(input),'core');
+ assert.equal(dueTask({...input,last:{...last,flowBlock:11}}),null);
+ assert.equal(dueTask({...input,last:{...last,merge:now-59999}}),null);
+ assert.equal(dueTask({...input,coreAvailable:false}),null);
+ assert.equal(dueTask({...input,retryAt:{core:now+1}}),null);
+});
 test('live cutover never inherits unpublished dry-run archive and snapshot timers',()=>{
  const dry={dryRun:true,core:100,holders:200,archive:300,depth:400};
  assert.deepEqual(restoredSchedule(dry,false),{dryRun:false,core:0});

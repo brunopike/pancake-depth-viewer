@@ -63,9 +63,9 @@ export async function loadState({ fetch: request = fetch, includeRemote = true, 
     }
   } catch { /* The bundled verified checkpoint remains usable. */ }
   if(includeRemote)try{
-    const options={cache:'no-store',signal:AbortSignal.timeout(15000)},r=await request(CLAIM_FLOW_URL,options);
+    const options={cache:'no-store',signal:AbortSignal.timeout(15000)},stamp='?t='+Date.now(),r=await request(CLAIM_FLOW_URL+stamp,options);
     if(r.ok)local=attachClaimFlow(local,JSON.parse(gunzipSync(Buffer.from(await r.arrayBuffer()))));
-    else if(r.status===404){const legacy=await request(CLAIM_FLOW_URL.slice(0,-3),options);if(legacy.ok)local=attachClaimFlow(local,await legacy.json());}
+    else if(r.status===404){const legacy=await request(CLAIM_FLOW_URL.slice(0,-3)+stamp,options);if(legacy.ok)local=attachClaimFlow(local,await legacy.json());}
   }catch{}
   return local;
 }
