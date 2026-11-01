@@ -1,6 +1,13 @@
 import test from 'node:test';import assert from 'node:assert/strict';
 import {buildHolderReport,holderBehavior,blockAtOrBefore,preserveHolderTrades,readChangedHolderBalances,SEED} from '../server/esim/holders.mjs';
 import {parseAbi,decodeFunctionData,encodeFunctionResult} from 'viem';
+import {validateHolders} from '../server/esim/holders.mjs';
+import {TOKEN} from '../server/esim/metrics.mjs';
+test('holder snapshots retain all addresses after the registry grows beyond thirty thousand',()=>{
+ const report={version:1,token:TOKEN,block:100,rows:Array.from({length:30001},(_,i)=>({address:'0x'+BigInt(i+1).toString(16).padStart(40,'0')}))};
+ assert.strictEqual(validateHolders(report),report);
+ assert.throws(()=>validateHolders({...report,rows:Array(100001)}),/INVALID_HOLDER_REPORT/);
+});
 const a='0x'+'1'.repeat(40),b='0x'+'2'.repeat(40),c='0x'+'3'.repeat(40),end=200000;
 const state={origin:1,cutoff:end,trades:[],calls:[],pools:{},firstRecipient:{}};
 test('incremental balances query transfers, new rows and unknown history while preserving untouched exact integers',async()=>{

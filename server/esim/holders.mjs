@@ -9,6 +9,7 @@ import { CONFIRMED_HOLDER_LABELS, HOLDER_IMPORT, applyHolderLabels } from '../..
 const seedFile = JSON.parse(await readFile(new URL('./holder-seed.json', import.meta.url)));
 export const SEED = {...seedFile, addresses:[...new Set([...seedFile.addresses,...HOLDER_IMPORT.records.map(r=>r.address)])], supplement:{source:HOLDER_IMPORT.source,capturedAt:HOLDER_IMPORT.capturedAt,block:HOLDER_IMPORT.block,count:HOLDER_IMPORT.count}, labels:{...seedFile.labels,...CONFIRMED_HOLDER_LABELS}};
 export const HOLDER_CACHE = 'https://raw.githubusercontent.com/brunopike/pancake-depth-viewer/holder-cache/holders.json';
+export const MAX_HOLDER_ADDRESSES = 100000;
 const ZERO = '0x0000000000000000000000000000000000000000';
 const valid = a => /^0x[0-9a-f]{40}$/.test(a || '') && a !== ZERO;
 const hex = n => `0x${n.toString(16)}`, num = n => Number(BigInt(n));
@@ -139,7 +140,7 @@ export async function collectHolders(state, transport, {previous,incremental=fal
   const logs=(await batch(calls)).flat();
   assert(logs.every(e=>!e.removed&&e.address.toLowerCase()===TOKEN&&e.topics[0]===TRANSFER&&num(e.blockNumber)>=start&&num(e.blockNumber)<=end),'INVALID_TRANSFER_DISCOVERY');
   for(const e of logs)for(const t of e.topics.slice(1,3)){const a=`0x${t.slice(-40)}`.toLowerCase();if(valid(a))known.add(a);}
-  const addresses=[...known].sort();assert(addresses.length<=30000,'HOLDER_ADDRESS_LIMIT');progress({phase:'holders',addresses:addresses.length,logs:logs.length,block:end});
+  const addresses=[...known].sort();assert(addresses.length<=MAX_HOLDER_ADDRESSES,'HOLDER_ADDRESS_LIMIT');progress({phase:'holders',addresses:addresses.length,logs:logs.length,block:end});
   const [supply,decimals,slot]=await batch([['eth_call',[{to:TOKEN,data:'0x18160ddd'},hex(end)]],['eth_call',[{to:TOKEN,data:'0x313ce567'},hex(end)]],['eth_call',[{to:MANAGER,data:encodeFunctionData({abi:clABI,functionName:'getSlot0',args:[PRICE_POOL]})},hex(end)]]]);
   assert(num(decimals)===18,'WRONG_TOKEN_DECIMALS');
   const sqrt=decodeFunctionResult({abi:clABI,functionName:'getSlot0',data:slot})[0];
@@ -183,7 +184,7 @@ export async function collectHolders(state, transport, {previous,incremental=fal
   return report;
 }
 export function validateHolders(report){
-  assert(report?.version===1&&report.token===TOKEN&&Number.isSafeInteger(report.block)&&Array.isArray(report.rows)&&report.rows.length<=30000,'INVALID_HOLDER_REPORT');return report;
+  assert(report?.version===1&&report.token===TOKEN&&Number.isSafeInteger(report.block)&&Array.isArray(report.rows)&&report.rows.length<=MAX_HOLDER_ADDRESSES,'INVALID_HOLDER_REPORT');return report;
 }
 export async function loadHolders({remote=true}={}) {
   if(remote)try{const response=await fetch(HOLDER_CACHE,{cache:'no-store',signal:AbortSignal.timeout(20000)});if(response.ok)return validateHolders(await response.json());}catch{}

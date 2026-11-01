@@ -8,8 +8,8 @@ import {pathToFileURL} from 'node:url';
 
 // One heavy child at a time on the 4 GB VM. Provenance retains its independent
 // GitHub job; a multi-minute attribution rebuild cannot block live processing.
-export function dueTask({now,last,cutoff,pendingBlock,block,retryAt={}}){
- const ready=task=>now>=(retryAt[task]||0);
+export function dueTask({now,last,cutoff,pendingBlock,block,retryAt={},coreAvailable=true}){
+ const ready=task=>now>=(retryAt[task]||0)&&(coreAvailable||!['core','holders','archive'].includes(task));
  if(ready('core')&&!last.core)return 'core';
  const due=[
   ['core',now-(last.core||0)>=60000&&(pendingBlock>block||now-cutoff*1000>=300000)],
@@ -44,23 +44,21 @@ export async function main(){
  const dryRun=process.env.ESIM_WORKER_DRY_RUN==='true';
  if(!process.env.ESIM_REALTIME_DATABASE_URL||!process.env.ALCHEMY_API_KEY||(!dryRun&&!process.env.GITHUB_TOKEN&&process.env.ESIM_GIT_PUBLISH!=='true'))throw Error('INVALID_WORKER_CONFIGURATION');
  await mkdir(local,{recursive:true});
- let stopping=false,child,guard,depthGuard;
+ let stopping=false,child,guard,depthGuard,activeLease,coreLost=false,depthLost=false;
  const stopChild=()=>{if(child?.pid)try{process.kill(-child.pid,'SIGTERM');}catch{}};
- const leaseLost=job=>error=>{console.error(JSON.stringify({phase:'vm-lease-lost',job,error}));stopping=true;stopChild();};
+ const leaseLost=job=>error=>{console.error(JSON.stringify({phase:'vm-lease-lost',job,error}));if(job==='core')coreLost=true;else depthLost=true;if(activeLease===(job==='core'?guard:depthGuard))stopChild();};
  for(const signal of ['SIGINT','SIGTERM'])process.once(signal,()=>{stopping=true;stopChild();});
  const command=async(file,args=[],{lease=guard,extra={},timeout=1500000}={})=>{
-  await lease.check();const started=Date.now();
-  child=spawn('/usr/bin/time',['-f','{"phase":"vm-resource","wallSeconds":%e,"userSeconds":%U,"systemSeconds":%S,"maxRssKiB":%M}',process.execPath,'--max-old-space-size=2304',file,...args],{detached:true,stdio:['ignore','pipe','pipe'],env:{...process.env,...lease.env,ESIM_PERSISTENT_WORKER:'true',ESIM_RPC_BUDGET:'600',...extra}});
+  await lease?.check();const started=Date.now();activeLease=lease;
+  child=spawn('/usr/bin/time',['-f','{"phase":"vm-resource","wallSeconds":%e,"userSeconds":%U,"systemSeconds":%S,"maxRssKiB":%M}',process.execPath,'--max-old-space-size=2304',file,...args],{detached:true,stdio:['ignore','pipe','pipe'],env:{...process.env,...lease?.env,ESIM_PERSISTENT_WORKER:'true',ESIM_RPC_BUDGET:'600',...extra}});
   let stderr='';child.stderr.on('data',chunk=>{stderr=(stderr+chunk).slice(-8192);});
   child.stdout.pipe(process.stdout);child.stderr.pipe(process.stderr);
   let timedOut=false;const timer=setTimeout(()=>{timedOut=true;stopChild();},timeout);
-  const code=await new Promise((resolve,reject)=>{child.once('error',reject);child.once('exit',resolve);});clearTimeout(timer);child=null;
-  await lease.check();if(code!==0||timedOut)throw Error(timedOut?'VM_TASK_TIMEOUT':workerFailureCode({stderr}));
+  const code=await new Promise((resolve,reject)=>{child.once('error',reject);child.once('exit',resolve);});clearTimeout(timer);child=null;activeLease=null;
+  await lease?.check();if(code!==0||timedOut)throw Error(timedOut?'VM_TASK_TIMEOUT':workerFailureCode({stderr}));
   console.log(JSON.stringify({phase:'vm-task-finished',task:file,elapsedMs:Date.now()-started}));
  };
  try{
-  while(!stopping&&!guard){guard=await startLease(dryRun?'shadow-core':'core',{onLost:leaseLost('core')});if(!guard){console.log('Core lease is owned by another worker; standing by.');await sleep(30000);}}
-  if(!guard)return;
   const lost=leaseLost('depth');
   depthGuard=await startLease(dryRun?'shadow-depth':'depth',{onLost:lost});
   const last=restoredSchedule(await json(`${local}/schedule.json`),dryRun),core=await json(`${local}/core.json`);
@@ -70,8 +68,12 @@ export async function main(){
   // A new owner always verifies the canonical chain, even if local timing is recent.
   last.core=0;
   while(!stopping){
+   if(coreLost){await guard?.close();guard=null;coreLost=false;}
+   if(depthLost){await depthGuard?.close();depthGuard=null;depthLost=false;}
+   // Core standby must not suspend independent depth and MM recovery.
+   if(!guard){guard=await startLease(dryRun?'shadow-core':'core',{onLost:leaseLost('core')});if(guard){last.core=0;first=true;}}
    const now=Date.now();let status={};try{status=await realtimeStatus();}catch{}
-   const task=dueTask({now,last,block,cutoff,pendingBlock:Number(status.pending_block)||0,retryAt});
+   const task=dueTask({now,last,block,cutoff,pendingBlock:Number(status.pending_block)||0,retryAt,coreAvailable:!!guard});
    if(task){
     const started=Date.now();
     try{
@@ -102,7 +104,7 @@ export async function main(){
        await guard.check();await realtimeSQL().query("DELETE FROM esim_webhook_receipts WHERE received_at < now()-interval '7 days'");
       }
      }else if(task==='mm'){
-      if(!dryRun)await command('server/mm-ledger/worker.mjs',[],{timeout:210000});
+      if(!dryRun)await command('server/mm-ledger/worker.mjs',[],{lease:null,timeout:210000});
      }else if(task==='depth'){
       if(!depthGuard)depthGuard=await startLease(dryRun?'shadow-depth':'depth',{onLost:lost});
       if(depthGuard){await command('scripts/snapshot.mjs',[],{lease:depthGuard,extra:{ESIM_SNAPSHOT_INTERVAL_MS:'300000'},timeout:600000});if(!dryRun)await command('scripts/publish-snapshot.mjs',[],{lease:depthGuard,timeout:120000});}

@@ -13,6 +13,8 @@ const failureCodes=['RPC_CAPACITY_EXCEEDED','RPC_RATE_LIMITED','RPC_UNAVAILABLE'
 export function workerFailureCode(error){
  const symbolic=String(error?.stderr||'').match(/^ESIM (?:refresh|claim flow) stopped: ([A-Z_]{3,80})\. Last verified (?:checkpoint|data) preserved\.$/m);
  if(symbolic)return symbolic[1];
+ const bare=String(error?.stderr||'').match(/^((?:HOLDER|VM|WORKER)_[A-Z_]{3,70})$/m);
+ if(bare)return bare[1];
  return failureCodes.find(code=>error?.message===code||new RegExp(`\\b${code}\\b`).test(error?.stderr||''))||'UPDATE_FAILED';
 }
 export function assertWorkerHealthy(failures){if(failures.size)throw Error('SNAPSHOT_UPDATE_FAILED');}

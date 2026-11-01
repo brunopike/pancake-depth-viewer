@@ -1,16 +1,15 @@
 import { readFile, writeFile, mkdir } from 'node:fs/promises';
-import { gunzipSync } from 'node:zlib';
 import { makeRpc } from '../../server/esim/rpc.mjs';
 import { refreshState } from '../../server/esim/collector.mjs';
 import { buildReport } from '../../server/esim/metrics.mjs';
-import { loadState,mergeCheckpointState,saveState } from '../../server/esim/store.mjs';
+import { loadState,mergeCheckpointState,saveState,readState } from '../../server/esim/store.mjs';
 import {checkpointPassComplete} from '../../server/esim/worker-health.mjs';
 const work = '.goodway/esim-monitor';
 await mkdir(work, { recursive: true });
 try {
   let state;
-  try { state = JSON.parse(gunzipSync(await readFile(`${work}/state.json.gz`))); }
-  catch { state = JSON.parse(gunzipSync(await readFile('server/esim/bootstrap.json.gz'))); }
+  try { state = await readState(`${work}/state.json.gz`); }
+  catch { state = await readState('server/esim/bootstrap.json.gz'); }
   if (process.env.ESIM_REMOTE_START === 'true') {
     state = mergeCheckpointState(state,await loadState({currentState:state,includeRemoteCore:process.env.ESIM_PERSISTENT_WORKER!=='true'||process.env.ESIM_REMOTE_BOOTSTRAP==='true'}));
   }

@@ -1,15 +1,15 @@
 import {loadSharedRegistry} from '../../server/esim/shared-data.mjs';
 import { readFile,writeFile,mkdir,rename } from 'node:fs/promises';
 import { collectHolders,loadHolders } from '../../server/esim/holders.mjs';
-import { loadState,parseState } from '../../server/esim/store.mjs';
+import { loadState,readState } from '../../server/esim/store.mjs';
 import { makeRpc } from '../../server/esim/rpc.mjs';
 try{
  await loadSharedRegistry();
  let state;
- if(process.env.ESIM_PERSISTENT_WORKER==='true')state=parseState(await readFile('.goodway/esim-monitor/state.json.gz'));
+ if(process.env.ESIM_PERSISTENT_WORKER==='true')state=await readState('.goodway/esim-monitor/state.json.gz');
  else state=await loadState();
  // The same worker has just verified this checkpoint; do not wait for the raw-file CDN to catch up.
- if(process.env.ESIM_PERSISTENT_WORKER!=='true')try{const local=parseState(await readFile('.goodway/esim-monitor/state.json.gz'));if(local.block>state.block)state=local;}catch{}
+ if(process.env.ESIM_PERSISTENT_WORKER!=='true')try{const local=await readState('.goodway/esim-monitor/state.json.gz');if(local.block>state.block)state=local;}catch{}
  let previous;try{previous=await loadHolders();}catch{}
  try{const local=JSON.parse(await readFile('.goodway/esim-holders/holders.json','utf8'));if(!previous||local.block>previous.block)previous=local;}catch{}
  const transport=makeRpc({budget:500,timeoutMs:900000,progress:e=>{if(e.phase!=='rpc'||e.physical%25===0)console.log(JSON.stringify(e));}});

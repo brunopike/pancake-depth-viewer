@@ -37,6 +37,7 @@ test('worker preserves a safe quota failure reason and reports recovery independ
  assert.deepEqual(errors,[['report','RPC_CAPACITY_EXCEEDED']]);assert.deepEqual(success,['holders']);
  assert.equal(workerFailureCode({stderr:'private URL\nESIM refresh stopped: RPC_CAPACITY_EXCEEDED. Last verified checkpoint preserved.\n'}),'RPC_CAPACITY_EXCEEDED');
  assert.equal(workerFailureCode(Error('https://private.example/secret')),'UPDATE_FAILED');
+ assert.equal(workerFailureCode({stderr:'HOLDER_ADDRESS_LIMIT\nCommand exited with non-zero status 1'}),'HOLDER_ADDRESS_LIMIT');
  assert.equal(workerFailureCode({stderr:'ESIM refresh stopped: DIRECT_CALL_INDEX_MISMATCH. Last verified checkpoint preserved.\n'}),'DIRECT_CALL_INDEX_MISMATCH');
  assert.throws(()=>assertWorkerHealthy(new Set(['report'])),/SNAPSHOT_UPDATE_FAILED/);
  assert.doesNotThrow(()=>assertWorkerHealthy(new Set()));

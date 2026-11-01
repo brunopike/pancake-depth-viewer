@@ -85,6 +85,13 @@ test('successful but busy core cannot starve older overdue depth and holder work
  const now=10000000,last={core:now-60001,holders:now-200000,depth:now-600000,archive:now,mm:now};
  assert.equal(dueTask({now,last,cutoff:now/1000-3600,block:10,pendingBlock:100}),'depth');
 });
+test('another core owner does not stop the independent VM depth and MM jobs',()=>{
+ const now=10000000,last={core:0,holders:0,archive:0,depth:0,mm:0};
+ const input={now,last,cutoff:0,block:0,pendingBlock:1,coreAvailable:false};
+ assert.equal(dueTask(input),'depth');
+ assert.equal(dueTask({...input,last:{...last,depth:now}}),'mm');
+ assert.equal(dueTask({...input,last:{...last,depth:now,mm:now}}),null);
+});
 test('a restart reuses a recent local prefix while a missing or old prefix bootstraps remotely',()=>{
  const fresh={first:true,hasCheckpoint:true,block:100,cutoff:9000,now:10000000};
  assert.equal(remoteBootstrapNeeded(fresh),false);

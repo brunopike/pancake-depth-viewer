@@ -2,6 +2,8 @@ import {validCohort} from './cohort-validation.mjs';
 import { readFile } from 'node:fs/promises';
 import { gunzipSync } from 'node:zlib';
 import {writeCheckpoint} from './state-writer.mjs';
+import {readCheckpoint} from './state-reader.mjs';
+import {Readable} from 'node:stream';
 import { TOKEN, SOURCE } from './metrics.mjs';
 import {validSourceInflow,newerSourceInflow} from './source-inflows.mjs';
 export const CHECKPOINT_URL = 'https://raw.githubusercontent.com/brunopike/pancake-depth-viewer/esim-cache/state.json.gz';
@@ -35,22 +37,25 @@ export function mergeCheckpointState(current,candidate){
 }
 export function parseState(bytes) {
   const state = JSON.parse(gunzipSync(bytes));
+  return validateState(state);
+}
+function validateState(state){
   if (state.version !== 1 || state.token !== TOKEN || state.source !== SOURCE || !Number.isSafeInteger(state.block) || !/^0x[0-9a-f]{64}$/.test(state.blockHash)) throw new Error('INVALID_CHECKPOINT');
   return state;
 }
+export async function readState(file){return validateState(await readCheckpoint(file));}
 export async function loadState({ fetch: request = fetch, includeRemote = true, includeRemoteCore=true, currentState, checkpointFile=process.env.ESIM_CHECKPOINT_FILE, currentCheckpointFile='.goodway/esim-monitor/state.json.gz' } = {}) {
-  let local = currentState||parseState(await readFile(new URL('./bootstrap.json.gz', import.meta.url)));
+  let local = currentState||await readState(new URL('./bootstrap.json.gz', import.meta.url));
   if(checkpointFile){
-    let checked;try{checked=parseState(await readFile(checkpointFile));}catch{throw Error('WORKER_CHECKPOINT_UNAVAILABLE');}
+    let checked;try{checked=await readState(checkpointFile);}catch{throw Error('WORKER_CHECKPOINT_UNAVAILABLE');}
     if(checked.block>local.block)local=checked;
     // The same session may already have advanced beyond its startup checkout.
-    let currentBytes;try{currentBytes=await readFile(currentCheckpointFile);}catch(error){if(error.code!=='ENOENT')throw Error('WORKER_CHECKPOINT_UNAVAILABLE');}
-    if(currentBytes){const current=parseState(currentBytes);if(current.block>local.block)local=current;}
+    try{const current=await readState(currentCheckpointFile);if(current.block>local.block)local=current;}catch(error){if(error.code!=='ENOENT')throw Error('WORKER_CHECKPOINT_UNAVAILABLE');}
   }
   if (includeRemote&&includeRemoteCore&&!checkpointFile) try {
     const response = await request(`${CHECKPOINT_URL}?t=${Date.now()}`, { cache: 'no-store', signal: AbortSignal.timeout(15000) });
     if (response.ok) {
-      const remote = parseState(Buffer.from(await response.arrayBuffer()));
+      const remote = validateState(await readCheckpoint(Readable.fromWeb(response.body)));
       if (remote.block > local.block) local=remote;
     }
   } catch { /* The bundled verified checkpoint remains usable. */ }

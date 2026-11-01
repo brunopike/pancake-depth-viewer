@@ -1,7 +1,7 @@
 // Short-lived high-memory work. The persistent supervisor never holds a full
 // ledger while another child is parsing the same ledger.
 import {readFile,writeFile,mkdir,rename} from 'node:fs/promises';
-import {parseState} from '../../server/esim/store.mjs';
+import {readState} from '../../server/esim/store.mjs';
 import {publishCore} from './realtime-worker.mjs';
 import {publishRealtime} from '../../server/esim/realtime-store.mjs';
 import {leaseFromEnvironment,requireLease} from '../../server/esim/worker-lease.mjs';
@@ -11,7 +11,7 @@ try{
  const lease=leaseFromEnvironment();if(!lease)throw Error('WORKER_LEASE_REQUIRED');await requireLease(lease);
  let result;
  if(task==='core'){
-  const state=parseState(await readFile('.goodway/esim-monitor/state.json.gz'));
+  const state=await readState('.goodway/esim-monitor/state.json.gz');
   if(state.block<Number(process.env.ESIM_MIN_BLOCK||0))throw Error('SNAPSHOT_NOT_ADVANCED');
   await publishCore(state,dryRun?async()=>{}:undefined);result={block:state.block,cutoff:state.cutoff};
  }else if(task==='holders'){
