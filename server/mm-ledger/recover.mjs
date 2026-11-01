@@ -8800,13 +8800,26 @@ import { createHash as createHash2 } from "node:crypto";
 
 // ../../../../ESIM市值统计/工程/esim-daily-ledger/web/lib/sync-plan.js
 import { createHash } from "node:crypto";
+var DEFAULT_START = "2026-09-30";
+function validStartDay(day) {
+  if (typeof day !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(day) || !Number.isFinite(Date.parse(day + "T00:00:00Z")) || (/* @__PURE__ */ new Date(day + "T00:00:00Z")).toISOString().slice(0, 10) !== day || day < DEFAULT_START) throw Error("\u5730\u5740\u7EDF\u8BA1\u8D77\u59CB\u65E5\u671F\u65E0\u6548");
+  return day;
+}
+function activeAddresses(addresses, day) {
+  return addresses.filter((a) => typeof a === "string" || (a.active_from || DEFAULT_START) <= day);
+}
+function collectionScope(addresses, day) {
+  const active = activeAddresses(addresses, day);
+  return { addresses: active.map((x) => typeof x === "string" ? x : x.address), wallets: active.filter((a) => typeof a === "string" || a.mode === "wallet").map((a) => typeof a === "string" ? a : a.address), balanceOnly: active.filter((a) => typeof a !== "string" && a.mode !== "wallet").map((a) => a.address), cohortHash: cohortHash(active) };
+}
 function cohortHash(addresses) {
   const entries = /* @__PURE__ */ new Map();
   for (const value of addresses) {
     const address2 = (typeof value === "string" ? value : value.address).toLowerCase(), mode = typeof value === "string" ? "wallet" : value.mode || "wallet";
     if (!["wallet", "robot", "balance_only"].includes(mode)) throw Error("\u5730\u5740\u91C7\u96C6\u6A21\u5F0F\u65E0\u6548");
-    if (entries.has(address2) && entries.get(address2) !== mode) throw Error("\u540C\u4E00\u5730\u5740\u7684\u91C7\u96C6\u6A21\u5F0F\u51B2\u7A81");
-    entries.set(address2, mode);
+    const start = validStartDay(typeof value === "string" ? DEFAULT_START : value.active_from || DEFAULT_START), identity = mode + (start === DEFAULT_START ? "" : "@" + start);
+    if (entries.has(address2) && entries.get(address2) !== identity) throw Error("\u540C\u4E00\u5730\u5740\u7684\u91C7\u96C6\u6A21\u5F0F\u51B2\u7A81\u6216\u8D77\u59CB\u65E5\u671F\u51B2\u7A81");
+    entries.set(address2, identity);
   }
   return "v2:" + createHash("sha256").update(JSON.stringify([...entries].sort(([a], [b]) => a.localeCompare(b)))).digest("hex");
 }
@@ -8818,7 +8831,7 @@ function buildSyncPlan(addresses, periods, { now = /* @__PURE__ */ new Date(), s
   const hash = cohortHash(addresses), known = new Map(periods.map((p) => [p.day, p])), plan = [];
   for (let day = start; day < today; day = plus(day, 1)) {
     const p = known.get(day);
-    if (!p || p.status !== "complete" || p.cohort_hash !== hash) plan.push({ day, partial: false });
+    if (!p || p.status !== "complete" || p.cohort_hash !== cohortHash(activeAddresses(addresses, day))) plan.push({ day, partial: false });
   }
   const pending = addresses.some((a) => a.backfill_pending);
   if ((source === "manual" || source === "backfill" || source === "server" || pending) && now.getTime() > Date.parse(today + "T00:00:00Z") + 65e3)
@@ -8954,7 +8967,7 @@ async function publish(snapshot2, lease) {
   return transaction(async (c) => {
     await c.query("SELECT pg_advisory_xact_lock(7693201)");
     if (lease && !(await c.query("SELECT 1 FROM esim_ledger.sync_runs WHERE id=$1 AND lease_version=$2 AND lease_until>now() FOR UPDATE", [lease.id, lease.version])).rowCount) throw Error("SYNC_LEASE_LOST");
-    const addresses = (await c.query("SELECT address,mode FROM esim_ledger.addresses ORDER BY ordinal")).rows;
+    const addresses = activeAddresses((await c.query("SELECT address,mode,active_from FROM esim_ledger.addresses ORDER BY ordinal")).rows, snapshot2.day);
     if (cohortHash(addresses) !== snapshot2.cohortHash || cohortHash(addresses.map((r) => r.address)) !== cohortHash(snapshot2.addresses)) throw Error("\u5730\u5740\u5E93\u5DF2\u53D8\u5316\uFF0C\u672C\u8F6E\u7ED3\u679C\u4E0D\u53D1\u5E03\uFF0C\u8BF7\u91CD\u65B0\u66F4\u65B0");
     const old = (await c.query("SELECT end_at FROM esim_ledger.periods WHERE day=$1 FOR UPDATE", [snapshot2.day])).rows[0];
     if (old && new Date(old.end_at) > new Date(snapshot2.end)) throw Error("\u5DF2\u6709\u66F4\u665A\u6570\u636E\uFF0C\u672C\u8F6E\u4E0D\u80FD\u8986\u76D6");
@@ -8963,7 +8976,7 @@ async function publish(snapshot2, lease) {
     await c.query("DELETE FROM esim_ledger.external_transfers WHERE day=$1", [snapshot2.day]);
     await insertRows(c, "positions", ["day", "address", "asset", "opening", "buy", "sell", "lp_in", "lp_out", "lp_fee", "external_in", "external_out", "internal_net", "other_net", "gas", "closing", "opening_lp", "closing_lp", "robot_net", "note"], snapshot2.positions);
     await insertRows(c, "external_transfers", ["hash", "log_index", "day", "occurred_at", "sender", "recipient", "asset", "amount", "raw_amount"], snapshot2.external);
-    const bad = (await c.query("SELECT count(*) AS n FROM esim_ledger.external_transfers e JOIN esim_ledger.addresses a ON a.address=e.recipient WHERE e.day=$1", [snapshot2.day])).rows[0];
+    const bad = (await c.query("SELECT count(*) AS n FROM esim_ledger.external_transfers e JOIN esim_ledger.addresses a ON a.address=e.recipient AND a.active_from<=e.day WHERE e.day=$1", [snapshot2.day])).rows[0];
     if (Number(bad.n)) throw Error("\u5185\u90E8\u8F6C\u8D26\u9519\u8BEF\u8FDB\u5165\u5BF9\u5916\u8F6C\u8D26\uFF0C\u505C\u6B62\u53D1\u5E03");
     const mismatch = (await c.query(`WITH a AS(SELECT address,asset,external_out n FROM esim_ledger.positions WHERE day=$1 AND asset IN('ESIM','USDT')),b AS(SELECT sender address,asset,sum(amount)n FROM esim_ledger.external_transfers WHERE day=$1 GROUP BY sender,asset) SELECT count(*) n FROM a FULL JOIN b USING(address,asset) WHERE abs(coalesce(a.n,0)-coalesce(b.n,0))>0.0000001`, [snapshot2.day])).rows[0];
     if (Number(mismatch.n)) throw Error("\u5BF9\u5916\u8F6C\u51FA\u6C47\u603B\u4E0E\u51ED\u8BC1\u660E\u7EC6\u4E0D\u4E00\u81F4\uFF0C\u505C\u6B62\u53D1\u5E03");
@@ -9110,7 +9123,7 @@ async function startSync(source = "manual") {
 }
 async function enqueueSync(c, source = "automatic") {
   await c.query("SELECT pg_advisory_xact_lock(7693201)");
-  const all = (await c.query("SELECT address,mode,backfill_pending FROM esim_ledger.addresses ORDER BY ordinal")).rows, dates = (await c.query("SELECT day,status,cohort_hash FROM esim_ledger.periods ORDER BY day")).rows;
+  const all = (await c.query("SELECT address,mode,active_from,backfill_pending FROM esim_ledger.addresses ORDER BY ordinal")).rows, dates = (await c.query("SELECT day,status,cohort_hash FROM esim_ledger.periods ORDER BY day")).rows;
   const { plan, hash } = buildSyncPlan(all, dates, { source });
   const active = (await c.query("SELECT id,status,stage,state->>'cohortHash' AS cohort_hash FROM esim_ledger.sync_runs WHERE status IN ('queued','running') LIMIT 1 FOR UPDATE")).rows[0];
   if (active?.cohort_hash === hash) return active;
@@ -9119,7 +9132,7 @@ async function enqueueSync(c, source = "automatic") {
   if (canResumeFailed(failed, hash)) return (await c.query("UPDATE esim_ledger.sync_runs SET status='queued',stage='\u4ECE\u65AD\u70B9\u7EE7\u7EED\u56DE\u6EAF',lease_until=NULL,finished_at=NULL,updated_at=now() WHERE id=$1 RETURNING id,status,stage", [failed.id])).rows[0];
   if (failed?.state?.cohortHash === hash && source !== "manual") return { id: failed.id, status: "failed", stage: "\u56DE\u6EAF\u4E2D\u65AD\uFF0C\u9700\u8981\u6838\u5BF9", error: failed.error };
   if (!plan.length) return { id: null, status: "complete", stage: "\u4ECA\u65E5\u5DF2\u66F4\u65B0" };
-  const state = { addresses: all.map((x) => x.address), wallets: all.filter((a) => a.mode === "wallet").map((a) => a.address), balanceOnly: all.filter((a) => a.mode !== "wallet").map((a) => a.address), plan, index: 0, cache: {}, nfts: null, wallet: null, stage: "\u51C6\u5907", cohortHash: hash };
+  const state = { catalog: all.map(({ address: address2, mode, active_from }) => ({ address: address2, mode, active_from })), addresses: all.map((x) => x.address), wallets: all.filter((a) => a.mode === "wallet").map((a) => a.address), balanceOnly: all.filter((a) => a.mode !== "wallet").map((a) => a.address), plan, index: 0, cache: {}, nfts: null, wallet: null, stage: "\u51C6\u5907", cohortHash: hash };
   return (await c.query("INSERT INTO esim_ledger.sync_runs(status,source,state)VALUES('queued',$1,$2)RETURNING id,status,stage", [source, JSON.stringify(state)])).rows[0];
 }
 async function syncStatus(id) {
@@ -9240,7 +9253,7 @@ async function runSync(id, budget = 45e3) {
   const s = claimed.state, endAt = Date.now() + budget, engine = (0, import_engine.createEngine)();
   engine.config = { ...engine.config, addresses: s.wallets, inputAddresses: s.wallets };
   try {
-    const current = (await db().query("SELECT address,mode FROM esim_ledger.addresses ORDER BY ordinal")).rows;
+    const current = (await db().query("SELECT address,mode,active_from FROM esim_ledger.addresses ORDER BY ordinal")).rows;
     if (cohortHash(current) !== s.cohortHash) throw Error("\u5730\u5740\u5E93\u5DF2\u53D8\u5316\uFF0C\u672C\u8F6E\u7ED3\u679C\u4E0D\u53D1\u5E03\uFF0C\u8BF7\u91CD\u65B0\u66F4\u65B0");
     if (s.retryable && s.retryCount >= 8) s.retryCount = 0;
     delete s.retryAfter;
@@ -9261,7 +9274,7 @@ async function runSync(id, budget = 45e3) {
     }
     const published = (await db().query("SELECT day,status,end_at,cohort_hash FROM esim_ledger.periods")).rows;
     s.plan = extendSyncPlan(s.plan, current, published, { source: claimed.source });
-    const saved = new Map(published.filter((p) => p.cohort_hash === s.cohortHash).map((p) => [p.day, p]));
+    const saved = new Map(published.filter((p) => p.cohort_hash === collectionScope(current, p.day).cohortHash).map((p) => [p.day, p]));
     while (s.index < s.plan.length) {
       const p = s.plan[s.index], v = saved.get(p.day);
       if (!v || !p.partial && v.status !== "complete" || p.partial && new Date(v.end_at) < new Date(p.end)) break;
@@ -9276,7 +9289,8 @@ async function runSync(id, budget = 45e3) {
     }
     if (s.index < s.plan.length) await getNftHistory(s);
     while (s.index < s.plan.length && Date.now() < endAt) {
-      const planned = s.plan[s.index];
+      const planned = s.plan[s.index], scope = { ...s, ...collectionScope(s.catalog || current, planned.day) };
+      engine.config = { ...engine.config, addresses: scope.wallets, inputAddresses: scope.wallets };
       if (!s.wallet) s.wallet = { day: planned.day, partial: planned.partial, endIso: planned.end, stage: "init", index: 0, rpc: {} };
       let j = s.wallet;
       engine.setRPC(reader(s.cache));
@@ -9284,16 +9298,16 @@ async function runSync(id, budget = 45e3) {
       s.stage = `${s.index + 1}/${s.plan.length}\u5929 \xB7 ${planned.day} \xB7 ${labels[j.stage] || j.stage}`;
       try {
         if (j.stage === "transfers" && j.index === 0) {
-          const qs = walletTransferQueries(s.wallets, j);
+          const qs = walletTransferQueries(scope.wallets, j);
           for (let i = 0; i < qs.length; i += 20) await fill(qs.slice(i, i + 20), s.cache, (m, x) => engine.trim(m, x));
         }
         if (j.stage === "nfts") {
           j.nftTransfers = [...new Map(s.nfts.concat(j.transfers.filter((t) => t.category === "erc721")).map((t) => [t.uniqueId, t])).values()];
-          j.index = s.wallets.length * 2;
+          j.index = scope.wallets.length * 2;
         }
         if (j.stage === "transactions" && j.index === 0) j.hashes = transactionHashes(j.transfers);
         if (j.stage === "balances" && j.index === 0) {
-          const qs = j.state.boundaries.flatMap((b) => s.wallets.flatMap((a) => [engine.config.token, engine.config.usdt].map((t) => ["eth_call", [{ to: t, data: "0x70a08231" + a.slice(2).padStart(64, "0") }, hex(b.block)]]).concat([["eth_getBalance", [a, hex(b.block)]], ["eth_getTransactionCount", [a, hex(b.block)]]])));
+          const qs = j.state.boundaries.flatMap((b) => scope.wallets.flatMap((a) => [engine.config.token, engine.config.usdt].map((t) => ["eth_call", [{ to: t, data: "0x70a08231" + a.slice(2).padStart(64, "0") }, hex(b.block)]]).concat([["eth_getBalance", [a, hex(b.block)]], ["eth_getTransactionCount", [a, hex(b.block)]]])));
           await fill(qs, s.cache, (m, x) => engine.trim(m, x));
         }
         if (j.stage === "lp") {
@@ -9301,7 +9315,7 @@ async function runSync(id, budget = 45e3) {
           await fill(qs, s.cache, (m, x) => engine.trim(m, x));
         }
         if (j.stage === "ready") {
-          const result = await snapshot(s, j, engine);
+          const result = await snapshot(scope, j, engine);
           await publish(result, { id, version: claimed.lease_version });
           s.nfts = j.nftTransfers;
           await db().query("INSERT INTO esim_ledger.rpc_cache(key,method,result)VALUES('nft-history-v2','metadata',$1)ON CONFLICT(key)DO UPDATE SET result=excluded.result", [JSON.stringify({ cohortHash: s.cohortHash, events: s.nfts })]);
@@ -9328,7 +9342,7 @@ async function runSync(id, budget = 45e3) {
       const owned = (await c.query("SELECT 1 FROM esim_ledger.sync_runs WHERE id=$1 AND lease_version=$2 AND lease_until>now() FOR UPDATE", [id, claimed.lease_version])).rowCount;
       if (!owned) throw Error("SYNC_LEASE_LOST");
       if (done) {
-        const current2 = (await c.query("SELECT address,mode FROM esim_ledger.addresses ORDER BY ordinal")).rows;
+        const current2 = (await c.query("SELECT address,mode,active_from FROM esim_ledger.addresses ORDER BY ordinal")).rows;
         if (cohortHash(current2) !== s.cohortHash) throw Error("\u5730\u5740\u5E93\u5DF2\u53D8\u5316\uFF0C\u672C\u8F6E\u7ED3\u679C\u4E0D\u53D1\u5E03\uFF0C\u8BF7\u91CD\u65B0\u66F4\u65B0");
         const periods = (await c.query("SELECT day,status,cohort_hash FROM esim_ledger.periods ORDER BY day")).rows;
         if (buildSyncPlan(current2, periods).plan.length) throw Error("\u5386\u53F2\u56DE\u6EAF\u8986\u76D6\u4E0D\u5B8C\u6574\uFF0C\u5F85\u56DE\u6EAF\u6807\u8BB0\u4FDD\u7559");
@@ -9384,7 +9398,7 @@ function ledgerHealth({ addresses, periods, job, checks, proof }, now = /* @__PU
   };
 }
 async function readLedgerHealth(c, now = /* @__PURE__ */ new Date()) {
-  const addresses = (await c.query("SELECT address,mode,backfill_pending FROM esim_ledger.addresses ORDER BY ordinal")).rows;
+  const addresses = (await c.query("SELECT address,mode,active_from,backfill_pending FROM esim_ledger.addresses ORDER BY ordinal")).rows;
   const periods = (await c.query("SELECT day,status,end_at,end_block,verified_at,cohort_hash FROM esim_ledger.periods ORDER BY day")).rows;
   const job = (await c.query("SELECT status,stage,error,updated_at,state->>'retryable' AS retryable FROM esim_ledger.sync_runs ORDER BY started_at DESC LIMIT 1")).rows[0];
   const latest = periods.at(-1)?.day;
