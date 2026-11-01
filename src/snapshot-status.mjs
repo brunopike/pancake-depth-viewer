@@ -35,7 +35,8 @@ export function snapshotStatus(entries,{retained=false,failed=false,now=Date.now
  else if(health?.error)recovery='等待后台自动重试；原有已核验数据保留';
  else if(auxiliary.length)recovery='等待对应后台核验任务完成；主交易和持仓更新独立运行';
  else if(Number(health?.pendingBlock)>Number(health?.processedBlock)&&now-Date.parse(health?.lastProcessed)<300000)recovery='正在恢复：后台正在补齐后续区块';
- const lastUpdated=times.length?new Date(Math.min(...times.map(([,v])=>v.cutoff))*1000).toISOString():null;
+ const updates=[...times.map(([,v])=>v.cutoff),...auxiliary.map(issue=>health.auxiliary[issue.split(':')[0]]?.cutoff).filter(Number.isFinite)];
+ const lastUpdated=updates.length&&!auxiliary.some(issue=>issue.endsWith(':PENDING'))?new Date(Math.min(...updates)*1000).toISOString():null;
  return {warning,alert:warning?{reason:causes.join('；')||'数据更新状态异常',lastUpdated,recovery}:null,text:[prefix,reason,...details,warning?recovery:null,realtime?'北京时间 · Webhook 触发核验；10 分钟兜底补查；每小时存档':'北京时间 · 后台目标每 60 分钟更新；页面刷新读取可用快照'].filter(Boolean).join(' · ')};
 }
 export function showSnapshotStatus(status,button,entries,options){

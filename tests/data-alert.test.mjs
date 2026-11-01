@@ -39,7 +39,11 @@ test('known worker failure codes have useful reasons without exposing raw diagno
 test('historical verification failures remain visible even while live snapshots advance',()=>{
  const auxiliary=Object.fromEntries(['provenance','cohort','archive'].map(k=>[k,{cutoff:now/1000-60}])),entries=[['交易',{cutoff:now/1000-10}]];
  auxiliary.provenance.cutoff=now/1000-7201;
- assert.match(snapshotStatus(entries,{now,realtime:true,health:{auxiliary}}).alert.reason,/分发币跨地址追踪超过两小时/);
+ const stale=snapshotStatus(entries,{now,realtime:true,health:{auxiliary}}).alert;
+ assert.match(stale.reason,/分发币跨地址追踪超过两小时/);
+ assert.equal(stale.lastUpdated,new Date(auxiliary.provenance.cutoff*1000).toISOString());
+ const pending=structuredClone(auxiliary);pending.provenance=null;
+ assert.equal(snapshotStatus(entries,{now,realtime:true,health:{auxiliary:pending}}).alert.lastUpdated,null);
  auxiliary.provenance.cutoff=now/1000-60;
  assert.equal(snapshotStatus(entries,{now,realtime:true,health:{auxiliary}}).alert,null);
 });
