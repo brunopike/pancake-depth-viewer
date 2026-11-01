@@ -33,6 +33,12 @@ test('hidden pages do not request status or refresh snapshots',async t=>{
  await h.poll();assert.equal(h.requests,0);assert.equal(h.refreshes,0);
  h.document.hidden=false;await h.poll();assert.equal(h.requests,1);assert.equal(h.refreshes,1);
 });
+test('new historical publication refreshes an unchanged live revision',async t=>{
+ let publishedAt='first';const h=harness(t,{status:async()=>({ok:true,json:async()=>({processedBlock:123,holderBlock:124,auxiliary:{provenance:{publishedAt}}})})});
+ await h.poll();assert.equal(h.refreshes,1);
+ h.advance(60000);await h.poll();assert.equal(h.refreshes,1);
+ publishedAt='second';h.advance(60000);await h.poll();assert.equal(h.refreshes,2);
+});
 
 test('failed status requests retain the independent five-minute fallback',async t=>{
  let failure='network';

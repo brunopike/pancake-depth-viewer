@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {CLAIM_FLOW_URL,validClaimFlow,enrichClaimFlowSnapshot,readClaimFlowSnapshot} from '../src/claim-flow-client.mjs';
+import {CLAIM_FLOW_URL,validClaimFlow,enrichClaimFlowSnapshot,readClaimFlowSnapshot,expireClaimFlowCache} from '../src/claim-flow-client.mjs';
 import {readSnapshot} from '../src/snapshot-client.mjs';
 import {gzipSync} from 'node:zlib';
 
@@ -10,6 +10,19 @@ const sale=(n,timestamp,direct,relay)=>({address:address(n),tx:hash(timestamp+n)
 const flow=()=>({version:1,method:'proportional-v1',token,source,throughBlock:200,blockHash:hash(200),cutoff:200,sales:[sale(1,20,10,0),sale(2,90,0,20),sale(2,100,0,3),sale(3,180,5,5),sale(4,200,0,2)],unconfirmedFlows:[{tx:hash(999),address:null,block:100,timestamp:100,amount_wei:'1'}]});
 const row=(n,received=false)=>({address:address(n),sold:'100',bought:'2',received,balance:'10',tags:[]});
 const snapshot=(kind='report',block=200)=>({version:1,token,source,block,blockHash:hash(block),cutoff:200,...(kind==='holders'?{rows:[row(2),row(3),row(4)]}:{windows:Object.fromEntries([['yesterday',0,100],['today',100,300],['history',0,300]].map(([key,start,end])=>[key,{start,end,groups:{all_pools:{sold_wei:'1000'}},...(kind==='addresses'?{initiator:{missingSold:'7',rows:[row(1,true),row(2),row(3,true),row(4)]},funding:{missingSold:'7',rows:[row(1,true),row(2),row(3,true),row(4)]}}:{})}]))})});
+test('published flow expires the cache promptly and preserves its last verified revision on failure or regression',async()=>{
+ const data={...snapshot('report',202),cutoff:202};let next=flow(),fail=false,calls=0;
+ const fetch=async()=>{calls++;if(fail)throw Error('OFFLINE');return new Response(gzipSync(JSON.stringify(next)));};
+ assert.equal((await readClaimFlowSnapshot('report',data,{fetch})).windows.history.claimFlow.throughBlock,200);
+ next={...flow(),throughBlock:201,blockHash:hash(201),cutoff:201};
+ assert.equal((await readClaimFlowSnapshot('report',data,{fetch})).windows.history.claimFlow.throughBlock,200);assert.equal(calls,1);
+ expireClaimFlowCache(fetch);
+ assert.equal((await readClaimFlowSnapshot('report',data,{fetch})).windows.history.claimFlow.throughBlock,201);assert.equal(calls,2);
+ expireClaimFlowCache(fetch);fail=true;
+ assert.equal((await readClaimFlowSnapshot('report',data,{fetch})).windows.history.claimFlow.throughBlock,201);
+ fail=false;next=flow();
+ assert.equal((await readClaimFlowSnapshot('report',data,{fetch})).windows.history.claimFlow.throughBlock,201);
+});
 
 test('claim-flow validator accepts only compatible metadata and normal sale evidence',()=>{
  const data=snapshot(),valid=flow();assert(validClaimFlow(valid,data));

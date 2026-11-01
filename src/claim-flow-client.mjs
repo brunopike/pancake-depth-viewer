@@ -80,16 +80,19 @@ export function enrichClaimFlowSnapshot(kind,snapshot,flow){
 }
 
 const flowCache=new WeakMap();
+export function expireClaimFlowCache(request=globalThis.fetch){const cached=flowCache.get(request);if(cached)cached.at=0;}
 export async function readClaimFlowSnapshot(kind,snapshot,{fetch:request=globalThis.fetch}={}){
  if(!compatibleSnapshot(snapshot))return snapshot;
  const cached=flowCache.get(request);
+ const retained=()=>cached?enrichClaimFlowSnapshot(kind,snapshot,cached.flow):snapshot;
  if(cached&&Date.now()-cached.at<300000)return enrichClaimFlowSnapshot(kind,snapshot,cached.flow);
  try{
   let response=await request(`${CLAIM_FLOW_URL}?t=${Date.now()}`,{cache:'no-store',signal:AbortSignal.timeout(15000)}),compressed=true;
   if(response.status===404){response=await request(`${CLAIM_FLOW_URL.slice(0,-3)}?t=${Date.now()}`,{cache:'no-store',signal:AbortSignal.timeout(15000)});compressed=false;}
-  if(!response.ok)return snapshot;
+  if(!response.ok)return retained();
   const flow=compressed?await new Response(response.body.pipeThrough(new DecompressionStream('gzip'))).json():await response.json();
-  if(validClaimFlow(flow,snapshot))flowCache.set(request,{at:Date.now(),flow});
+  if(!validClaimFlow(flow,snapshot)||cached&&(flow.throughBlock<cached.flow.throughBlock||flow.cutoff<cached.flow.cutoff||flow.throughBlock===cached.flow.throughBlock&&(flow.modelRevision??1)<(cached.flow.modelRevision??1)))return retained();
+  flowCache.set(request,{at:Date.now(),flow});
   return enrichClaimFlowSnapshot(kind,snapshot,flow);
- }catch{return snapshot;}
+ }catch{return retained();}
 }
