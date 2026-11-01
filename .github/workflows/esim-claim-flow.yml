@@ -1,5 +1,11 @@
 name: Refresh ESIM claim flow
 on:
+  workflow_call:
+    inputs:
+      rpc_budget:
+        default: '600'
+        required: false
+        type: string
   workflow_dispatch:
     inputs:
       rpc_budget:
@@ -21,6 +27,8 @@ jobs:
     timeout-minutes: 120
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: main
       - name: Load the verified ledger and provenance checkpoint
         uses: actions/checkout@v4
         with:

@@ -7,6 +7,16 @@ import {SOURCE_INFLOW_SEED} from '../server/esim/source-inflows.mjs';
 const a=n=>'0x'+n.toString(16).padStart(40,'0'),h=n=>'0x'+n.toString(16).padStart(64,'0');
 const log=(b,from,to,v)=>({address:TOKEN,topics:[TRANSFER,topic(from),topic(to)],data:'0x'+v.toString(16),blockNumber:'0x'+b.toString(16),transactionIndex:'0x0',logIndex:'0x0',transactionHash:h(b),removed:false});
 const state=end=>({token:TOKEN,source:SOURCE,block:end,blockHash:h(end),cutoff:1000,pools:{},trades:[],distributions:[{id:h(100)+':0x0',block:100,recipient:a(1),value:'100'}]});
+test('candidate receipts are verified before one replay, including zero-origin fills and excluding earlier history',async()=>{
+ const logs=[log(100,SOURCE,a(1),100),log(101,a(2),a(9),50)],requested=[],s={...state(101),pools:{[a(9)]:{}},trades:[99,101].map(block=>({tx:h(block),block,timestamp:block,side:'sell',address:a(2),amount_wei:'50'}))};
+ const transport={batch:async calls=>calls.map(([method,p])=>{
+  if(method==='eth_chainId')return '0x38';if(method==='eth_getBlockByNumber')return {hash:h(Number(BigInt(p[0])))};
+  if(method==='eth_getLogs')return logs;
+  assert.equal(method,'eth_getTransactionReceipt');requested.push(p[0]);return {transactionHash:h(101),blockHash:h(101),blockNumber:'0x65',status:'0x1',logs:[logs[1]]};
+ }),rpc:async()=>({hash:h(101)})};
+ const result=await collectClaimFlow(s,transport,{readBalances:async(addresses,block)=>addresses.map(address=>address===a(1)?block==='0x63'?'0':'100':block==='0x63'?'100':'50')});
+ assert.deepEqual(requested,[h(101)]);assert.equal(result.report.totals.sold_wei,'0');assert.equal(result.report.totals.remaining_wei,'100');
+});
 test('fixed ESIM logs backfill once and increment from the saved block, with opening and closing reconciliation',async()=>{
  const requests=[],logs=[log(100,SOURCE,a(1),100),log(101,a(1),a(2),20),log(103,a(2),a(1),10)];
  const transport={batch:async calls=>Promise.all(calls.map(async([method,p])=>{

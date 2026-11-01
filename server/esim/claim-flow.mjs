@@ -16,7 +16,7 @@ function shares(lots,value,total){
  }
  ensure(remaining===0n,'FLOW_ROUNDING');return parts.filter(p=>p.amount);
 }
-export function traceClaimFlow({source,marketAddresses,openingBalances,transfers,trades,unsafeTransactions=[],zero=ZERO}){
+export function traceClaimFlow({source,marketAddresses,openingBalances,transfers,trades,unsafeTransactions=[],zero=ZERO,progress=()=>{}}){
  const markets=new Set(marketAddresses),wallets=new Map(),sales=[],unconfirmedFlows=[],byTx=new Map(),seen=new Set(),unsafe=new Set(unsafeTransactions),times=new Map();
  for(const t of trades){times.set(t.tx,t.timestamp);if(t.side==='buy')unsafe.add(t.tx);}
  const totals={issued:0n,direct:0n,relay:0n,pool:0n,returned:0n,burned:0n,matchedGross:0n};
@@ -48,7 +48,9 @@ export function traceClaimFlow({source,marketAddresses,openingBalances,transfers
   }
   for(const [address,sink]of sinks){if(sink.confirmed)continue;const amount=sink.parts.filter(p=>p.root).reduce((n,p)=>n+p.amount,0n);if(amount)unconfirmedFlows.push({tx,address,block:sink.block,timestamp:times.get(tx)??sink.timestamp??null,amount_wei:amount.toString(),reason:unsafe.has(tx)||recycled?'mixed-market-or-lp-path':'pool-input-not-matched-to-sale'});}
  };
+ let processed=0;const started=Date.now();progress({phase:'claim-origin-replay',transfers:0,total:ordered.length});
  for(const e of ordered){
+  if(++processed%10000===0)progress({phase:'claim-origin-replay',transfers:processed,total:ordered.length,wallets:wallets.size,elapsedMs:Date.now()-started});
   ensure(!seen.has(e.id),'FLOW_DUPLICATE');seen.add(e.id);
   if(e.tx!==tx){finish();tx=e.tx;sinks=new Map();owners=byTx.get(tx)||new Map();inputGross=0n;outputSeen=false;recycled=false;}
   const value=BigInt(e.value);ensure(value>=0n,'FLOW_NEGATIVE_TRANSFER');if(!value||e.from===e.to)continue;
@@ -76,6 +78,7 @@ export function traceClaimFlow({source,marketAddresses,openingBalances,transfers
   const w=get(e.to,tx);w.balance+=value;for(const p of parts)add(w.lots,p);
  }
  finish();
+ progress({phase:'claim-origin-replay',transfers:processed,total:ordered.length,wallets:wallets.size,elapsedMs:Date.now()-started});
  let remaining=0n;
  for(const w of wallets.values()){const all=[...w.lots.values()];ensure(all.reduce((n,p)=>n+p.amount,0n)===w.balance,'FLOW_LEDGER_MISMATCH');remaining+=all.filter(p=>p.root).reduce((n,p)=>n+p.amount,0n);}
  const sold=totals.direct+totals.relay,unconfirmed=totals.pool-sold;

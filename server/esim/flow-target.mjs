@@ -1,5 +1,5 @@
 const hex=n=>'0x'+n.toString(16);
-export async function flowTarget(state,previous,transport,maxBlocks=100000){
+export async function flowTarget(state,previous,transport,maxBlocks=600000){
  if(!Number.isSafeInteger(maxBlocks)||maxBlocks<1||maxBlocks>3000000)throw Error('INVALID_FLOW_WINDOW');
  const start=previous?.throughBlock??state.distributions.reduce((n,r)=>Math.min(n,r.block),Infinity)-1;
  const end=Math.min(state.block,start+maxBlocks);

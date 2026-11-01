@@ -26,7 +26,8 @@ export async function collectClaimFlow(state,transport,{previous,progress=()=>{}
  const queries=[];for(let b=fromBlock;b<=state.block;b+=3000)queries.push(['eth_getLogs',[{address:TOKEN,topics:[TRANSFER],fromBlock:hex(b),toBlock:hex(Math.min(b+2999,state.block))}]]);
  progress({phase:'claim-transfer-scan',fromBlock,toBlock:state.block,queries:queries.length});
  const raw=(await transport.batch(queries)).flat();
- ensure(raw.length<=500000&&raw.every(e=>!e.removed&&e.address.toLowerCase()===TOKEN&&e.topics[0]===TRANSFER&&e.topics.length===3&&order(e)[0]>=fromBlock&&order(e)[0]<=state.block),'FLOW_INVALID_LOGS');
+ ensure(raw.length<=500000,'FLOW_EVENT_BATCH_LIMIT');
+ ensure(raw.every(e=>!e.removed&&e.address.toLowerCase()===TOKEN&&e.topics[0]===TRANSFER&&e.topics.length===3&&order(e)[0]>=fromBlock&&order(e)[0]<=state.block),'FLOW_INVALID_LOGS');
  const seen=new Set(previous?.transfers.map(e=>e.id)||[]),added=[];
  for(const e of raw){const id=eventKey(e);ensure(!seen.has(id),'FLOW_DUPLICATE_LOG');seen.add(id);added.push({id,tx:e.transactionHash,blockHash:e.blockHash,order:order(e),timestamp:e.blockTimestamp?Number(BigInt(e.blockTimestamp)):null,from:addr(e.topics[1]),to:addr(e.topics[2]),value:BigInt(e.data).toString()});}
  const transfers=[...(previous?.transfers||[]),...added];ensure(transfers.length<=MAX_FLOW_TRANSFERS,'FLOW_EVENT_LIMIT');
@@ -40,8 +41,9 @@ export async function collectClaimFlow(state,transport,{previous,progress=()=>{}
  const options={source:SOURCE,marketAddresses:[...markets],openingBalances,transfers,trades:state.trades};
  // Balance reconciliation cannot detect omitted net-zero transfers. Each proposed
  // sale is additionally checked against every ESIM Transfer in its receipt.
- const proposed=traceClaimFlow(options),proof={...(previous?.receiptProof||{})};
- const txs=[...new Set(proposed.sales.map(s=>s.tx))].filter(tx=>!proof[tx]);
+ const proof={...(previous?.receiptProof||{})};
+ // Verify candidate fill receipts first; one provenance replay is sufficient.
+ const txs=[...new Set(state.trades.filter(t=>t.side==='sell'&&t.address&&t.block>=startBlock&&t.block<=state.block).map(t=>t.tx))].filter(tx=>!proof[tx]);
  const byTx=new Map();for(const e of transfers){if(!byTx.has(e.tx))byTx.set(e.tx,[]);byTx.get(e.tx).push(e);}
  progress({phase:'claim-sale-receipts',transactions:txs.length});
  const receipts=await transport.batch(txs.map(tx=>['eth_getTransactionReceipt',[tx]]));
@@ -52,7 +54,7 @@ export async function collectClaimFlow(state,transport,{previous,progress=()=>{}
   ensure(logs.length===events.length&&logs.every(e=>{const x=indexed.get(eventKey(e));return x&&x.from===addr(e.topics[1])&&x.to===addr(e.topics[2])&&x.value===BigInt(e.data).toString()&&x.order.every((n,j)=>n===order(e)[j]);}),'FLOW_RECEIPT_LOG_MISMATCH');
   proof[tx]={block:events[0].order[0],blockHash:r.blockHash,unsafe:r.logs.some(e=>markets.has(e.address.toLowerCase())&&lpEvents.has(e.topics[0]))};
  }
- const traced=traceClaimFlow({...options,unsafeTransactions:Object.keys(proof).filter(tx=>proof[tx].unsafe)});
+ const traced=traceClaimFlow({...options,progress,unsafeTransactions:Object.keys(proof).filter(tx=>proof[tx].unsafe)});
  const missingTime=[...new Set(traced.unconfirmedFlows.filter(e=>e.timestamp===null).map(e=>e.block))],blockTimes={...(previous?.blockTimes||{})};
  const newTimes=missingTime.filter(b=>!Object.hasOwn(blockTimes,b));
  const blocks=await transport.batch(newTimes.map(b=>['eth_getBlockByNumber',[hex(b),false]]));

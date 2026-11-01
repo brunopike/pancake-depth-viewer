@@ -1,0 +1,16 @@
+name: ESIM archive historical verification
+on:
+  push:
+    branches: [esim-cache]
+    paths:
+      - archive-health.json
+      - .github/workflows/esim-history-on-archive.yml
+permissions:
+  contents: write
+jobs:
+  provenance:
+    uses: brunopike/pancake-depth-viewer/.github/workflows/esim-claim-flow.yml@main
+    secrets: inherit
+  cohort:
+    uses: brunopike/pancake-depth-viewer/.github/workflows/esim-cohort.yml@main
+    secrets: inherit

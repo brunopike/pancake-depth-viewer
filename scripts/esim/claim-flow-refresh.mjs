@@ -27,8 +27,12 @@ try{
  const budget=Number(process.env.ESIM_RPC_BUDGET||600);if(!Number.isInteger(budget)||budget<1||budget>2000)throw Error('BAD_BUDGET');
  const timeoutMs=Number(process.env.ESIM_FLOW_TIMEOUT_MS||1500000);if(!Number.isInteger(timeoutMs)||timeoutMs<60000||timeoutMs>5400000)throw Error('BAD_TIMEOUT');
  const transport=makeRpc({budget,timeoutMs,cacheDir:`${work}/rpc-cache`,progress:e=>{if(e.phase!=='rpc'||e.physical%10===0)console.log(JSON.stringify(e));}});
- const target=await flowTarget(state,previous,transport);
- const next=await collectClaimFlow(target,transport,{previous,progress:e=>console.log(JSON.stringify(e))});
+ let next,maxBlocks=600000;
+ for(;;){
+  const target=await flowTarget(state,previous,transport,maxBlocks);
+  try{next=await collectClaimFlow(target,transport,{previous,progress:e=>console.log(JSON.stringify(e))});break;}
+  catch(error){if(error.message!=='FLOW_EVENT_BATCH_LIMIT'||maxBlocks<=3000)throw error;maxBlocks=Math.max(3000,Math.floor(maxBlocks/2));}
+ }
  if(!validClaimFlow(state,next.report))throw Error('FLOW_REPORT_INVALID');
  await writeCheckpoint(next,work);
  await writeFile(`${work}/report.tmp`,JSON.stringify(next.report));await rename(`${work}/report.tmp`,`${work}/report.json`);
