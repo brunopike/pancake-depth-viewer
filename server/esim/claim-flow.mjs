@@ -16,10 +16,13 @@ function shares(lots,value,total){
  }
  ensure(remaining===0n,'FLOW_ROUNDING');return parts.filter(p=>p.amount);
 }
-export function traceClaimFlow({source,marketAddresses,openingBalances,transfers,trades,unsafeTransactions=[],zero=ZERO,progress=()=>{}}){
- const markets=new Set(marketAddresses),wallets=new Map(),sales=[],unconfirmedFlows=[],byTx=new Map(),seen=new Set(),unsafe=new Set(unsafeTransactions),times=new Map();
+export function traceClaimFlow({source,marketAddresses,openingBalances,transfers,trades,unsafeTransactions=[],zero=ZERO,progress=()=>{},previous=null}){
+ const saved=previous?.replayState;
+ if(previous)ensure(saved?.version===1,'FLOW_REPLAY_CHECKPOINT');
+ const markets=new Set(marketAddresses),wallets=new Map((saved?.wallets||[]).map(([a,w])=>[a,{...w,balance:BigInt(w.balance),lots:new Map(w.lots.map(lot=>[key(lot),{...lot,amount:BigInt(lot.amount)}]))}])),sales=[...(previous?.sales||[])],unconfirmedFlows=[...(previous?.unconfirmedFlows||[])],byTx=new Map(),seen=new Set(),unsafe=new Set(unsafeTransactions),times=new Map();
  for(const t of trades){times.set(t.tx,t.timestamp);if(t.side==='buy')unsafe.add(t.tx);}
  const totals={issued:0n,direct:0n,relay:0n,pool:0n,returned:0n,burned:0n,matchedGross:0n};
+ if(saved)for(const name of Object.keys(totals))totals[name]=BigInt(saved.totals[name]);
  for(const t of trades)if(t.side==='sell'&&t.address){if(!byTx.has(t.tx))byTx.set(t.tx,new Map());const m=byTx.get(t.tx),old=m.get(t.address);if(old)old.amount+=BigInt(t.amount_wei);else m.set(t.address,{...t,amount:BigInt(t.amount_wei)});}
  const get=(address,tx)=>{
   let w=wallets.get(address);
@@ -29,6 +32,7 @@ export function traceClaimFlow({source,marketAddresses,openingBalances,transfers
   return w;
  };
  const ordered=[...transfers].sort(compare);let tx=null,sinks=new Map(),owners=new Map(),inputGross=0n,outputSeen=false,recycled=false;
+ if(ordered.length&&saved?.lastOrder)ensure(compare(ordered[0],{order:saved.lastOrder})>0&&ordered[0].tx!==saved.lastTx,'FLOW_REPLAY_BOUNDARY');
  const finish=()=>{
   const safe=!unsafe.has(tx)&&!recycled&&inputGross===[...owners.values()].reduce((n,t)=>n+t.amount,0n);
   // A fee-retaining router mixes prior dust with the current input. With one
@@ -83,11 +87,20 @@ export function traceClaimFlow({source,marketAddresses,openingBalances,transfers
  for(const w of wallets.values()){const all=[...w.lots.values()];ensure(all.reduce((n,p)=>n+p.amount,0n)===w.balance,'FLOW_LEDGER_MISMATCH');remaining+=all.filter(p=>p.root).reduce((n,p)=>n+p.amount,0n);}
  const sold=totals.direct+totals.relay,unconfirmed=totals.pool-sold;
  ensure(unconfirmed>=0n&&totals.issued===remaining+sold+unconfirmed+totals.returned+totals.burned,'FLOW_CONSERVATION');
- return {version:1,modelRevision:2,method:'proportional-v1',sales,unconfirmedFlows,totals:{issued_wei:totals.issued.toString(),direct_wei:totals.direct.toString(),relay_wei:totals.relay.toString(),sold_wei:sold.toString(),remaining_wei:remaining.toString(),unconfirmed_pool_wei:unconfirmed.toString(),returned_wei:totals.returned.toString(),burned_wei:totals.burned.toString(),matched_gross_wei:totals.matchedGross.toString()},closingBalances:Object.fromEntries([...wallets].map(([a,w])=>[a,w.balance.toString()]))};
+ // Keep exact lots at a complete transaction boundary; the collector validates
+ // the prior inputs and all closing balances before reusing or publishing them.
+ const replayState={version:1,lastOrder:ordered.at(-1)?.order??saved?.lastOrder??null,lastTx:tx??saved?.lastTx??null,totals:Object.fromEntries(Object.entries(totals).map(([k,v])=>[k,v.toString()])),wallets:[...wallets].map(([a,w])=>[a,{balance:w.balance.toString(),tx:w.tx,lots:[...w.lots.values()].map(({remainder,...lot})=>({...lot,amount:lot.amount.toString()}))}])};
+ return {version:1,modelRevision:2,method:'proportional-v1',sales,unconfirmedFlows,totals:{issued_wei:totals.issued.toString(),direct_wei:totals.direct.toString(),relay_wei:totals.relay.toString(),sold_wei:sold.toString(),remaining_wei:remaining.toString(),unconfirmed_pool_wei:unconfirmed.toString(),returned_wei:totals.returned.toString(),burned_wei:totals.burned.toString(),matched_gross_wei:totals.matchedGross.toString()},closingBalances:Object.fromEntries([...wallets].map(([a,w])=>[a,w.balance.toString()])),replayState};
 }
 export function claimFlowWindow(flow,start,end){
  if(!flow)return null;const rows=flow.sales.filter(s=>s.timestamp>=start&&s.timestamp<end),direct=sum(rows,'direct_wei'),relay=sum(rows,'relay_wei');
  const ranked=new Map();for(const r of rows){if(!BigInt(r.relay_wei))continue;const prior=ranked.get(r.address);if(prior)prior.amount+=BigInt(r.relay_wei);else ranked.set(r.address,{address:r.address,amount:BigInt(r.relay_wei),example:r.examples.find(e=>e.root!==r.address),tx:r.tx});}
  const pending=(flow.unconfirmedFlows||[]).filter(r=>r.timestamp!==null&&r.timestamp>=start&&r.timestamp<end),unknown=(flow.unconfirmedFlows||[]).some(r=>r.timestamp===null),pendingAmount=sum(pending,'amount_wei');
  return {modelRevision:flow.modelRevision??1,method:flow.method,cutoff:flow.cutoff??null,throughBlock:flow.throughBlock??null,direct_wei:direct.toString(),relay_wei:relay.toString(),sold_wei:(direct+relay).toString(),pending_wei:unknown?null:pendingAmount.toString(),pendingTransactions:new Set(pending.map(r=>r.tx)).size,complete:!unknown&&pendingAmount===0n&&flow.cutoff>=end,transactions:new Set(rows.map(r=>r.tx)).size,relayAddresses:ranked.size,examples:[...ranked.values()].sort((a,b)=>a.amount>b.amount?-1:a.amount<b.amount?1:a.address.localeCompare(b.address)).slice(0,50).map(r=>({...r,amount:r.amount.toString()}))};
+}
+export function claimFlowAlreadyPublished(saved,report){
+ if(saved.throughBlock!==report.throughBlock)return saved.throughBlock>report.throughBlock;
+ if((saved.modelRevision??1)!==(report.modelRevision??1))return (saved.modelRevision??1)>(report.modelRevision??1);
+ if((saved.replayCheckpointVersion??0)!==(report.replayCheckpointVersion??0))return (saved.replayCheckpointVersion??0)>(report.replayCheckpointVersion??0);
+ return saved.replayInputHash===report.replayInputHash;
 }

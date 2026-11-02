@@ -4,13 +4,23 @@ import {readHolderBalances} from './holders.mjs';
 import {traceClaimFlow} from './claim-flow.mjs';
 import {SOURCE_INFLOW_SEED,buildSourceInflow} from './source-inflows.mjs';
 import {MAX_TRACKED_ADDRESSES,MAX_FLOW_TRANSFERS} from '../../src/data-capacity.mjs';
+import {createHash} from 'node:crypto';
 const ZERO='0x0000000000000000000000000000000000000000',hex=n=>'0x'+n.toString(16);
 const ensure=(ok,code)=>{if(!ok)throw Error(code);};
 const lpEvents=new Set(['Mint(address,address,int24,int24,uint128,uint256,uint256)','Burn(address,int24,int24,uint128,uint256,uint256)','Collect(address,address,int24,int24,uint128,uint128)','Mint(address,uint256,uint256)','Burn(address,uint256,uint256,address)','ModifyLiquidity(bytes32,address,int24,int24,int256,bytes32)'].map(signature));
+function replayInputHash(state,transfers,throughBlock,openingBalances){
+ const hash=createHash('sha256');
+ hash.update(JSON.stringify([state.token,state.source,Object.keys(state.pools).filter(a=>a.length===42).sort()]));
+ hash.update(JSON.stringify(Object.entries(openingBalances).sort(([a],[b])=>a.localeCompare(b))));
+ for(const e of transfers)if(e.order[0]<=throughBlock)hash.update(JSON.stringify(e));
+ for(const t of state.trades)if(t.block<=throughBlock)hash.update(JSON.stringify([t.tx,t.address,t.side,t.amount_wei,t.block,t.timestamp]));
+ return hash.digest('hex');
+}
 export async function collectClaimFlow(state,transport,{previous,progress=()=>{},readBalances=readHolderBalances,sourceInflowSeed=SOURCE_INFLOW_SEED}={}){
  ensure(state.token===TOKEN&&state.source===SOURCE&&state.distributions.length,'FLOW_INVALID_SOURCE');
  const startBlock=state.distributions.reduce((n,r)=>Math.min(n,r.block),Infinity),openingBlock=startBlock-1;
  const markets=new Set([PCS,UNI,VAULT,...Object.keys(state.pools).filter(a=>a.length===42)]);
+ const marketAddresses=[...markets].sort(),sameMarkets=JSON.stringify(previous?.marketAddresses)===JSON.stringify(marketAddresses);
  const normal=a=>a!==SOURCE&&a!==ZERO&&!markets.has(a);
  if(previous)ensure(previous.version===1&&previous.token===TOKEN&&previous.source===SOURCE&&previous.startBlock===startBlock&&previous.throughBlock<=state.block,'FLOW_INVALID_CHECKPOINT');
  const checks=[['eth_chainId',[]],['eth_getBlockByNumber',[hex(openingBlock),false]],['eth_getBlockByNumber',[hex(state.block),false]]];
@@ -41,7 +51,8 @@ export async function collectClaimFlow(state,transport,{previous,progress=()=>{}
  const options={source:SOURCE,marketAddresses:[...markets],openingBalances,transfers,trades:state.trades};
  // Balance reconciliation cannot detect omitted net-zero transfers. Each proposed
  // sale is additionally checked against every ESIM Transfer in its receipt.
- const proof={...(previous?.receiptProof||{})};
+ // A newly recognized pool can make an old receipt an unsafe LP path.
+ const proof=sameMarkets?{...(previous?.receiptProof||{})}:{};
  // Verify candidate fill receipts first; one provenance replay is sufficient.
  const txs=[...new Set(state.trades.filter(t=>t.side==='sell'&&t.address&&t.block>=startBlock&&t.block<=state.block).map(t=>t.tx))].filter(tx=>!proof[tx]);
  const byTx=new Map();for(const e of transfers){if(!byTx.has(e.tx))byTx.set(e.tx,[]);byTx.get(e.tx).push(e);}
@@ -54,7 +65,8 @@ export async function collectClaimFlow(state,transport,{previous,progress=()=>{}
   ensure(logs.length===events.length&&logs.every(e=>{const x=indexed.get(eventKey(e));return x&&x.from===addr(e.topics[1])&&x.to===addr(e.topics[2])&&x.value===BigInt(e.data).toString()&&x.order.every((n,j)=>n===order(e)[j]);}),'FLOW_RECEIPT_LOG_MISMATCH');
   proof[tx]={block:events[0].order[0],blockHash:r.blockHash,unsafe:r.logs.some(e=>markets.has(e.address.toLowerCase())&&lpEvents.has(e.topics[0]))};
  }
- const traced=traceClaimFlow({...options,progress,unsafeTransactions:Object.keys(proof).filter(tx=>proof[tx].unsafe)});
+ const resume=previous?.replayState?.version===1&&Array.isArray(previous.replayWallets)&&previous.replayState.inputHash===replayInputHash(state,transfers,previous.throughBlock,previous.openingBalances);
+ const traced=traceClaimFlow({...options,transfers:resume?added:transfers,previous:resume?{...previous.report,replayState:{...previous.replayState,wallets:previous.replayWallets}}:null,progress,unsafeTransactions:Object.keys(proof).filter(tx=>proof[tx].unsafe)});
  const missingTime=[...new Set(traced.unconfirmedFlows.filter(e=>e.timestamp===null).map(e=>e.block))],blockTimes={...(previous?.blockTimes||{})};
  const newTimes=missingTime.filter(b=>!Object.hasOwn(blockTimes,b));
  const blocks=await transport.batch(newTimes.map(b=>['eth_getBlockByNumber',[hex(b),false]]));
@@ -69,9 +81,10 @@ export async function collectClaimFlow(state,transport,{previous,progress=()=>{}
   sourceInflow=buildSourceInflow({transfers,startBlock,throughBlock:state.block,blockHash:state.blockHash,cutoff:state.cutoff,balance,checkpoint:sourceInflowSeed});
  }
  const after=await transport.rpc('eth_getBlockByNumber',[hex(state.block),false],{fresh:true});ensure(after?.hash===end.hash,'FLOW_END_CHANGED');
- const {closingBalances,...report}=traced;
+ const {closingBalances,replayState:{wallets:replayWallets,...replayState},...report}=traced;
+ replayState.inputHash=replayInputHash(state,transfers,state.block,openingBalances);
  // Revision 3 adds the reconciled all-history source inflow counter; the
  // proportional sale-attribution algorithm is unchanged.
- Object.assign(report,{modelRevision:3,token:TOKEN,source:SOURCE,startBlock,openingBlock,openingBlockHash:opening.hash,throughBlock:state.block,blockHash:state.blockHash,cutoff:state.cutoff,sourceInflow,transferCount:transfers.length,addressCount:addresses.length,receiptCount:Object.keys(proof).length,coverage:'single-token-rpc-logs; sale-receipts-and-wallet-balances-reconciled; unknown-net-zero-transfers-depend-on-rpc-completeness'});
- return {version:1,token:TOKEN,source:SOURCE,startBlock,openingBlock,openingBlockHash:opening.hash,throughBlock:state.block,blockHash:state.blockHash,cutoff:state.cutoff,openingBalances,transfers,receiptProof:proof,blockTimes,report};
+ Object.assign(report,{modelRevision:3,replayCheckpointVersion:1,replayInputHash:replayState.inputHash,token:TOKEN,source:SOURCE,startBlock,openingBlock,openingBlockHash:opening.hash,throughBlock:state.block,blockHash:state.blockHash,cutoff:state.cutoff,sourceInflow,transferCount:transfers.length,addressCount:addresses.length,receiptCount:Object.keys(proof).length,coverage:'single-token-rpc-logs; sale-receipts-and-wallet-balances-reconciled; unknown-net-zero-transfers-depend-on-rpc-completeness'});
+ return {version:1,token:TOKEN,source:SOURCE,startBlock,openingBlock,openingBlockHash:opening.hash,throughBlock:state.block,blockHash:state.blockHash,cutoff:state.cutoff,openingBalances,transfers,receiptProof:proof,blockTimes,marketAddresses,replayState,replayWallets,report};
 }

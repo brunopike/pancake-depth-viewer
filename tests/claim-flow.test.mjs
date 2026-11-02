@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {traceClaimFlow,claimFlowWindow} from '../server/esim/claim-flow.mjs';
+import {traceClaimFlow,claimFlowWindow,claimFlowAlreadyPublished} from '../server/esim/claim-flow.mjs';
 const source='source',pool='pool',router='router';
 const edge=(n,from,to,value,tx='tx'+n)=>({id:String(n),tx,order:[n,0,0],from,to,value:String(value)});
 const sale=(tx,address,amount)=>({tx,address,side:'sell',amount_wei:String(amount),timestamp:100,block:9});
@@ -46,4 +46,40 @@ test('equal remainders allocate exact wei deterministically across partial and f
  assert.deepEqual(r.sales[0].examples.map(row=>row.root),['a']);
  assert.deepEqual(r.sales[1].examples.map(row=>row.root),['c','b']);
  assert.equal(r.totals.remaining_wei,'0');assert.equal(r.totals.issued_wei,r.totals.sold_wei);
+});
+test('a serialized transaction-boundary checkpoint produces exactly the full replay result',()=>{
+ const transfers=[edge(1,source,'a',101),edge(2,'a',router,51),edge(3,source,'b',99),edge(4,'b',router,49),edge(5,router,'c',37),edge(6,'c',pool,31,'sell'),edge(7,router,source,11),edge(8,router,'zero',3)];
+ const trades=[sale('sell','c',31)],options={source,zero:'zero',marketAddresses:[pool],openingBalances:{a:'0',b:'0',c:'0',[router]:'17'},trades};
+ const first=traceClaimFlow({...options,transfers:transfers.slice(0,4)});
+ assert(first.replayState);
+ const saved=JSON.parse(JSON.stringify(first));
+ const next=traceClaimFlow({...options,transfers:transfers.slice(4),previous:saved});
+ assert.deepEqual(next,traceClaimFlow({...options,transfers}));
+ assert.deepEqual(traceClaimFlow({...options,transfers:[],previous:JSON.parse(JSON.stringify(next))}),next);
+});
+test('publishing the initial resumable checkpoint does not skip an equal-block legacy report',()=>{
+ const report={throughBlock:100,modelRevision:3,replayCheckpointVersion:1,replayInputHash:'new'};
+ assert.equal(claimFlowAlreadyPublished({throughBlock:100,modelRevision:3},report),false);
+ assert.equal(claimFlowAlreadyPublished(report,report),true);
+ assert.equal(claimFlowAlreadyPublished({...report,throughBlock:101},report),true);
+ assert.equal(claimFlowAlreadyPublished({...report,modelRevision:4},report),true);
+ assert.equal(claimFlowAlreadyPublished({...report,replayInputHash:'old'},report),false);
+});
+test('many serialized checkpoints retain exact rounding, mixed roots, returns and sell classification',()=>{
+ let seed=7;const random=n=>{seed=(seed*16807)%2147483647;return seed%n;},addresses=['a','b','c',router],balances=Object.fromEntries(addresses.map(a=>[a,200])),transfers=[],trades=[];
+ for(let i=1;i<=180;i++){
+  let from=addresses[random(addresses.length)],to=[source,pool,...addresses][random(6)];
+  if(i%5===0)from=source;
+  const value=from===source?random(100)+1:random(balances[from]+1);
+  if(from!==source)balances[from]-=value;
+  if(to!==source&&to!==pool)balances[to]+=value;
+  transfers.push(edge(i,from,to,value));
+  if(to===pool)trades.push(sale('tx'+i,from,value));
+ }
+ const options={source,zero:'zero',marketAddresses:[pool],openingBalances:Object.fromEntries(addresses.map(a=>[a,'200'])),trades};
+ let previous=null;
+ for(let i=0;i<transfers.length;i+=15)previous=JSON.parse(JSON.stringify(traceClaimFlow({...options,transfers:transfers.slice(i,i+15),previous})));
+ assert.deepEqual(previous,traceClaimFlow({...options,transfers}));
+ const first=traceClaimFlow({...options,transfers:[edge(1,source,'a',10,'split')]});
+ assert.throws(()=>traceClaimFlow({...options,transfers:[edge(2,'a',pool,1,'split')],previous:first}),/FLOW_REPLAY_BOUNDARY/);
 });
