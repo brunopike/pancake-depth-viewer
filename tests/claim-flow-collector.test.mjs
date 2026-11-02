@@ -50,6 +50,21 @@ test('a newly recognized market rechecks prior receipt LP safety before rebuildi
  const changed={...state(101),pools:{[p]:{},[q]:{}},trades},rebuilt=await collectClaimFlow(changed,transport,{previous:first,readBalances}),fresh=await collectClaimFlow(changed,transport,{readBalances});
  assert.deepEqual(rebuilt.report,fresh.report);assert.equal(rebuilt.report.totals.sold_wei,'0');assert.equal(rebuilt.report.totals.unconfirmed_pool_wei,'100');
 });
+test('legacy receipt revalidation uses bounded batches while preserving every candidate',async()=>{
+ const p=a(8),logs=[log(100,SOURCE,a(1),100),...Array.from({length:1001},(_,i)=>log(101+i,a(1),p,0))],trades=logs.slice(1).map(e=>({tx:e.transactionHash,block:Number(BigInt(e.blockNumber)),timestamp:101,side:'sell',address:a(1),amount_wei:'0'})),seen=[];
+ const transport={batch:async calls=>{
+  assert(calls.length<=1000);
+  return calls.map(([method,args])=>{
+   if(method==='eth_chainId')return '0x38';
+   if(method==='eth_getBlockByNumber')return {hash:h(Number(BigInt(args[0])))};
+   if(method==='eth_getLogs')return logs;
+   const e=logs.find(row=>row.transactionHash===args[0]);seen.push(args[0]);
+   return {transactionHash:e.transactionHash,blockHash:h(Number(BigInt(e.blockNumber))),blockNumber:e.blockNumber,status:'0x1',logs:[e]};
+  });
+ },rpc:async()=>({hash:h(1101)})};
+ const result=await collectClaimFlow({...state(1101),pools:{[p]:{}},trades},transport,{readBalances:async(addresses,block)=>addresses.map(()=>block==='0x63'?'0':'100')});
+ assert.equal(seen.length,1001);assert.equal(result.report.receiptCount,1001);
+});
 test('source gross inflow enrichment pins the seed hash and independently reconciles the contract wallet',async()=>{
  const checkpoint={...SOURCE_INFLOW_SEED,throughBlock:99,blockHash:h(99),cutoff:900,total_wei:'300',transfer_events:1,balance_wei:'300'};
  const requests=[],transport={batch:async calls=>calls.map(([method,p])=>{requests.push([method,p]);return method==='eth_chainId'?'0x38':method==='eth_getBlockByNumber'?{hash:h(Number(BigInt(p[0])))}:[log(100,SOURCE,a(1),100)];}),rpc:async()=>({hash:h(100)})};

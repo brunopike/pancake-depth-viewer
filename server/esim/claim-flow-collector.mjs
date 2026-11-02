@@ -57,13 +57,15 @@ export async function collectClaimFlow(state,transport,{previous,progress=()=>{}
  const txs=[...new Set(state.trades.filter(t=>t.side==='sell'&&t.address&&t.block>=startBlock&&t.block<=state.block).map(t=>t.tx))].filter(tx=>!proof[tx]);
  const byTx=new Map();for(const e of transfers){if(!byTx.has(e.tx))byTx.set(e.tx,[]);byTx.get(e.tx).push(e);}
  progress({phase:'claim-sale-receipts',transactions:txs.length});
- const receipts=await transport.batch(txs.map(tx=>['eth_getTransactionReceipt',[tx]]));
+ for(let offset=0;offset<txs.length;offset+=1000){
+ const batch=txs.slice(offset,offset+1000),receipts=await transport.batch(batch.map(tx=>['eth_getTransactionReceipt',[tx]]));
  for(const [i,r]of receipts.entries()){
-  const tx=txs[i],events=byTx.get(tx)||[];
+  const tx=batch[i],events=byTx.get(tx)||[];
   ensure(r?.transactionHash===tx&&r.status==='0x1'&&Number(BigInt(r.blockNumber))===events[0]?.order[0]&&(!events[0].blockHash||r.blockHash===events[0].blockHash),'FLOW_RECEIPT_MISMATCH');
   const logs=r.logs.filter(e=>e.address.toLowerCase()===TOKEN&&e.topics[0]===TRANSFER),indexed=new Map(events.map(e=>[e.id,e]));
   ensure(logs.length===events.length&&logs.every(e=>{const x=indexed.get(eventKey(e));return x&&x.from===addr(e.topics[1])&&x.to===addr(e.topics[2])&&x.value===BigInt(e.data).toString()&&x.order.every((n,j)=>n===order(e)[j]);}),'FLOW_RECEIPT_LOG_MISMATCH');
   proof[tx]={block:events[0].order[0],blockHash:r.blockHash,unsafe:r.logs.some(e=>markets.has(e.address.toLowerCase())&&lpEvents.has(e.topics[0]))};
+ }
  }
  const resume=previous?.replayState?.version===1&&Array.isArray(previous.replayWallets)&&previous.replayState.inputHash===replayInputHash(state,transfers,previous.throughBlock,previous.openingBalances);
  const traced=traceClaimFlow({...options,transfers:resume?added:transfers,previous:resume?{...previous.report,replayState:{...previous.replayState,wallets:previous.replayWallets}}:null,progress,unsafeTransactions:Object.keys(proof).filter(tx=>proof[tx].unsafe)});
