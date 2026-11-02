@@ -1,7 +1,7 @@
 import { TOKEN, SOURCE } from './metrics.mjs';
 import {collectSourceInflow} from './source-inflow-collector.mjs';
 import {collectNativeTraces} from './native-traces.mjs';
-import {discoverClassicPools,backfillClassicTrades} from './classic-pools.mjs';
+import {discoverClassicPools,discoverClassicPoolCreations,backfillClassicTrades} from './classic-pools.mjs';
 import { TRANSFER, V2, V3, V4, PCS, UNI, SWAPS, signature, topic, addr, order, before, eventKey,
   decodeLeg, attributionCandidates, attributedRows } from './attribution.mjs';
 const hex = n => `0x${n.toString(16)}`;
@@ -50,6 +50,8 @@ export async function refreshState(state, transport, { maxBlocks = 24000, target
   // New pool identities are real Initialize events. Nonzero hook economics are
   // not extrapolated from a previous audit; the pool-fill sums remain explicit.
   if (initializations.length) warnings.push('本次发现新增池；复杂交易保留未归因。');
+  const created=await discoverClassicPoolCreations(pools,transport,state.block,end);
+  Object.assign(pools,created);
   const queries = logQueries(TOKEN, [TRANSFER, topic(SOURCE)]);
   const classic = Object.keys(pools).filter(id => id.length === 42);
   if (classic.length) queries.push(...logQueries(classic, [[V2, ...V3]]));
@@ -78,7 +80,7 @@ export async function refreshState(state, transport, { maxBlocks = 24000, target
   const headers = Object.fromEntries((await batch(blocks.map(b => ['eth_getBlockByNumber', [hex(b), false]]))).map(h => [num(h.number), h]));
   for (const r of fetchedReceipts) { const h = headers[num(r.blockNumber)]; ensure(h?.hash === r.blockHash && h.transactions[num(r.transactionIndex)] === r.transactionHash, 'RECEIPT_CANONICAL'); }
   for (const e of allEvents) { const r = receipts[e.transactionHash]; ensure(r.status === '0x1' && r.blockHash === e.blockHash && r.logs.some(l => eventKey(l) === eventKey(e) && l.data === e.data && l.address === e.address), 'EVENT_RECEIPT_MISMATCH'); }
-  const added=await discoverClassicPools(fetchedReceipts.flatMap(r=>r.logs),pools,transport,state.block,end);
+  const added={...created,...await discoverClassicPools(fetchedReceipts.flatMap(r=>r.logs),pools,transport,state.block,end)};
   if(Object.keys(added).length){
     progress({phase:'new-classic-pools',pools:Object.keys(added),replayFrom:start});
     // Replay the complete interval, including all new-pool swaps and receipts.

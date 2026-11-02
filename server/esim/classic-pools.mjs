@@ -1,6 +1,6 @@
 import {encodeFunctionData,parseAbi} from 'viem';
 import {TOKEN} from './metrics.mjs';
-import {V2,V3,V4,TRANSFER,addr,eventKey,decodeLeg,attributionCandidates,attributedRows} from './attribution.mjs';
+import {V2,V3,V4,TRANSFER,signature,topic,addr,eventKey,decodeLeg,attributionCandidates,attributedRows} from './attribution.mjs';
 
 const FACTORY='0x0bfbcf9fa4f9c56b0f40a671ad40e0805a091865';
 const V2_FACTORY='0xca143ce32fe78f1f7019d7d551a6402fc5350c73';
@@ -40,6 +40,29 @@ export async function discoverClassicPools(events,pools,{batch,rpc},checkpoint,e
   added[id]={id,manager:id,token0,token1,fee,verified:`Pancake V${v3?3:2} factory`,discoveredAfter:checkpoint,historyFrom};
  }
  return added;
+}
+
+export async function discoverClassicPoolCreations(pools,transport,checkpoint,end){
+ const requests=[];
+ for(const [factory,event,swap,poolWord] of [
+  [V2_FACTORY,'PairCreated(address,address,address,uint256)',V2,0],
+  [FACTORY,'PoolCreated(address,address,uint24,int24,address)',[...V3][1],1]
+ ])for(const tokenTopics of [[topic(TOKEN)],[null,topic(TOKEN)]])for(let start=checkpoint+1;start<=end;start+=5000){
+  const sig=signature(event),stop=Math.min(start+4999,end);
+  requests.push({factory,sig,swap,poolWord,start,stop,call:['eth_getLogs',[{address:factory,topics:[sig,...tokenTopics],fromBlock:hex(start),toBlock:hex(stop)}]]});
+ }
+ const results=await transport.batch(requests.map(r=>r.call)),candidates=[];
+ for(const [i,events] of results.entries()){
+  const q=requests[i];if(!Array.isArray(events))throw Error('CLASSIC_POOL_CREATION_MISSING');
+  for(const e of events){
+   const block=Number(BigInt(e.blockNumber));
+   if(e.removed||e.address.toLowerCase()!==q.factory||e.topics[0]!==q.sig||block<q.start||block>q.stop)throw Error('CLASSIC_POOL_CREATION_MISMATCH');
+   const id=addr(word('0x'+e.data.slice(2+q.poolWord*64,2+(q.poolWord+1)*64)));
+   // Metadata candidates only; the collector counts real Swap logs after verification.
+   candidates.push({address:id,topics:[q.swap]});
+  }
+ }
+ return discoverClassicPools(candidates,pools,transport,checkpoint,end);
 }
 
 export async function backfillClassicTrades(state,added,transport){
