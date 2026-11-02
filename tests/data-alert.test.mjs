@@ -40,10 +40,34 @@ test('historical verification failures remain visible even while live snapshots 
  const auxiliary=Object.fromEntries(['provenance','cohort','archive'].map(k=>[k,{cutoff:now/1000-60}])),entries=[['交易',{cutoff:now/1000-10}]];
  auxiliary.provenance.cutoff=now/1000-7201;
  const stale=snapshotStatus(entries,{now,realtime:true,health:{auxiliary}}).alert;
- assert.match(stale.reason,/分发币跨地址追踪超过两小时/);
+ assert.match(stale.reason,/分发币跨地址追踪.*超过两小时/);
  assert.equal(stale.lastUpdated,new Date(auxiliary.provenance.cutoff*1000).toISOString());
  const pending=structuredClone(auxiliary);pending.provenance=null;
  assert.equal(snapshotStatus(entries,{now,realtime:true,health:{auxiliary:pending}}).alert.lastUpdated,null);
  auxiliary.provenance.cutoff=now/1000-60;
  assert.equal(snapshotStatus(entries,{now,realtime:true,health:{auxiliary}}).alert,null);
+});
+test('historical lag is scoped amber and reports a running verifier without claiming current results',()=>{
+ const auxiliary=Object.fromEntries(['provenance','cohort','archive'].map(k=>[k,{cutoff:now/1000-60}]));auxiliary.provenance.cutoff=now/1000-7201;
+ const options={now,realtime:true,health:{auxiliary,auxiliaryJobs:{provenance:{running:true}}}};
+ const r=snapshotStatus([['交易',{cutoff:now/1000-10}],['持仓',{cutoff:now/1000-20}]],options);
+ assert.equal(r.alert.severity,'warning');assert.equal(r.alert.scope,'history');assert.match(r.alert.title,/历史统计/);
+ assert.match(r.alert.recovery,/正在运行/);assert.match(r.text,/交易和持仓已更新/);assert.doesNotMatch(r.text,/当前显示上次核验快照/);
+ assert.equal(r.alert.lastUpdated,new Date(auxiliary.provenance.cutoff*1000).toISOString());
+ const real=snapshotStatus([['交易',{cutoff:now/1000-901}]],options);assert.equal(real.alert.severity,'error');assert.match(real.alert.title,/数据更新异常/);
+ const future=snapshotStatus([['交易',{cutoff:now/1000+120}]],options);assert.equal(future.alert.severity,'error');assert.match(future.alert.reason,/时间超前/);
+});
+test('an expired or unavailable historical worker is never described as running',()=>{
+ const auxiliary={provenance:{cutoff:now/1000-7201},cohort:{cutoff:now/1000},archive:{cutoff:now/1000}};
+ const r=snapshotStatus([['交易',{cutoff:now/1000-10}]],{now,realtime:true,health:{auxiliary,auxiliaryJobs:{provenance:{running:false}}}});
+ assert.equal(r.alert.severity,'warning');assert.doesNotMatch(r.alert.recovery,/正在运行/);assert.match(r.alert.reason,/超过两小时/);
+});
+
+test('banner restores error appearance after a historical-only warning',()=>{
+ const nodes=new Map(),root={dataset:{},querySelector:s=>{if(!nodes.has(s))nodes.set(s,{textContent:''});return nodes.get(s);},setAttribute(k,v){this[k]=v;}};
+ renderDataAlert({severity:'warning',title:'ESIM 链上 · 历史统计待更新',reason:'old history',lastUpdated:new Date(now).toISOString(),recovery:'running'},root);
+ assert.equal(root.dataset.severity,'warning');assert.equal(root.role,'status');assert.equal(nodes.get('.data-alert-fields>div:nth-child(2)>dt').textContent,'历史数据截至');
+ renderDataAlert({reason:'read failed',recovery:'retry'},root);
+ assert.equal(root.dataset.severity,'error');assert.equal(root.role,'alert');assert.match(nodes.get('.data-alert-heading strong').textContent,/数据更新异常/);
+ assert.equal(nodes.get('.data-alert-fields>div:nth-child(2)>dt').textContent,'最后更新时间');
 });

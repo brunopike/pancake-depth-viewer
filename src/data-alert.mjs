@@ -2,6 +2,11 @@ export function renderDataAlert(model,root=globalThis.document?.getElementById('
  if(!root)return;
  root.hidden=!model;
  if(!model)return;
+ const warning=model.severity==='warning';
+ if(root.dataset)root.dataset.severity=warning?'warning':'error';
+ root.setAttribute?.('role',warning?'status':'alert');
+ const labels={'.data-alert-heading strong':model.title||'ESIM 链上 · 数据更新异常','.data-alert-fields>div:nth-child(1)>dt':warning?'历史统计状态':'异常原因','.data-alert-fields>div:nth-child(2)>dt':warning?'历史数据截至':'最后更新时间','.data-alert-fields>div:nth-child(3)>dt':warning?'更新状态':'恢复状态'};
+ for(const [selector,value]of Object.entries(labels)){const node=root.querySelector(selector);if(node&&node.textContent!==value)node.textContent=value;}
  const time=Number.isFinite(Date.parse(model.lastUpdated))?new Date(model.lastUpdated).toLocaleString('zh-CN',{timeZone:'Asia/Shanghai',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false})+'（北京时间，数据截至）':'暂无成功更新记录';
  for(const [field,value]of Object.entries({reason:model.reason,time,recovery:model.recovery})){
   const node=root.querySelector(`[data-alert-${field}]`);if(node&&node.textContent!==value)node.textContent=value;

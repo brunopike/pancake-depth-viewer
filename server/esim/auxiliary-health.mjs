@@ -1,3 +1,4 @@
+import {realtimeSQL} from './realtime-store.mjs';
 const kinds=['provenance','cohort','archive'],root='https://raw.githubusercontent.com/brunopike/pancake-depth-viewer/esim-cache/';
 let cached,pending,checkedAt=0;
 function valid(row,kind){return row?.version===1&&row.kind===kind&&Number.isSafeInteger(row.block)&&row.block>0&&Number.isFinite(row.cutoff)&&row.cutoff>0&&Number.isFinite(Date.parse(row.publishedAt))&&row.counts&&Object.values(row.counts).every(n=>Number.isSafeInteger(n)&&n>=0);}
@@ -14,4 +15,9 @@ export async function readAuxiliaryStatus(){
   catch{return [kind,cached?.[kind]||null];}
  })).then(rows=>{checkedAt=Date.now();cached=Object.fromEntries(rows);return cached;}).finally(()=>{pending=null;});
  return pending;
+}
+
+export async function readAuxiliaryJobs(sql=realtimeSQL()){
+ const rows=await sql.query("SELECT job,expires_at>clock_timestamp() AS running,updated_at FROM esim_worker_leases WHERE job IN ('provenance','cohort')");
+ return Object.fromEntries(rows.filter(r=>['provenance','cohort'].includes(r.job)).map(r=>[r.job,{running:r.running===true,lastHeartbeat:r.updated_at}]));
 }
