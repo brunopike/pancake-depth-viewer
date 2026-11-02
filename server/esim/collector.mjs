@@ -1,7 +1,7 @@
 import { TOKEN, SOURCE } from './metrics.mjs';
 import {collectSourceInflow} from './source-inflow-collector.mjs';
 import {collectNativeTraces} from './native-traces.mjs';
-import {discoverClassicPools} from './classic-pools.mjs';
+import {discoverClassicPools,backfillClassicTrades} from './classic-pools.mjs';
 import { TRANSFER, V2, V3, V4, PCS, UNI, SWAPS, signature, topic, addr, order, before, eventKey,
   decodeLeg, attributionCandidates, attributedRows } from './attribution.mjs';
 const hex = n => `0x${n.toString(16)}`;
@@ -82,7 +82,8 @@ export async function refreshState(state, transport, { maxBlocks = 24000, target
   if(Object.keys(added).length){
     progress({phase:'new-classic-pools',pools:Object.keys(added),replayFrom:start});
     // Replay the complete interval, including all new-pool swaps and receipts.
-    return refreshState({...state,pools:{...pools,...added}},transport,{maxBlocks,targetBlock,progress});
+    const trades=await backfillClassicTrades(state,added,transport);
+    return refreshState({...state,trades,pools:{...pools,...added}},transport,{maxBlocks,targetBlock,progress});
   }
   const time = block => timestamp(headers[block]);
   const firstRecipient = structuredClone(state.firstRecipient);
