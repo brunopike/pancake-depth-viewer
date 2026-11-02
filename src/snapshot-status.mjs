@@ -14,7 +14,7 @@ export function setSnapshotHealth(health){
  if(lastDisplay)showSnapshotStatus(...lastDisplay.slice(0,3),{...lastDisplay[3],failed:readFailed});
  else if(readFailed)showSnapshotFailure();
 }
-export function snapshotStatus(entries,{retained=false,failed=false,now=Date.now(),realtime=globalThis.location?.hostname==='esimonchain.imstark.site',health=liveHealth}={}){
+export function snapshotStatus(entries,{retained=false,failed=false,loading=false,now=Date.now(),realtime=globalThis.location?.hostname==='esimonchain.imstark.site',health=liveHealth}={}){
  const missing=entries.some(([,value])=>!Number.isFinite(value?.cutoff));
  const times=entries.filter(([,value])=>Number.isFinite(value?.cutoff));
  const ageMinutes=times.length?Math.max(0,Math.floor((now-Math.min(...times.map(([,value])=>value.cutoff*1000)))/60000)):null;
@@ -29,6 +29,7 @@ export function snapshotStatus(entries,{retained=false,failed=false,now=Date.now
  const date=s=>new Date(s*1000).toLocaleString('zh-CN',{timeZone:'Asia/Shanghai',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hour12:false});
  const prefix=historyOnly?entries.map(([label])=>label).join('和')+'已更新，部分历史统计待更新':stale?`快照已过期，最早距今 ${ageMinutes} 分钟`:retained||failed?'更新未完成，保留已显示数据':reason?'当前显示上次核验快照':'已读取最新可用快照';
  const details=entries.map(([label,value])=>Number.isFinite(value?.cutoff)?`${label}截至 ${date(value.cutoff)}`:`${label}数据暂缺`);
+ if(loading&&!failed&&!health?.error&&!health?.unavailable)return {warning:false,alert:null,text:['正在读取最新快照，当前显示缓存',...details].join(' · ')};
  const warning=!!(retained||failed||missing||stale||future||reason);
  const causes=[future?'数据截止时间超前，需核验时钟或数据':null,failed?'当前页面读取失败':null,stale?`数据超过 ${realtime?15:120} 分钟未更新（最早距今 ${ageMinutes} 分钟）`:null,missing?entries.filter(([,v])=>!Number.isFinite(v?.cutoff)).map(([label])=>label+'数据暂缺').join('、'):null,reason,retained&&!failed?'本次未取得完整更新，保留上次已核验数据':null].filter(Boolean);
  let recovery='暂未确认正在恢复，等待后台定时补查';

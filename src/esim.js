@@ -20,7 +20,7 @@ const escape = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&l
 const net = wei => { if (wei == null) return '待核验'; const n = BigInt(wei); return `<strong class="${n > 0n ? 'sell' : 'buy'}">${n > 0n ? '卖出' : n < 0n ? '买入' : '持平'} ${amount(n < 0n ? -n : n)}</strong>`; };
 const metric = (label, value, unit = '', sub = '', cls = '') => `<div class="metric ${cls}"><span>${label}</span><strong>${value}${unit ? `<em>${unit}</em>` : ''}</strong><small>${sub}</small></div>`;
 const addresses = (g, side) => `${g[side + '_addresses_lower_bound'] ? '≥' : ''}${integer(g[side + '_addresses'])}`;
-let report, holderReport, active = 'today', busy = false, endpoint = null, manual={},reloadForTags=false;
+let report, holderReport, active = 'today', busy = false, endpoint = null, manual={},reloadForTags=false,initialReadFinished=false;
 try{manual=readManual(localStorage.getItem(TAG_KEY));}catch{}
 const openLink=(url,text)=>`<a href="${escape(url)}" target="_top" rel="noopener noreferrer">${text} →</a>`;
 function holdingsBridge(){
@@ -133,12 +133,13 @@ async function refresh(live=true) {
 $('refresh').addEventListener('click',refresh);
 window.addEventListener('storage',e=>{if(e.key===TAG_KEY){manual=readManual(e.newValue);if(busy)reloadForTags=true;else void refresh(false);}});
 void Promise.all([cachedData('report-v1'),compactViewsEnabled(manual)?cachedData('report-v1').then(item=>cachedView('summary',{addresses:(item?.data?.top||[]).map(row=>row.address)})):null]).then(([trades,holders])=>{
+ if(initialReadFinished)return;
  if(holders&&(!holderReport||holders.data.block>holderReport.block))holderReport=holders.data;
- if(validSnapshot('report',trades?.data)&&(!report||trades.data.block>report.block)){render(trades.data);showSnapshotStatus($('status'),$('refresh'),[['交易',report],['持仓',holderReport]],{retained:true});}
+ if(validSnapshot('report',trades?.data)&&(!report||trades.data.block>report.block)){render(trades.data);showSnapshotStatus($('status'),$('refresh'),[['交易',report],['持仓',holderReport]],{loading:true});}
 }).catch(()=>{});
 try{
  const config=await json('./data/esim-config.json');endpoint=esimEndpoint(config);
 }catch{}
-await refresh(false);
+await refresh(false);initialReadFinished=true;
 
 startSnapshotPolling(()=>refresh(false));

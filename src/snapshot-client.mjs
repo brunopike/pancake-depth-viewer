@@ -38,7 +38,7 @@ export async function readSnapshot(kind,{current,fetch:request=globalThis.fetch,
   let selected=fast;
   for(const result of results)if(result.status==='fulfilled'&&(!selected||result.value.data.block>selected.data.block))selected=result.value;
   if(!selected)try{selected=await read(2);}catch{}
-  const result=selected&&(!current||selected.data.block>=current.block)?selected:current?{data:current,source:'retained'}:null;
+  const result=selected&&(!current||selected.data.block>=current.block)?selected:current?{data:current,source:selected?'current':'retained'}:null;
   if(!result)throw Error('数据暂时无法读取，请点击刷新重试。');
   const data=kind==='report'?retainSourceInflow(result.data,current):result.data;
   return remember(kind,{...result,data:result.source==='realtime'?data:await readClaimFlowSnapshot(kind,data,{fetch:request})});
@@ -47,6 +47,6 @@ export async function readSnapshot(kind,{current,fetch:request=globalThis.fetch,
 export async function readTradingReport({current,live=false,queryLive,fetch}={}){
   const saved=await readSnapshot('report',{current,fetch});
   if(!live||!queryLive)return saved;
-  try{const data=await queryLive();if(!data?.windows||!Number.isFinite(data.block))throw Error('INVALID_REPORT');const selected=newerSnapshot(saved.data,data);return {data:retainSourceInflow(selected,saved.data),source:selected===data?'live':'retained'};}
+  try{const data=await queryLive();if(!data?.windows||!Number.isFinite(data.block))throw Error('INVALID_REPORT');const selected=newerSnapshot(saved.data,data);return {data:retainSourceInflow(selected,saved.data),source:selected===data?'live':saved.source};}
   catch{return {...saved,source:'retained'};}
 }

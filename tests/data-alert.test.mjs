@@ -71,3 +71,10 @@ test('banner restores error appearance after a historical-only warning',()=>{
  assert.equal(root.dataset.severity,'error');assert.equal(root.role,'alert');assert.match(nodes.get('.data-alert-heading strong').textContent,/数据更新异常/);
  assert.equal(nodes.get('.data-alert-fields>div:nth-child(2)>dt').textContent,'最后更新时间');
 });
+test('initial cache display is a loading state, not a failed update; a real failed read still alerts',()=>{
+ const entries=[['交易',{cutoff:now/1000-10}],['持仓',null]];
+ const pending=snapshotStatus(entries,{now,realtime:true,loading:true});
+ assert.equal(pending.alert,null);assert.equal(pending.warning,false);assert.match(pending.text,/正在读取最新/);
+ const failed=snapshotStatus(entries,{now,realtime:true,loading:true,failed:true,retained:true});
+ assert.equal(failed.alert.severity,'error');assert.match(failed.alert.reason,/读取失败/);
+});

@@ -24,5 +24,13 @@ test('a newer bundled fallback may advance retained data, while an older live an
  const fallback=await readSnapshot('report',{current,fetch:async url=>{if(url.includes('current-')||url.includes('raw.githubusercontent'))throw Error('offline');return{ok:true,json:async()=>snapshot('report',200)}}});
  assert.equal(fallback.data.block,200);assert.equal(fallback.source,'bundled');
  const result=await readTradingReport({current,live:true,fetch:async()=>({ok:true,json:async()=>snapshot('report',200)}),queryLive:async()=>snapshot('report',150)});
- assert.equal(result.data.block,200);assert.equal(result.source,'retained');
+ assert.equal(result.data.block,200);assert.equal(result.source,'published');
+});
+test('a successful older response preserves the newer current snapshot without reporting a read failure',async()=>{
+ for(const kind of ['report','addresses','holders']){
+  const current=snapshot(kind,200),older=await readSnapshot(kind,{current,realtime:false,fetch:async()=>({ok:true,json:async()=>snapshot(kind,100)})});
+  assert.equal(older.data.block,200);assert.equal(older.source,'current');
+  const failed=await readSnapshot(kind,{current,realtime:false,fetch:async()=>{throw Error('offline');}});
+  assert.equal(failed.data.block,200);assert.equal(failed.source,'retained');
+ }
 });
