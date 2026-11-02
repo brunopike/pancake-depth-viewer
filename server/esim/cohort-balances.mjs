@@ -1,7 +1,7 @@
 // Two fungible balance pools: distribution-origin tokens and other tokens.
 // Floor to wei on partial transfers; a full-wallet transfer carries all origin wei.
 export function cohortBalances({source,marketAddresses,openingBalances,transfers}){
- const zero='0x0000000000000000000000000000000000000000',markets=new Set(marketAddresses),balances=new Map(Object.entries(openingBalances).map(([a,b])=>[a,BigInt(b)])),origins=new Map(),returnedFlows=[];
+ const zero='0x0000000000000000000000000000000000000000',markets=new Set(marketAddresses),balances=new Map(Object.entries(openingBalances).filter(([a])=>!markets.has(a)).map(([a,b])=>[a,BigInt(b)])),origins=new Map(),returnedFlows=[];
  let issued=0n,returned=0n,pool=0n,burned=0n;
  const normal=a=>a!==source&&a!==zero&&!markets.has(a),need=a=>{if(!balances.has(a))throw Error('COHORT_OPENING_MISSING');};
  for(const e of [...transfers].sort((a,b)=>a.order[0]-b.order[0]||a.order[1]-b.order[1]||a.order[2]-b.order[2])){

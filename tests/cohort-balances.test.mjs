@@ -8,3 +8,8 @@ test('full balance transfers preserve all source wei and underflow refuses publi
  const r=cohortBalances({source:'S',marketAddresses:[],openingBalances:{A:'2',B:'0'},transfers:[transfer(1,'S','A',1),transfer(2,'A','B',3)]});assert.equal(r.sourceBalances.B,'1');
  assert.throws(()=>cohortBalances({source:'S',marketAddresses:[],openingBalances:{A:'0',B:'0'},transfers:[transfer(1,'A','B',1)]}),/UNDERFLOW/);
 });
+test('a newly recognized pool is removed from old wallet opening balances',()=>{
+ const r=cohortBalances({source:'S',marketAddresses:['P'],openingBalances:{A:'0',P:'1'},transfers:[transfer(1,'S','A',100),transfer(2,'A','P',60),transfer(3,'P','A',20)]});
+ assert.deepEqual(r.closingBalances,{A:'60'});
+ assert.deepEqual(r.conservation,{issued:'100',remaining:'40',returned:'0',pool:'60',burned:'0'});
+});
