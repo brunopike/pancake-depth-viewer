@@ -7,6 +7,9 @@ import {gunzipSync} from 'node:zlib';
 import {leaseFromEnvironment,requireLease} from '../../server/esim/worker-lease.mjs';
 import {packCheckpointFiles} from '../../server/esim/checkpoint-chunks.mjs';
 
+// Git must not detach an unbounded GC while the next ledger task is running.
+const gitLimits=['-c','gc.auto=0','-c','maintenance.auto=false','-c','pack.threads=1','-c','pack.windowMemory=64m','-c','pack.deltaCacheSize=32m'];
+
 // Git's binary transport avoids the REST blob endpoint's JSON input-size limit.
 // A private temporary index keeps the active branch and user's staging untouched.
 export async function publishReportFiles(files,{cwd=process.cwd(),skip=()=>false,message,branch='esim-cache'}={}){
@@ -20,20 +23,20 @@ export async function publishReportFiles(files,{cwd=process.cwd(),skip=()=>false
  if(physical.some(([,content])=>Buffer.byteLength(content)>100*1024*1024))throw Error('CHECKPOINT_FILE_TOO_LARGE');
  const run=promisify(execFile),dir=await mkdtemp(join(tmpdir(),'esim-publish-'));
  let stage='FETCH';
- const git=async(args,isolated=false)=>(await run('git',args,{cwd,maxBuffer:134217728,timeout:120000,env:isolated?{...process.env,GIT_INDEX_FILE:join(dir,'index')}:process.env})).stdout.trim();
+ const git=async(args,isolated=false)=>(await run('git',[...gitLimits,...args],{cwd,maxBuffer:134217728,timeout:120000,env:isolated?{...process.env,GIT_INDEX_FILE:join(dir,'index')}:process.env})).stdout.trim();
  try{
   await git(['fetch','--no-tags','--depth=1','origin',branch]);
   stage='BUILD';
   const parent=await git(['rev-parse','FETCH_HEAD']);
   let prior;
-  if(cohortOnly){const names=await git(['ls-tree','--name-only',parent,'cohort.json.gz']);if(names){const {stdout}=await run('git',['show',`${parent}:cohort.json.gz`],{cwd,encoding:'buffer',maxBuffer:134217728,timeout:120000});prior=JSON.parse(gunzipSync(stdout));}}
+  if(cohortOnly){const names=await git(['ls-tree','--name-only',parent,'cohort.json.gz']);if(names){const {stdout}=await run('git',[...gitLimits,'show',`${parent}:cohort.json.gz`],{cwd,encoding:'buffer',maxBuffer:134217728,timeout:120000});prior=JSON.parse(gunzipSync(stdout));}}
   else if(single){
    const names=await git(['ls-tree','--name-only',parent,files[0][0]]);
    if(names)prior=JSON.parse(await git(['show',`${parent}:${files[0][0]}`]));
   }else if(core)prior=JSON.parse(await git(['show',`${parent}:report.json`]));
   else{
    const names=await git(['ls-tree','--name-only',parent,'claim-flow.json.gz']);
-   if(names){const {stdout}=await run('git',['show',`${parent}:claim-flow.json.gz`],{cwd,encoding:'buffer',maxBuffer:134217728,timeout:120000});prior=JSON.parse(gunzipSync(stdout));}
+   if(names){const {stdout}=await run('git',[...gitLimits,'show',`${parent}:claim-flow.json.gz`],{cwd,encoding:'buffer',maxBuffer:134217728,timeout:120000});prior=JSON.parse(gunzipSync(stdout));}
    else prior=JSON.parse(await git(['show',`${parent}:claim-flow.json`]));
   }
   if(skip(prior))return false;

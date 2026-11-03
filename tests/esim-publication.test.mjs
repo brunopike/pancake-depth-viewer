@@ -16,7 +16,16 @@ test('binary publication preserves the working branch, staged user edits and unr
   await writeFile(join(cwd,'report.json'),JSON.stringify({block:1}));await writeFile(join(cwd,'claim-flow.json'),'{"throughBlock":1}');await writeFile(join(cwd,'keep.txt'),'preserve');git(['add','.']);git(['commit','-m','seed']);git(['push','origin','HEAD:refs/heads/esim-cache']);
   const head=git(['rev-parse','HEAD']);await writeFile(join(cwd,'user.txt'),'staged draft');git(['add','user.txt']);const staged=git(['diff','--cached']);
   const bytes=Buffer.from([0,255,31,139,128,0]);
-  const commit=await publishReportFiles([['state.json.gz',bytes],['report.json','{"block":2}'],['addresses.json','{"rows":[]}']],{cwd,message:'verified checkpoint',skip:prior=>prior.block>=2});
+  const trace=join(dir,'git-trace.jsonl'),savedTrace=process.env.GIT_TRACE2_EVENT,savedParams=process.env.GIT_TRACE2_CONFIG_PARAMS;
+  let commit;
+  try{
+   process.env.GIT_TRACE2_EVENT=trace;process.env.GIT_TRACE2_CONFIG_PARAMS='gc.auto,maintenance.auto,pack.threads,pack.windowMemory,pack.deltaCacheSize';
+   commit=await publishReportFiles([['state.json.gz',bytes],['report.json','{"block":2}'],['addresses.json','{"rows":[]}']],{cwd,message:'verified checkpoint',skip:prior=>prior.block>=2});
+  }finally{
+   for(const[k,v]of Object.entries({GIT_TRACE2_EVENT:savedTrace,GIT_TRACE2_CONFIG_PARAMS:savedParams}))if(v===undefined)delete process.env[k];else process.env[k]=v;
+  }
+  const config=Object.fromEntries((await readFile(trace,'utf8')).trim().split('\n').map(JSON.parse).filter(e=>e.event==='def_param').map(e=>[e.param,e.value]));
+  for(const[k,v]of Object.entries({'gc.auto':'0','maintenance.auto':'false','pack.threads':'1','pack.windowmemory':'64m','pack.deltacachesize':'32m'}))assert.equal(config[k],v,k);
   assert.match(commit,/^[0-9a-f]{40}$/);assert.equal(git(['rev-parse','HEAD']),head);assert.equal(git(['diff','--cached']),staged);assert.equal(await readFile(join(cwd,'user.txt'),'utf8'),'staged draft');
   assert.equal(git(['show',`${commit}:keep.txt`]),'preserve');
   assert.deepEqual(execFileSync('git',['show',`${commit}:state.json.gz`],{cwd}),bytes);

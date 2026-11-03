@@ -42,21 +42,32 @@ export async function recoverVmCheckpoint(root='.goodway/esim-monitor'){
  try{await rename(`${root}/rpc-cache`,`${root}/rpc-cache-reorg-${suffix}`);}catch(e){if(e.code!=='ENOENT')throw e;}
  await copyFile(`${root}/vm-rollback.json.gz`,`${root}/state.json.gz`);
 }
+export async function stopVmProcess(child,graceMs=5000){
+ if(!child?.pid)return;
+ const signal=sig=>{try{process.kill(-child.pid,sig);}catch{}};
+ if(child.exitCode!==null||child.signalCode!==null){signal('SIGKILL');return;}
+ const closed=new Promise(resolve=>child.once('close',resolve)),timer=setTimeout(()=>signal('SIGKILL'),graceMs);
+ signal('SIGTERM');
+ try{await closed;}finally{clearTimeout(timer);signal('SIGKILL');}
+}
 export async function main(){
  const dryRun=process.env.ESIM_WORKER_DRY_RUN==='true';
  if(!process.env.ESIM_REALTIME_DATABASE_URL||!process.env.ALCHEMY_API_KEY||(!dryRun&&!process.env.GITHUB_TOKEN&&process.env.ESIM_GIT_PUBLISH!=='true'))throw Error('INVALID_WORKER_CONFIGURATION');
  await mkdir(local,{recursive:true});
  let stopping=false,child,guard,depthGuard,activeLease,coreLost=false,depthLost=false;
- const stopChild=()=>{if(child?.pid)try{process.kill(-child.pid,'SIGTERM');}catch{}};
+ const stopChild=()=>stopVmProcess(child);
  const leaseLost=job=>error=>{console.error(JSON.stringify({phase:'vm-lease-lost',job,error}));if(job==='core')coreLost=true;else depthLost=true;if(activeLease===(job==='core'?guard:depthGuard))stopChild();};
  for(const signal of ['SIGINT','SIGTERM'])process.once(signal,()=>{stopping=true;stopChild();});
  const command=async(file,args=[],{lease=guard,extra={},timeout=1500000}={})=>{
   await lease?.check();const started=Date.now();activeLease=lease;
-  child=spawn('/usr/bin/time',['-f','{"phase":"vm-resource","wallSeconds":%e,"userSeconds":%U,"systemSeconds":%S,"maxRssKiB":%M}',process.execPath,'--max-old-space-size=2304',file,...args],{detached:true,stdio:['ignore','pipe','pipe'],env:{...process.env,...lease?.env,ESIM_PERSISTENT_WORKER:'true',ESIM_RPC_BUDGET:'600',...extra}});
+  child=spawn('/usr/bin/time',['-f','{"phase":"vm-resource","wallSeconds":%e,"userSeconds":%U,"systemSeconds":%S,"maxRssKiB":%M}',process.execPath,'--max-old-space-size=2048',file,...args],{detached:true,stdio:['ignore','pipe','pipe'],env:{...process.env,...lease?.env,ESIM_PERSISTENT_WORKER:'true',ESIM_RPC_BUDGET:'600',...extra}});
   let stderr='';child.stderr.on('data',chunk=>{stderr=(stderr+chunk).slice(-8192);});
   child.stdout.pipe(process.stdout);child.stderr.pipe(process.stderr);
   let timedOut=false;const timer=setTimeout(()=>{timedOut=true;stopChild();},timeout);
-  const code=await new Promise((resolve,reject)=>{child.once('error',reject);child.once('exit',resolve);});clearTimeout(timer);child=null;activeLease=null;
+  const running=child;
+  let code;
+  try{code=await new Promise((resolve,reject)=>{running.once('error',reject);running.once('close',resolve);});}
+  finally{clearTimeout(timer);await stopVmProcess(running);child=null;activeLease=null;}
   await lease?.check();if(code!==0||timedOut)throw Error(timedOut?'VM_TASK_TIMEOUT':workerFailureCode({stderr}));
   console.log(JSON.stringify({phase:'vm-task-finished',task:file,elapsedMs:Date.now()-started}));
  };
@@ -131,6 +142,6 @@ export async function main(){
    }
    await sleep(20000);
   }
- }finally{stopChild();if(depthGuard)await depthGuard.close();if(guard)await guard.close();}
+ }finally{await stopChild();if(depthGuard)await depthGuard.close();if(guard)await guard.close();}
 }
 if(process.argv[1]&&import.meta.url===pathToFileURL(process.argv[1]).href)main().catch(()=>{console.error('VM_WORKER_STOPPED');process.exitCode=1;});
