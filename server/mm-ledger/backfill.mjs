@@ -11,12 +11,24 @@ var __require = /* @__PURE__ */ ((x) => typeof require !== "undefined" ? require
   if (typeof require !== "undefined") return require.apply(this, arguments);
   throw Error('Dynamic require of "' + x + '" is not supported');
 });
+var __esm = (fn, res, err) => function __init() {
+  if (err) throw err[0];
+  try {
+    return fn && (res = (0, fn[__getOwnPropNames(fn)[0]])(fn = 0)), res;
+  } catch (e) {
+    throw err = [e], e;
+  }
+};
 var __commonJS = (cb, mod) => function __require2() {
   try {
     return mod || (0, cb[__getOwnPropNames(cb)[0]])((mod = { exports: {} }).exports, mod), mod.exports;
   } catch (e) {
     throw mod = 0, e;
   }
+};
+var __export = (target, all) => {
+  for (var name in all)
+    __defProp(target, name, { get: all[name], enumerable: true });
 };
 var __copyProps = (to, from, except, desc) => {
   if (from && typeof from === "object" || typeof from === "function") {
@@ -35,9 +47,9 @@ var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__ge
   mod
 ));
 
-// ../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/postgres-array/index.js
+// ../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/postgres-array/index.js
 var require_postgres_array = __commonJS({
-  "../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/postgres-array/index.js"(exports) {
+  "../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/postgres-array/index.js"(exports) {
     "use strict";
     exports.parse = function(source, transform) {
       return new ArrayParser(source, transform).parse();
@@ -129,9 +141,9 @@ var require_postgres_array = __commonJS({
   }
 });
 
-// ../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/pg-types/lib/arrayParser.js
+// ../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/pg-types/lib/arrayParser.js
 var require_arrayParser = __commonJS({
-  "../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/pg-types/lib/arrayParser.js"(exports, module) {
+  "../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/pg-types/lib/arrayParser.js"(exports, module) {
     var array = require_postgres_array();
     module.exports = {
       create: function(source, transform) {
@@ -145,9 +157,9 @@ var require_arrayParser = __commonJS({
   }
 });
 
-// ../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/postgres-date/index.js
+// ../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/postgres-date/index.js
 var require_postgres_date = __commonJS({
-  "../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/postgres-date/index.js"(exports, module) {
+  "../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/postgres-date/index.js"(exports, module) {
     "use strict";
     var DATE_TIME = /(\d{1,})-(\d{2})-(\d{2}) (\d{2}):(\d{2}):(\d{2})(\.\d{1,})?.*?( BC)?$/;
     var DATE = /^(\d{1,})-(\d{2})-(\d{2})( BC)?$/;
@@ -232,9 +244,9 @@ var require_postgres_date = __commonJS({
   }
 });
 
-// ../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/xtend/mutable.js
+// ../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/xtend/mutable.js
 var require_mutable = __commonJS({
-  "../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/xtend/mutable.js"(exports, module) {
+  "../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/xtend/mutable.js"(exports, module) {
     module.exports = extend;
     var hasOwnProperty = Object.prototype.hasOwnProperty;
     function extend(target) {
@@ -251,9 +263,9 @@ var require_mutable = __commonJS({
   }
 });
 
-// ../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/postgres-interval/index.js
+// ../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/postgres-interval/index.js
 var require_postgres_interval = __commonJS({
-  "../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/postgres-interval/index.js"(exports, module) {
+  "../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/postgres-interval/index.js"(exports, module) {
     "use strict";
     var extend = require_mutable();
     module.exports = PostgresInterval;
@@ -342,9 +354,9 @@ var require_postgres_interval = __commonJS({
   }
 });
 
-// ../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/postgres-bytea/index.js
+// ../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/postgres-bytea/index.js
 var require_postgres_bytea = __commonJS({
-  "../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/postgres-bytea/index.js"(exports, module) {
+  "../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/postgres-bytea/index.js"(exports, module) {
     "use strict";
     var bufferFrom = Buffer.from || Buffer;
     module.exports = function parseBytea(input) {
@@ -378,9 +390,9 @@ var require_postgres_bytea = __commonJS({
   }
 });
 
-// ../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/pg-types/lib/textParsers.js
+// ../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/pg-types/lib/textParsers.js
 var require_textParsers = __commonJS({
-  "../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/pg-types/lib/textParsers.js"(exports, module) {
+  "../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/pg-types/lib/textParsers.js"(exports, module) {
     var array = require_postgres_array();
     var arrayParser = require_arrayParser();
     var parseDate = require_postgres_date();
@@ -578,9 +590,9 @@ var require_textParsers = __commonJS({
   }
 });
 
-// ../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/pg-int8/index.js
+// ../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/pg-int8/index.js
 var require_pg_int8 = __commonJS({
-  "../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/pg-int8/index.js"(exports, module) {
+  "../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/pg-int8/index.js"(exports, module) {
     "use strict";
     var BASE = 1e6;
     function readInt8(buffer) {
@@ -658,9 +670,9 @@ var require_pg_int8 = __commonJS({
   }
 });
 
-// ../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/pg-types/lib/binaryParsers.js
+// ../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/pg-types/lib/binaryParsers.js
 var require_binaryParsers = __commonJS({
-  "../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/pg-types/lib/binaryParsers.js"(exports, module) {
+  "../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/pg-types/lib/binaryParsers.js"(exports, module) {
     var parseInt64 = require_pg_int8();
     var parseBits = function(data, bits, offset, invert, callback) {
       offset = offset || 0;
@@ -858,9 +870,9 @@ var require_binaryParsers = __commonJS({
   }
 });
 
-// ../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/pg-types/lib/builtins.js
+// ../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/pg-types/lib/builtins.js
 var require_builtins = __commonJS({
-  "../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/pg-types/lib/builtins.js"(exports, module) {
+  "../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/pg-types/lib/builtins.js"(exports, module) {
     module.exports = {
       BOOL: 16,
       BYTEA: 17,
@@ -926,9 +938,9 @@ var require_builtins = __commonJS({
   }
 });
 
-// ../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/pg-types/index.js
+// ../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/pg-types/index.js
 var require_pg_types = __commonJS({
-  "../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/pg-types/index.js"(exports) {
+  "../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/pg-types/index.js"(exports) {
     var textParsers = require_textParsers();
     var binaryParsers = require_binaryParsers();
     var arrayParser = require_arrayParser();
@@ -967,9 +979,9 @@ var require_pg_types = __commonJS({
   }
 });
 
-// ../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/pg/lib/defaults.js
+// ../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/pg/lib/defaults.js
 var require_defaults = __commonJS({
-  "../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/pg/lib/defaults.js"(exports, module) {
+  "../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/pg/lib/defaults.js"(exports, module) {
     "use strict";
     var user;
     try {
@@ -1036,9 +1048,9 @@ var require_defaults = __commonJS({
   }
 });
 
-// ../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/pg/lib/utils.js
+// ../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/pg/lib/utils.js
 var require_utils = __commonJS({
-  "../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/pg/lib/utils.js"(exports, module) {
+  "../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/pg/lib/utils.js"(exports, module) {
     "use strict";
     var defaults2 = require_defaults();
     var nodeUtils = __require("util");
@@ -1200,9 +1212,9 @@ var require_utils = __commonJS({
   }
 });
 
-// ../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/pg/lib/crypto/utils.js
+// ../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/pg/lib/crypto/utils.js
 var require_utils2 = __commonJS({
-  "../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/pg/lib/crypto/utils.js"(exports, module) {
+  "../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/pg/lib/crypto/utils.js"(exports, module) {
     var nodeCrypto = __require("crypto");
     module.exports = {
       postgresMd5PasswordHash,
@@ -1251,9 +1263,9 @@ var require_utils2 = __commonJS({
   }
 });
 
-// ../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/pg/lib/crypto/cert-signatures.js
+// ../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/pg/lib/crypto/cert-signatures.js
 var require_cert_signatures = __commonJS({
-  "../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/pg/lib/crypto/cert-signatures.js"(exports, module) {
+  "../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/pg/lib/crypto/cert-signatures.js"(exports, module) {
     function x509Error(msg, cert) {
       return new Error("SASL channel binding: " + msg + " when parsing public certificate " + cert.toString("base64"));
     }
@@ -1364,9 +1376,9 @@ var require_cert_signatures = __commonJS({
   }
 });
 
-// ../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/pg/lib/crypto/sasl.js
+// ../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/pg/lib/crypto/sasl.js
 var require_sasl = __commonJS({
-  "../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/pg/lib/crypto/sasl.js"(exports, module) {
+  "../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/pg/lib/crypto/sasl.js"(exports, module) {
     "use strict";
     var crypto = require_utils2();
     var { signatureAlgorithmHashFromCertificate } = require_cert_signatures();
@@ -1549,9 +1561,9 @@ var require_sasl = __commonJS({
   }
 });
 
-// ../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/pg/lib/type-overrides.js
+// ../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/pg/lib/type-overrides.js
 var require_type_overrides = __commonJS({
-  "../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/pg/lib/type-overrides.js"(exports, module) {
+  "../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/pg/lib/type-overrides.js"(exports, module) {
     "use strict";
     var types2 = require_pg_types();
     function TypeOverrides2(userTypes) {
@@ -1584,9 +1596,9 @@ var require_type_overrides = __commonJS({
   }
 });
 
-// ../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/pg-connection-string/index.js
+// ../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/pg-connection-string/index.js
 var require_pg_connection_string = __commonJS({
-  "../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/pg-connection-string/index.js"(exports, module) {
+  "../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/pg-connection-string/index.js"(exports, module) {
     "use strict";
     function parse(str, options = {}) {
       if (str.charAt(0) === "/") {
@@ -1772,9 +1784,9 @@ See https://www.postgresql.org/docs/current/libpq-ssl.html for libpq SSL mode de
   }
 });
 
-// ../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/pg/lib/connection-parameters.js
+// ../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/pg/lib/connection-parameters.js
 var require_connection_parameters = __commonJS({
-  "../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/pg/lib/connection-parameters.js"(exports, module) {
+  "../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/pg/lib/connection-parameters.js"(exports, module) {
     "use strict";
     var dns = __require("dns");
     var defaults2 = require_defaults();
@@ -1923,9 +1935,9 @@ var require_connection_parameters = __commonJS({
   }
 });
 
-// ../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/pg/lib/result.js
+// ../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/pg/lib/result.js
 var require_result = __commonJS({
-  "../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/pg/lib/result.js"(exports, module) {
+  "../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/pg/lib/result.js"(exports, module) {
     "use strict";
     var types2 = require_pg_types();
     var matchRegexp = /^([A-Za-z]+)(?: (\d+))?(?: (\d+))?/;
@@ -2014,9 +2026,9 @@ var require_result = __commonJS({
   }
 });
 
-// ../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/pg/lib/query.js
+// ../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/pg/lib/query.js
 var require_query = __commonJS({
-  "../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/pg/lib/query.js"(exports, module) {
+  "../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/pg/lib/query.js"(exports, module) {
     "use strict";
     var { EventEmitter } = __require("events");
     var Result2 = require_result();
@@ -2216,9 +2228,9 @@ var require_query = __commonJS({
   }
 });
 
-// ../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/pg-protocol/dist/messages.js
+// ../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/pg-protocol/dist/messages.js
 var require_messages = __commonJS({
-  "../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/pg-protocol/dist/messages.js"(exports) {
+  "../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/pg-protocol/dist/messages.js"(exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.NoticeMessage = exports.DataRowMessage = exports.CommandCompleteMessage = exports.ReadyForQueryMessage = exports.NotificationResponseMessage = exports.BackendKeyDataMessage = exports.AuthenticationMD5Password = exports.ParameterStatusMessage = exports.ParameterDescriptionMessage = exports.RowDescriptionMessage = exports.Field = exports.CopyResponse = exports.CopyDataMessage = exports.DatabaseError = exports.copyDone = exports.emptyQuery = exports.replicationStart = exports.portalSuspended = exports.noData = exports.closeComplete = exports.bindComplete = exports.parseComplete = void 0;
@@ -2381,9 +2393,9 @@ var require_messages = __commonJS({
   }
 });
 
-// ../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/pg-protocol/dist/buffer-writer.js
+// ../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/pg-protocol/dist/buffer-writer.js
 var require_buffer_writer = __commonJS({
-  "../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/pg-protocol/dist/buffer-writer.js"(exports) {
+  "../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/pg-protocol/dist/buffer-writer.js"(exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.Writer = void 0;
@@ -2494,9 +2506,9 @@ var require_buffer_writer = __commonJS({
   }
 });
 
-// ../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/pg-protocol/dist/serializer.js
+// ../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/pg-protocol/dist/serializer.js
 var require_serializer = __commonJS({
-  "../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/pg-protocol/dist/serializer.js"(exports) {
+  "../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/pg-protocol/dist/serializer.js"(exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.serialize = void 0;
@@ -2708,9 +2720,9 @@ var require_serializer = __commonJS({
   }
 });
 
-// ../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/pg-protocol/dist/buffer-reader.js
+// ../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/pg-protocol/dist/buffer-reader.js
 var require_buffer_reader = __commonJS({
-  "../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/pg-protocol/dist/buffer-reader.js"(exports) {
+  "../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/pg-protocol/dist/buffer-reader.js"(exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.BufferReader = void 0;
@@ -2767,9 +2779,9 @@ var require_buffer_reader = __commonJS({
   }
 });
 
-// ../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/pg-protocol/dist/parser.js
+// ../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/pg-protocol/dist/parser.js
 var require_parser = __commonJS({
-  "../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/pg-protocol/dist/parser.js"(exports) {
+  "../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/pg-protocol/dist/parser.js"(exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.Parser = void 0;
@@ -3074,9 +3086,9 @@ var require_parser = __commonJS({
   }
 });
 
-// ../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/pg-protocol/dist/index.js
+// ../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/pg-protocol/dist/index.js
 var require_dist = __commonJS({
-  "../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/pg-protocol/dist/index.js"(exports) {
+  "../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/pg-protocol/dist/index.js"(exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.DatabaseError = exports.serialize = void 0;
@@ -3098,18 +3110,18 @@ var require_dist = __commonJS({
   }
 });
 
-// ../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/pg-cloudflare/dist/empty.js
+// ../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/pg-cloudflare/dist/empty.js
 var require_empty = __commonJS({
-  "../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/pg-cloudflare/dist/empty.js"(exports) {
+  "../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/pg-cloudflare/dist/empty.js"(exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.default = {};
   }
 });
 
-// ../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/pg/lib/stream.js
+// ../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/pg/lib/stream.js
 var require_stream = __commonJS({
-  "../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/pg/lib/stream.js"(exports, module) {
+  "../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/pg/lib/stream.js"(exports, module) {
     var { getStream, getSecureStream } = getStreamFuncs();
     module.exports = {
       /**
@@ -3173,9 +3185,9 @@ var require_stream = __commonJS({
   }
 });
 
-// ../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/pg/lib/connection.js
+// ../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/pg/lib/connection.js
 var require_connection = __commonJS({
-  "../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/pg/lib/connection.js"(exports, module) {
+  "../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/pg/lib/connection.js"(exports, module) {
     "use strict";
     var EventEmitter = __require("events").EventEmitter;
     var { parse, serialize } = require_dist();
@@ -3375,9 +3387,9 @@ var require_connection = __commonJS({
   }
 });
 
-// ../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/split2/index.js
+// ../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/split2/index.js
 var require_split2 = __commonJS({
-  "../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/split2/index.js"(exports, module) {
+  "../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/split2/index.js"(exports, module) {
     "use strict";
     var { Transform } = __require("stream");
     var { StringDecoder } = __require("string_decoder");
@@ -3476,9 +3488,9 @@ var require_split2 = __commonJS({
   }
 });
 
-// ../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/pgpass/lib/helper.js
+// ../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/pgpass/lib/helper.js
 var require_helper = __commonJS({
-  "../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/pgpass/lib/helper.js"(exports, module) {
+  "../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/pgpass/lib/helper.js"(exports, module) {
     "use strict";
     var path = __require("path");
     var Stream = __require("stream").Stream;
@@ -3647,9 +3659,9 @@ var require_helper = __commonJS({
   }
 });
 
-// ../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/pgpass/lib/index.js
+// ../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/pgpass/lib/index.js
 var require_lib = __commonJS({
-  "../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/pgpass/lib/index.js"(exports, module) {
+  "../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/pgpass/lib/index.js"(exports, module) {
     "use strict";
     var path = __require("path");
     var fs = __require("fs");
@@ -3668,9 +3680,9 @@ var require_lib = __commonJS({
   }
 });
 
-// ../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/pg/lib/client.js
+// ../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/pg/lib/client.js
 var require_client = __commonJS({
-  "../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/pg/lib/client.js"(exports, module) {
+  "../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/pg/lib/client.js"(exports, module) {
     var EventEmitter = __require("events").EventEmitter;
     var utils = require_utils();
     var nodeUtils = __require("util");
@@ -4365,9 +4377,9 @@ var require_client = __commonJS({
   }
 });
 
-// ../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/pg-pool/index.js
+// ../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/pg-pool/index.js
 var require_pg_pool = __commonJS({
-  "../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/pg-pool/index.js"(exports, module) {
+  "../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/pg-pool/index.js"(exports, module) {
     "use strict";
     var EventEmitter = __require("events").EventEmitter;
     var NOOP = function() {
@@ -4791,9 +4803,9 @@ var require_pg_pool = __commonJS({
   }
 });
 
-// ../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/pg/lib/native/query.js
+// ../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/pg/lib/native/query.js
 var require_query2 = __commonJS({
-  "../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/pg/lib/native/query.js"(exports, module) {
+  "../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/pg/lib/native/query.js"(exports, module) {
     "use strict";
     var EventEmitter = __require("events").EventEmitter;
     var util = __require("util");
@@ -4934,9 +4946,9 @@ var require_query2 = __commonJS({
   }
 });
 
-// ../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/pg/lib/native/client.js
+// ../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/pg/lib/native/client.js
 var require_client2 = __commonJS({
-  "../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/pg/lib/native/client.js"(exports, module) {
+  "../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/pg/lib/native/client.js"(exports, module) {
     var nodeUtils = __require("util");
     var Native;
     try {
@@ -5272,17 +5284,17 @@ var require_client2 = __commonJS({
   }
 });
 
-// ../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/pg/lib/native/index.js
+// ../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/pg/lib/native/index.js
 var require_native = __commonJS({
-  "../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/pg/lib/native/index.js"(exports, module) {
+  "../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/pg/lib/native/index.js"(exports, module) {
     "use strict";
     module.exports = require_client2();
   }
 });
 
-// ../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/pg/lib/index.js
+// ../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/pg/lib/index.js
 var require_lib2 = __commonJS({
-  "../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/pg/lib/index.js"(exports, module) {
+  "../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/pg/lib/index.js"(exports, module) {
     "use strict";
     var Client2 = require_client();
     var defaults2 = require_defaults();
@@ -5346,15 +5358,15 @@ var require_lib2 = __commonJS({
   }
 });
 
-// ../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/@vercel/functions/headers.js
+// ../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/@vercel/functions/headers.js
 var require_headers = __commonJS({
-  "../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/@vercel/functions/headers.js"(exports, module) {
+  "../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/@vercel/functions/headers.js"(exports, module) {
     "use strict";
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
     var __getOwnPropNames2 = Object.getOwnPropertyNames;
     var __hasOwnProp2 = Object.prototype.hasOwnProperty;
-    var __export = (target, all) => {
+    var __export2 = (target, all) => {
       for (var name in all)
         __defProp2(target, name, { get: all[name], enumerable: true });
     };
@@ -5368,7 +5380,7 @@ var require_headers = __commonJS({
     };
     var __toCommonJS = (mod) => __copyProps2(__defProp2({}, "__esModule", { value: true }), mod);
     var headers_exports = {};
-    __export(headers_exports, {
+    __export2(headers_exports, {
       CITY_HEADER_NAME: () => CITY_HEADER_NAME,
       COUNTRY_HEADER_NAME: () => COUNTRY_HEADER_NAME,
       EMOJI_FLAG_UNICODE_STARTING_POSITION: () => EMOJI_FLAG_UNICODE_STARTING_POSITION,
@@ -5437,15 +5449,15 @@ var require_headers = __commonJS({
   }
 });
 
-// ../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/@vercel/functions/get-env.js
+// ../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/@vercel/functions/get-env.js
 var require_get_env = __commonJS({
-  "../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/@vercel/functions/get-env.js"(exports, module) {
+  "../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/@vercel/functions/get-env.js"(exports, module) {
     "use strict";
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
     var __getOwnPropNames2 = Object.getOwnPropertyNames;
     var __hasOwnProp2 = Object.prototype.hasOwnProperty;
-    var __export = (target, all) => {
+    var __export2 = (target, all) => {
       for (var name in all)
         __defProp2(target, name, { get: all[name], enumerable: true });
     };
@@ -5459,7 +5471,7 @@ var require_get_env = __commonJS({
     };
     var __toCommonJS = (mod) => __copyProps2(__defProp2({}, "__esModule", { value: true }), mod);
     var get_env_exports = {};
-    __export(get_env_exports, {
+    __export2(get_env_exports, {
       getEnv: () => getEnv2
     });
     module.exports = __toCommonJS(get_env_exports);
@@ -5601,15 +5613,15 @@ var require_get_env = __commonJS({
   }
 });
 
-// ../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/@vercel/functions/get-context.js
+// ../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/@vercel/functions/get-context.js
 var require_get_context = __commonJS({
-  "../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/@vercel/functions/get-context.js"(exports, module) {
+  "../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/@vercel/functions/get-context.js"(exports, module) {
     "use strict";
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
     var __getOwnPropNames2 = Object.getOwnPropertyNames;
     var __hasOwnProp2 = Object.prototype.hasOwnProperty;
-    var __export = (target, all) => {
+    var __export2 = (target, all) => {
       for (var name in all)
         __defProp2(target, name, { get: all[name], enumerable: true });
     };
@@ -5623,7 +5635,7 @@ var require_get_context = __commonJS({
     };
     var __toCommonJS = (mod) => __copyProps2(__defProp2({}, "__esModule", { value: true }), mod);
     var get_context_exports = {};
-    __export(get_context_exports, {
+    __export2(get_context_exports, {
       SYMBOL_FOR_REQ_CONTEXT: () => SYMBOL_FOR_REQ_CONTEXT,
       getContext: () => getContext
     });
@@ -5636,15 +5648,15 @@ var require_get_context = __commonJS({
   }
 });
 
-// ../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/@vercel/functions/deadline.js
+// ../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/@vercel/functions/deadline.js
 var require_deadline = __commonJS({
-  "../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/@vercel/functions/deadline.js"(exports, module) {
+  "../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/@vercel/functions/deadline.js"(exports, module) {
     "use strict";
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
     var __getOwnPropNames2 = Object.getOwnPropertyNames;
     var __hasOwnProp2 = Object.prototype.hasOwnProperty;
-    var __export = (target, all) => {
+    var __export2 = (target, all) => {
       for (var name in all)
         __defProp2(target, name, { get: all[name], enumerable: true });
     };
@@ -5658,7 +5670,7 @@ var require_deadline = __commonJS({
     };
     var __toCommonJS = (mod) => __copyProps2(__defProp2({}, "__esModule", { value: true }), mod);
     var deadline_exports = {};
-    __export(deadline_exports, {
+    __export2(deadline_exports, {
       getDeadline: () => getDeadline2
     });
     module.exports = __toCommonJS(deadline_exports);
@@ -5677,15 +5689,15 @@ var require_deadline = __commonJS({
   }
 });
 
-// ../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/@vercel/functions/wait-until.js
+// ../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/@vercel/functions/wait-until.js
 var require_wait_until = __commonJS({
-  "../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/@vercel/functions/wait-until.js"(exports, module) {
+  "../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/@vercel/functions/wait-until.js"(exports, module) {
     "use strict";
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
     var __getOwnPropNames2 = Object.getOwnPropertyNames;
     var __hasOwnProp2 = Object.prototype.hasOwnProperty;
-    var __export = (target, all) => {
+    var __export2 = (target, all) => {
       for (var name in all)
         __defProp2(target, name, { get: all[name], enumerable: true });
     };
@@ -5699,7 +5711,7 @@ var require_wait_until = __commonJS({
     };
     var __toCommonJS = (mod) => __copyProps2(__defProp2({}, "__esModule", { value: true }), mod);
     var wait_until_exports = {};
-    __export(wait_until_exports, {
+    __export2(wait_until_exports, {
       waitUntil: () => waitUntil2
     });
     module.exports = __toCommonJS(wait_until_exports);
@@ -5715,15 +5727,15 @@ var require_wait_until = __commonJS({
   }
 });
 
-// ../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/@vercel/functions/metric.js
+// ../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/@vercel/functions/metric.js
 var require_metric = __commonJS({
-  "../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/@vercel/functions/metric.js"(exports, module) {
+  "../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/@vercel/functions/metric.js"(exports, module) {
     "use strict";
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
     var __getOwnPropNames2 = Object.getOwnPropertyNames;
     var __hasOwnProp2 = Object.prototype.hasOwnProperty;
-    var __export = (target, all) => {
+    var __export2 = (target, all) => {
       for (var name in all)
         __defProp2(target, name, { get: all[name], enumerable: true });
     };
@@ -5737,7 +5749,7 @@ var require_metric = __commonJS({
     };
     var __toCommonJS = (mod) => __copyProps2(__defProp2({}, "__esModule", { value: true }), mod);
     var metric_exports = {};
-    __export(metric_exports, {
+    __export2(metric_exports, {
       metric: () => metric2
     });
     module.exports = __toCommonJS(metric_exports);
@@ -5749,15 +5761,15 @@ var require_metric = __commonJS({
   }
 });
 
-// ../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/@vercel/functions/middleware.js
+// ../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/@vercel/functions/middleware.js
 var require_middleware = __commonJS({
-  "../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/@vercel/functions/middleware.js"(exports, module) {
+  "../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/@vercel/functions/middleware.js"(exports, module) {
     "use strict";
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
     var __getOwnPropNames2 = Object.getOwnPropertyNames;
     var __hasOwnProp2 = Object.prototype.hasOwnProperty;
-    var __export = (target, all) => {
+    var __export2 = (target, all) => {
       for (var name in all)
         __defProp2(target, name, { get: all[name], enumerable: true });
     };
@@ -5771,7 +5783,7 @@ var require_middleware = __commonJS({
     };
     var __toCommonJS = (mod) => __copyProps2(__defProp2({}, "__esModule", { value: true }), mod);
     var middleware_exports = {};
-    __export(middleware_exports, {
+    __export2(middleware_exports, {
       next: () => next2,
       rewrite: () => rewrite2
     });
@@ -5810,15 +5822,15 @@ var require_middleware = __commonJS({
   }
 });
 
-// ../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/@vercel/functions/cache/in-memory-cache.js
+// ../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/@vercel/functions/cache/in-memory-cache.js
 var require_in_memory_cache = __commonJS({
-  "../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/@vercel/functions/cache/in-memory-cache.js"(exports, module) {
+  "../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/@vercel/functions/cache/in-memory-cache.js"(exports, module) {
     "use strict";
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
     var __getOwnPropNames2 = Object.getOwnPropertyNames;
     var __hasOwnProp2 = Object.prototype.hasOwnProperty;
-    var __export = (target, all) => {
+    var __export2 = (target, all) => {
       for (var name in all)
         __defProp2(target, name, { get: all[name], enumerable: true });
     };
@@ -5832,7 +5844,7 @@ var require_in_memory_cache = __commonJS({
     };
     var __toCommonJS = (mod) => __copyProps2(__defProp2({}, "__esModule", { value: true }), mod);
     var in_memory_cache_exports = {};
-    __export(in_memory_cache_exports, {
+    __export2(in_memory_cache_exports, {
       InMemoryCache: () => InMemoryCache
     });
     module.exports = __toCommonJS(in_memory_cache_exports);
@@ -5878,15 +5890,15 @@ var require_in_memory_cache = __commonJS({
   }
 });
 
-// ../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/@vercel/functions/cache/build-client.js
+// ../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/@vercel/functions/cache/build-client.js
 var require_build_client = __commonJS({
-  "../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/@vercel/functions/cache/build-client.js"(exports, module) {
+  "../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/@vercel/functions/cache/build-client.js"(exports, module) {
     "use strict";
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
     var __getOwnPropNames2 = Object.getOwnPropertyNames;
     var __hasOwnProp2 = Object.prototype.hasOwnProperty;
-    var __export = (target, all) => {
+    var __export2 = (target, all) => {
       for (var name in all)
         __defProp2(target, name, { get: all[name], enumerable: true });
     };
@@ -5900,7 +5912,7 @@ var require_build_client = __commonJS({
     };
     var __toCommonJS = (mod) => __copyProps2(__defProp2({}, "__esModule", { value: true }), mod);
     var build_client_exports = {};
-    __export(build_client_exports, {
+    __export2(build_client_exports, {
       BuildCache: () => BuildCache
     });
     module.exports = __toCommonJS(build_client_exports);
@@ -6059,15 +6071,15 @@ var require_build_client = __commonJS({
   }
 });
 
-// ../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/@vercel/functions/cache/index.js
+// ../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/@vercel/functions/cache/index.js
 var require_cache = __commonJS({
-  "../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/@vercel/functions/cache/index.js"(exports, module) {
+  "../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/@vercel/functions/cache/index.js"(exports, module) {
     "use strict";
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
     var __getOwnPropNames2 = Object.getOwnPropertyNames;
     var __hasOwnProp2 = Object.prototype.hasOwnProperty;
-    var __export = (target, all) => {
+    var __export2 = (target, all) => {
       for (var name in all)
         __defProp2(target, name, { get: all[name], enumerable: true });
     };
@@ -6081,7 +6093,7 @@ var require_cache = __commonJS({
     };
     var __toCommonJS = (mod) => __copyProps2(__defProp2({}, "__esModule", { value: true }), mod);
     var cache_exports = {};
-    __export(cache_exports, {
+    __export2(cache_exports, {
       HEADERS_VERCEL_CACHE_ITEM_NAME: () => HEADERS_VERCEL_CACHE_ITEM_NAME,
       HEADERS_VERCEL_CACHE_STATE: () => HEADERS_VERCEL_CACHE_STATE,
       HEADERS_VERCEL_CACHE_TAGS: () => HEADERS_VERCEL_CACHE_TAGS,
@@ -6216,15 +6228,15 @@ var require_cache = __commonJS({
   }
 });
 
-// ../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/@vercel/functions/db-connections/index.js
+// ../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/@vercel/functions/db-connections/index.js
 var require_db_connections = __commonJS({
-  "../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/@vercel/functions/db-connections/index.js"(exports, module) {
+  "../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/@vercel/functions/db-connections/index.js"(exports, module) {
     "use strict";
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
     var __getOwnPropNames2 = Object.getOwnPropertyNames;
     var __hasOwnProp2 = Object.prototype.hasOwnProperty;
-    var __export = (target, all) => {
+    var __export2 = (target, all) => {
       for (var name in all)
         __defProp2(target, name, { get: all[name], enumerable: true });
     };
@@ -6238,7 +6250,7 @@ var require_db_connections = __commonJS({
     };
     var __toCommonJS = (mod) => __copyProps2(__defProp2({}, "__esModule", { value: true }), mod);
     var db_connections_exports = {};
-    __export(db_connections_exports, {
+    __export2(db_connections_exports, {
       attachDatabasePool: () => attachDatabasePool3,
       experimental_attachDatabasePool: () => experimental_attachDatabasePool2
     });
@@ -6371,15 +6383,15 @@ var require_db_connections = __commonJS({
   }
 });
 
-// ../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/@vercel/functions/purge/index.js
+// ../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/@vercel/functions/purge/index.js
 var require_purge = __commonJS({
-  "../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/@vercel/functions/purge/index.js"(exports, module) {
+  "../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/@vercel/functions/purge/index.js"(exports, module) {
     "use strict";
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
     var __getOwnPropNames2 = Object.getOwnPropertyNames;
     var __hasOwnProp2 = Object.prototype.hasOwnProperty;
-    var __export = (target, all) => {
+    var __export2 = (target, all) => {
       for (var name in all)
         __defProp2(target, name, { get: all[name], enumerable: true });
     };
@@ -6393,7 +6405,7 @@ var require_purge = __commonJS({
     };
     var __toCommonJS = (mod) => __copyProps2(__defProp2({}, "__esModule", { value: true }), mod);
     var purge_exports = {};
-    __export(purge_exports, {
+    __export2(purge_exports, {
       dangerouslyDeleteBySrcImage: () => dangerouslyDeleteBySrcImage2,
       dangerouslyDeleteByTag: () => dangerouslyDeleteByTag2,
       invalidateBySrcImage: () => invalidateBySrcImage2,
@@ -6426,15 +6438,15 @@ var require_purge = __commonJS({
   }
 });
 
-// ../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/@vercel/functions/addcachetag/index.js
+// ../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/@vercel/functions/addcachetag/index.js
 var require_addcachetag = __commonJS({
-  "../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/@vercel/functions/addcachetag/index.js"(exports, module) {
+  "../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/@vercel/functions/addcachetag/index.js"(exports, module) {
     "use strict";
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
     var __getOwnPropNames2 = Object.getOwnPropertyNames;
     var __hasOwnProp2 = Object.prototype.hasOwnProperty;
-    var __export = (target, all) => {
+    var __export2 = (target, all) => {
       for (var name in all)
         __defProp2(target, name, { get: all[name], enumerable: true });
     };
@@ -6448,7 +6460,7 @@ var require_addcachetag = __commonJS({
     };
     var __toCommonJS = (mod) => __copyProps2(__defProp2({}, "__esModule", { value: true }), mod);
     var addcachetag_exports = {};
-    __export(addcachetag_exports, {
+    __export2(addcachetag_exports, {
       addCacheTag: () => addCacheTag2
     });
     module.exports = __toCommonJS(addcachetag_exports);
@@ -6463,15 +6475,3722 @@ var require_addcachetag = __commonJS({
   }
 });
 
-// ../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/@vercel/functions/websocket/index.js
+// ../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/ws/lib/constants.js
+var require_constants = __commonJS({
+  "../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/ws/lib/constants.js"(exports, module) {
+    "use strict";
+    var BINARY_TYPES = ["nodebuffer", "arraybuffer", "fragments"];
+    var hasBlob = typeof Blob !== "undefined";
+    if (hasBlob) BINARY_TYPES.push("blob");
+    module.exports = {
+      BINARY_TYPES,
+      CLOSE_TIMEOUT: 3e4,
+      EMPTY_BUFFER: Buffer.alloc(0),
+      GUID: "258EAFA5-E914-47DA-95CA-C5AB0DC85B11",
+      hasBlob,
+      kForOnEventAttribute: /* @__PURE__ */ Symbol("kIsForOnEventAttribute"),
+      kListener: /* @__PURE__ */ Symbol("kListener"),
+      kStatusCode: /* @__PURE__ */ Symbol("status-code"),
+      kWebSocket: /* @__PURE__ */ Symbol("websocket"),
+      NOOP: () => {
+      }
+    };
+  }
+});
+
+// ../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/ws/lib/buffer-util.js
+var require_buffer_util = __commonJS({
+  "../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/ws/lib/buffer-util.js"(exports, module) {
+    "use strict";
+    var { EMPTY_BUFFER } = require_constants();
+    var FastBuffer = Buffer[Symbol.species];
+    function concat(list, totalLength) {
+      if (list.length === 0) return EMPTY_BUFFER;
+      if (list.length === 1) return list[0];
+      const target = Buffer.allocUnsafe(totalLength);
+      let offset = 0;
+      for (let i = 0; i < list.length; i++) {
+        const buf = list[i];
+        target.set(buf, offset);
+        offset += buf.length;
+      }
+      if (offset < totalLength) {
+        return new FastBuffer(target.buffer, target.byteOffset, offset);
+      }
+      return target;
+    }
+    function _mask(source, mask, output, offset, length) {
+      for (let i = 0; i < length; i++) {
+        output[offset + i] = source[i] ^ mask[i & 3];
+      }
+    }
+    function _unmask(buffer, mask) {
+      for (let i = 0; i < buffer.length; i++) {
+        buffer[i] ^= mask[i & 3];
+      }
+    }
+    function toArrayBuffer(buf) {
+      if (buf.length === buf.buffer.byteLength) {
+        return buf.buffer;
+      }
+      return buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.length);
+    }
+    function toBuffer(data) {
+      toBuffer.readOnly = true;
+      if (Buffer.isBuffer(data)) return data;
+      let buf;
+      if (data instanceof ArrayBuffer) {
+        buf = new FastBuffer(data);
+      } else if (ArrayBuffer.isView(data)) {
+        buf = new FastBuffer(data.buffer, data.byteOffset, data.byteLength);
+      } else {
+        buf = Buffer.from(data);
+        toBuffer.readOnly = false;
+      }
+      return buf;
+    }
+    module.exports = {
+      concat,
+      mask: _mask,
+      toArrayBuffer,
+      toBuffer,
+      unmask: _unmask
+    };
+    if (!process.env.WS_NO_BUFFER_UTIL) {
+      try {
+        const bufferUtil = __require("bufferutil");
+        module.exports.mask = function(source, mask, output, offset, length) {
+          if (length < 48) _mask(source, mask, output, offset, length);
+          else bufferUtil.mask(source, mask, output, offset, length);
+        };
+        module.exports.unmask = function(buffer, mask) {
+          if (buffer.length < 32) _unmask(buffer, mask);
+          else bufferUtil.unmask(buffer, mask);
+        };
+      } catch (e) {
+      }
+    }
+  }
+});
+
+// ../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/ws/lib/limiter.js
+var require_limiter = __commonJS({
+  "../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/ws/lib/limiter.js"(exports, module) {
+    "use strict";
+    var kDone = /* @__PURE__ */ Symbol("kDone");
+    var kRun = /* @__PURE__ */ Symbol("kRun");
+    var Limiter = class {
+      /**
+       * Creates a new `Limiter`.
+       *
+       * @param {Number} [concurrency=Infinity] The maximum number of jobs allowed
+       *     to run concurrently
+       */
+      constructor(concurrency) {
+        this[kDone] = () => {
+          this.pending--;
+          this[kRun]();
+        };
+        this.concurrency = concurrency || Infinity;
+        this.jobs = [];
+        this.pending = 0;
+      }
+      /**
+       * Adds a job to the queue.
+       *
+       * @param {Function} job The job to run
+       * @public
+       */
+      add(job) {
+        this.jobs.push(job);
+        this[kRun]();
+      }
+      /**
+       * Removes a job from the queue and runs it if possible.
+       *
+       * @private
+       */
+      [kRun]() {
+        if (this.pending === this.concurrency) return;
+        if (this.jobs.length) {
+          const job = this.jobs.shift();
+          this.pending++;
+          job(this[kDone]);
+        }
+      }
+    };
+    module.exports = Limiter;
+  }
+});
+
+// ../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/ws/lib/permessage-deflate.js
+var require_permessage_deflate = __commonJS({
+  "../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/ws/lib/permessage-deflate.js"(exports, module) {
+    "use strict";
+    var zlib = __require("zlib");
+    var bufferUtil = require_buffer_util();
+    var Limiter = require_limiter();
+    var { kStatusCode } = require_constants();
+    var FastBuffer = Buffer[Symbol.species];
+    var TRAILER = Buffer.from([0, 0, 255, 255]);
+    var kPerMessageDeflate = /* @__PURE__ */ Symbol("permessage-deflate");
+    var kTotalLength = /* @__PURE__ */ Symbol("total-length");
+    var kCallback = /* @__PURE__ */ Symbol("callback");
+    var kBuffers = /* @__PURE__ */ Symbol("buffers");
+    var kError = /* @__PURE__ */ Symbol("error");
+    var zlibLimiter;
+    var PerMessageDeflate2 = class {
+      /**
+       * Creates a PerMessageDeflate instance.
+       *
+       * @param {Object} [options] Configuration options
+       * @param {(Boolean|Number)} [options.clientMaxWindowBits] Advertise support
+       *     for, or request, a custom client window size
+       * @param {Boolean} [options.clientNoContextTakeover=false] Advertise/
+       *     acknowledge disabling of client context takeover
+       * @param {Number} [options.concurrencyLimit=10] The number of concurrent
+       *     calls to zlib
+       * @param {Boolean} [options.isServer=false] Create the instance in either
+       *     server or client mode
+       * @param {Number} [options.maxPayload=0] The maximum allowed message length
+       * @param {(Boolean|Number)} [options.serverMaxWindowBits] Request/confirm the
+       *     use of a custom server window size
+       * @param {Boolean} [options.serverNoContextTakeover=false] Request/accept
+       *     disabling of server context takeover
+       * @param {Number} [options.threshold=1024] Size (in bytes) below which
+       *     messages should not be compressed if context takeover is disabled
+       * @param {Object} [options.zlibDeflateOptions] Options to pass to zlib on
+       *     deflate
+       * @param {Object} [options.zlibInflateOptions] Options to pass to zlib on
+       *     inflate
+       */
+      constructor(options) {
+        this._options = options || {};
+        this._threshold = this._options.threshold !== void 0 ? this._options.threshold : 1024;
+        this._maxPayload = this._options.maxPayload | 0;
+        this._isServer = !!this._options.isServer;
+        this._deflate = null;
+        this._inflate = null;
+        this.params = null;
+        if (!zlibLimiter) {
+          const concurrency = this._options.concurrencyLimit !== void 0 ? this._options.concurrencyLimit : 10;
+          zlibLimiter = new Limiter(concurrency);
+        }
+      }
+      /**
+       * @type {String}
+       */
+      static get extensionName() {
+        return "permessage-deflate";
+      }
+      /**
+       * Create an extension negotiation offer.
+       *
+       * @return {Object} Extension parameters
+       * @public
+       */
+      offer() {
+        const params = {};
+        if (this._options.serverNoContextTakeover) {
+          params.server_no_context_takeover = true;
+        }
+        if (this._options.clientNoContextTakeover) {
+          params.client_no_context_takeover = true;
+        }
+        if (this._options.serverMaxWindowBits) {
+          params.server_max_window_bits = this._options.serverMaxWindowBits;
+        }
+        if (this._options.clientMaxWindowBits) {
+          params.client_max_window_bits = this._options.clientMaxWindowBits;
+        } else if (this._options.clientMaxWindowBits == null) {
+          params.client_max_window_bits = true;
+        }
+        return params;
+      }
+      /**
+       * Accept an extension negotiation offer/response.
+       *
+       * @param {Array} configurations The extension negotiation offers/reponse
+       * @return {Object} Accepted configuration
+       * @public
+       */
+      accept(configurations) {
+        configurations = this.normalizeParams(configurations);
+        this.params = this._isServer ? this.acceptAsServer(configurations) : this.acceptAsClient(configurations);
+        return this.params;
+      }
+      /**
+       * Releases all resources used by the extension.
+       *
+       * @public
+       */
+      cleanup() {
+        if (this._inflate) {
+          this._inflate.close();
+          this._inflate = null;
+        }
+        if (this._deflate) {
+          const callback = this._deflate[kCallback];
+          this._deflate.close();
+          this._deflate = null;
+          if (callback) {
+            callback(
+              new Error(
+                "The deflate stream was closed while data was being processed"
+              )
+            );
+          }
+        }
+      }
+      /**
+       *  Accept an extension negotiation offer.
+       *
+       * @param {Array} offers The extension negotiation offers
+       * @return {Object} Accepted configuration
+       * @private
+       */
+      acceptAsServer(offers) {
+        const opts = this._options;
+        const accepted = offers.find((params) => {
+          if (opts.serverNoContextTakeover === false && params.server_no_context_takeover || params.server_max_window_bits && (opts.serverMaxWindowBits === false || typeof opts.serverMaxWindowBits === "number" && opts.serverMaxWindowBits > params.server_max_window_bits) || typeof opts.clientMaxWindowBits === "number" && !params.client_max_window_bits) {
+            return false;
+          }
+          return true;
+        });
+        if (!accepted) {
+          throw new Error("None of the extension offers can be accepted");
+        }
+        if (opts.serverNoContextTakeover) {
+          accepted.server_no_context_takeover = true;
+        }
+        if (opts.clientNoContextTakeover) {
+          accepted.client_no_context_takeover = true;
+        }
+        if (typeof opts.serverMaxWindowBits === "number") {
+          accepted.server_max_window_bits = opts.serverMaxWindowBits;
+        }
+        if (typeof opts.clientMaxWindowBits === "number") {
+          accepted.client_max_window_bits = opts.clientMaxWindowBits;
+        } else if (accepted.client_max_window_bits === true || opts.clientMaxWindowBits === false) {
+          delete accepted.client_max_window_bits;
+        }
+        return accepted;
+      }
+      /**
+       * Accept the extension negotiation response.
+       *
+       * @param {Array} response The extension negotiation response
+       * @return {Object} Accepted configuration
+       * @private
+       */
+      acceptAsClient(response) {
+        const params = response[0];
+        if (this._options.clientNoContextTakeover === false && params.client_no_context_takeover) {
+          throw new Error('Unexpected parameter "client_no_context_takeover"');
+        }
+        if (!params.client_max_window_bits) {
+          if (typeof this._options.clientMaxWindowBits === "number") {
+            params.client_max_window_bits = this._options.clientMaxWindowBits;
+          }
+        } else if (this._options.clientMaxWindowBits === false || typeof this._options.clientMaxWindowBits === "number" && params.client_max_window_bits > this._options.clientMaxWindowBits) {
+          throw new Error(
+            'Unexpected or invalid parameter "client_max_window_bits"'
+          );
+        }
+        return params;
+      }
+      /**
+       * Normalize parameters.
+       *
+       * @param {Array} configurations The extension negotiation offers/reponse
+       * @return {Array} The offers/response with normalized parameters
+       * @private
+       */
+      normalizeParams(configurations) {
+        configurations.forEach((params) => {
+          Object.keys(params).forEach((key2) => {
+            let value = params[key2];
+            if (value.length > 1) {
+              throw new Error(`Parameter "${key2}" must have only a single value`);
+            }
+            value = value[0];
+            if (key2 === "client_max_window_bits") {
+              if (value !== true) {
+                const num = +value;
+                if (!Number.isInteger(num) || num < 8 || num > 15) {
+                  throw new TypeError(
+                    `Invalid value for parameter "${key2}": ${value}`
+                  );
+                }
+                value = num;
+              } else if (!this._isServer) {
+                throw new TypeError(
+                  `Invalid value for parameter "${key2}": ${value}`
+                );
+              }
+            } else if (key2 === "server_max_window_bits") {
+              const num = +value;
+              if (!Number.isInteger(num) || num < 8 || num > 15) {
+                throw new TypeError(
+                  `Invalid value for parameter "${key2}": ${value}`
+                );
+              }
+              value = num;
+            } else if (key2 === "client_no_context_takeover" || key2 === "server_no_context_takeover") {
+              if (value !== true) {
+                throw new TypeError(
+                  `Invalid value for parameter "${key2}": ${value}`
+                );
+              }
+            } else {
+              throw new Error(`Unknown parameter "${key2}"`);
+            }
+            params[key2] = value;
+          });
+        });
+        return configurations;
+      }
+      /**
+       * Decompress data. Concurrency limited.
+       *
+       * @param {Buffer} data Compressed data
+       * @param {Boolean} fin Specifies whether or not this is the last fragment
+       * @param {Function} callback Callback
+       * @public
+       */
+      decompress(data, fin, callback) {
+        zlibLimiter.add((done) => {
+          this._decompress(data, fin, (err, result) => {
+            done();
+            callback(err, result);
+          });
+        });
+      }
+      /**
+       * Compress data. Concurrency limited.
+       *
+       * @param {(Buffer|String)} data Data to compress
+       * @param {Boolean} fin Specifies whether or not this is the last fragment
+       * @param {Function} callback Callback
+       * @public
+       */
+      compress(data, fin, callback) {
+        zlibLimiter.add((done) => {
+          this._compress(data, fin, (err, result) => {
+            done();
+            callback(err, result);
+          });
+        });
+      }
+      /**
+       * Decompress data.
+       *
+       * @param {Buffer} data Compressed data
+       * @param {Boolean} fin Specifies whether or not this is the last fragment
+       * @param {Function} callback Callback
+       * @private
+       */
+      _decompress(data, fin, callback) {
+        const endpoint = this._isServer ? "client" : "server";
+        if (!this._inflate) {
+          const key2 = `${endpoint}_max_window_bits`;
+          const windowBits = typeof this.params[key2] !== "number" ? zlib.Z_DEFAULT_WINDOWBITS : this.params[key2];
+          this._inflate = zlib.createInflateRaw({
+            ...this._options.zlibInflateOptions,
+            windowBits
+          });
+          this._inflate[kPerMessageDeflate] = this;
+          this._inflate[kTotalLength] = 0;
+          this._inflate[kBuffers] = [];
+          this._inflate.on("error", inflateOnError);
+          this._inflate.on("data", inflateOnData);
+        }
+        this._inflate[kCallback] = callback;
+        this._inflate.write(data);
+        if (fin) this._inflate.write(TRAILER);
+        this._inflate.flush(() => {
+          const err = this._inflate[kError];
+          if (err) {
+            this._inflate.close();
+            this._inflate = null;
+            callback(err);
+            return;
+          }
+          const data2 = bufferUtil.concat(
+            this._inflate[kBuffers],
+            this._inflate[kTotalLength]
+          );
+          if (this._inflate._readableState.endEmitted) {
+            this._inflate.close();
+            this._inflate = null;
+          } else {
+            this._inflate[kTotalLength] = 0;
+            this._inflate[kBuffers] = [];
+            if (fin && this.params[`${endpoint}_no_context_takeover`]) {
+              this._inflate.reset();
+            }
+          }
+          callback(null, data2);
+        });
+      }
+      /**
+       * Compress data.
+       *
+       * @param {(Buffer|String)} data Data to compress
+       * @param {Boolean} fin Specifies whether or not this is the last fragment
+       * @param {Function} callback Callback
+       * @private
+       */
+      _compress(data, fin, callback) {
+        const endpoint = this._isServer ? "server" : "client";
+        if (!this._deflate) {
+          const key2 = `${endpoint}_max_window_bits`;
+          const windowBits = typeof this.params[key2] !== "number" ? zlib.Z_DEFAULT_WINDOWBITS : this.params[key2];
+          this._deflate = zlib.createDeflateRaw({
+            ...this._options.zlibDeflateOptions,
+            windowBits
+          });
+          this._deflate[kTotalLength] = 0;
+          this._deflate[kBuffers] = [];
+          this._deflate.on("data", deflateOnData);
+        }
+        this._deflate[kCallback] = callback;
+        this._deflate.write(data);
+        this._deflate.flush(zlib.Z_SYNC_FLUSH, () => {
+          if (!this._deflate) {
+            return;
+          }
+          let data2 = bufferUtil.concat(
+            this._deflate[kBuffers],
+            this._deflate[kTotalLength]
+          );
+          if (fin) {
+            data2 = new FastBuffer(data2.buffer, data2.byteOffset, data2.length - 4);
+          }
+          this._deflate[kCallback] = null;
+          this._deflate[kTotalLength] = 0;
+          this._deflate[kBuffers] = [];
+          if (fin && this.params[`${endpoint}_no_context_takeover`]) {
+            this._deflate.reset();
+          }
+          callback(null, data2);
+        });
+      }
+    };
+    module.exports = PerMessageDeflate2;
+    function deflateOnData(chunk) {
+      this[kBuffers].push(chunk);
+      this[kTotalLength] += chunk.length;
+    }
+    function inflateOnData(chunk) {
+      this[kTotalLength] += chunk.length;
+      if (this[kPerMessageDeflate]._maxPayload < 1 || this[kTotalLength] <= this[kPerMessageDeflate]._maxPayload) {
+        this[kBuffers].push(chunk);
+        return;
+      }
+      this[kError] = new RangeError("Max payload size exceeded");
+      this[kError].code = "WS_ERR_UNSUPPORTED_MESSAGE_LENGTH";
+      this[kError][kStatusCode] = 1009;
+      this.removeListener("data", inflateOnData);
+      this.reset();
+    }
+    function inflateOnError(err) {
+      this[kPerMessageDeflate]._inflate = null;
+      if (this[kError]) {
+        this[kCallback](this[kError]);
+        return;
+      }
+      err[kStatusCode] = 1007;
+      this[kCallback](err);
+    }
+  }
+});
+
+// ../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/ws/lib/validation.js
+var require_validation = __commonJS({
+  "../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/ws/lib/validation.js"(exports, module) {
+    "use strict";
+    var { isUtf8 } = __require("buffer");
+    var { hasBlob } = require_constants();
+    var tokenChars = [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      // 0 - 15
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      // 16 - 31
+      0,
+      1,
+      0,
+      1,
+      1,
+      1,
+      1,
+      1,
+      0,
+      0,
+      1,
+      1,
+      0,
+      1,
+      1,
+      0,
+      // 32 - 47
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      // 48 - 63
+      0,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      // 64 - 79
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      0,
+      0,
+      0,
+      1,
+      1,
+      // 80 - 95
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      // 96 - 111
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      0,
+      1,
+      0,
+      1,
+      0
+      // 112 - 127
+    ];
+    function isValidStatusCode(code) {
+      return code >= 1e3 && code <= 1014 && code !== 1004 && code !== 1005 && code !== 1006 || code >= 3e3 && code <= 4999;
+    }
+    function _isValidUTF8(buf) {
+      const len = buf.length;
+      let i = 0;
+      while (i < len) {
+        if ((buf[i] & 128) === 0) {
+          i++;
+        } else if ((buf[i] & 224) === 192) {
+          if (i + 1 === len || (buf[i + 1] & 192) !== 128 || (buf[i] & 254) === 192) {
+            return false;
+          }
+          i += 2;
+        } else if ((buf[i] & 240) === 224) {
+          if (i + 2 >= len || (buf[i + 1] & 192) !== 128 || (buf[i + 2] & 192) !== 128 || buf[i] === 224 && (buf[i + 1] & 224) === 128 || // Overlong
+          buf[i] === 237 && (buf[i + 1] & 224) === 160) {
+            return false;
+          }
+          i += 3;
+        } else if ((buf[i] & 248) === 240) {
+          if (i + 3 >= len || (buf[i + 1] & 192) !== 128 || (buf[i + 2] & 192) !== 128 || (buf[i + 3] & 192) !== 128 || buf[i] === 240 && (buf[i + 1] & 240) === 128 || // Overlong
+          buf[i] === 244 && buf[i + 1] > 143 || buf[i] > 244) {
+            return false;
+          }
+          i += 4;
+        } else {
+          return false;
+        }
+      }
+      return true;
+    }
+    function isBlob(value) {
+      return hasBlob && typeof value === "object" && typeof value.arrayBuffer === "function" && typeof value.type === "string" && typeof value.stream === "function" && (value[Symbol.toStringTag] === "Blob" || value[Symbol.toStringTag] === "File");
+    }
+    module.exports = {
+      isBlob,
+      isValidStatusCode,
+      isValidUTF8: _isValidUTF8,
+      tokenChars
+    };
+    if (isUtf8) {
+      module.exports.isValidUTF8 = function(buf) {
+        return buf.length < 24 ? _isValidUTF8(buf) : isUtf8(buf);
+      };
+    } else if (!process.env.WS_NO_UTF_8_VALIDATE) {
+      try {
+        const isValidUTF8 = __require("utf-8-validate");
+        module.exports.isValidUTF8 = function(buf) {
+          return buf.length < 32 ? _isValidUTF8(buf) : isValidUTF8(buf);
+        };
+      } catch (e) {
+      }
+    }
+  }
+});
+
+// ../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/ws/lib/receiver.js
+var require_receiver = __commonJS({
+  "../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/ws/lib/receiver.js"(exports, module) {
+    "use strict";
+    var { Writable } = __require("stream");
+    var PerMessageDeflate2 = require_permessage_deflate();
+    var {
+      BINARY_TYPES,
+      EMPTY_BUFFER,
+      kStatusCode,
+      kWebSocket
+    } = require_constants();
+    var { concat, toArrayBuffer, unmask } = require_buffer_util();
+    var { isValidStatusCode, isValidUTF8 } = require_validation();
+    var FastBuffer = Buffer[Symbol.species];
+    var GET_INFO = 0;
+    var GET_PAYLOAD_LENGTH_16 = 1;
+    var GET_PAYLOAD_LENGTH_64 = 2;
+    var GET_MASK = 3;
+    var GET_DATA = 4;
+    var INFLATING = 5;
+    var DEFER_EVENT = 6;
+    var Receiver2 = class extends Writable {
+      /**
+       * Creates a Receiver instance.
+       *
+       * @param {Object} [options] Options object
+       * @param {Boolean} [options.allowSynchronousEvents=true] Specifies whether
+       *     any of the `'message'`, `'ping'`, and `'pong'` events can be emitted
+       *     multiple times in the same tick
+       * @param {String} [options.binaryType=nodebuffer] The type for binary data
+       * @param {Object} [options.extensions] An object containing the negotiated
+       *     extensions
+       * @param {Boolean} [options.isServer=false] Specifies whether to operate in
+       *     client or server mode
+       * @param {Number} [options.maxBufferedChunks=0] The maximum number of
+       *     buffered data chunks
+       * @param {Number} [options.maxFragments=0] The maximum number of message
+       *     fragments
+       * @param {Number} [options.maxPayload=0] The maximum allowed message length
+       * @param {Boolean} [options.skipUTF8Validation=false] Specifies whether or
+       *     not to skip UTF-8 validation for text and close messages
+       */
+      constructor(options = {}) {
+        super();
+        this._allowSynchronousEvents = options.allowSynchronousEvents !== void 0 ? options.allowSynchronousEvents : true;
+        this._binaryType = options.binaryType || BINARY_TYPES[0];
+        this._extensions = options.extensions || {};
+        this._isServer = !!options.isServer;
+        this._maxBufferedChunks = options.maxBufferedChunks | 0;
+        this._maxFragments = options.maxFragments | 0;
+        this._maxPayload = options.maxPayload | 0;
+        this._skipUTF8Validation = !!options.skipUTF8Validation;
+        this[kWebSocket] = void 0;
+        this._bufferedBytes = 0;
+        this._buffers = [];
+        this._compressed = false;
+        this._payloadLength = 0;
+        this._mask = void 0;
+        this._fragmented = 0;
+        this._masked = false;
+        this._fin = false;
+        this._opcode = 0;
+        this._totalPayloadLength = 0;
+        this._messageLength = 0;
+        this._fragments = [];
+        this._errored = false;
+        this._loop = false;
+        this._state = GET_INFO;
+      }
+      /**
+       * Implements `Writable.prototype._write()`.
+       *
+       * @param {Buffer} chunk The chunk of data to write
+       * @param {String} encoding The character encoding of `chunk`
+       * @param {Function} cb Callback
+       * @private
+       */
+      _write(chunk, encoding, cb) {
+        if (this._opcode === 8 && this._state == GET_INFO) return cb();
+        if (this._maxBufferedChunks > 0 && this._buffers.length >= this._maxBufferedChunks) {
+          cb(
+            this.createError(
+              RangeError,
+              "Too many buffered chunks",
+              false,
+              1008,
+              "WS_ERR_TOO_MANY_BUFFERED_PARTS"
+            )
+          );
+          return;
+        }
+        this._bufferedBytes += chunk.length;
+        this._buffers.push(chunk);
+        this.startLoop(cb);
+      }
+      /**
+       * Consumes `n` bytes from the buffered data.
+       *
+       * @param {Number} n The number of bytes to consume
+       * @return {Buffer} The consumed bytes
+       * @private
+       */
+      consume(n) {
+        this._bufferedBytes -= n;
+        if (n === this._buffers[0].length) return this._buffers.shift();
+        if (n < this._buffers[0].length) {
+          const buf = this._buffers[0];
+          this._buffers[0] = new FastBuffer(
+            buf.buffer,
+            buf.byteOffset + n,
+            buf.length - n
+          );
+          return new FastBuffer(buf.buffer, buf.byteOffset, n);
+        }
+        const dst = Buffer.allocUnsafe(n);
+        do {
+          const buf = this._buffers[0];
+          const offset = dst.length - n;
+          if (n >= buf.length) {
+            dst.set(this._buffers.shift(), offset);
+          } else {
+            dst.set(new Uint8Array(buf.buffer, buf.byteOffset, n), offset);
+            this._buffers[0] = new FastBuffer(
+              buf.buffer,
+              buf.byteOffset + n,
+              buf.length - n
+            );
+          }
+          n -= buf.length;
+        } while (n > 0);
+        return dst;
+      }
+      /**
+       * Starts the parsing loop.
+       *
+       * @param {Function} cb Callback
+       * @private
+       */
+      startLoop(cb) {
+        this._loop = true;
+        do {
+          switch (this._state) {
+            case GET_INFO:
+              this.getInfo(cb);
+              break;
+            case GET_PAYLOAD_LENGTH_16:
+              this.getPayloadLength16(cb);
+              break;
+            case GET_PAYLOAD_LENGTH_64:
+              this.getPayloadLength64(cb);
+              break;
+            case GET_MASK:
+              this.getMask();
+              break;
+            case GET_DATA:
+              this.getData(cb);
+              break;
+            case INFLATING:
+            case DEFER_EVENT:
+              this._loop = false;
+              return;
+          }
+        } while (this._loop);
+        if (!this._errored) cb();
+      }
+      /**
+       * Reads the first two bytes of a frame.
+       *
+       * @param {Function} cb Callback
+       * @private
+       */
+      getInfo(cb) {
+        if (this._bufferedBytes < 2) {
+          this._loop = false;
+          return;
+        }
+        const buf = this.consume(2);
+        if ((buf[0] & 48) !== 0) {
+          const error = this.createError(
+            RangeError,
+            "RSV2 and RSV3 must be clear",
+            true,
+            1002,
+            "WS_ERR_UNEXPECTED_RSV_2_3"
+          );
+          cb(error);
+          return;
+        }
+        const compressed = (buf[0] & 64) === 64;
+        if (compressed && !this._extensions[PerMessageDeflate2.extensionName]) {
+          const error = this.createError(
+            RangeError,
+            "RSV1 must be clear",
+            true,
+            1002,
+            "WS_ERR_UNEXPECTED_RSV_1"
+          );
+          cb(error);
+          return;
+        }
+        this._fin = (buf[0] & 128) === 128;
+        this._opcode = buf[0] & 15;
+        this._payloadLength = buf[1] & 127;
+        if (this._opcode === 0) {
+          if (compressed) {
+            const error = this.createError(
+              RangeError,
+              "RSV1 must be clear",
+              true,
+              1002,
+              "WS_ERR_UNEXPECTED_RSV_1"
+            );
+            cb(error);
+            return;
+          }
+          if (!this._fragmented) {
+            const error = this.createError(
+              RangeError,
+              "invalid opcode 0",
+              true,
+              1002,
+              "WS_ERR_INVALID_OPCODE"
+            );
+            cb(error);
+            return;
+          }
+          this._opcode = this._fragmented;
+        } else if (this._opcode === 1 || this._opcode === 2) {
+          if (this._fragmented) {
+            const error = this.createError(
+              RangeError,
+              `invalid opcode ${this._opcode}`,
+              true,
+              1002,
+              "WS_ERR_INVALID_OPCODE"
+            );
+            cb(error);
+            return;
+          }
+          this._compressed = compressed;
+        } else if (this._opcode > 7 && this._opcode < 11) {
+          if (!this._fin) {
+            const error = this.createError(
+              RangeError,
+              "FIN must be set",
+              true,
+              1002,
+              "WS_ERR_EXPECTED_FIN"
+            );
+            cb(error);
+            return;
+          }
+          if (compressed) {
+            const error = this.createError(
+              RangeError,
+              "RSV1 must be clear",
+              true,
+              1002,
+              "WS_ERR_UNEXPECTED_RSV_1"
+            );
+            cb(error);
+            return;
+          }
+          if (this._payloadLength > 125 || this._opcode === 8 && this._payloadLength === 1) {
+            const error = this.createError(
+              RangeError,
+              `invalid payload length ${this._payloadLength}`,
+              true,
+              1002,
+              "WS_ERR_INVALID_CONTROL_PAYLOAD_LENGTH"
+            );
+            cb(error);
+            return;
+          }
+        } else {
+          const error = this.createError(
+            RangeError,
+            `invalid opcode ${this._opcode}`,
+            true,
+            1002,
+            "WS_ERR_INVALID_OPCODE"
+          );
+          cb(error);
+          return;
+        }
+        if (!this._fin && !this._fragmented) this._fragmented = this._opcode;
+        this._masked = (buf[1] & 128) === 128;
+        if (this._isServer) {
+          if (!this._masked) {
+            const error = this.createError(
+              RangeError,
+              "MASK must be set",
+              true,
+              1002,
+              "WS_ERR_EXPECTED_MASK"
+            );
+            cb(error);
+            return;
+          }
+        } else if (this._masked) {
+          const error = this.createError(
+            RangeError,
+            "MASK must be clear",
+            true,
+            1002,
+            "WS_ERR_UNEXPECTED_MASK"
+          );
+          cb(error);
+          return;
+        }
+        if (this._payloadLength === 126) this._state = GET_PAYLOAD_LENGTH_16;
+        else if (this._payloadLength === 127) this._state = GET_PAYLOAD_LENGTH_64;
+        else this.haveLength(cb);
+      }
+      /**
+       * Gets extended payload length (7+16).
+       *
+       * @param {Function} cb Callback
+       * @private
+       */
+      getPayloadLength16(cb) {
+        if (this._bufferedBytes < 2) {
+          this._loop = false;
+          return;
+        }
+        this._payloadLength = this.consume(2).readUInt16BE(0);
+        this.haveLength(cb);
+      }
+      /**
+       * Gets extended payload length (7+64).
+       *
+       * @param {Function} cb Callback
+       * @private
+       */
+      getPayloadLength64(cb) {
+        if (this._bufferedBytes < 8) {
+          this._loop = false;
+          return;
+        }
+        const buf = this.consume(8);
+        const num = buf.readUInt32BE(0);
+        if (num > Math.pow(2, 53 - 32) - 1) {
+          const error = this.createError(
+            RangeError,
+            "Unsupported WebSocket frame: payload length > 2^53 - 1",
+            false,
+            1009,
+            "WS_ERR_UNSUPPORTED_DATA_PAYLOAD_LENGTH"
+          );
+          cb(error);
+          return;
+        }
+        this._payloadLength = num * Math.pow(2, 32) + buf.readUInt32BE(4);
+        this.haveLength(cb);
+      }
+      /**
+       * Payload length has been read.
+       *
+       * @param {Function} cb Callback
+       * @private
+       */
+      haveLength(cb) {
+        if (this._payloadLength && this._opcode < 8) {
+          this._totalPayloadLength += this._payloadLength;
+          if (this._totalPayloadLength > this._maxPayload && this._maxPayload > 0) {
+            const error = this.createError(
+              RangeError,
+              "Max payload size exceeded",
+              false,
+              1009,
+              "WS_ERR_UNSUPPORTED_MESSAGE_LENGTH"
+            );
+            cb(error);
+            return;
+          }
+        }
+        if (this._masked) this._state = GET_MASK;
+        else this._state = GET_DATA;
+      }
+      /**
+       * Reads mask bytes.
+       *
+       * @private
+       */
+      getMask() {
+        if (this._bufferedBytes < 4) {
+          this._loop = false;
+          return;
+        }
+        this._mask = this.consume(4);
+        this._state = GET_DATA;
+      }
+      /**
+       * Reads data bytes.
+       *
+       * @param {Function} cb Callback
+       * @private
+       */
+      getData(cb) {
+        let data = EMPTY_BUFFER;
+        if (this._payloadLength) {
+          if (this._bufferedBytes < this._payloadLength) {
+            this._loop = false;
+            return;
+          }
+          data = this.consume(this._payloadLength);
+          if (this._masked && (this._mask[0] | this._mask[1] | this._mask[2] | this._mask[3]) !== 0) {
+            unmask(data, this._mask);
+          }
+        }
+        if (this._opcode > 7) {
+          this.controlMessage(data, cb);
+          return;
+        }
+        if (this._compressed) {
+          this._state = INFLATING;
+          this.decompress(data, cb);
+          return;
+        }
+        if (data.length) {
+          if (this._maxFragments > 0 && this._fragments.length >= this._maxFragments) {
+            const error = this.createError(
+              RangeError,
+              "Too many message fragments",
+              false,
+              1008,
+              "WS_ERR_TOO_MANY_BUFFERED_PARTS"
+            );
+            cb(error);
+            return;
+          }
+          this._messageLength = this._totalPayloadLength;
+          this._fragments.push(data);
+        }
+        this.dataMessage(cb);
+      }
+      /**
+       * Decompresses data.
+       *
+       * @param {Buffer} data Compressed data
+       * @param {Function} cb Callback
+       * @private
+       */
+      decompress(data, cb) {
+        const perMessageDeflate = this._extensions[PerMessageDeflate2.extensionName];
+        perMessageDeflate.decompress(data, this._fin, (err, buf) => {
+          if (err) return cb(err);
+          if (buf.length) {
+            this._messageLength += buf.length;
+            if (this._messageLength > this._maxPayload && this._maxPayload > 0) {
+              const error = this.createError(
+                RangeError,
+                "Max payload size exceeded",
+                false,
+                1009,
+                "WS_ERR_UNSUPPORTED_MESSAGE_LENGTH"
+              );
+              cb(error);
+              return;
+            }
+            if (this._maxFragments > 0 && this._fragments.length >= this._maxFragments) {
+              const error = this.createError(
+                RangeError,
+                "Too many message fragments",
+                false,
+                1008,
+                "WS_ERR_TOO_MANY_BUFFERED_PARTS"
+              );
+              cb(error);
+              return;
+            }
+            this._fragments.push(buf);
+          }
+          this.dataMessage(cb);
+          if (this._state === GET_INFO) this.startLoop(cb);
+        });
+      }
+      /**
+       * Handles a data message.
+       *
+       * @param {Function} cb Callback
+       * @private
+       */
+      dataMessage(cb) {
+        if (!this._fin) {
+          this._state = GET_INFO;
+          return;
+        }
+        const messageLength = this._messageLength;
+        const fragments = this._fragments;
+        this._totalPayloadLength = 0;
+        this._messageLength = 0;
+        this._fragmented = 0;
+        this._fragments = [];
+        if (this._opcode === 2) {
+          let data;
+          if (this._binaryType === "nodebuffer") {
+            data = concat(fragments, messageLength);
+          } else if (this._binaryType === "arraybuffer") {
+            data = toArrayBuffer(concat(fragments, messageLength));
+          } else if (this._binaryType === "blob") {
+            data = new Blob(fragments);
+          } else {
+            data = fragments;
+          }
+          if (this._allowSynchronousEvents) {
+            this.emit("message", data, true);
+            this._state = GET_INFO;
+          } else {
+            this._state = DEFER_EVENT;
+            setImmediate(() => {
+              this.emit("message", data, true);
+              this._state = GET_INFO;
+              this.startLoop(cb);
+            });
+          }
+        } else {
+          const buf = concat(fragments, messageLength);
+          if (!this._skipUTF8Validation && !isValidUTF8(buf)) {
+            const error = this.createError(
+              Error,
+              "invalid UTF-8 sequence",
+              true,
+              1007,
+              "WS_ERR_INVALID_UTF8"
+            );
+            cb(error);
+            return;
+          }
+          if (this._state === INFLATING || this._allowSynchronousEvents) {
+            this.emit("message", buf, false);
+            this._state = GET_INFO;
+          } else {
+            this._state = DEFER_EVENT;
+            setImmediate(() => {
+              this.emit("message", buf, false);
+              this._state = GET_INFO;
+              this.startLoop(cb);
+            });
+          }
+        }
+      }
+      /**
+       * Handles a control message.
+       *
+       * @param {Buffer} data Data to handle
+       * @return {(Error|RangeError|undefined)} A possible error
+       * @private
+       */
+      controlMessage(data, cb) {
+        if (this._opcode === 8) {
+          if (data.length === 0) {
+            this._loop = false;
+            this.emit("conclude", 1005, EMPTY_BUFFER);
+            this.end();
+          } else {
+            const code = data.readUInt16BE(0);
+            if (!isValidStatusCode(code)) {
+              const error = this.createError(
+                RangeError,
+                `invalid status code ${code}`,
+                true,
+                1002,
+                "WS_ERR_INVALID_CLOSE_CODE"
+              );
+              cb(error);
+              return;
+            }
+            const buf = new FastBuffer(
+              data.buffer,
+              data.byteOffset + 2,
+              data.length - 2
+            );
+            if (!this._skipUTF8Validation && !isValidUTF8(buf)) {
+              const error = this.createError(
+                Error,
+                "invalid UTF-8 sequence",
+                true,
+                1007,
+                "WS_ERR_INVALID_UTF8"
+              );
+              cb(error);
+              return;
+            }
+            this._loop = false;
+            this.emit("conclude", code, buf);
+            this.end();
+          }
+          this._state = GET_INFO;
+          return;
+        }
+        if (this._allowSynchronousEvents) {
+          this.emit(this._opcode === 9 ? "ping" : "pong", data);
+          this._state = GET_INFO;
+        } else {
+          this._state = DEFER_EVENT;
+          setImmediate(() => {
+            this.emit(this._opcode === 9 ? "ping" : "pong", data);
+            this._state = GET_INFO;
+            this.startLoop(cb);
+          });
+        }
+      }
+      /**
+       * Builds an error object.
+       *
+       * @param {function(new:Error|RangeError)} ErrorCtor The error constructor
+       * @param {String} message The error message
+       * @param {Boolean} prefix Specifies whether or not to add a default prefix to
+       *     `message`
+       * @param {Number} statusCode The status code
+       * @param {String} errorCode The exposed error code
+       * @return {(Error|RangeError)} The error
+       * @private
+       */
+      createError(ErrorCtor, message, prefix, statusCode, errorCode) {
+        this._loop = false;
+        this._errored = true;
+        const err = new ErrorCtor(
+          prefix ? `Invalid WebSocket frame: ${message}` : message
+        );
+        Error.captureStackTrace(err, this.createError);
+        err.code = errorCode;
+        err[kStatusCode] = statusCode;
+        return err;
+      }
+    };
+    module.exports = Receiver2;
+  }
+});
+
+// ../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/ws/lib/sender.js
+var require_sender = __commonJS({
+  "../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/ws/lib/sender.js"(exports, module) {
+    "use strict";
+    var { Duplex } = __require("stream");
+    var { randomFillSync } = __require("crypto");
+    var {
+      types: { isUint8Array }
+    } = __require("util");
+    var PerMessageDeflate2 = require_permessage_deflate();
+    var { EMPTY_BUFFER, kWebSocket, NOOP } = require_constants();
+    var { isBlob, isValidStatusCode } = require_validation();
+    var { mask: applyMask, toBuffer } = require_buffer_util();
+    var kByteLength = /* @__PURE__ */ Symbol("kByteLength");
+    var maskBuffer = Buffer.alloc(4);
+    var RANDOM_POOL_SIZE = 8 * 1024;
+    var randomPool;
+    var randomPoolPointer = RANDOM_POOL_SIZE;
+    var DEFAULT = 0;
+    var DEFLATING = 1;
+    var GET_BLOB_DATA = 2;
+    var Sender2 = class _Sender {
+      /**
+       * Creates a Sender instance.
+       *
+       * @param {Duplex} socket The connection socket
+       * @param {Object} [extensions] An object containing the negotiated extensions
+       * @param {Function} [generateMask] The function used to generate the masking
+       *     key
+       */
+      constructor(socket, extensions, generateMask) {
+        this._extensions = extensions || {};
+        if (generateMask) {
+          this._generateMask = generateMask;
+          this._maskBuffer = Buffer.alloc(4);
+        }
+        this._socket = socket;
+        this._firstFragment = true;
+        this._compress = false;
+        this._bufferedBytes = 0;
+        this._queue = [];
+        this._state = DEFAULT;
+        this.onerror = NOOP;
+        this[kWebSocket] = void 0;
+      }
+      /**
+       * Frames a piece of data according to the HyBi WebSocket protocol.
+       *
+       * @param {(Buffer|String)} data The data to frame
+       * @param {Object} options Options object
+       * @param {Boolean} [options.fin=false] Specifies whether or not to set the
+       *     FIN bit
+       * @param {Function} [options.generateMask] The function used to generate the
+       *     masking key
+       * @param {Boolean} [options.mask=false] Specifies whether or not to mask
+       *     `data`
+       * @param {Buffer} [options.maskBuffer] The buffer used to store the masking
+       *     key
+       * @param {Number} options.opcode The opcode
+       * @param {Boolean} [options.readOnly=false] Specifies whether `data` can be
+       *     modified
+       * @param {Boolean} [options.rsv1=false] Specifies whether or not to set the
+       *     RSV1 bit
+       * @return {(Buffer|String)[]} The framed data
+       * @public
+       */
+      static frame(data, options) {
+        let mask;
+        let merge = false;
+        let offset = 2;
+        let skipMasking = false;
+        if (options.mask) {
+          mask = options.maskBuffer || maskBuffer;
+          if (options.generateMask) {
+            options.generateMask(mask);
+          } else {
+            if (randomPoolPointer === RANDOM_POOL_SIZE) {
+              if (randomPool === void 0) {
+                randomPool = Buffer.alloc(RANDOM_POOL_SIZE);
+              }
+              randomFillSync(randomPool, 0, RANDOM_POOL_SIZE);
+              randomPoolPointer = 0;
+            }
+            mask[0] = randomPool[randomPoolPointer++];
+            mask[1] = randomPool[randomPoolPointer++];
+            mask[2] = randomPool[randomPoolPointer++];
+            mask[3] = randomPool[randomPoolPointer++];
+          }
+          skipMasking = (mask[0] | mask[1] | mask[2] | mask[3]) === 0;
+          offset = 6;
+        }
+        let dataLength;
+        if (typeof data === "string") {
+          if ((!options.mask || skipMasking) && options[kByteLength] !== void 0) {
+            dataLength = options[kByteLength];
+          } else {
+            data = Buffer.from(data);
+            dataLength = data.length;
+          }
+        } else {
+          dataLength = data.length;
+          merge = options.mask && options.readOnly && !skipMasking;
+        }
+        let payloadLength = dataLength;
+        if (dataLength >= 65536) {
+          offset += 8;
+          payloadLength = 127;
+        } else if (dataLength > 125) {
+          offset += 2;
+          payloadLength = 126;
+        }
+        const target = Buffer.allocUnsafe(merge ? dataLength + offset : offset);
+        target[0] = options.fin ? options.opcode | 128 : options.opcode;
+        if (options.rsv1) target[0] |= 64;
+        target[1] = payloadLength;
+        if (payloadLength === 126) {
+          target.writeUInt16BE(dataLength, 2);
+        } else if (payloadLength === 127) {
+          target[2] = target[3] = 0;
+          target.writeUIntBE(dataLength, 4, 6);
+        }
+        if (!options.mask) return [target, data];
+        target[1] |= 128;
+        target[offset - 4] = mask[0];
+        target[offset - 3] = mask[1];
+        target[offset - 2] = mask[2];
+        target[offset - 1] = mask[3];
+        if (skipMasking) return [target, data];
+        if (merge) {
+          applyMask(data, mask, target, offset, dataLength);
+          return [target];
+        }
+        applyMask(data, mask, data, 0, dataLength);
+        return [target, data];
+      }
+      /**
+       * Sends a close message to the other peer.
+       *
+       * @param {Number} [code] The status code component of the body
+       * @param {(String|Buffer)} [data] The message component of the body
+       * @param {Boolean} [mask=false] Specifies whether or not to mask the message
+       * @param {Function} [cb] Callback
+       * @public
+       */
+      close(code, data, mask, cb) {
+        let buf;
+        if (code === void 0) {
+          buf = EMPTY_BUFFER;
+        } else if (typeof code !== "number" || !isValidStatusCode(code)) {
+          throw new TypeError("First argument must be a valid error code number");
+        } else if (data === void 0 || !data.length) {
+          buf = Buffer.allocUnsafe(2);
+          buf.writeUInt16BE(code, 0);
+        } else {
+          const length = Buffer.byteLength(data);
+          if (length > 123) {
+            throw new RangeError("The message must not be greater than 123 bytes");
+          }
+          buf = Buffer.allocUnsafe(2 + length);
+          buf.writeUInt16BE(code, 0);
+          if (typeof data === "string") {
+            buf.write(data, 2);
+          } else if (isUint8Array(data)) {
+            buf.set(data, 2);
+          } else {
+            throw new TypeError("Second argument must be a string or a Uint8Array");
+          }
+        }
+        const options = {
+          [kByteLength]: buf.length,
+          fin: true,
+          generateMask: this._generateMask,
+          mask,
+          maskBuffer: this._maskBuffer,
+          opcode: 8,
+          readOnly: false,
+          rsv1: false
+        };
+        if (this._state !== DEFAULT) {
+          this.enqueue([this.dispatch, buf, false, options, cb]);
+        } else {
+          this.sendFrame(_Sender.frame(buf, options), cb);
+        }
+      }
+      /**
+       * Sends a ping message to the other peer.
+       *
+       * @param {*} data The message to send
+       * @param {Boolean} [mask=false] Specifies whether or not to mask `data`
+       * @param {Function} [cb] Callback
+       * @public
+       */
+      ping(data, mask, cb) {
+        let byteLength;
+        let readOnly;
+        if (typeof data === "string") {
+          byteLength = Buffer.byteLength(data);
+          readOnly = false;
+        } else if (isBlob(data)) {
+          byteLength = data.size;
+          readOnly = false;
+        } else {
+          data = toBuffer(data);
+          byteLength = data.length;
+          readOnly = toBuffer.readOnly;
+        }
+        if (byteLength > 125) {
+          throw new RangeError("The data size must not be greater than 125 bytes");
+        }
+        const options = {
+          [kByteLength]: byteLength,
+          fin: true,
+          generateMask: this._generateMask,
+          mask,
+          maskBuffer: this._maskBuffer,
+          opcode: 9,
+          readOnly,
+          rsv1: false
+        };
+        if (isBlob(data)) {
+          if (this._state !== DEFAULT) {
+            this.enqueue([this.getBlobData, data, false, options, cb]);
+          } else {
+            this.getBlobData(data, false, options, cb);
+          }
+        } else if (this._state !== DEFAULT) {
+          this.enqueue([this.dispatch, data, false, options, cb]);
+        } else {
+          this.sendFrame(_Sender.frame(data, options), cb);
+        }
+      }
+      /**
+       * Sends a pong message to the other peer.
+       *
+       * @param {*} data The message to send
+       * @param {Boolean} [mask=false] Specifies whether or not to mask `data`
+       * @param {Function} [cb] Callback
+       * @public
+       */
+      pong(data, mask, cb) {
+        let byteLength;
+        let readOnly;
+        if (typeof data === "string") {
+          byteLength = Buffer.byteLength(data);
+          readOnly = false;
+        } else if (isBlob(data)) {
+          byteLength = data.size;
+          readOnly = false;
+        } else {
+          data = toBuffer(data);
+          byteLength = data.length;
+          readOnly = toBuffer.readOnly;
+        }
+        if (byteLength > 125) {
+          throw new RangeError("The data size must not be greater than 125 bytes");
+        }
+        const options = {
+          [kByteLength]: byteLength,
+          fin: true,
+          generateMask: this._generateMask,
+          mask,
+          maskBuffer: this._maskBuffer,
+          opcode: 10,
+          readOnly,
+          rsv1: false
+        };
+        if (isBlob(data)) {
+          if (this._state !== DEFAULT) {
+            this.enqueue([this.getBlobData, data, false, options, cb]);
+          } else {
+            this.getBlobData(data, false, options, cb);
+          }
+        } else if (this._state !== DEFAULT) {
+          this.enqueue([this.dispatch, data, false, options, cb]);
+        } else {
+          this.sendFrame(_Sender.frame(data, options), cb);
+        }
+      }
+      /**
+       * Sends a data message to the other peer.
+       *
+       * @param {*} data The message to send
+       * @param {Object} options Options object
+       * @param {Boolean} [options.binary=false] Specifies whether `data` is binary
+       *     or text
+       * @param {Boolean} [options.compress=false] Specifies whether or not to
+       *     compress `data`
+       * @param {Boolean} [options.fin=false] Specifies whether the fragment is the
+       *     last one
+       * @param {Boolean} [options.mask=false] Specifies whether or not to mask
+       *     `data`
+       * @param {Function} [cb] Callback
+       * @public
+       */
+      send(data, options, cb) {
+        const perMessageDeflate = this._extensions[PerMessageDeflate2.extensionName];
+        let opcode = options.binary ? 2 : 1;
+        let rsv1 = options.compress;
+        let byteLength;
+        let readOnly;
+        if (typeof data === "string") {
+          byteLength = Buffer.byteLength(data);
+          readOnly = false;
+        } else if (isBlob(data)) {
+          byteLength = data.size;
+          readOnly = false;
+        } else {
+          data = toBuffer(data);
+          byteLength = data.length;
+          readOnly = toBuffer.readOnly;
+        }
+        if (this._firstFragment) {
+          this._firstFragment = false;
+          if (rsv1 && perMessageDeflate && perMessageDeflate.params[perMessageDeflate._isServer ? "server_no_context_takeover" : "client_no_context_takeover"]) {
+            rsv1 = byteLength >= perMessageDeflate._threshold;
+          }
+          this._compress = rsv1;
+        } else {
+          rsv1 = false;
+          opcode = 0;
+        }
+        if (options.fin) this._firstFragment = true;
+        const opts = {
+          [kByteLength]: byteLength,
+          fin: options.fin,
+          generateMask: this._generateMask,
+          mask: options.mask,
+          maskBuffer: this._maskBuffer,
+          opcode,
+          readOnly,
+          rsv1
+        };
+        if (isBlob(data)) {
+          if (this._state !== DEFAULT) {
+            this.enqueue([this.getBlobData, data, this._compress, opts, cb]);
+          } else {
+            this.getBlobData(data, this._compress, opts, cb);
+          }
+        } else if (this._state !== DEFAULT) {
+          this.enqueue([this.dispatch, data, this._compress, opts, cb]);
+        } else {
+          this.dispatch(data, this._compress, opts, cb);
+        }
+      }
+      /**
+       * Gets the contents of a blob as binary data.
+       *
+       * @param {Blob} blob The blob
+       * @param {Boolean} [compress=false] Specifies whether or not to compress
+       *     the data
+       * @param {Object} options Options object
+       * @param {Boolean} [options.fin=false] Specifies whether or not to set the
+       *     FIN bit
+       * @param {Function} [options.generateMask] The function used to generate the
+       *     masking key
+       * @param {Boolean} [options.mask=false] Specifies whether or not to mask
+       *     `data`
+       * @param {Buffer} [options.maskBuffer] The buffer used to store the masking
+       *     key
+       * @param {Number} options.opcode The opcode
+       * @param {Boolean} [options.readOnly=false] Specifies whether `data` can be
+       *     modified
+       * @param {Boolean} [options.rsv1=false] Specifies whether or not to set the
+       *     RSV1 bit
+       * @param {Function} [cb] Callback
+       * @private
+       */
+      getBlobData(blob, compress, options, cb) {
+        this._bufferedBytes += options[kByteLength];
+        this._state = GET_BLOB_DATA;
+        blob.arrayBuffer().then((arrayBuffer) => {
+          if (this._socket.destroyed) {
+            const err = new Error(
+              "The socket was closed while the blob was being read"
+            );
+            process.nextTick(callCallbacks, this, err, cb);
+            return;
+          }
+          this._bufferedBytes -= options[kByteLength];
+          const data = toBuffer(arrayBuffer);
+          if (!compress) {
+            this._state = DEFAULT;
+            this.sendFrame(_Sender.frame(data, options), cb);
+            this.dequeue();
+          } else {
+            this.dispatch(data, compress, options, cb);
+          }
+        }).catch((err) => {
+          process.nextTick(onError, this, err, cb);
+        });
+      }
+      /**
+       * Dispatches a message.
+       *
+       * @param {(Buffer|String)} data The message to send
+       * @param {Boolean} [compress=false] Specifies whether or not to compress
+       *     `data`
+       * @param {Object} options Options object
+       * @param {Boolean} [options.fin=false] Specifies whether or not to set the
+       *     FIN bit
+       * @param {Function} [options.generateMask] The function used to generate the
+       *     masking key
+       * @param {Boolean} [options.mask=false] Specifies whether or not to mask
+       *     `data`
+       * @param {Buffer} [options.maskBuffer] The buffer used to store the masking
+       *     key
+       * @param {Number} options.opcode The opcode
+       * @param {Boolean} [options.readOnly=false] Specifies whether `data` can be
+       *     modified
+       * @param {Boolean} [options.rsv1=false] Specifies whether or not to set the
+       *     RSV1 bit
+       * @param {Function} [cb] Callback
+       * @private
+       */
+      dispatch(data, compress, options, cb) {
+        if (!compress) {
+          this.sendFrame(_Sender.frame(data, options), cb);
+          return;
+        }
+        const perMessageDeflate = this._extensions[PerMessageDeflate2.extensionName];
+        this._bufferedBytes += options[kByteLength];
+        this._state = DEFLATING;
+        perMessageDeflate.compress(data, options.fin, (_, buf) => {
+          if (this._socket.destroyed) {
+            const err = new Error(
+              "The socket was closed while data was being compressed"
+            );
+            callCallbacks(this, err, cb);
+            return;
+          }
+          this._bufferedBytes -= options[kByteLength];
+          this._state = DEFAULT;
+          options.readOnly = false;
+          this.sendFrame(_Sender.frame(buf, options), cb);
+          this.dequeue();
+        });
+      }
+      /**
+       * Executes queued send operations.
+       *
+       * @private
+       */
+      dequeue() {
+        while (this._state === DEFAULT && this._queue.length) {
+          const params = this._queue.shift();
+          this._bufferedBytes -= params[3][kByteLength];
+          Reflect.apply(params[0], this, params.slice(1));
+        }
+      }
+      /**
+       * Enqueues a send operation.
+       *
+       * @param {Array} params Send operation parameters.
+       * @private
+       */
+      enqueue(params) {
+        this._bufferedBytes += params[3][kByteLength];
+        this._queue.push(params);
+      }
+      /**
+       * Sends a frame.
+       *
+       * @param {(Buffer | String)[]} list The frame to send
+       * @param {Function} [cb] Callback
+       * @private
+       */
+      sendFrame(list, cb) {
+        if (list.length === 2) {
+          this._socket.cork();
+          this._socket.write(list[0]);
+          this._socket.write(list[1], cb);
+          this._socket.uncork();
+        } else {
+          this._socket.write(list[0], cb);
+        }
+      }
+    };
+    module.exports = Sender2;
+    function callCallbacks(sender, err, cb) {
+      if (typeof cb === "function") cb(err);
+      for (let i = 0; i < sender._queue.length; i++) {
+        const params = sender._queue[i];
+        const callback = params[params.length - 1];
+        if (typeof callback === "function") callback(err);
+      }
+    }
+    function onError(sender, err, cb) {
+      callCallbacks(sender, err, cb);
+      sender.onerror(err);
+    }
+  }
+});
+
+// ../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/ws/lib/event-target.js
+var require_event_target = __commonJS({
+  "../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/ws/lib/event-target.js"(exports, module) {
+    "use strict";
+    var { kForOnEventAttribute, kListener } = require_constants();
+    var kCode = /* @__PURE__ */ Symbol("kCode");
+    var kData = /* @__PURE__ */ Symbol("kData");
+    var kError = /* @__PURE__ */ Symbol("kError");
+    var kMessage = /* @__PURE__ */ Symbol("kMessage");
+    var kReason = /* @__PURE__ */ Symbol("kReason");
+    var kTarget = /* @__PURE__ */ Symbol("kTarget");
+    var kType = /* @__PURE__ */ Symbol("kType");
+    var kWasClean = /* @__PURE__ */ Symbol("kWasClean");
+    var Event = class {
+      /**
+       * Create a new `Event`.
+       *
+       * @param {String} type The name of the event
+       * @throws {TypeError} If the `type` argument is not specified
+       */
+      constructor(type) {
+        this[kTarget] = null;
+        this[kType] = type;
+      }
+      /**
+       * @type {*}
+       */
+      get target() {
+        return this[kTarget];
+      }
+      /**
+       * @type {String}
+       */
+      get type() {
+        return this[kType];
+      }
+    };
+    Object.defineProperty(Event.prototype, "target", { enumerable: true });
+    Object.defineProperty(Event.prototype, "type", { enumerable: true });
+    var CloseEvent = class extends Event {
+      /**
+       * Create a new `CloseEvent`.
+       *
+       * @param {String} type The name of the event
+       * @param {Object} [options] A dictionary object that allows for setting
+       *     attributes via object members of the same name
+       * @param {Number} [options.code=0] The status code explaining why the
+       *     connection was closed
+       * @param {String} [options.reason=''] A human-readable string explaining why
+       *     the connection was closed
+       * @param {Boolean} [options.wasClean=false] Indicates whether or not the
+       *     connection was cleanly closed
+       */
+      constructor(type, options = {}) {
+        super(type);
+        this[kCode] = options.code === void 0 ? 0 : options.code;
+        this[kReason] = options.reason === void 0 ? "" : options.reason;
+        this[kWasClean] = options.wasClean === void 0 ? false : options.wasClean;
+      }
+      /**
+       * @type {Number}
+       */
+      get code() {
+        return this[kCode];
+      }
+      /**
+       * @type {String}
+       */
+      get reason() {
+        return this[kReason];
+      }
+      /**
+       * @type {Boolean}
+       */
+      get wasClean() {
+        return this[kWasClean];
+      }
+    };
+    Object.defineProperty(CloseEvent.prototype, "code", { enumerable: true });
+    Object.defineProperty(CloseEvent.prototype, "reason", { enumerable: true });
+    Object.defineProperty(CloseEvent.prototype, "wasClean", { enumerable: true });
+    var ErrorEvent = class extends Event {
+      /**
+       * Create a new `ErrorEvent`.
+       *
+       * @param {String} type The name of the event
+       * @param {Object} [options] A dictionary object that allows for setting
+       *     attributes via object members of the same name
+       * @param {*} [options.error=null] The error that generated this event
+       * @param {String} [options.message=''] The error message
+       */
+      constructor(type, options = {}) {
+        super(type);
+        this[kError] = options.error === void 0 ? null : options.error;
+        this[kMessage] = options.message === void 0 ? "" : options.message;
+      }
+      /**
+       * @type {*}
+       */
+      get error() {
+        return this[kError];
+      }
+      /**
+       * @type {String}
+       */
+      get message() {
+        return this[kMessage];
+      }
+    };
+    Object.defineProperty(ErrorEvent.prototype, "error", { enumerable: true });
+    Object.defineProperty(ErrorEvent.prototype, "message", { enumerable: true });
+    var MessageEvent = class extends Event {
+      /**
+       * Create a new `MessageEvent`.
+       *
+       * @param {String} type The name of the event
+       * @param {Object} [options] A dictionary object that allows for setting
+       *     attributes via object members of the same name
+       * @param {*} [options.data=null] The message content
+       */
+      constructor(type, options = {}) {
+        super(type);
+        this[kData] = options.data === void 0 ? null : options.data;
+      }
+      /**
+       * @type {*}
+       */
+      get data() {
+        return this[kData];
+      }
+    };
+    Object.defineProperty(MessageEvent.prototype, "data", { enumerable: true });
+    var EventTarget = {
+      /**
+       * Register an event listener.
+       *
+       * @param {String} type A string representing the event type to listen for
+       * @param {(Function|Object)} handler The listener to add
+       * @param {Object} [options] An options object specifies characteristics about
+       *     the event listener
+       * @param {Boolean} [options.once=false] A `Boolean` indicating that the
+       *     listener should be invoked at most once after being added. If `true`,
+       *     the listener would be automatically removed when invoked.
+       * @public
+       */
+      addEventListener(type, handler, options = {}) {
+        for (const listener of this.listeners(type)) {
+          if (!options[kForOnEventAttribute] && listener[kListener] === handler && !listener[kForOnEventAttribute]) {
+            return;
+          }
+        }
+        let wrapper;
+        if (type === "message") {
+          wrapper = function onMessage(data, isBinary) {
+            const event = new MessageEvent("message", {
+              data: isBinary ? data : data.toString()
+            });
+            event[kTarget] = this;
+            callListener(handler, this, event);
+          };
+        } else if (type === "close") {
+          wrapper = function onClose(code, message) {
+            const event = new CloseEvent("close", {
+              code,
+              reason: message.toString(),
+              wasClean: this._closeFrameReceived && this._closeFrameSent
+            });
+            event[kTarget] = this;
+            callListener(handler, this, event);
+          };
+        } else if (type === "error") {
+          wrapper = function onError(error) {
+            const event = new ErrorEvent("error", {
+              error,
+              message: error.message
+            });
+            event[kTarget] = this;
+            callListener(handler, this, event);
+          };
+        } else if (type === "open") {
+          wrapper = function onOpen() {
+            const event = new Event("open");
+            event[kTarget] = this;
+            callListener(handler, this, event);
+          };
+        } else {
+          return;
+        }
+        wrapper[kForOnEventAttribute] = !!options[kForOnEventAttribute];
+        wrapper[kListener] = handler;
+        if (options.once) {
+          this.once(type, wrapper);
+        } else {
+          this.on(type, wrapper);
+        }
+      },
+      /**
+       * Remove an event listener.
+       *
+       * @param {String} type A string representing the event type to remove
+       * @param {(Function|Object)} handler The listener to remove
+       * @public
+       */
+      removeEventListener(type, handler) {
+        for (const listener of this.listeners(type)) {
+          if (listener[kListener] === handler && !listener[kForOnEventAttribute]) {
+            this.removeListener(type, listener);
+            break;
+          }
+        }
+      }
+    };
+    module.exports = {
+      CloseEvent,
+      ErrorEvent,
+      Event,
+      EventTarget,
+      MessageEvent
+    };
+    function callListener(listener, thisArg, event) {
+      if (typeof listener === "object" && listener.handleEvent) {
+        listener.handleEvent.call(listener, event);
+      } else {
+        listener.call(thisArg, event);
+      }
+    }
+  }
+});
+
+// ../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/ws/lib/extension.js
+var require_extension = __commonJS({
+  "../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/ws/lib/extension.js"(exports, module) {
+    "use strict";
+    var { tokenChars } = require_validation();
+    function push(dest, name, elem) {
+      if (dest[name] === void 0) dest[name] = [elem];
+      else dest[name].push(elem);
+    }
+    function parse(header) {
+      const offers = /* @__PURE__ */ Object.create(null);
+      let params = /* @__PURE__ */ Object.create(null);
+      let mustUnescape = false;
+      let isEscaping = false;
+      let inQuotes = false;
+      let extensionName;
+      let paramName;
+      let start = -1;
+      let code = -1;
+      let end = -1;
+      let i = 0;
+      for (; i < header.length; i++) {
+        code = header.charCodeAt(i);
+        if (extensionName === void 0) {
+          if (end === -1 && tokenChars[code] === 1) {
+            if (start === -1) start = i;
+          } else if (i !== 0 && (code === 32 || code === 9)) {
+            if (end === -1 && start !== -1) end = i;
+          } else if (code === 59 || code === 44) {
+            if (start === -1) {
+              throw new SyntaxError(`Unexpected character at index ${i}`);
+            }
+            if (end === -1) end = i;
+            const name = header.slice(start, end);
+            if (code === 44) {
+              push(offers, name, params);
+              params = /* @__PURE__ */ Object.create(null);
+            } else {
+              extensionName = name;
+            }
+            start = end = -1;
+          } else {
+            throw new SyntaxError(`Unexpected character at index ${i}`);
+          }
+        } else if (paramName === void 0) {
+          if (end === -1 && tokenChars[code] === 1) {
+            if (start === -1) start = i;
+          } else if (code === 32 || code === 9) {
+            if (end === -1 && start !== -1) end = i;
+          } else if (code === 59 || code === 44) {
+            if (start === -1) {
+              throw new SyntaxError(`Unexpected character at index ${i}`);
+            }
+            if (end === -1) end = i;
+            push(params, header.slice(start, end), true);
+            if (code === 44) {
+              push(offers, extensionName, params);
+              params = /* @__PURE__ */ Object.create(null);
+              extensionName = void 0;
+            }
+            start = end = -1;
+          } else if (code === 61 && start !== -1 && end === -1) {
+            paramName = header.slice(start, i);
+            start = end = -1;
+          } else {
+            throw new SyntaxError(`Unexpected character at index ${i}`);
+          }
+        } else {
+          if (isEscaping) {
+            if (tokenChars[code] !== 1) {
+              throw new SyntaxError(`Unexpected character at index ${i}`);
+            }
+            if (start === -1) start = i;
+            else if (!mustUnescape) mustUnescape = true;
+            isEscaping = false;
+          } else if (inQuotes) {
+            if (tokenChars[code] === 1) {
+              if (start === -1) start = i;
+            } else if (code === 34 && start !== -1) {
+              inQuotes = false;
+              end = i;
+            } else if (code === 92) {
+              isEscaping = true;
+            } else {
+              throw new SyntaxError(`Unexpected character at index ${i}`);
+            }
+          } else if (code === 34 && header.charCodeAt(i - 1) === 61) {
+            inQuotes = true;
+          } else if (end === -1 && tokenChars[code] === 1) {
+            if (start === -1) start = i;
+          } else if (start !== -1 && (code === 32 || code === 9)) {
+            if (end === -1) end = i;
+          } else if (code === 59 || code === 44) {
+            if (start === -1) {
+              throw new SyntaxError(`Unexpected character at index ${i}`);
+            }
+            if (end === -1) end = i;
+            let value = header.slice(start, end);
+            if (mustUnescape) {
+              value = value.replace(/\\/g, "");
+              mustUnescape = false;
+            }
+            push(params, paramName, value);
+            if (code === 44) {
+              push(offers, extensionName, params);
+              params = /* @__PURE__ */ Object.create(null);
+              extensionName = void 0;
+            }
+            paramName = void 0;
+            start = end = -1;
+          } else {
+            throw new SyntaxError(`Unexpected character at index ${i}`);
+          }
+        }
+      }
+      if (start === -1 || inQuotes || code === 32 || code === 9) {
+        throw new SyntaxError("Unexpected end of input");
+      }
+      if (end === -1) end = i;
+      const token = header.slice(start, end);
+      if (extensionName === void 0) {
+        push(offers, token, params);
+      } else {
+        if (paramName === void 0) {
+          push(params, token, true);
+        } else if (mustUnescape) {
+          push(params, paramName, token.replace(/\\/g, ""));
+        } else {
+          push(params, paramName, token);
+        }
+        push(offers, extensionName, params);
+      }
+      return offers;
+    }
+    function format(extensions) {
+      return Object.keys(extensions).map((extension2) => {
+        let configurations = extensions[extension2];
+        if (!Array.isArray(configurations)) configurations = [configurations];
+        return configurations.map((params) => {
+          return [extension2].concat(
+            Object.keys(params).map((k) => {
+              let values = params[k];
+              if (!Array.isArray(values)) values = [values];
+              return values.map((v) => v === true ? k : `${k}=${v}`).join("; ");
+            })
+          ).join("; ");
+        }).join(", ");
+      }).join(", ");
+    }
+    module.exports = { format, parse };
+  }
+});
+
+// ../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/ws/lib/websocket.js
 var require_websocket = __commonJS({
-  "../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/@vercel/functions/websocket/index.js"(exports, module) {
+  "../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/ws/lib/websocket.js"(exports, module) {
+    "use strict";
+    var EventEmitter = __require("events");
+    var https = __require("https");
+    var http = __require("http");
+    var net = __require("net");
+    var tls = __require("tls");
+    var { randomBytes, createHash: createHash5 } = __require("crypto");
+    var { Duplex, Readable } = __require("stream");
+    var { URL: URL2 } = __require("url");
+    var PerMessageDeflate2 = require_permessage_deflate();
+    var Receiver2 = require_receiver();
+    var Sender2 = require_sender();
+    var { isBlob } = require_validation();
+    var {
+      BINARY_TYPES,
+      CLOSE_TIMEOUT,
+      EMPTY_BUFFER,
+      GUID,
+      kForOnEventAttribute,
+      kListener,
+      kStatusCode,
+      kWebSocket,
+      NOOP
+    } = require_constants();
+    var {
+      EventTarget: { addEventListener, removeEventListener }
+    } = require_event_target();
+    var { format, parse } = require_extension();
+    var { toBuffer } = require_buffer_util();
+    var kAborted = /* @__PURE__ */ Symbol("kAborted");
+    var protocolVersions = [8, 13];
+    var readyStates = ["CONNECTING", "OPEN", "CLOSING", "CLOSED"];
+    var subprotocolRegex = /^[!#$%&'*+\-.0-9A-Z^_`|a-z~]+$/;
+    var WebSocket2 = class _WebSocket extends EventEmitter {
+      /**
+       * Create a new `WebSocket`.
+       *
+       * @param {(String|URL)} address The URL to which to connect
+       * @param {(String|String[])} [protocols] The subprotocols
+       * @param {Object} [options] Connection options
+       */
+      constructor(address2, protocols, options) {
+        super();
+        this._binaryType = BINARY_TYPES[0];
+        this._closeCode = 1006;
+        this._closeFrameReceived = false;
+        this._closeFrameSent = false;
+        this._closeMessage = EMPTY_BUFFER;
+        this._closeTimer = null;
+        this._errorEmitted = false;
+        this._extensions = {};
+        this._paused = false;
+        this._protocol = "";
+        this._readyState = _WebSocket.CONNECTING;
+        this._receiver = null;
+        this._sender = null;
+        this._socket = null;
+        if (address2 !== null) {
+          this._bufferedAmount = 0;
+          this._isServer = false;
+          this._redirects = 0;
+          if (protocols === void 0) {
+            protocols = [];
+          } else if (!Array.isArray(protocols)) {
+            if (typeof protocols === "object" && protocols !== null) {
+              options = protocols;
+              protocols = [];
+            } else {
+              protocols = [protocols];
+            }
+          }
+          initAsClient(this, address2, protocols, options);
+        } else {
+          this._autoPong = options.autoPong;
+          this._closeTimeout = options.closeTimeout;
+          this._isServer = true;
+        }
+      }
+      /**
+       * For historical reasons, the custom "nodebuffer" type is used by the default
+       * instead of "blob".
+       *
+       * @type {String}
+       */
+      get binaryType() {
+        return this._binaryType;
+      }
+      set binaryType(type) {
+        if (!BINARY_TYPES.includes(type)) return;
+        this._binaryType = type;
+        if (this._receiver) this._receiver._binaryType = type;
+      }
+      /**
+       * @type {Number}
+       */
+      get bufferedAmount() {
+        if (!this._socket) return this._bufferedAmount;
+        return this._socket._writableState.length + this._sender._bufferedBytes;
+      }
+      /**
+       * @type {String}
+       */
+      get extensions() {
+        return Object.keys(this._extensions).join();
+      }
+      /**
+       * @type {Boolean}
+       */
+      get isPaused() {
+        return this._paused;
+      }
+      /**
+       * @type {Function}
+       */
+      /* istanbul ignore next */
+      get onclose() {
+        return null;
+      }
+      /**
+       * @type {Function}
+       */
+      /* istanbul ignore next */
+      get onerror() {
+        return null;
+      }
+      /**
+       * @type {Function}
+       */
+      /* istanbul ignore next */
+      get onopen() {
+        return null;
+      }
+      /**
+       * @type {Function}
+       */
+      /* istanbul ignore next */
+      get onmessage() {
+        return null;
+      }
+      /**
+       * @type {String}
+       */
+      get protocol() {
+        return this._protocol;
+      }
+      /**
+       * @type {Number}
+       */
+      get readyState() {
+        return this._readyState;
+      }
+      /**
+       * @type {String}
+       */
+      get url() {
+        return this._url;
+      }
+      /**
+       * Set up the socket and the internal resources.
+       *
+       * @param {Duplex} socket The network socket between the server and client
+       * @param {Buffer} head The first packet of the upgraded stream
+       * @param {Object} options Options object
+       * @param {Boolean} [options.allowSynchronousEvents=false] Specifies whether
+       *     any of the `'message'`, `'ping'`, and `'pong'` events can be emitted
+       *     multiple times in the same tick
+       * @param {Function} [options.generateMask] The function used to generate the
+       *     masking key
+       * @param {Number} [options.maxBufferedChunks=0] The maximum number of
+       *     buffered data chunks
+       * @param {Number} [options.maxFragments=0] The maximum number of message
+       *     fragments
+       * @param {Number} [options.maxPayload=0] The maximum allowed message size
+       * @param {Boolean} [options.skipUTF8Validation=false] Specifies whether or
+       *     not to skip UTF-8 validation for text and close messages
+       * @private
+       */
+      setSocket(socket, head, options) {
+        const receiver = new Receiver2({
+          allowSynchronousEvents: options.allowSynchronousEvents,
+          binaryType: this.binaryType,
+          extensions: this._extensions,
+          isServer: this._isServer,
+          maxBufferedChunks: options.maxBufferedChunks,
+          maxFragments: options.maxFragments,
+          maxPayload: options.maxPayload,
+          skipUTF8Validation: options.skipUTF8Validation
+        });
+        const sender = new Sender2(socket, this._extensions, options.generateMask);
+        this._receiver = receiver;
+        this._sender = sender;
+        this._socket = socket;
+        receiver[kWebSocket] = this;
+        sender[kWebSocket] = this;
+        socket[kWebSocket] = this;
+        receiver.on("conclude", receiverOnConclude);
+        receiver.on("drain", receiverOnDrain);
+        receiver.on("error", receiverOnError);
+        receiver.on("message", receiverOnMessage);
+        receiver.on("ping", receiverOnPing);
+        receiver.on("pong", receiverOnPong);
+        sender.onerror = senderOnError;
+        if (socket.setTimeout) socket.setTimeout(0);
+        if (socket.setNoDelay) socket.setNoDelay();
+        if (head.length > 0) socket.unshift(head);
+        socket.on("close", socketOnClose);
+        socket.on("data", socketOnData);
+        socket.on("end", socketOnEnd);
+        socket.on("error", socketOnError);
+        this._readyState = _WebSocket.OPEN;
+        this.emit("open");
+      }
+      /**
+       * Emit the `'close'` event.
+       *
+       * @private
+       */
+      emitClose() {
+        if (!this._socket) {
+          this._readyState = _WebSocket.CLOSED;
+          this.emit("close", this._closeCode, this._closeMessage);
+          return;
+        }
+        if (this._extensions[PerMessageDeflate2.extensionName]) {
+          this._extensions[PerMessageDeflate2.extensionName].cleanup();
+        }
+        this._receiver.removeAllListeners();
+        this._readyState = _WebSocket.CLOSED;
+        this.emit("close", this._closeCode, this._closeMessage);
+      }
+      /**
+       * Start a closing handshake.
+       *
+       *          +----------+   +-----------+   +----------+
+       *     - - -|ws.close()|-->|close frame|-->|ws.close()|- - -
+       *    |     +----------+   +-----------+   +----------+     |
+       *          +----------+   +-----------+         |
+       * CLOSING  |ws.close()|<--|close frame|<--+-----+       CLOSING
+       *          +----------+   +-----------+   |
+       *    |           |                        |   +---+        |
+       *                +------------------------+-->|fin| - - - -
+       *    |         +---+                      |   +---+
+       *     - - - - -|fin|<---------------------+
+       *              +---+
+       *
+       * @param {Number} [code] Status code explaining why the connection is closing
+       * @param {(String|Buffer)} [data] The reason why the connection is
+       *     closing
+       * @public
+       */
+      close(code, data) {
+        if (this.readyState === _WebSocket.CLOSED) return;
+        if (this.readyState === _WebSocket.CONNECTING) {
+          const msg = "WebSocket was closed before the connection was established";
+          abortHandshake(this, this._req, msg);
+          return;
+        }
+        if (this.readyState === _WebSocket.CLOSING) {
+          if (this._closeFrameSent && (this._closeFrameReceived || this._receiver._writableState.errorEmitted)) {
+            this._socket.end();
+          }
+          return;
+        }
+        this._readyState = _WebSocket.CLOSING;
+        this._sender.close(code, data, !this._isServer, (err) => {
+          if (err) return;
+          this._closeFrameSent = true;
+          if (this._closeFrameReceived || this._receiver._writableState.errorEmitted) {
+            this._socket.end();
+          }
+        });
+        setCloseTimer(this);
+      }
+      /**
+       * Pause the socket.
+       *
+       * @public
+       */
+      pause() {
+        if (this.readyState === _WebSocket.CONNECTING || this.readyState === _WebSocket.CLOSED) {
+          return;
+        }
+        this._paused = true;
+        this._socket.pause();
+      }
+      /**
+       * Send a ping.
+       *
+       * @param {*} [data] The data to send
+       * @param {Boolean} [mask] Indicates whether or not to mask `data`
+       * @param {Function} [cb] Callback which is executed when the ping is sent
+       * @public
+       */
+      ping(data, mask, cb) {
+        if (this.readyState === _WebSocket.CONNECTING) {
+          throw new Error("WebSocket is not open: readyState 0 (CONNECTING)");
+        }
+        if (typeof data === "function") {
+          cb = data;
+          data = mask = void 0;
+        } else if (typeof mask === "function") {
+          cb = mask;
+          mask = void 0;
+        }
+        if (typeof data === "number") data = data.toString();
+        if (this.readyState !== _WebSocket.OPEN) {
+          sendAfterClose(this, data, cb);
+          return;
+        }
+        if (mask === void 0) mask = !this._isServer;
+        this._sender.ping(data || EMPTY_BUFFER, mask, cb);
+      }
+      /**
+       * Send a pong.
+       *
+       * @param {*} [data] The data to send
+       * @param {Boolean} [mask] Indicates whether or not to mask `data`
+       * @param {Function} [cb] Callback which is executed when the pong is sent
+       * @public
+       */
+      pong(data, mask, cb) {
+        if (this.readyState === _WebSocket.CONNECTING) {
+          throw new Error("WebSocket is not open: readyState 0 (CONNECTING)");
+        }
+        if (typeof data === "function") {
+          cb = data;
+          data = mask = void 0;
+        } else if (typeof mask === "function") {
+          cb = mask;
+          mask = void 0;
+        }
+        if (typeof data === "number") data = data.toString();
+        if (this.readyState !== _WebSocket.OPEN) {
+          sendAfterClose(this, data, cb);
+          return;
+        }
+        if (mask === void 0) mask = !this._isServer;
+        this._sender.pong(data || EMPTY_BUFFER, mask, cb);
+      }
+      /**
+       * Resume the socket.
+       *
+       * @public
+       */
+      resume() {
+        if (this.readyState === _WebSocket.CONNECTING || this.readyState === _WebSocket.CLOSED) {
+          return;
+        }
+        this._paused = false;
+        if (!this._receiver._writableState.needDrain) this._socket.resume();
+      }
+      /**
+       * Send a data message.
+       *
+       * @param {*} data The message to send
+       * @param {Object} [options] Options object
+       * @param {Boolean} [options.binary] Specifies whether `data` is binary or
+       *     text
+       * @param {Boolean} [options.compress] Specifies whether or not to compress
+       *     `data`
+       * @param {Boolean} [options.fin=true] Specifies whether the fragment is the
+       *     last one
+       * @param {Boolean} [options.mask] Specifies whether or not to mask `data`
+       * @param {Function} [cb] Callback which is executed when data is written out
+       * @public
+       */
+      send(data, options, cb) {
+        if (this.readyState === _WebSocket.CONNECTING) {
+          throw new Error("WebSocket is not open: readyState 0 (CONNECTING)");
+        }
+        if (typeof options === "function") {
+          cb = options;
+          options = {};
+        }
+        if (typeof data === "number") data = data.toString();
+        if (this.readyState !== _WebSocket.OPEN) {
+          sendAfterClose(this, data, cb);
+          return;
+        }
+        const opts = {
+          binary: typeof data !== "string",
+          mask: !this._isServer,
+          compress: true,
+          fin: true,
+          ...options
+        };
+        if (!this._extensions[PerMessageDeflate2.extensionName]) {
+          opts.compress = false;
+        }
+        this._sender.send(data || EMPTY_BUFFER, opts, cb);
+      }
+      /**
+       * Forcibly close the connection.
+       *
+       * @public
+       */
+      terminate() {
+        if (this.readyState === _WebSocket.CLOSED) return;
+        if (this.readyState === _WebSocket.CONNECTING) {
+          const msg = "WebSocket was closed before the connection was established";
+          abortHandshake(this, this._req, msg);
+          return;
+        }
+        if (this._socket) {
+          this._readyState = _WebSocket.CLOSING;
+          this._socket.destroy();
+        }
+      }
+    };
+    Object.defineProperty(WebSocket2, "CONNECTING", {
+      enumerable: true,
+      value: readyStates.indexOf("CONNECTING")
+    });
+    Object.defineProperty(WebSocket2.prototype, "CONNECTING", {
+      enumerable: true,
+      value: readyStates.indexOf("CONNECTING")
+    });
+    Object.defineProperty(WebSocket2, "OPEN", {
+      enumerable: true,
+      value: readyStates.indexOf("OPEN")
+    });
+    Object.defineProperty(WebSocket2.prototype, "OPEN", {
+      enumerable: true,
+      value: readyStates.indexOf("OPEN")
+    });
+    Object.defineProperty(WebSocket2, "CLOSING", {
+      enumerable: true,
+      value: readyStates.indexOf("CLOSING")
+    });
+    Object.defineProperty(WebSocket2.prototype, "CLOSING", {
+      enumerable: true,
+      value: readyStates.indexOf("CLOSING")
+    });
+    Object.defineProperty(WebSocket2, "CLOSED", {
+      enumerable: true,
+      value: readyStates.indexOf("CLOSED")
+    });
+    Object.defineProperty(WebSocket2.prototype, "CLOSED", {
+      enumerable: true,
+      value: readyStates.indexOf("CLOSED")
+    });
+    [
+      "binaryType",
+      "bufferedAmount",
+      "extensions",
+      "isPaused",
+      "protocol",
+      "readyState",
+      "url"
+    ].forEach((property) => {
+      Object.defineProperty(WebSocket2.prototype, property, { enumerable: true });
+    });
+    ["open", "error", "close", "message"].forEach((method) => {
+      Object.defineProperty(WebSocket2.prototype, `on${method}`, {
+        enumerable: true,
+        get() {
+          for (const listener of this.listeners(method)) {
+            if (listener[kForOnEventAttribute]) return listener[kListener];
+          }
+          return null;
+        },
+        set(handler) {
+          for (const listener of this.listeners(method)) {
+            if (listener[kForOnEventAttribute]) {
+              this.removeListener(method, listener);
+              break;
+            }
+          }
+          if (typeof handler !== "function") return;
+          this.addEventListener(method, handler, {
+            [kForOnEventAttribute]: true
+          });
+        }
+      });
+    });
+    WebSocket2.prototype.addEventListener = addEventListener;
+    WebSocket2.prototype.removeEventListener = removeEventListener;
+    module.exports = WebSocket2;
+    function initAsClient(websocket, address2, protocols, options) {
+      const opts = {
+        allowSynchronousEvents: true,
+        autoPong: true,
+        closeTimeout: CLOSE_TIMEOUT,
+        protocolVersion: protocolVersions[1],
+        maxBufferedChunks: 1024 * 1024,
+        maxFragments: 128 * 1024,
+        maxPayload: 100 * 1024 * 1024,
+        skipUTF8Validation: false,
+        perMessageDeflate: true,
+        followRedirects: false,
+        maxRedirects: 10,
+        ...options,
+        socketPath: void 0,
+        hostname: void 0,
+        protocol: void 0,
+        timeout: void 0,
+        method: "GET",
+        host: void 0,
+        path: void 0,
+        port: void 0
+      };
+      websocket._autoPong = opts.autoPong;
+      websocket._closeTimeout = opts.closeTimeout;
+      if (!protocolVersions.includes(opts.protocolVersion)) {
+        throw new RangeError(
+          `Unsupported protocol version: ${opts.protocolVersion} (supported versions: ${protocolVersions.join(", ")})`
+        );
+      }
+      let parsedUrl;
+      if (address2 instanceof URL2) {
+        parsedUrl = address2;
+      } else {
+        try {
+          parsedUrl = new URL2(address2);
+        } catch {
+          throw new SyntaxError(`Invalid URL: ${address2}`);
+        }
+      }
+      if (parsedUrl.protocol === "http:") {
+        parsedUrl.protocol = "ws:";
+      } else if (parsedUrl.protocol === "https:") {
+        parsedUrl.protocol = "wss:";
+      }
+      websocket._url = parsedUrl.href;
+      const isSecure = parsedUrl.protocol === "wss:";
+      const isIpcUrl = parsedUrl.protocol === "ws+unix:";
+      let invalidUrlMessage;
+      if (parsedUrl.protocol !== "ws:" && !isSecure && !isIpcUrl) {
+        invalidUrlMessage = `The URL's protocol must be one of "ws:", "wss:", "http:", "https:", or "ws+unix:"`;
+      } else if (isIpcUrl && !parsedUrl.pathname) {
+        invalidUrlMessage = "The URL's pathname is empty";
+      } else if (parsedUrl.hash) {
+        invalidUrlMessage = "The URL contains a fragment identifier";
+      }
+      if (invalidUrlMessage) {
+        const err = new SyntaxError(invalidUrlMessage);
+        if (websocket._redirects === 0) {
+          throw err;
+        } else {
+          emitErrorAndClose(websocket, err);
+          return;
+        }
+      }
+      const defaultPort = isSecure ? 443 : 80;
+      const key2 = randomBytes(16).toString("base64");
+      const request = isSecure ? https.request : http.request;
+      const protocolSet = /* @__PURE__ */ new Set();
+      let perMessageDeflate;
+      opts.createConnection = opts.createConnection || (isSecure ? tlsConnect : netConnect);
+      opts.defaultPort = opts.defaultPort || defaultPort;
+      opts.port = parsedUrl.port || defaultPort;
+      opts.host = parsedUrl.hostname.startsWith("[") ? parsedUrl.hostname.slice(1, -1) : parsedUrl.hostname;
+      opts.headers = {
+        ...opts.headers,
+        "Sec-WebSocket-Version": opts.protocolVersion,
+        "Sec-WebSocket-Key": key2,
+        Connection: "Upgrade",
+        Upgrade: "websocket"
+      };
+      opts.path = parsedUrl.pathname + parsedUrl.search;
+      opts.timeout = opts.handshakeTimeout;
+      if (opts.perMessageDeflate) {
+        perMessageDeflate = new PerMessageDeflate2({
+          ...opts.perMessageDeflate,
+          isServer: false,
+          maxPayload: opts.maxPayload
+        });
+        opts.headers["Sec-WebSocket-Extensions"] = format({
+          [PerMessageDeflate2.extensionName]: perMessageDeflate.offer()
+        });
+      }
+      if (protocols.length) {
+        for (const protocol of protocols) {
+          if (typeof protocol !== "string" || !subprotocolRegex.test(protocol) || protocolSet.has(protocol)) {
+            throw new SyntaxError(
+              "An invalid or duplicated subprotocol was specified"
+            );
+          }
+          protocolSet.add(protocol);
+        }
+        opts.headers["Sec-WebSocket-Protocol"] = protocols.join(",");
+      }
+      if (opts.origin) {
+        if (opts.protocolVersion < 13) {
+          opts.headers["Sec-WebSocket-Origin"] = opts.origin;
+        } else {
+          opts.headers.Origin = opts.origin;
+        }
+      }
+      if (parsedUrl.username || parsedUrl.password) {
+        opts.auth = `${parsedUrl.username}:${parsedUrl.password}`;
+      }
+      if (isIpcUrl) {
+        const parts = opts.path.split(":");
+        opts.socketPath = parts[0];
+        opts.path = parts[1];
+      }
+      let req;
+      if (opts.followRedirects) {
+        if (websocket._redirects === 0) {
+          websocket._originalIpc = isIpcUrl;
+          websocket._originalSecure = isSecure;
+          websocket._originalHostOrSocketPath = isIpcUrl ? opts.socketPath : parsedUrl.host;
+          const headers = options && options.headers;
+          options = { ...options, headers: {} };
+          if (headers) {
+            for (const [key3, value] of Object.entries(headers)) {
+              options.headers[key3.toLowerCase()] = value;
+            }
+          }
+        } else if (websocket.listenerCount("redirect") === 0) {
+          const isSameHost = isIpcUrl ? websocket._originalIpc ? opts.socketPath === websocket._originalHostOrSocketPath : false : websocket._originalIpc ? false : parsedUrl.host === websocket._originalHostOrSocketPath;
+          if (!isSameHost || websocket._originalSecure && !isSecure) {
+            delete opts.headers.authorization;
+            delete opts.headers.cookie;
+            if (!isSameHost) delete opts.headers.host;
+            opts.auth = void 0;
+          }
+        }
+        if (opts.auth && !options.headers.authorization) {
+          options.headers.authorization = "Basic " + Buffer.from(opts.auth).toString("base64");
+        }
+        req = websocket._req = request(opts);
+        if (websocket._redirects) {
+          websocket.emit("redirect", websocket.url, req);
+        }
+      } else {
+        req = websocket._req = request(opts);
+      }
+      if (opts.timeout) {
+        req.on("timeout", () => {
+          abortHandshake(websocket, req, "Opening handshake has timed out");
+        });
+      }
+      req.on("error", (err) => {
+        if (req === null || req[kAborted]) return;
+        req = websocket._req = null;
+        emitErrorAndClose(websocket, err);
+      });
+      req.on("response", (res) => {
+        const location = res.headers.location;
+        const statusCode = res.statusCode;
+        if (location && opts.followRedirects && statusCode >= 300 && statusCode < 400) {
+          if (++websocket._redirects > opts.maxRedirects) {
+            abortHandshake(websocket, req, "Maximum redirects exceeded");
+            return;
+          }
+          req.abort();
+          let addr2;
+          try {
+            addr2 = new URL2(location, address2);
+          } catch (e) {
+            const err = new SyntaxError(`Invalid URL: ${location}`);
+            emitErrorAndClose(websocket, err);
+            return;
+          }
+          initAsClient(websocket, addr2, protocols, options);
+        } else if (!websocket.emit("unexpected-response", req, res)) {
+          abortHandshake(
+            websocket,
+            req,
+            `Unexpected server response: ${res.statusCode}`
+          );
+        }
+      });
+      req.on("upgrade", (res, socket, head) => {
+        websocket.emit("upgrade", res);
+        if (websocket.readyState !== WebSocket2.CONNECTING) return;
+        req = websocket._req = null;
+        const upgrade = res.headers.upgrade;
+        if (upgrade === void 0 || upgrade.toLowerCase() !== "websocket") {
+          abortHandshake(websocket, socket, "Invalid Upgrade header");
+          return;
+        }
+        const digest = createHash5("sha1").update(key2 + GUID).digest("base64");
+        if (res.headers["sec-websocket-accept"] !== digest) {
+          abortHandshake(websocket, socket, "Invalid Sec-WebSocket-Accept header");
+          return;
+        }
+        const serverProt = res.headers["sec-websocket-protocol"];
+        let protError;
+        if (serverProt !== void 0) {
+          if (!protocolSet.size) {
+            protError = "Server sent a subprotocol but none was requested";
+          } else if (!protocolSet.has(serverProt)) {
+            protError = "Server sent an invalid subprotocol";
+          }
+        } else if (protocolSet.size) {
+          protError = "Server sent no subprotocol";
+        }
+        if (protError) {
+          abortHandshake(websocket, socket, protError);
+          return;
+        }
+        if (serverProt) websocket._protocol = serverProt;
+        const secWebSocketExtensions = res.headers["sec-websocket-extensions"];
+        if (secWebSocketExtensions !== void 0) {
+          if (!perMessageDeflate) {
+            const message = "Server sent a Sec-WebSocket-Extensions header but no extension was requested";
+            abortHandshake(websocket, socket, message);
+            return;
+          }
+          let extensions;
+          try {
+            extensions = parse(secWebSocketExtensions);
+          } catch (err) {
+            const message = "Invalid Sec-WebSocket-Extensions header";
+            abortHandshake(websocket, socket, message);
+            return;
+          }
+          const extensionNames = Object.keys(extensions);
+          if (extensionNames.length !== 1 || extensionNames[0] !== PerMessageDeflate2.extensionName) {
+            const message = "Server indicated an extension that was not requested";
+            abortHandshake(websocket, socket, message);
+            return;
+          }
+          try {
+            perMessageDeflate.accept(extensions[PerMessageDeflate2.extensionName]);
+          } catch (err) {
+            const message = "Invalid Sec-WebSocket-Extensions header";
+            abortHandshake(websocket, socket, message);
+            return;
+          }
+          websocket._extensions[PerMessageDeflate2.extensionName] = perMessageDeflate;
+        }
+        websocket.setSocket(socket, head, {
+          allowSynchronousEvents: opts.allowSynchronousEvents,
+          generateMask: opts.generateMask,
+          maxBufferedChunks: opts.maxBufferedChunks,
+          maxFragments: opts.maxFragments,
+          maxPayload: opts.maxPayload,
+          skipUTF8Validation: opts.skipUTF8Validation
+        });
+      });
+      if (opts.finishRequest) {
+        opts.finishRequest(req, websocket);
+      } else {
+        req.end();
+      }
+    }
+    function emitErrorAndClose(websocket, err) {
+      websocket._readyState = WebSocket2.CLOSING;
+      websocket._errorEmitted = true;
+      websocket.emit("error", err);
+      websocket.emitClose();
+    }
+    function netConnect(options) {
+      options.path = options.socketPath;
+      return net.connect(options);
+    }
+    function tlsConnect(options) {
+      options.path = void 0;
+      if (!options.servername && options.servername !== "") {
+        options.servername = net.isIP(options.host) ? "" : options.host;
+      }
+      return tls.connect(options);
+    }
+    function abortHandshake(websocket, stream, message) {
+      websocket._readyState = WebSocket2.CLOSING;
+      const err = new Error(message);
+      Error.captureStackTrace(err, abortHandshake);
+      if (stream.setHeader) {
+        stream[kAborted] = true;
+        stream.abort();
+        if (stream.socket && !stream.socket.destroyed) {
+          stream.socket.destroy();
+        }
+        process.nextTick(emitErrorAndClose, websocket, err);
+      } else {
+        stream.destroy(err);
+        stream.once("error", websocket.emit.bind(websocket, "error"));
+        stream.once("close", websocket.emitClose.bind(websocket));
+      }
+    }
+    function sendAfterClose(websocket, data, cb) {
+      if (data) {
+        const length = isBlob(data) ? data.size : toBuffer(data).length;
+        if (websocket._socket) websocket._sender._bufferedBytes += length;
+        else websocket._bufferedAmount += length;
+      }
+      if (cb) {
+        const err = new Error(
+          `WebSocket is not open: readyState ${websocket.readyState} (${readyStates[websocket.readyState]})`
+        );
+        process.nextTick(cb, err);
+      }
+    }
+    function receiverOnConclude(code, reason) {
+      const websocket = this[kWebSocket];
+      websocket._closeFrameReceived = true;
+      websocket._closeMessage = reason;
+      websocket._closeCode = code;
+      if (websocket._socket[kWebSocket] === void 0) return;
+      websocket._socket.removeListener("data", socketOnData);
+      process.nextTick(resume, websocket._socket);
+      if (code === 1005) websocket.close();
+      else websocket.close(code, reason);
+    }
+    function receiverOnDrain() {
+      const websocket = this[kWebSocket];
+      if (!websocket.isPaused) websocket._socket.resume();
+    }
+    function receiverOnError(err) {
+      const websocket = this[kWebSocket];
+      if (websocket._socket[kWebSocket] !== void 0) {
+        websocket._socket.removeListener("data", socketOnData);
+        process.nextTick(resume, websocket._socket);
+        websocket.close(err[kStatusCode]);
+      }
+      if (!websocket._errorEmitted) {
+        websocket._errorEmitted = true;
+        websocket.emit("error", err);
+      }
+    }
+    function receiverOnFinish() {
+      this[kWebSocket].emitClose();
+    }
+    function receiverOnMessage(data, isBinary) {
+      this[kWebSocket].emit("message", data, isBinary);
+    }
+    function receiverOnPing(data) {
+      const websocket = this[kWebSocket];
+      if (websocket._autoPong) websocket.pong(data, !this._isServer, NOOP);
+      websocket.emit("ping", data);
+    }
+    function receiverOnPong(data) {
+      this[kWebSocket].emit("pong", data);
+    }
+    function resume(stream) {
+      stream.resume();
+    }
+    function senderOnError(err) {
+      const websocket = this[kWebSocket];
+      if (websocket.readyState === WebSocket2.CLOSED) return;
+      if (websocket.readyState === WebSocket2.OPEN) {
+        websocket._readyState = WebSocket2.CLOSING;
+        setCloseTimer(websocket);
+      }
+      this._socket.end();
+      if (!websocket._errorEmitted) {
+        websocket._errorEmitted = true;
+        websocket.emit("error", err);
+      }
+    }
+    function setCloseTimer(websocket) {
+      websocket._closeTimer = setTimeout(
+        websocket._socket.destroy.bind(websocket._socket),
+        websocket._closeTimeout
+      );
+    }
+    function socketOnClose() {
+      const websocket = this[kWebSocket];
+      this.removeListener("close", socketOnClose);
+      this.removeListener("data", socketOnData);
+      this.removeListener("end", socketOnEnd);
+      websocket._readyState = WebSocket2.CLOSING;
+      if (!this._readableState.endEmitted && !websocket._closeFrameReceived && !websocket._receiver._writableState.errorEmitted && this._readableState.length !== 0) {
+        const chunk = this.read(this._readableState.length);
+        websocket._receiver.write(chunk);
+      }
+      websocket._receiver.end();
+      this[kWebSocket] = void 0;
+      clearTimeout(websocket._closeTimer);
+      if (websocket._receiver._writableState.finished || websocket._receiver._writableState.errorEmitted) {
+        websocket.emitClose();
+      } else {
+        websocket._receiver.on("error", receiverOnFinish);
+        websocket._receiver.on("finish", receiverOnFinish);
+      }
+    }
+    function socketOnData(chunk) {
+      if (!this[kWebSocket]._receiver.write(chunk)) {
+        this.pause();
+      }
+    }
+    function socketOnEnd() {
+      const websocket = this[kWebSocket];
+      websocket._readyState = WebSocket2.CLOSING;
+      websocket._receiver.end();
+      this.end();
+    }
+    function socketOnError() {
+      const websocket = this[kWebSocket];
+      this.removeListener("error", socketOnError);
+      this.on("error", NOOP);
+      if (websocket) {
+        websocket._readyState = WebSocket2.CLOSING;
+        this.destroy();
+      }
+    }
+  }
+});
+
+// ../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/ws/lib/stream.js
+var require_stream2 = __commonJS({
+  "../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/ws/lib/stream.js"(exports, module) {
+    "use strict";
+    var WebSocket2 = require_websocket();
+    var { Duplex } = __require("stream");
+    function emitClose(stream) {
+      stream.emit("close");
+    }
+    function duplexOnEnd() {
+      if (!this.destroyed && this._writableState.finished) {
+        this.destroy();
+      }
+    }
+    function duplexOnError(err) {
+      this.removeListener("error", duplexOnError);
+      this.destroy();
+      if (this.listenerCount("error") === 0) {
+        this.emit("error", err);
+      }
+    }
+    function createWebSocketStream2(ws, options) {
+      let terminateOnDestroy = true;
+      const duplex = new Duplex({
+        ...options,
+        autoDestroy: false,
+        emitClose: false,
+        objectMode: false,
+        writableObjectMode: false
+      });
+      ws.on("message", function message(msg, isBinary) {
+        const data = !isBinary && duplex._readableState.objectMode ? msg.toString() : msg;
+        if (!duplex.push(data)) ws.pause();
+      });
+      ws.once("error", function error(err) {
+        if (duplex.destroyed) return;
+        terminateOnDestroy = false;
+        duplex.destroy(err);
+      });
+      ws.once("close", function close() {
+        if (duplex.destroyed) return;
+        duplex.push(null);
+      });
+      duplex._destroy = function(err, callback) {
+        if (ws.readyState === ws.CLOSED) {
+          callback(err);
+          process.nextTick(emitClose, duplex);
+          return;
+        }
+        let called = false;
+        ws.once("error", function error(err2) {
+          called = true;
+          callback(err2);
+        });
+        ws.once("close", function close() {
+          if (!called) callback(err);
+          process.nextTick(emitClose, duplex);
+        });
+        if (terminateOnDestroy) ws.terminate();
+      };
+      duplex._final = function(callback) {
+        if (ws.readyState === ws.CONNECTING) {
+          ws.once("open", function open() {
+            duplex._final(callback);
+          });
+          return;
+        }
+        if (ws._socket === null) return;
+        if (ws._socket._writableState.finished) {
+          callback();
+          if (duplex._readableState.endEmitted) duplex.destroy();
+        } else {
+          ws._socket.once("finish", function finish() {
+            callback();
+          });
+          ws.close();
+        }
+      };
+      duplex._read = function() {
+        if (ws.isPaused) ws.resume();
+      };
+      duplex._write = function(chunk, encoding, callback) {
+        if (ws.readyState === ws.CONNECTING) {
+          ws.once("open", function open() {
+            duplex._write(chunk, encoding, callback);
+          });
+          return;
+        }
+        ws.send(chunk, callback);
+      };
+      duplex.on("end", duplexOnEnd);
+      duplex.on("error", duplexOnError);
+      return duplex;
+    }
+    module.exports = createWebSocketStream2;
+  }
+});
+
+// ../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/ws/lib/subprotocol.js
+var require_subprotocol = __commonJS({
+  "../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/ws/lib/subprotocol.js"(exports, module) {
+    "use strict";
+    var { tokenChars } = require_validation();
+    function parse(header) {
+      const protocols = /* @__PURE__ */ new Set();
+      let start = -1;
+      let end = -1;
+      let i = 0;
+      for (i; i < header.length; i++) {
+        const code = header.charCodeAt(i);
+        if (end === -1 && tokenChars[code] === 1) {
+          if (start === -1) start = i;
+        } else if (i !== 0 && (code === 32 || code === 9)) {
+          if (end === -1 && start !== -1) end = i;
+        } else if (code === 44) {
+          if (start === -1) {
+            throw new SyntaxError(`Unexpected character at index ${i}`);
+          }
+          if (end === -1) end = i;
+          const protocol2 = header.slice(start, end);
+          if (protocols.has(protocol2)) {
+            throw new SyntaxError(`The "${protocol2}" subprotocol is duplicated`);
+          }
+          protocols.add(protocol2);
+          start = end = -1;
+        } else {
+          throw new SyntaxError(`Unexpected character at index ${i}`);
+        }
+      }
+      if (start === -1 || end !== -1) {
+        throw new SyntaxError("Unexpected end of input");
+      }
+      const protocol = header.slice(start, i);
+      if (protocols.has(protocol)) {
+        throw new SyntaxError(`The "${protocol}" subprotocol is duplicated`);
+      }
+      protocols.add(protocol);
+      return protocols;
+    }
+    module.exports = { parse };
+  }
+});
+
+// ../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/ws/lib/websocket-server.js
+var require_websocket_server = __commonJS({
+  "../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/ws/lib/websocket-server.js"(exports, module) {
+    "use strict";
+    var EventEmitter = __require("events");
+    var http = __require("http");
+    var { Duplex } = __require("stream");
+    var { createHash: createHash5 } = __require("crypto");
+    var extension2 = require_extension();
+    var PerMessageDeflate2 = require_permessage_deflate();
+    var subprotocol2 = require_subprotocol();
+    var WebSocket2 = require_websocket();
+    var { CLOSE_TIMEOUT, GUID, kWebSocket } = require_constants();
+    var keyRegex = /^[+/0-9A-Za-z]{22}==$/;
+    var RUNNING = 0;
+    var CLOSING = 1;
+    var CLOSED = 2;
+    var WebSocketServer2 = class extends EventEmitter {
+      /**
+       * Create a `WebSocketServer` instance.
+       *
+       * @param {Object} options Configuration options
+       * @param {Boolean} [options.allowSynchronousEvents=true] Specifies whether
+       *     any of the `'message'`, `'ping'`, and `'pong'` events can be emitted
+       *     multiple times in the same tick
+       * @param {Boolean} [options.autoPong=true] Specifies whether or not to
+       *     automatically send a pong in response to a ping
+       * @param {Number} [options.backlog=511] The maximum length of the queue of
+       *     pending connections
+       * @param {Boolean} [options.clientTracking=true] Specifies whether or not to
+       *     track clients
+       * @param {Number} [options.closeTimeout=30000] Duration in milliseconds to
+       *     wait for the closing handshake to finish after `websocket.close()` is
+       *     called
+       * @param {Function} [options.handleProtocols] A hook to handle protocols
+       * @param {String} [options.host] The hostname where to bind the server
+       * @param {Number} [options.maxBufferedChunks=1048576] The maximum number of
+       *     buffered data chunks
+       * @param {Number} [options.maxFragments=131072] The maximum number of message
+       *     fragments
+       * @param {Number} [options.maxPayload=104857600] The maximum allowed message
+       *     size
+       * @param {Boolean} [options.noServer=false] Enable no server mode
+       * @param {String} [options.path] Accept only connections matching this path
+       * @param {(Boolean|Object)} [options.perMessageDeflate=false] Enable/disable
+       *     permessage-deflate
+       * @param {Number} [options.port] The port where to bind the server
+       * @param {(http.Server|https.Server)} [options.server] A pre-created HTTP/S
+       *     server to use
+       * @param {Boolean} [options.skipUTF8Validation=false] Specifies whether or
+       *     not to skip UTF-8 validation for text and close messages
+       * @param {Function} [options.verifyClient] A hook to reject connections
+       * @param {Function} [options.WebSocket=WebSocket] Specifies the `WebSocket`
+       *     class to use. It must be the `WebSocket` class or class that extends it
+       * @param {Function} [callback] A listener for the `listening` event
+       */
+      constructor(options, callback) {
+        super();
+        options = {
+          allowSynchronousEvents: true,
+          autoPong: true,
+          maxBufferedChunks: 1024 * 1024,
+          maxFragments: 128 * 1024,
+          maxPayload: 100 * 1024 * 1024,
+          skipUTF8Validation: false,
+          perMessageDeflate: false,
+          handleProtocols: null,
+          clientTracking: true,
+          closeTimeout: CLOSE_TIMEOUT,
+          verifyClient: null,
+          noServer: false,
+          backlog: null,
+          // use default (511 as implemented in net.js)
+          server: null,
+          host: null,
+          path: null,
+          port: null,
+          WebSocket: WebSocket2,
+          ...options
+        };
+        if (options.port == null && !options.server && !options.noServer || options.port != null && (options.server || options.noServer) || options.server && options.noServer) {
+          throw new TypeError(
+            'One and only one of the "port", "server", or "noServer" options must be specified'
+          );
+        }
+        if (options.port != null) {
+          this._server = http.createServer((req, res) => {
+            const body = http.STATUS_CODES[426];
+            res.writeHead(426, {
+              "Content-Length": body.length,
+              "Content-Type": "text/plain"
+            });
+            res.end(body);
+          });
+          this._server.listen(
+            options.port,
+            options.host,
+            options.backlog,
+            callback
+          );
+        } else if (options.server) {
+          this._server = options.server;
+        }
+        if (this._server) {
+          const emitConnection = this.emit.bind(this, "connection");
+          this._removeListeners = addListeners(this._server, {
+            listening: this.emit.bind(this, "listening"),
+            error: this.emit.bind(this, "error"),
+            upgrade: (req, socket, head) => {
+              this.handleUpgrade(req, socket, head, emitConnection);
+            }
+          });
+        }
+        if (options.perMessageDeflate === true) options.perMessageDeflate = {};
+        if (options.clientTracking) {
+          this.clients = /* @__PURE__ */ new Set();
+          this._shouldEmitClose = false;
+        }
+        this.options = options;
+        this._state = RUNNING;
+      }
+      /**
+       * Returns the bound address, the address family name, and port of the server
+       * as reported by the operating system if listening on an IP socket.
+       * If the server is listening on a pipe or UNIX domain socket, the name is
+       * returned as a string.
+       *
+       * @return {(Object|String|null)} The address of the server
+       * @public
+       */
+      address() {
+        if (this.options.noServer) {
+          throw new Error('The server is operating in "noServer" mode');
+        }
+        if (!this._server) return null;
+        return this._server.address();
+      }
+      /**
+       * Stop the server from accepting new connections and emit the `'close'` event
+       * when all existing connections are closed.
+       *
+       * @param {Function} [cb] A one-time listener for the `'close'` event
+       * @public
+       */
+      close(cb) {
+        if (this._state === CLOSED) {
+          if (cb) {
+            this.once("close", () => {
+              cb(new Error("The server is not running"));
+            });
+          }
+          process.nextTick(emitClose, this);
+          return;
+        }
+        if (cb) this.once("close", cb);
+        if (this._state === CLOSING) return;
+        this._state = CLOSING;
+        if (this.options.noServer || this.options.server) {
+          if (this._server) {
+            this._removeListeners();
+            this._removeListeners = this._server = null;
+          }
+          if (this.clients) {
+            if (!this.clients.size) {
+              process.nextTick(emitClose, this);
+            } else {
+              this._shouldEmitClose = true;
+            }
+          } else {
+            process.nextTick(emitClose, this);
+          }
+        } else {
+          const server = this._server;
+          this._removeListeners();
+          this._removeListeners = this._server = null;
+          server.close(() => {
+            emitClose(this);
+          });
+        }
+      }
+      /**
+       * See if a given request should be handled by this server instance.
+       *
+       * @param {http.IncomingMessage} req Request object to inspect
+       * @return {Boolean} `true` if the request is valid, else `false`
+       * @public
+       */
+      shouldHandle(req) {
+        if (this.options.path) {
+          const index = req.url.indexOf("?");
+          const pathname = index !== -1 ? req.url.slice(0, index) : req.url;
+          if (pathname !== this.options.path) return false;
+        }
+        return true;
+      }
+      /**
+       * Handle a HTTP Upgrade request.
+       *
+       * @param {http.IncomingMessage} req The request object
+       * @param {Duplex} socket The network socket between the server and client
+       * @param {Buffer} head The first packet of the upgraded stream
+       * @param {Function} cb Callback
+       * @public
+       */
+      handleUpgrade(req, socket, head, cb) {
+        socket.on("error", socketOnError);
+        const key2 = req.headers["sec-websocket-key"];
+        const upgrade = req.headers.upgrade;
+        const version = +req.headers["sec-websocket-version"];
+        if (req.method !== "GET") {
+          const message = "Invalid HTTP method";
+          abortHandshakeOrEmitwsClientError(this, req, socket, 405, message);
+          return;
+        }
+        if (upgrade === void 0 || upgrade.toLowerCase() !== "websocket") {
+          const message = "Invalid Upgrade header";
+          abortHandshakeOrEmitwsClientError(this, req, socket, 400, message);
+          return;
+        }
+        if (key2 === void 0 || !keyRegex.test(key2)) {
+          const message = "Missing or invalid Sec-WebSocket-Key header";
+          abortHandshakeOrEmitwsClientError(this, req, socket, 400, message);
+          return;
+        }
+        if (version !== 13 && version !== 8) {
+          const message = "Missing or invalid Sec-WebSocket-Version header";
+          abortHandshakeOrEmitwsClientError(this, req, socket, 400, message, {
+            "Sec-WebSocket-Version": "13, 8"
+          });
+          return;
+        }
+        if (!this.shouldHandle(req)) {
+          abortHandshake(socket, 400);
+          return;
+        }
+        const secWebSocketProtocol = req.headers["sec-websocket-protocol"];
+        let protocols = /* @__PURE__ */ new Set();
+        if (secWebSocketProtocol !== void 0) {
+          try {
+            protocols = subprotocol2.parse(secWebSocketProtocol);
+          } catch (err) {
+            const message = "Invalid Sec-WebSocket-Protocol header";
+            abortHandshakeOrEmitwsClientError(this, req, socket, 400, message);
+            return;
+          }
+        }
+        const secWebSocketExtensions = req.headers["sec-websocket-extensions"];
+        const extensions = {};
+        if (this.options.perMessageDeflate && secWebSocketExtensions !== void 0) {
+          const perMessageDeflate = new PerMessageDeflate2({
+            ...this.options.perMessageDeflate,
+            isServer: true,
+            maxPayload: this.options.maxPayload
+          });
+          try {
+            const offers = extension2.parse(secWebSocketExtensions);
+            if (offers[PerMessageDeflate2.extensionName]) {
+              perMessageDeflate.accept(offers[PerMessageDeflate2.extensionName]);
+              extensions[PerMessageDeflate2.extensionName] = perMessageDeflate;
+            }
+          } catch (err) {
+            const message = "Invalid or unacceptable Sec-WebSocket-Extensions header";
+            abortHandshakeOrEmitwsClientError(this, req, socket, 400, message);
+            return;
+          }
+        }
+        if (this.options.verifyClient) {
+          const info = {
+            origin: req.headers[`${version === 8 ? "sec-websocket-origin" : "origin"}`],
+            secure: !!(req.socket.authorized || req.socket.encrypted),
+            req
+          };
+          if (this.options.verifyClient.length === 2) {
+            this.options.verifyClient(info, (verified, code, message, headers) => {
+              if (!verified) {
+                return abortHandshake(socket, code || 401, message, headers);
+              }
+              this.completeUpgrade(
+                extensions,
+                key2,
+                protocols,
+                req,
+                socket,
+                head,
+                cb
+              );
+            });
+            return;
+          }
+          if (!this.options.verifyClient(info)) return abortHandshake(socket, 401);
+        }
+        this.completeUpgrade(extensions, key2, protocols, req, socket, head, cb);
+      }
+      /**
+       * Upgrade the connection to WebSocket.
+       *
+       * @param {Object} extensions The accepted extensions
+       * @param {String} key The value of the `Sec-WebSocket-Key` header
+       * @param {Set} protocols The subprotocols
+       * @param {http.IncomingMessage} req The request object
+       * @param {Duplex} socket The network socket between the server and client
+       * @param {Buffer} head The first packet of the upgraded stream
+       * @param {Function} cb Callback
+       * @throws {Error} If called more than once with the same socket
+       * @private
+       */
+      completeUpgrade(extensions, key2, protocols, req, socket, head, cb) {
+        if (!socket.readable || !socket.writable) return socket.destroy();
+        if (socket[kWebSocket]) {
+          throw new Error(
+            "server.handleUpgrade() was called more than once with the same socket, possibly due to a misconfiguration"
+          );
+        }
+        if (this._state > RUNNING) return abortHandshake(socket, 503);
+        const digest = createHash5("sha1").update(key2 + GUID).digest("base64");
+        const headers = [
+          "HTTP/1.1 101 Switching Protocols",
+          "Upgrade: websocket",
+          "Connection: Upgrade",
+          `Sec-WebSocket-Accept: ${digest}`
+        ];
+        const ws = new this.options.WebSocket(null, void 0, this.options);
+        if (protocols.size) {
+          const protocol = this.options.handleProtocols ? this.options.handleProtocols(protocols, req) : protocols.values().next().value;
+          if (protocol) {
+            headers.push(`Sec-WebSocket-Protocol: ${protocol}`);
+            ws._protocol = protocol;
+          }
+        }
+        if (extensions[PerMessageDeflate2.extensionName]) {
+          const params = extensions[PerMessageDeflate2.extensionName].params;
+          const value = extension2.format({
+            [PerMessageDeflate2.extensionName]: [params]
+          });
+          headers.push(`Sec-WebSocket-Extensions: ${value}`);
+          ws._extensions = extensions;
+        }
+        this.emit("headers", headers, req);
+        socket.write(headers.concat("\r\n").join("\r\n"));
+        socket.removeListener("error", socketOnError);
+        ws.setSocket(socket, head, {
+          allowSynchronousEvents: this.options.allowSynchronousEvents,
+          maxBufferedChunks: this.options.maxBufferedChunks,
+          maxFragments: this.options.maxFragments,
+          maxPayload: this.options.maxPayload,
+          skipUTF8Validation: this.options.skipUTF8Validation
+        });
+        if (this.clients) {
+          this.clients.add(ws);
+          ws.on("close", () => {
+            this.clients.delete(ws);
+            if (this._shouldEmitClose && !this.clients.size) {
+              process.nextTick(emitClose, this);
+            }
+          });
+        }
+        cb(ws, req);
+      }
+    };
+    module.exports = WebSocketServer2;
+    function addListeners(server, map) {
+      for (const event of Object.keys(map)) server.on(event, map[event]);
+      return function removeListeners() {
+        for (const event of Object.keys(map)) {
+          server.removeListener(event, map[event]);
+        }
+      };
+    }
+    function emitClose(server) {
+      server._state = CLOSED;
+      server.emit("close");
+    }
+    function socketOnError() {
+      this.destroy();
+    }
+    function abortHandshake(socket, code, message, headers) {
+      message = message || http.STATUS_CODES[code];
+      headers = {
+        Connection: "close",
+        "Content-Type": "text/html",
+        "Content-Length": Buffer.byteLength(message),
+        ...headers
+      };
+      socket.once("finish", socket.destroy);
+      socket.end(
+        `HTTP/1.1 ${code} ${http.STATUS_CODES[code]}\r
+` + Object.keys(headers).map((h) => `${h}: ${headers[h]}`).join("\r\n") + "\r\n\r\n" + message
+      );
+    }
+    function abortHandshakeOrEmitwsClientError(server, req, socket, code, message, headers) {
+      if (server.listenerCount("wsClientError")) {
+        const err = new Error(message);
+        Error.captureStackTrace(err, abortHandshakeOrEmitwsClientError);
+        server.emit("wsClientError", err, socket, req);
+      } else {
+        abortHandshake(socket, code, message, headers);
+      }
+    }
+  }
+});
+
+// ../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/ws/wrapper.mjs
+var wrapper_exports = {};
+__export(wrapper_exports, {
+  PerMessageDeflate: () => import_permessage_deflate.default,
+  Receiver: () => import_receiver.default,
+  Sender: () => import_sender.default,
+  WebSocket: () => import_websocket.default,
+  WebSocketServer: () => import_websocket_server.default,
+  createWebSocketStream: () => import_stream.default,
+  default: () => wrapper_default,
+  extension: () => import_extension.default,
+  subprotocol: () => import_subprotocol.default
+});
+var import_stream, import_extension, import_permessage_deflate, import_receiver, import_sender, import_subprotocol, import_websocket, import_websocket_server, wrapper_default;
+var init_wrapper = __esm({
+  "../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/ws/wrapper.mjs"() {
+    import_stream = __toESM(require_stream2(), 1);
+    import_extension = __toESM(require_extension(), 1);
+    import_permessage_deflate = __toESM(require_permessage_deflate(), 1);
+    import_receiver = __toESM(require_receiver(), 1);
+    import_sender = __toESM(require_sender(), 1);
+    import_subprotocol = __toESM(require_subprotocol(), 1);
+    import_websocket = __toESM(require_websocket(), 1);
+    import_websocket_server = __toESM(require_websocket_server(), 1);
+    wrapper_default = import_websocket.default;
+  }
+});
+
+// ../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/@vercel/functions/websocket/index.js
+var require_websocket2 = __commonJS({
+  "../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/@vercel/functions/websocket/index.js"(exports, module) {
     "use strict";
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
     var __getOwnPropNames2 = Object.getOwnPropertyNames;
     var __hasOwnProp2 = Object.prototype.hasOwnProperty;
-    var __export = (target, all) => {
+    var __export2 = (target, all) => {
       for (var name in all)
         __defProp2(target, name, { get: all[name], enumerable: true });
     };
@@ -6485,7 +10204,7 @@ var require_websocket = __commonJS({
     };
     var __toCommonJS = (mod) => __copyProps2(__defProp2({}, "__esModule", { value: true }), mod);
     var websocket_exports = {};
-    __export(websocket_exports, {
+    __export2(websocket_exports, {
       experimental_upgradeWebSocket: () => experimental_upgradeWebSocket2,
       upgradeWebSocket: () => upgradeWebSocket2
     });
@@ -6494,7 +10213,7 @@ var require_websocket = __commonJS({
     var DEFAULT_MAX_PAYLOAD = 256 * 1024;
     async function loadWebSocketServer() {
       try {
-        const ws = await import("ws");
+        const ws = await Promise.resolve().then(() => (init_wrapper(), wrapper_exports));
         return ws.WebSocketServer;
       } catch {
         throw new Error(
@@ -6509,9 +10228,9 @@ var require_websocket = __commonJS({
           "upgradeWebSocket is not available in the current runtime environment. This feature requires a Vercel runtime that supports WebSocket upgrades."
         );
       }
-      const WebSocketServer = await loadWebSocketServer();
+      const WebSocketServer2 = await loadWebSocketServer();
       const { req, socket, head } = ctx.upgradeWebSocket();
-      const wss = new WebSocketServer({
+      const wss = new WebSocketServer2({
         noServer: true,
         maxPayload: options.maxPayload ?? DEFAULT_MAX_PAYLOAD
       });
@@ -6558,15 +10277,15 @@ var require_websocket = __commonJS({
   }
 });
 
-// ../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/@vercel/functions/index.js
+// ../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/@vercel/functions/index.js
 var require_functions = __commonJS({
-  "../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/@vercel/functions/index.js"(exports, module) {
+  "../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/@vercel/functions/index.js"(exports, module) {
     "use strict";
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
     var __getOwnPropNames2 = Object.getOwnPropertyNames;
     var __hasOwnProp2 = Object.prototype.hasOwnProperty;
-    var __export = (target, all) => {
+    var __export2 = (target, all) => {
       for (var name in all)
         __defProp2(target, name, { get: all[name], enumerable: true });
     };
@@ -6580,13 +10299,13 @@ var require_functions = __commonJS({
     };
     var __toCommonJS = (mod) => __copyProps2(__defProp2({}, "__esModule", { value: true }), mod);
     var src_exports = {};
-    __export(src_exports, {
+    __export2(src_exports, {
       addCacheTag: () => import_addcachetag.addCacheTag,
       attachDatabasePool: () => import_db_connections.attachDatabasePool,
       dangerouslyDeleteBySrcImage: () => import_purge.dangerouslyDeleteBySrcImage,
       dangerouslyDeleteByTag: () => import_purge.dangerouslyDeleteByTag,
       experimental_attachDatabasePool: () => import_db_connections.experimental_attachDatabasePool,
-      experimental_upgradeWebSocket: () => import_websocket.experimental_upgradeWebSocket,
+      experimental_upgradeWebSocket: () => import_websocket2.experimental_upgradeWebSocket,
       geolocation: () => import_headers.geolocation,
       getCache: () => import_cache.getCache,
       getDeadline: () => import_deadline.getDeadline,
@@ -6597,7 +10316,7 @@ var require_functions = __commonJS({
       metric: () => import_metric.metric,
       next: () => import_middleware.next,
       rewrite: () => import_middleware.rewrite,
-      upgradeWebSocket: () => import_websocket.upgradeWebSocket,
+      upgradeWebSocket: () => import_websocket2.upgradeWebSocket,
       waitUntil: () => import_wait_until.waitUntil
     });
     module.exports = __toCommonJS(src_exports);
@@ -6611,13 +10330,13 @@ var require_functions = __commonJS({
     var import_db_connections = require_db_connections();
     var import_purge = require_purge();
     var import_addcachetag = require_addcachetag();
-    var import_websocket = require_websocket();
+    var import_websocket2 = require_websocket2();
   }
 });
 
-// ../../../../ESIM市值统计/工程/esim-daily-ledger/web/vendor/engine.cjs
+// ../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/vendor/engine.cjs
 var require_engine = __commonJS({
-  "../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/vendor/engine.cjs"(exports) {
+  "../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/vendor/engine.cjs"(exports) {
     exports.createEngine = function() {
       var ESIM_CFG = { "chainId": 56, "network": "bnb-mainnet", "token": "0x7765a659c5b0cfbfd9fbc2ef2298b75a598f2d2d", "usdt": "0x55d398326f99059ff775485246999027b3197955", "timezone": "Asia/Shanghai", "start": "2026-09-30T08:00:00+08:00", "dailyStartHour": 8, "addresses": ["0x4b7d906b209f6cee02091d0139f105c08cb861fd", "0x4eb0621554a3e7619595bed6d16dd592179c2ec1", "0xac80c4ad44ae3386205f4972d1d95712d75fb66f", "0x0dadf9848667cd51ac9bddce543c4f70278e7150", "0x3759db8f9245291c5a710fdf807e95245e6c4122", "0xe86eaf59765d580a6daccf9644b9867aeed8a18c", "0x45a186cba397f354a85e50a33f7b7082c2784ac6", "0xc2b8f3c7db355bbe8d174909d921885d0cf45359", "0x5f714f871acf20cf797a362b7583b4cb0f0bdf24", "0x8bfa50a8973c9d859b01ce6c905ea3c0a0abaddf", "0xc5b5c9f4b80f0b345a06ba7970cc3b8995ed24a4", "0xeecd820601367bf3b8aaef68b4e85495b61007cf", "0x3ab32cfcacfedeaa42c0f0eb51158c56871f71b9", "0x2635f3fe2c6ec8720391f39b09001eddc63a1a23", "0x0946f6a9e3b006984bf9f2250e12b577ccb14909", "0x0d151c68690e7a5821bc7abab74db02a703fe582", "0x040d55a50378815bf23ea17ac81f4428af73ce24", "0xea4bd4aad512ca4dccda821e8693b6b38b51fc68", "0x435883e28439f909f68c536a0c9fc8a6f1248417", "0x41e0836726b37c670acf8bac9efa8964bfc737fe", "0x2aa283101c266cbc20a142ad161d59143112bfc1", "0xb8c7fdcf7e2ab23a231df904257ff59be53ed73d", "0xc40409aee5b913f14dfd8f967299ddf9dc5009a1", "0xe858154e5b1d0c295b24103dbc7671b67faccba3", "0xe8e15e97a8652ebdc8333007ea9d3b0275595d96", "0x85e471fd8abe8e0c6b6f6b4c635956020336a12e", "0xa6b9f2f8507c3dcee32f765361f2c5527d7b6ad6", "0xd21261df561825ef324bd4430487eac32a28a66a", "0x76f9b8a66780986688e265d9a0028623052176c1", "0x1db99241d9e230edc33996567ec2707c42475fd8", "0xdcdb497a0b2ab74753f8e40e36071ce7a0ab4930"], "inputAddresses": ["0x4B7d906b209f6cee02091d0139f105c08Cb861fd", "0x4EB0621554A3e7619595bED6D16dd592179c2ec1", "0xaC80C4Ad44aE3386205f4972d1d95712D75fb66f", "0x0DAdf9848667Cd51Ac9bdDCe543c4F70278e7150", "0x3759Db8f9245291C5A710fdF807e95245E6C4122", "0xe86eAF59765D580A6Daccf9644b9867AEED8a18c", "0x45a186cBA397f354a85e50A33f7B7082C2784AC6", "0xc2B8f3C7dB355BbE8d174909d921885d0Cf45359", "0x5f714F871acF20cf797a362B7583b4Cb0F0bdf24", "0x8bfa50A8973C9D859B01ce6c905ea3C0a0abadDf", "0xc5B5c9f4B80F0b345a06bA7970Cc3b8995ED24a4", "0xeecD820601367Bf3b8Aaef68b4E85495b61007CF", "0x3aB32CFCAcFeDEaa42c0f0eb51158C56871F71b9", "0x2635F3Fe2c6EC8720391f39b09001edDc63a1a23", "0x0946f6A9E3b006984bF9f2250e12b577ccB14909", "0x0D151c68690e7A5821Bc7abaB74Db02A703FE582", "0x040d55A50378815bF23EA17ac81F4428af73Ce24", "0xea4bD4AaD512CA4DCcDa821E8693B6b38B51fc68", "0x435883e28439F909F68C536a0C9Fc8A6F1248417", "0x41E0836726b37C670AcF8BAC9EfA8964Bfc737FE", "0x2Aa283101C266Cbc20A142Ad161D59143112bFc1", "0xb8C7FDCf7E2Ab23a231dF904257FF59Be53Ed73D", "0xc40409Aee5B913f14dfD8f967299ddf9dc5009a1", "0xE858154E5B1D0C295b24103DBc7671b67fACCba3", "0xE8e15e97A8652EbdC8333007eA9D3B0275595D96", "0x85E471Fd8AbE8e0c6B6F6b4C635956020336a12e", "0xA6b9f2f8507C3dcEe32f765361F2C5527D7B6Ad6", "0xD21261dF561825Ef324BD4430487eac32a28A66a", "0x76f9B8a66780986688e265D9a0028623052176C1", "0x1DB99241D9E230eDc33996567EC2707c42475fd8", "0x1DB99241D9E230eDc33996567EC2707c42475fd8", "0xdcDB497A0b2Ab74753f8E40e36071cE7a0aB4930"], "startDay": "2026-09-30", "startBoundary": { "time": "2026-09-30T08:00:00+08:00", "block": 124808836, "actualTime": "2026-09-30T07:59:59+08:00" }, "nftSeed": [], "referencePools": [{ "id": "0x082a0a013f0d9152e53e435b274276e798f75cd5", "token0": "0x4ef9d3062c7f6eba4aae4990c5036598c6eff4ec", "token1": "0xbb4cdb9cbd36b01bd1cbaebf2de08d9173bc095c", "manager": "0x082a0a013f0d9152e53e435b274276e798f75cd5", "type": "classic", "swapCount": 1 }, { "id": "0x172fcd41e0913e95784454622d1c3724f546f849", "token0": "0x55d398326f99059ff775485246999027b3197955", "token1": "0xbb4cdb9cbd36b01bd1cbaebf2de08d9173bc095c", "manager": "0x172fcd41e0913e95784454622d1c3724f546f849", "type": "classic", "swapCount": 29 }, { "id": "0x1e213600fa9317feac4ef4087acdf5d0e25d7187", "token0": "0x0e09fabb73bd3ade0a17ecc321fd13a19e81ce82", "token1": "0xbb4cdb9cbd36b01bd1cbaebf2de08d9173bc095c", "manager": "0x1e213600fa9317feac4ef4087acdf5d0e25d7187", "type": "classic", "swapCount": 1 }, { "id": "0x247f51881d1e3ae0f759afb801413a6c948ef442", "token0": "0x55d398326f99059ff775485246999027b3197955", "token1": "0x7130d2a12b9bcbfae4f2634d864a1ee1ce3ead9c", "manager": "0x247f51881d1e3ae0f759afb801413a6c948ef442", "type": "classic", "swapCount": 2 }, { "id": "0x3b2b70dd9684deee3f942653a418be34fc0d525b", "token0": "0x0e09fabb73bd3ade0a17ecc321fd13a19e81ce82", "token1": "0x7130d2a12b9bcbfae4f2634d864a1ee1ce3ead9c", "manager": "0x3b2b70dd9684deee3f942653a418be34fc0d525b", "type": "classic", "swapCount": 1 }, { "id": "0x3c519f6bb91158a4148b276baa2d4fe3e8a26614", "token0": "0x4ef9d3062c7f6eba4aae4990c5036598c6eff4ec", "token1": "0x55d398326f99059ff775485246999027b3197955", "manager": "0x3c519f6bb91158a4148b276baa2d4fe3e8a26614", "type": "classic", "swapCount": 1 }, { "id": "0x4141325bac36affe9db165e854982230a14e6d48", "token0": "0x8ac76a51cc950d9822d68b83fe1ad97b32cd580d", "token1": "0xbb4cdb9cbd36b01bd1cbaebf2de08d9173bc095c", "manager": "0x4141325bac36affe9db165e854982230a14e6d48", "type": "classic", "swapCount": 1 }, { "id": "0x51472df7d3c9a02a912f2473960ef835ff1e9a42", "token0": "0x2170ed0880ac9a755fd29b2688956bd959f933f8", "token1": "0xbe9d156892e55e7154bcd3cb0fea677f9d3103e1", "manager": "0x51472df7d3c9a02a912f2473960ef835ff1e9a42", "type": "classic", "swapCount": 2 }, { "id": "0x62edaf2a56c9fb55be5f9b1399ac067f6a37013b", "token0": "0x7130d2a12b9bcbfae4f2634d864a1ee1ce3ead9c", "token1": "0xbb4cdb9cbd36b01bd1cbaebf2de08d9173bc095c", "manager": "0x62edaf2a56c9fb55be5f9b1399ac067f6a37013b", "type": "classic", "swapCount": 1 }, { "id": "0x62fcb3c1794fb95bd8b1a97f6ad5d8a7e4943a1e", "token0": "0x2170ed0880ac9a755fd29b2688956bd959f933f8", "token1": "0xbb4cdb9cbd36b01bd1cbaebf2de08d9173bc095c", "manager": "0x62fcb3c1794fb95bd8b1a97f6ad5d8a7e4943a1e", "type": "classic", "swapCount": 3 }, { "id": "0x7213a321f1855cf1779f42c0cd85d3d95291d34c", "token0": "0x2170ed0880ac9a755fd29b2688956bd959f933f8", "token1": "0xe9e7cea3dedca5984780bafc599bd69add087d56", "manager": "0x7213a321f1855cf1779f42c0cd85d3d95291d34c", "type": "classic", "swapCount": 1 }, { "id": "0x783a3d7c3236cf05f103adc890377f5984d694e5", "token0": "0x4902c5ebc598265ed2212b559b042de8a5eeec3f", "token1": "0x7c8d5502b544ddaf8852fc46d1174e34876d545c", "manager": "0x783a3d7c3236cf05f103adc890377f5984d694e5", "type": "classic", "swapCount": 1 }, { "id": "0x9f599f3d64a9d99ea21e68127bb6ce99f893da61", "token0": "0x2170ed0880ac9a755fd29b2688956bd959f933f8", "token1": "0x55d398326f99059ff775485246999027b3197955", "manager": "0x9f599f3d64a9d99ea21e68127bb6ce99f893da61", "type": "classic", "swapCount": 2 }, { "id": "0xafb2da14056725e3ba3a30dd846b6bbbd7886c56", "token0": "0x0e09fabb73bd3ade0a17ecc321fd13a19e81ce82", "token1": "0xbb4cdb9cbd36b01bd1cbaebf2de08d9173bc095c", "manager": "0xafb2da14056725e3ba3a30dd846b6bbbd7886c56", "type": "classic", "swapCount": 1 }, { "id": "0xbf4dc3116ba2490ba860849b2cd3399932e843bc", "token0": "0x55d398326f99059ff775485246999027b3197955", "token1": "0x7765a659c5b0cfbfd9fbc2ef2298b75a598f2d2d", "manager": "0xbf4dc3116ba2490ba860849b2cd3399932e843bc", "type": "classic", "swapCount": 108 }, { "id": "0xc53e634836e95cda2857e2fbd3eaf2f7f63cf832", "token0": "0x4902c5ebc598265ed2212b559b042de8a5eeec3f", "token1": "0xbb4cdb9cbd36b01bd1cbaebf2de08d9173bc095c", "manager": "0xc53e634836e95cda2857e2fbd3eaf2f7f63cf832", "type": "classic", "swapCount": 1 }, { "id": "0xcaaf3c41a40103a23eeaa4bba468af3cf5b0e0d8", "token0": "0x55d398326f99059ff775485246999027b3197955", "token1": "0xcae117ca6bc8a341d2e7207f30e180f0e5618b9d", "manager": "0xcaaf3c41a40103a23eeaa4bba468af3cf5b0e0d8", "type": "classic", "swapCount": 2 }, { "id": "0xcd06956a47164ea866c3e9601085777e89cffad5", "token0": "0x55d398326f99059ff775485246999027b3197955", "token1": "0x7765a659c5b0cfbfd9fbc2ef2298b75a598f2d2d", "manager": "0xcd06956a47164ea866c3e9601085777e89cffad5", "type": "classic", "swapCount": 585 }, { "id": "0xe2b7b3e9171e5f9693f4d9304177fa4b129d0bca", "token0": "0x2170ed0880ac9a755fd29b2688956bd959f933f8", "token1": "0xe9e7cea3dedca5984780bafc599bd69add087d56", "manager": "0xe2b7b3e9171e5f9693f4d9304177fa4b129d0bca", "type": "classic", "swapCount": 1 }, { "id": "0xeb7528398b2725e1e0374734a87320132223a5c6", "token0": "0x0e09fabb73bd3ade0a17ecc321fd13a19e81ce82", "token1": "0x2170ed0880ac9a755fd29b2688956bd959f933f8", "manager": "0xeb7528398b2725e1e0374734a87320132223a5c6", "type": "classic", "swapCount": 1 }, { "id": "0xf2688fb5b81049dfb7703ada5e770543770612c4", "token0": "0x8ac76a51cc950d9822d68b83fe1ad97b32cd580d", "token1": "0xbb4cdb9cbd36b01bd1cbaebf2de08d9173bc095c", "manager": "0xf2688fb5b81049dfb7703ada5e770543770612c4", "type": "classic", "swapCount": 3 }, { "id": "0x118c0dbba8ece2c060b050e14a94e7e5e97dcdc023325f0dcfcfeb7c0f7130d3", "token0": "0x55d398326f99059ff775485246999027b3197955", "token1": "0x7765a659c5b0cfbfd9fbc2ef2298b75a598f2d2d", "manager": "0xa0ffb9c1ce1fe56963b0321b32e7a0302114058b", "type": "infinity", "swapCount": 1 }, { "id": "0x24d01c45d3fc828e99c6c34cf6ddb9a39260b7fb2bc849833195caac3c987176", "token0": "0x55d398326f99059ff775485246999027b3197955", "token1": "0x7765a659c5b0cfbfd9fbc2ef2298b75a598f2d2d", "manager": "0xa0ffb9c1ce1fe56963b0321b32e7a0302114058b", "type": "infinity", "swapCount": 2864 }, { "id": "0x258907d03806aad208f23147bf05d4e5f69eaba5c6ded94f02d98445add62c31", "token0": "0x55d398326f99059ff775485246999027b3197955", "token1": "0x8ac76a51cc950d9822d68b83fe1ad97b32cd580d", "manager": "0xa0ffb9c1ce1fe56963b0321b32e7a0302114058b", "type": "infinity", "swapCount": 1 }, { "id": "0x32a805e65a3219a79707ab3e75443d75160d798de46613fc960d39cd4a96bb22", "token0": "0x55d398326f99059ff775485246999027b3197955", "token1": "0x8ac76a51cc950d9822d68b83fe1ad97b32cd580d", "manager": "0xa0ffb9c1ce1fe56963b0321b32e7a0302114058b", "type": "infinity", "swapCount": 2 }, { "id": "0x5826c5bd582f96f018219f91559c50ad17067bb421ed305d69763d7065b8432b", "token0": "0x55d398326f99059ff775485246999027b3197955", "token1": "0x7765a659c5b0cfbfd9fbc2ef2298b75a598f2d2d", "manager": "0xa0ffb9c1ce1fe56963b0321b32e7a0302114058b", "type": "infinity", "swapCount": 5 }, { "id": "0x767e8e440c8ec7ac01fddee3cea2e40931538a1375493aa2d510dd39c6d9b998", "token0": "0x55d398326f99059ff775485246999027b3197955", "token1": "0x7765a659c5b0cfbfd9fbc2ef2298b75a598f2d2d", "manager": "0xa0ffb9c1ce1fe56963b0321b32e7a0302114058b", "type": "infinity", "swapCount": 39 }, { "id": "0x81c144e9e30c6ca0f1501d04b107137a6862698d1f54abc16bf5d015cff35c4f", "token0": "0x0000000000000000000000000000000000000000", "token1": "0x2170ed0880ac9a755fd29b2688956bd959f933f8", "manager": "0xa0ffb9c1ce1fe56963b0321b32e7a0302114058b", "type": "infinity", "swapCount": 2 }, { "id": "0x8cbeeb68dd5de3355a7be1249d44b4fba14521da76ee649b2a291de1afd684ed", "token0": "0x0000000000000000000000000000000000000000", "token1": "0x8d0d000ee44948fc98c9b98a4fa4921476f08b0d", "manager": "0xa0ffb9c1ce1fe56963b0321b32e7a0302114058b", "type": "infinity", "swapCount": 1 }, { "id": "0xd37aa0f0d66ad670279f6b89325c88bdff17d0265144762fb01f54fca9779944", "token0": "0x0000000000000000000000000000000000000000", "token1": "0x55d398326f99059ff775485246999027b3197955", "manager": "0xa0ffb9c1ce1fe56963b0321b32e7a0302114058b", "type": "infinity", "swapCount": 1 }, { "id": "0xdc85783e828973a0a9f0013fb2fc5ed841765c4e9ef7deaf719a4745d37f422e", "token0": "0x55d398326f99059ff775485246999027b3197955", "token1": "0x7c8d5502b544ddaf8852fc46d1174e34876d545c", "manager": "0xa0ffb9c1ce1fe56963b0321b32e7a0302114058b", "type": "infinity", "swapCount": 1 }, { "id": "0xf126c8e4f74ace95628ec14a496e3a8bbb5f16ef9ee908359e0c4b9018d0356f", "token0": "0x8ac76a51cc950d9822d68b83fe1ad97b32cd580d", "token1": "0x8d0d000ee44948fc98c9b98a4fa4921476f08b0d", "manager": "0xa0ffb9c1ce1fe56963b0321b32e7a0302114058b", "type": "infinity", "swapCount": 1 }, { "id": "0x8321c1f53959b14ece4b5400e60aeac59e7b6b8bac446f2f0a89b9e84e68a08a", "poolId": "0x8321c1f53959b14ece4b5400e60aeac59e7b6b8bac446f2f0a89b9e84e68a08a", "manager": "0x28e2ea090877bf75740558f6bfb36a5ffee9e9df", "type": "uniswap-v4", "token0": "0x55d398326f99059ff775485246999027b3197955", "token1": "0x8ac76a51cc950d9822d68b83fe1ad97b32cd580d", "fee": 1, "tickSpacing": 1, "hooks": "0x0000000000000000000000000000000000000000", "poolKey": "0x00000000000000000000000055d398326f99059ff775485246999027b31979550000000000000000000000008ac76a51cc950d9822d68b83fe1ad97b32cd580d000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000000", "verification": { "transactionHash": "0x9160bf6c1f1279b073967f3dfe23bf7baacbf29559a13fc6150470d3b50d2e95", "block": 126564647, "logIndex": 11, "method": "Successful callTracer swap PoolKey ABI keccak equals receipt Swap poolId", "poolKeyHash": "0x8321c1f53959b14ece4b5400e60aeac59e7b6b8bac446f2f0a89b9e84e68a08a" }, "swapCount": 2 }, { "id": "0x1bb9710a71ec152e7b57de9df46e33b76690b992f283b360782721f18e0869b2", "poolId": "0x1bb9710a71ec152e7b57de9df46e33b76690b992f283b360782721f18e0869b2", "manager": "0x28e2ea090877bf75740558f6bfb36a5ffee9e9df", "type": "uniswap-v4", "token0": "0x55d398326f99059ff775485246999027b3197955", "token1": "0x7765a659c5b0cfbfd9fbc2ef2298b75a598f2d2d", "fee": 1, "tickSpacing": 1, "hooks": "0x0000000000000000000000000000000000000000", "poolKey": "0x00000000000000000000000055d398326f99059ff775485246999027b31979550000000000000000000000007765a659c5b0cfbfd9fbc2ef2298b75a598f2d2d000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000000", "verification": { "transactionHash": "0x1754638837503ebbd8473580a51c60a7af952ec58ca81a1512f8c8d71e97cdec", "block": 128281528, "logIndex": 241, "method": "Successful callTracer swap PoolKey ABI keccak equals receipt Swap poolId", "poolKeyHash": "0x1bb9710a71ec152e7b57de9df46e33b76690b992f283b360782721f18e0869b2" }, "swapCount": 1 }, { "id": "0xf8c7b3c122f31aec155c6beb0c1c78a5e74208358a840cadfbc6129b59391850", "poolId": "0xf8c7b3c122f31aec155c6beb0c1c78a5e74208358a840cadfbc6129b59391850", "manager": "0x28e2ea090877bf75740558f6bfb36a5ffee9e9df", "type": "uniswap-v4", "token0": "0x55d398326f99059ff775485246999027b3197955", "token1": "0x8ac76a51cc950d9822d68b83fe1ad97b32cd580d", "fee": 6, "tickSpacing": 1, "hooks": "0x0000000000000000000000000000000000000000", "poolKey": "0x00000000000000000000000055d398326f99059ff775485246999027b31979550000000000000000000000008ac76a51cc950d9822d68b83fe1ad97b32cd580d000000000000000000000000000000000000000000000000000000000000000600000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000000", "verification": { "transactionHash": "0x54bec96ea1ba94b3405e32bbe21e02a51a245c01062c181b8dbf62c604bf069f", "block": 126630871, "logIndex": 58, "tracePath": [2, 0, 1, 2, 1, 0, 3], "method": "Successful cached callTracer swap PoolKey ABI keccak equals receipt Swap poolId", "poolKeyHash": "0xf8c7b3c122f31aec155c6beb0c1c78a5e74208358a840cadfbc6129b59391850" } }, { "id": "0x93efe26bb57852dcba5ab7b389be998f9a823b0024c0de1d8613e6e3244036c4", "poolId": "0x93efe26bb57852dcba5ab7b389be998f9a823b0024c0de1d8613e6e3244036c4", "manager": "0x28e2ea090877bf75740558f6bfb36a5ffee9e9df", "type": "uniswap-v4", "token0": "0x7130d2a12b9bcbfae4f2634d864a1ee1ce3ead9c", "token1": "0x8ac76a51cc950d9822d68b83fe1ad97b32cd580d", "fee": 3e3, "tickSpacing": 60, "hooks": "0x0000000000000000000000000000000000000000", "poolKey": "0x0000000000000000000000007130d2a12b9bcbfae4f2634d864a1ee1ce3ead9c0000000000000000000000008ac76a51cc950d9822d68b83fe1ad97b32cd580d0000000000000000000000000000000000000000000000000000000000000bb8000000000000000000000000000000000000000000000000000000000000003c0000000000000000000000000000000000000000000000000000000000000000", "verification": { "transactionHash": "0x4e18d8712884c16ff4dc8df1aed4c8c36e2611504f664c8143c3226378d4331d", "block": 128956678, "logIndex": 373, "tracePath": [2, 3, 0, 3], "method": "Successful cached callTracer swap PoolKey ABI keccak equals receipt Swap poolId", "poolKeyHash": "0x93efe26bb57852dcba5ab7b389be998f9a823b0024c0de1d8613e6e3244036c4" } }, { "id": "0x628ea54a6450645d2bb7b2911c8c6f3d7f3944c2f4703c259a1b85bf5569870b", "poolId": "0x628ea54a6450645d2bb7b2911c8c6f3d7f3944c2f4703c259a1b85bf5569870b", "manager": "0x28e2ea090877bf75740558f6bfb36a5ffee9e9df", "type": "uniswap-v4", "token0": "0x55d398326f99059ff775485246999027b3197955", "token1": "0x8ac76a51cc950d9822d68b83fe1ad97b32cd580d", "fee": 2, "tickSpacing": 1, "hooks": "0x0000000000000000000000000000000000000000", "poolKey": "0x00000000000000000000000055d398326f99059ff775485246999027b31979550000000000000000000000008ac76a51cc950d9822d68b83fe1ad97b32cd580d000000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000000", "verification": { "transactionHash": "0x4e18d8712884c16ff4dc8df1aed4c8c36e2611504f664c8143c3226378d4331d", "block": 128956678, "logIndex": 370, "tracePath": [2, 1, 0, 3], "method": "Successful cached callTracer swap PoolKey ABI keccak equals receipt Swap poolId", "poolKeyHash": "0x628ea54a6450645d2bb7b2911c8c6f3d7f3944c2f4703c259a1b85bf5569870b" } }, { "id": "0x47a90a2d92a8367a91efa1906bfc8c1e05bf10c4", "token0": "0x55d398326f99059ff775485246999027b3197955", "token1": "0xbb4cdb9cbd36b01bd1cbaebf2de08d9173bc095c", "manager": "0x47a90a2d92a8367a91efa1906bfc8c1e05bf10c4", "type": "classic", "swapCount": 1 }, { "id": "0xac7011a0d0cfde1b06363f2141df9ae5da139759", "token0": "0x55d398326f99059ff775485246999027b3197955", "token1": "0x7765a659c5b0cfbfd9fbc2ef2298b75a598f2d2d", "manager": "0xac7011a0d0cfde1b06363f2141df9ae5da139759", "type": "classic", "swapCount": 0 }, { "id": "0xe1cc96f3ef3bc6a82140bfdf19124223e4a5d906", "token0": "0x544028231562a43b106fbceca722b65cb5c861b0", "token1": "0xf7c736310a1a89b82257443960b372af74632dfe", "manager": "0xe1cc96f3ef3bc6a82140bfdf19124223e4a5d906", "type": "classic", "swapCount": 1 }], "verifiedNonEsimResolutions": [{ "hash": "0x9de80551077e65d2bb1f135f4713e20f8ce7fc62ed00f02094349bb2f9100a4a", "wallet": "0x3ab32cfcacfedeaa42c0f0eb51158c56871f71b9", "chainId": 56, "blockHash": "0x484e20e1a90ca147f2f38a66c49f51c65c3d0ddbcfa71b3ef0e9d53f0aa7c20a", "blockNumber": 128852827, "expectedUSDTraw": "-2075420520015869105", "expectedBNBraw": "2685372145470412", "type": "\u975EESIM\u5151\u6362\u53CA\u8D39\u7528", "reason": "\u5DF2\u9010\u7B14\u6838\u5B9E\u4EA4\u6613\u56DE\u6267\u3001\u6210\u529F\u8C03\u7528\u8DEF\u5F84\u53CA\u539F\u59CB\u6574\u6570\uFF1A\u4ED8\u51FA 2 USDT\uFF0C\u6536\u5230 0.002685372145470412 BNB\uFF1B\u4E0D\u6D89\u53CA ESIM \u4E70\u5356\u6216 LP\u3002\u8DEF\u7531\u7559\u5B58 0.006 USDT \u5DF2\u5305\u542B\u5728\u4E0A\u8FF0\u4ED8\u51FA\u5185\uFF0C\u4E0D\u80FD\u91CD\u590D\u6263\u51CF\u3002\u53E6\u6709 0.075420520015869105 USDT \u6263\u81F3 UserOperation \u4E8B\u4EF6\u4E2D\u7684\u4EE3\u4ED8\u5730\u5740 0x7a956fd329d0c616f2d1dde98bb35694f397df46\uFF1B\u5DF2\u8BA1\u5165\u5B9E\u9645 U \u6536\u652F\uFF0C\u4F46\u4E0D\u6DF7\u5165\u5151\u6362\u672C\u91D1\u3002\u5177\u4F53\u6536\u8D39\u89C4\u5219\u672A\u786E\u8BA4\u3002\u94B1\u5305\u4F59\u989D\u3001Gas \u4E0E\u539F\u6709 ESIM \u4E70\u5356\u91D1\u989D\u4FDD\u6301\u4E0D\u53D8\u3002", "evidence": [{ "sourceFile": "resolutions-five.json", "sourceSHA256": "1561879e5e1c8b152265b5a55979a772a2cd122139048f1e7c2f592893a606c8", "receiptAndTrace": { "status": "fresh-receipt-and-callTracer-match", "checkedAt": "2026-10-26T06:35:26.513233+00:00", "chainId": 56, "receiptSHA256": "72f3c865494d5befcbbc9763f11a2f80cbfe1e87993a3c0df5f7579020aa61aa", "traceSHA256": "fcc141fd465c939849ac9279f48d1575666e10e874497b4a7538fed0f16d8340", "matchesPriorCache": true, "rpcMethods": ["eth_getTransactionReceipt", "debug_traceTransaction"], "sourceCount": 1, "independentEvidenceTypes": 2, "limitation": "One configured RPC provider; receipt logs and successful callTracer are two evidence types, not two independent providers." }, "transactionURL": "https://bscscan.com/tx/0x9de80551077e65d2bb1f135f4713e20f8ce7fc62ed00f02094349bb2f9100a4a", "grossInput": { "asset": "USDT", "amountRaw": "2000000000000000000" }, "output": { "asset": "BNB", "amountRaw": "2685372145470412" }, "routerRetainedIncludedInInput": { "asset": "USDT", "amountRaw": "6000000000000000" }, "extraPaymasterDebit": { "asset": "USDT", "amountRaw": "75420520015869105", "recipient": "0x7a956fd329d0c616f2d1dde98bb35694f397df46" }, "evidenceBoundary": "One RPC provider; successful receipt logs and call trace. Exact transaction only; no ownership or fee-policy inference." }], "day": "2026-10-21", "time": "2026-10-21T09:48:55+08:00" }, { "hash": "0x4e18d8712884c16ff4dc8df1aed4c8c36e2611504f664c8143c3226378d4331d", "wallet": "0xc2b8f3c7db355bbe8d174909d921885d0cf45359", "chainId": 56, "blockHash": "0xbb765d9e0eb829ea4c09e809be910ac89413b506312a418889dc3372bbe0a430", "blockNumber": 128956678, "expectedUSDTraw": "-2000000000000000000", "expectedBNBraw": "2665142864832233", "type": "\u975EESIM\u5151\u6362", "reason": "\u5DF2\u9010\u7B14\u6838\u5B9E\u4EA4\u6613\u56DE\u6267\u3001\u6210\u529F\u8C03\u7528\u8DEF\u5F84\u53CA\u539F\u59CB\u6574\u6570\uFF1A\u4ED8\u51FA 2 USDT\uFF0C\u6536\u5230 0.002665142864832233 BNB\uFF1B\u4E0D\u6D89\u53CA ESIM \u4E70\u5356\u6216 LP\u3002\u8DEF\u7531\u7559\u5B58 0.006 USDT \u5DF2\u5305\u542B\u5728\u4E0A\u8FF0\u4ED8\u51FA\u5185\uFF0C\u4E0D\u80FD\u91CD\u590D\u6263\u51CF\u3002\u94B1\u5305\u4F59\u989D\u3001Gas \u4E0E\u539F\u6709 ESIM \u4E70\u5356\u91D1\u989D\u4FDD\u6301\u4E0D\u53D8\u3002", "evidence": [{ "sourceFile": "resolutions-five.json", "sourceSHA256": "1561879e5e1c8b152265b5a55979a772a2cd122139048f1e7c2f592893a606c8", "receiptAndTrace": { "status": "fresh-receipt-and-callTracer-match", "checkedAt": "2026-10-26T06:35:26.513233+00:00", "chainId": 56, "receiptSHA256": "b11090142ddded5b7fbd808c6eac48f275969b64b77fee71fbff9b5887ea3fc1", "traceSHA256": "a95b0c4989582586d086d310ddab6ce2c99da9dea6d5778c3e413d07e24b89a7", "matchesPriorCache": true, "rpcMethods": ["eth_getTransactionReceipt", "debug_traceTransaction"], "sourceCount": 1, "independentEvidenceTypes": 2, "limitation": "One configured RPC provider; receipt logs and successful callTracer are two evidence types, not two independent providers." }, "transactionURL": "https://bscscan.com/tx/0x4e18d8712884c16ff4dc8df1aed4c8c36e2611504f664c8143c3226378d4331d", "grossInput": { "asset": "USDT", "amountRaw": "2000000000000000000" }, "output": { "asset": "BNB", "amountRaw": "2665142864832233" }, "routerRetainedIncludedInInput": { "asset": "USDT", "amountRaw": "6000000000000000" }, "extraPaymasterDebit": { "asset": "USDT", "amountRaw": "0", "recipient": null }, "evidenceBoundary": "One RPC provider; successful receipt logs and call trace. Exact transaction only; no ownership or fee-policy inference." }], "day": "2026-10-21", "time": "2026-10-21T22:48:06+08:00" }, { "hash": "0xde3c8ccab95c727c36f79ee15f8b2c6786fa17ed4866fba3a3adfa30d8c826f4", "wallet": "0x45a186cba397f354a85e50a33f7b7082c2784ac6", "chainId": 56, "blockHash": "0x08f87f83f86a612839a8ef32a12282809447e11d26aa91f350f89bcdcd615243", "blockNumber": 129070736, "expectedUSDTraw": "-1000000000000000000", "expectedBNBraw": "1345401606380498", "type": "\u975EESIM\u5151\u6362", "reason": "\u5DF2\u9010\u7B14\u6838\u5B9E\u4EA4\u6613\u56DE\u6267\u3001\u6210\u529F\u8C03\u7528\u8DEF\u5F84\u53CA\u539F\u59CB\u6574\u6570\uFF1A\u4ED8\u51FA 1 USDT\uFF0C\u6536\u5230 0.001345401606380498 BNB\uFF1B\u4E0D\u6D89\u53CA ESIM \u4E70\u5356\u6216 LP\u3002\u8DEF\u7531\u7559\u5B58 0.003 USDT \u5DF2\u5305\u542B\u5728\u4E0A\u8FF0\u4ED8\u51FA\u5185\uFF0C\u4E0D\u80FD\u91CD\u590D\u6263\u51CF\u3002\u94B1\u5305\u4F59\u989D\u3001Gas \u4E0E\u539F\u6709 ESIM \u4E70\u5356\u91D1\u989D\u4FDD\u6301\u4E0D\u53D8\u3002", "evidence": [{ "sourceFile": "resolutions-five.json", "sourceSHA256": "1561879e5e1c8b152265b5a55979a772a2cd122139048f1e7c2f592893a606c8", "receiptAndTrace": { "status": "fresh-receipt-and-callTracer-match", "checkedAt": "2026-10-26T06:35:26.513233+00:00", "chainId": 56, "receiptSHA256": "23a7e5cee672d357080fc9e59f0724e49af6cbaabf9e181cd80970f74a7544a7", "traceSHA256": "afc6be8ac113f9b8dd434119610089f15be53eac0c26ad9a0d94ddf0681783f1", "matchesPriorCache": true, "rpcMethods": ["eth_getTransactionReceipt", "debug_traceTransaction"], "sourceCount": 1, "independentEvidenceTypes": 2, "limitation": "One configured RPC provider; receipt logs and successful callTracer are two evidence types, not two independent providers." }, "transactionURL": "https://bscscan.com/tx/0xde3c8ccab95c727c36f79ee15f8b2c6786fa17ed4866fba3a3adfa30d8c826f4", "grossInput": { "asset": "USDT", "amountRaw": "1000000000000000000" }, "output": { "asset": "BNB", "amountRaw": "1345401606380498" }, "routerRetainedIncludedInInput": { "asset": "USDT", "amountRaw": "3000000000000000" }, "extraPaymasterDebit": { "asset": "USDT", "amountRaw": "0", "recipient": null }, "evidenceBoundary": "One RPC provider; successful receipt logs and call trace. Exact transaction only; no ownership or fee-policy inference." }], "day": "2026-10-22", "time": "2026-10-22T13:03:55+08:00" }, { "hash": "0x2d8dcc318e018a448a07a18c5dd4a23ca6ca9d0f176e83991489ae51d7127559", "wallet": "0xe86eaf59765d580a6daccf9644b9867aeed8a18c", "chainId": 56, "blockHash": "0x94f81415d35ce7a7f67c5128b513ff65e37d83aaa928a5592099dba23455de0c", "blockNumber": 129087217, "expectedUSDTraw": "728277494357338733998", "expectedBNBraw": "-990000000000000000", "type": "\u975EESIM\u5151\u6362", "reason": "\u5DF2\u9010\u7B14\u6838\u5B9E\u4EA4\u6613\u56DE\u6267\u3001\u6210\u529F\u8C03\u7528\u8DEF\u5F84\u53CA\u539F\u59CB\u6574\u6570\uFF1A\u4ED8\u51FA 0.99 BNB\uFF0C\u6536\u5230 728.277494357338733998 USDT\uFF1B\u4E0D\u6D89\u53CA ESIM \u4E70\u5356\u6216 LP\u3002\u8DEF\u7531\u7559\u5B58 0.00297 BNB \u5DF2\u5305\u542B\u5728\u4E0A\u8FF0\u4ED8\u51FA\u5185\uFF0C\u4E0D\u80FD\u91CD\u590D\u6263\u51CF\u3002\u94B1\u5305\u4F59\u989D\u3001Gas \u4E0E\u539F\u6709 ESIM \u4E70\u5356\u91D1\u989D\u4FDD\u6301\u4E0D\u53D8\u3002", "evidence": [{ "sourceFile": "resolutions-two.json", "sourceSHA256": "d38403415b84c12960c033c21942453539c42c29f778dd25db7c177f591b26b0", "receiptAndTrace": { "freshNetworkRead": true, "retrievedAt": "2026-10-26T06:35:54.301403+00:00", "chainId": 56, "methods": ["eth_getTransactionByHash", "eth_getTransactionReceipt", "debug_traceTransaction"], "sha256": { "eth_getTransactionByHash": "83feb1a97e2946a5c7c35309294f8362db058e0506592163b069805864ef7977", "eth_getTransactionReceipt": "584b5736549358f75ebeee7a08c5b00e904b14abb7407d540eafd81d728e5274", "debug_traceTransaction": "56e1ccd89184fe807c7e4ad44820c2319ad087a854a7a19bd24997c111927673" }, "cacheIdentical": { "eth_getTransactionByHash": false, "eth_getTransactionReceipt": true, "debug_traceTransaction": true }, "coreFieldsIdentical": true, "optionalMetadataDifference": { "field": "eth_getTransactionByHash.blockTimestamp", "cached": null, "fresh": "0x6ad9b637", "crossCheck": "matches every receipt log blockTimestamp" } }, "transactionURL": "https://bscscan.com/tx/0x2d8dcc318e018a448a07a18c5dd4a23ca6ca9d0f176e83991489ae51d7127559", "grossInput": { "asset": "BNB", "amountRaw": "990000000000000000" }, "output": { "asset": "USDT", "amountRaw": "728277494357338733998" }, "routerRetainedIncludedInInput": { "asset": "BNB", "amountRaw": "2970000000000000" }, "extraPaymasterDebit": { "asset": "USDT", "amountRaw": "0", "recipient": null }, "evidenceBoundary": "One RPC provider; successful receipt logs and call trace. Exact transaction only; no ownership or fee-policy inference." }], "day": "2026-10-22", "time": "2026-10-22T15:07:35+08:00" }, { "hash": "0x13f7e126d881bb246093f93537d7fcad33bd1c6ceca2977dea2fabd5c749b604", "wallet": "0x0dadf9848667cd51ac9bddce543c4f70278e7150", "chainId": 56, "blockHash": "0x8038b93a1b784b7b15f9c24e6d33911ba3d3da80cbcd83206bf3ef9333940e12", "blockNumber": 129468810, "expectedUSDTraw": "-1083466904634631375", "expectedBNBraw": "1351289416337449", "type": "\u975EESIM\u5151\u6362\u53CA\u8D39\u7528", "reason": "\u5DF2\u9010\u7B14\u6838\u5B9E\u4EA4\u6613\u56DE\u6267\u3001\u6210\u529F\u8C03\u7528\u8DEF\u5F84\u53CA\u539F\u59CB\u6574\u6570\uFF1A\u4ED8\u51FA 1 USDT\uFF0C\u6536\u5230 0.001351289416337449 BNB\uFF1B\u4E0D\u6D89\u53CA ESIM \u4E70\u5356\u6216 LP\u3002\u8DEF\u7531\u7559\u5B58 0.003 USDT \u5DF2\u5305\u542B\u5728\u4E0A\u8FF0\u4ED8\u51FA\u5185\uFF0C\u4E0D\u80FD\u91CD\u590D\u6263\u51CF\u3002\u53E6\u6709 0.083466904634631375 USDT \u6263\u81F3 UserOperation \u4E8B\u4EF6\u4E2D\u7684\u4EE3\u4ED8\u5730\u5740 0x7a956fd329d0c616f2d1dde98bb35694f397df46\uFF1B\u5DF2\u8BA1\u5165\u5B9E\u9645 U \u6536\u652F\uFF0C\u4F46\u4E0D\u6DF7\u5165\u5151\u6362\u672C\u91D1\u3002\u5177\u4F53\u6536\u8D39\u89C4\u5219\u672A\u786E\u8BA4\u3002\u94B1\u5305\u4F59\u989D\u3001Gas \u4E0E\u539F\u6709 ESIM \u4E70\u5356\u91D1\u989D\u4FDD\u6301\u4E0D\u53D8\u3002", "evidence": [{ "sourceFile": "resolutions-two.json", "sourceSHA256": "d38403415b84c12960c033c21942453539c42c29f778dd25db7c177f591b26b0", "receiptAndTrace": { "freshNetworkRead": true, "retrievedAt": "2026-10-26T06:35:56.557926+00:00", "chainId": 56, "methods": ["eth_getTransactionByHash", "eth_getTransactionReceipt", "debug_traceTransaction"], "sha256": { "eth_getTransactionByHash": "dedf49b1133412cd9f16e22d0161eed066674811f3ab8238496cde5e89f9c695", "eth_getTransactionReceipt": "a0e478ff09b37764a27db13c83dfae2f300b78b831b1683d55645b79063178a1", "debug_traceTransaction": "7a36b98862871f4a3f1ffda52ce2e0cafe6d41712110e54018ff424afec1f677" }, "cacheIdentical": { "eth_getTransactionByHash": true, "eth_getTransactionReceipt": true, "debug_traceTransaction": true }, "coreFieldsIdentical": true, "optionalMetadataDifference": null }, "transactionURL": "https://bscscan.com/tx/0x13f7e126d881bb246093f93537d7fcad33bd1c6ceca2977dea2fabd5c749b604", "grossInput": { "asset": "USDT", "amountRaw": "1000000000000000000" }, "output": { "asset": "BNB", "amountRaw": "1351289416337449" }, "routerRetainedIncludedInInput": { "asset": "USDT", "amountRaw": "3000000000000000" }, "extraPaymasterDebit": { "asset": "USDT", "amountRaw": "83466904634631375", "recipient": "0x7a956fd329d0c616f2d1dde98bb35694f397df46" }, "evidenceBoundary": "One RPC provider; successful receipt logs and call trace. Exact transaction only; no ownership or fee-policy inference." }], "day": "2026-10-24", "time": "2026-10-24T14:50:22+08:00" }, { "hash": "0xfcd4996c0efb475f3fe6d66f16f20ea1983fc41ef5b45143d7270a38c40f5bb7", "wallet": "0x3759db8f9245291c5a710fdf807e95245e6c4122", "chainId": 56, "blockHash": "0x7a9cdcff27ebed6d8119a864739b69113e7a6ccc39f009bfabfb0165ab021ef5", "blockNumber": 129574278, "expectedUSDTraw": "-1000000000000000000", "expectedBNBraw": "1365396044718319", "type": "\u975EESIM\u5151\u6362", "reason": "\u5DF2\u9010\u7B14\u6838\u5B9E\u4EA4\u6613\u56DE\u6267\u3001\u6210\u529F\u8C03\u7528\u8DEF\u5F84\u53CA\u539F\u59CB\u6574\u6570\uFF1A\u4ED8\u51FA 1 USDT\uFF0C\u6536\u5230 0.001365396044718319 BNB\uFF1B\u4E0D\u6D89\u53CA ESIM \u4E70\u5356\u6216 LP\u3002\u8DEF\u7531\u7559\u5B58 0.003 USDT \u5DF2\u5305\u542B\u5728\u4E0A\u8FF0\u4ED8\u51FA\u5185\uFF0C\u4E0D\u80FD\u91CD\u590D\u6263\u51CF\u3002\u94B1\u5305\u4F59\u989D\u3001Gas \u4E0E\u539F\u6709 ESIM \u4E70\u5356\u91D1\u989D\u4FDD\u6301\u4E0D\u53D8\u3002", "evidence": [{ "sourceFile": "resolutions-five.json", "sourceSHA256": "1561879e5e1c8b152265b5a55979a772a2cd122139048f1e7c2f592893a606c8", "receiptAndTrace": { "status": "fresh-receipt-and-callTracer-match", "checkedAt": "2026-10-26T06:35:26.513233+00:00", "chainId": 56, "receiptSHA256": "f3ba181a56a75e1d65df9fc1b11311f338da09a7873e5154f47ab0ba2a6869f7", "traceSHA256": "67def36e127ca1f9f67b47c8e7a8f7a92a300f4b1a05626ff40a80c5d40c6dc3", "matchesPriorCache": true, "rpcMethods": ["eth_getTransactionReceipt", "debug_traceTransaction"], "sourceCount": 1, "independentEvidenceTypes": 2, "limitation": "One configured RPC provider; receipt logs and successful callTracer are two evidence types, not two independent providers." }, "transactionURL": "https://bscscan.com/tx/0xfcd4996c0efb475f3fe6d66f16f20ea1983fc41ef5b45143d7270a38c40f5bb7", "grossInput": { "asset": "USDT", "amountRaw": "1000000000000000000" }, "output": { "asset": "BNB", "amountRaw": "1365396044718319" }, "routerRetainedIncludedInInput": { "asset": "USDT", "amountRaw": "3000000000000000" }, "extraPaymasterDebit": { "asset": "USDT", "amountRaw": "0", "recipient": null }, "evidenceBoundary": "One RPC provider; successful receipt logs and call trace. Exact transaction only; no ownership or fee-policy inference." }], "day": "2026-10-24", "time": "2026-10-25T04:01:37+08:00" }, { "hash": "0x8a9492f95f67e924118935d2a1f6aa5af9f909f0cb98ed61217b52e6978e98f6", "wallet": "0x45a186cba397f354a85e50a33f7b7082c2784ac6", "chainId": 56, "blockHash": "0xb9c489f92106ec6af60ff7dbb4290aecf97bf2ad19c900dde8db24b073d6e7ca", "blockNumber": 129830365, "expectedUSDTraw": "-1000000000000000000", "expectedBNBraw": "1350437605501286", "type": "\u975EESIM\u5151\u6362", "reason": "\u5DF2\u9010\u7B14\u6838\u5B9E\u4EA4\u6613\u56DE\u6267\u3001\u6210\u529F\u8C03\u7528\u8DEF\u5F84\u53CA\u539F\u59CB\u6574\u6570\uFF1A\u4ED8\u51FA 1 USDT\uFF0C\u6536\u5230 0.001350437605501286 BNB\uFF1B\u4E0D\u6D89\u53CA ESIM \u4E70\u5356\u6216 LP\u3002\u8DEF\u7531\u7559\u5B58 0.003 USDT \u5DF2\u5305\u542B\u5728\u4E0A\u8FF0\u4ED8\u51FA\u5185\uFF0C\u4E0D\u80FD\u91CD\u590D\u6263\u51CF\u3002\u94B1\u5305\u4F59\u989D\u3001Gas \u4E0E\u539F\u6709 ESIM \u4E70\u5356\u91D1\u989D\u4FDD\u6301\u4E0D\u53D8\u3002", "evidence": [{ "sourceFile": "resolutions-five.json", "sourceSHA256": "1561879e5e1c8b152265b5a55979a772a2cd122139048f1e7c2f592893a606c8", "receiptAndTrace": { "status": "fresh-receipt-and-callTracer-match", "checkedAt": "2026-10-26T06:35:26.513233+00:00", "chainId": 56, "receiptSHA256": "e1e1f4021c494d3c90da199880af4552908229be1fb600f1f5607502cb79e7f5", "traceSHA256": "8579b7ac8e3acf6d53f1e0b7eeb18987068d342b8969ac4d94e86c49ffce07fc", "matchesPriorCache": true, "rpcMethods": ["eth_getTransactionReceipt", "debug_traceTransaction"], "sourceCount": 1, "independentEvidenceTypes": 2, "limitation": "One configured RPC provider; receipt logs and successful callTracer are two evidence types, not two independent providers." }, "transactionURL": "https://bscscan.com/tx/0x8a9492f95f67e924118935d2a1f6aa5af9f909f0cb98ed61217b52e6978e98f6", "grossInput": { "asset": "USDT", "amountRaw": "1000000000000000000" }, "output": { "asset": "BNB", "amountRaw": "1350437605501286" }, "routerRetainedIncludedInInput": { "asset": "USDT", "amountRaw": "3000000000000000" }, "extraPaymasterDebit": { "asset": "USDT", "amountRaw": "0", "recipient": null }, "evidenceBoundary": "One RPC provider; successful receipt logs and call trace. Exact transaction only; no ownership or fee-policy inference." }], "day": "2026-10-26", "time": "2026-10-26T12:04:01+08:00" }], "nftSeedAddresses": ["0x4b7d906b209f6cee02091d0139f105c08cb861fd", "0x4eb0621554a3e7619595bed6d16dd592179c2ec1", "0xac80c4ad44ae3386205f4972d1d95712d75fb66f", "0x0dadf9848667cd51ac9bddce543c4f70278e7150", "0x3759db8f9245291c5a710fdf807e95245e6c4122", "0xe86eaf59765d580a6daccf9644b9867aeed8a18c", "0x45a186cba397f354a85e50a33f7b7082c2784ac6", "0xc2b8f3c7db355bbe8d174909d921885d0cf45359", "0x5f714f871acf20cf797a362b7583b4cb0f0bdf24", "0x8bfa50a8973c9d859b01ce6c905ea3c0a0abaddf", "0xc5b5c9f4b80f0b345a06ba7970cc3b8995ed24a4", "0xeecd820601367bf3b8aaef68b4e85495b61007cf", "0x3ab32cfcacfedeaa42c0f0eb51158c56871f71b9", "0x2635f3fe2c6ec8720391f39b09001eddc63a1a23", "0x0946f6a9e3b006984bf9f2250e12b577ccb14909", "0x0d151c68690e7a5821bc7abab74db02a703fe582", "0x040d55a50378815bf23ea17ac81f4428af73ce24", "0xea4bd4aad512ca4dccda821e8693b6b38b51fc68", "0x435883e28439f909f68c536a0c9fc8a6f1248417", "0x41e0836726b37c670acf8bac9efa8964bfc737fe", "0x2aa283101c266cbc20a142ad161d59143112bfc1", "0xb8c7fdcf7e2ab23a231df904257ff59be53ed73d", "0xc40409aee5b913f14dfd8f967299ddf9dc5009a1", "0xe858154e5b1d0c295b24103dbc7671b67faccba3", "0xe8e15e97a8652ebdc8333007ea9d3b0275595d96", "0x85e471fd8abe8e0c6b6f6b4c635956020336a12e", "0xa6b9f2f8507c3dcee32f765361f2c5527d7b6ad6", "0xd21261df561825ef324bd4430487eac32a28a66a", "0x76f9b8a66780986688e265d9a0028623052176c1", "0x1db99241d9e230edc33996567ec2707c42475fd8", "0xdcdb497a0b2ab74753f8e40e36071ce7a0ab4930"], "addressRegistrySheetId": 2601005, "schemaVersion": 2, "spreadsheetId": "1gv68oBO-tO-EPjT51Z-z_hxde2jS7soU0kJNKIZLXWM", "folderId": "1taeQpyRMylhDPhR9g995CbuW1JC_F-lg", "dailySheetId": 2601003, "detailSheetId": 2601004 };
       var ESIM_SIGNATURES = { "v2swap": "0xd78ad95fa46c994b6551d0da85fc275fe613ce37657fb8d5e3d130840159d822", "v3swap": "0xc42079f94a6350d7e6235f29174924f928cc2ac818eb64fed8004e115fbcca67", "pcsv3swap": "0x19b47279256b2a23a1665c810c8d55a1758940ee09377d4f8d26497a3577dc83", "infswap": "0x04206ad2b7c0f463bff3dd4f33c5735b0f2957a351e4f79763a4fa9e775dd237", "uniswap": "0x40e9cecb9f5f1f1c5b9c97dec2917b7ee92e57ba5563708daca94dd84ad7112f", "inflp": "0xf208f4912782fd25c7f114ca3723a2d5dd6f3bcc3ac8db5af63baa85f711d5ec", "v3mint": "0x7a53080ba414158be7ec69b987b5fb7d07dee101fe85488f0853ae16239d0bde", "v3burn": "0x0c396cd989a39f4459b5fa1aed6a9a8dcdbc45908acfd67e028cd568da98982c", "v3collect": "0x70935338e69775456a85ddef226c395fb668b63fa0115f5f20610b388e6ca9c0", "v2mint": "0x4c209b5fc8ad50758f13e2e1088ba56a560dff690a1c6fef26394f4c03821c4f", "v2burn": "0xdccd412f0b1252819cb1fd330b93224ca42612892bb3f4f789976e6d81936496", "modifyLiquidity": "0x9371d11530af2cff27a016eed6923462a8179d9d7a7ad119d532185c103aa148" };
@@ -6690,8 +10409,8 @@ var require_engine = __commonJS({
       }
       function esimTrimRpc(method, result) {
         if (method === "eth_getTransactionReceipt") {
-          var topics = new Set(Object.values(ESIM_SIGNATURES).concat(["0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef", "0x49628fd1471006c1482da88028e9ce4dbb080b815c9b0344d39e5a8e6ec1419f"]));
-          var x = { esimReceiptSchema: 2 };
+          var topics = new Set(Object.values(ESIM_SIGNATURES).concat(["0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef", "0x49628fd1471006c1482da88028e9ce4dbb080b815c9b0344d39e5a8e6ec1419f", "0x7fcf532c15f0a6db0bd6d0e038bea71d30d808c7d98cb3bf7268a95bf5081b65", "0x2251435bd151cd72851a82be055bf6d1c3d7f34d08d56493dddf874229b8e897"]));
+          var x = { esimReceiptSchema: 3 };
           ["transactionHash", "transactionIndex", "blockHash", "blockNumber", "from", "to", "gasUsed", "effectiveGasPrice", "status"].forEach((k) => {
             if (result[k] !== void 0) x[k] = result[k];
           });
@@ -6917,7 +10636,7 @@ var require_engine = __commonJS({
           esimLedgerAddress_(t.to);
           (nativeByTx[t.hash] || (nativeByTx[t.hash] = [])).push(t);
         });
-        var totals = {}, rows = [], flows = [], lpEvents = [], otherTokens = [], buyKeys = /* @__PURE__ */ new Set(), otherNativeKeys = /* @__PURE__ */ new Set(), classificationNotes = {};
+        var totals = {}, rows = [], flows = [], lpEvents = [], otherTokens = [], buyKeys = /* @__PURE__ */ new Set(), sellKeys = /* @__PURE__ */ new Set(), otherNativeKeys = /* @__PURE__ */ new Set(), classificationNotes = {};
         wallets.forEach(function(wallet) {
           totals[wallet] = {};
         });
@@ -7035,7 +10754,12 @@ var require_engine = __commonJS({
             else if (lp) kind = esim < 0n || usdt < 0n ? "LP\u6295\u5165/\u8C03\u6574" : esim > 0n || usdt > 0n ? "LP\u6536\u56DE/\u9886\u53D6\u8D39\u7528" : "LP\u8C03\u6574";
             else if (swaps && esim > 0n && usdt < 0n) kind = "\u4E70\u5165";
             else if (swaps && esim < 0n && usdt > 0n) kind = "\u5356\u51FA";
-            else if (swaps && esim > 0n && usdt === 0n && bnb < 0n) kind = "BNB\u4E70\u5165";
+            else if (swaps && esim < 0n && usdt === 0n && bnb > 0n && !native.some(function(t) {
+              return addresses.has(t.from.toLowerCase()) && addresses.has(t.to.toLowerCase()) && (t.from.toLowerCase() === wallet || t.to.toLowerCase() === wallet);
+            }) && esimLedgerNativeSale_(r, native, wallet, cfg.token, -esim, bnb)) {
+              kind = "\u5356\u51FA";
+              sellKeys.add(hash + "|" + wallet);
+            } else if (swaps && esim > 0n && usdt === 0n && bnb < 0n) kind = "BNB\u4E70\u5165";
             else if (swaps && (esim || usdt)) kind = "\u5176\u4ED6\u5E01\u79CD/\u7EC4\u5408\u5151\u6362";
             else if (esim || usdt) kind = "\u5916\u90E8\u8F6C\u8D26";
             else if (["internalInESIM", "internalOutESIM", "internalInUSDT", "internalOutUSDT"].some(function(k) {
@@ -7063,6 +10787,10 @@ var require_engine = __commonJS({
               if (route || !nonEsimCounterflow) resolution = null;
             }
             var classificationNote = "";
+            if (sellKeys.has(hash + "|" + wallet)) {
+              classificationNote = "\u5DF2\u6838\u5BF9\u6210\u529F ESIM Swap\u3001\u8DEF\u7531\u7ED3\u7B97\u4E8B\u4EF6\u3001WBNB \u64A4\u56DE\u53CA\u8FD4\u56DE\u94B1\u5305\u7684\u539F\u751F\u5E01\u8C03\u7528\uFF1BBNB \u56DE\u6B3E\u5355\u5217\uFF0C\u4E0D\u6298\u7B97 USDT \u6216\u8BA1\u5916\u90E8\u5165\u91D1\u3002";
+              (classificationNotes[wallet] || (classificationNotes[wallet] = [])).push({ hash, type: "BNB\u7ED3\u7B97\u5356\u51FA", reason: classificationNote, USDT: String(usdt), BNB: String(bnb), amountUnit: "raw-18-decimals" });
+            }
             if (nonEsimCounterflow) {
               kind = resolution ? resolution.type : route ? "\u975EESIM\u5151\u6362" : "\u5176\u4ED6\u5F85\u6838\u5B9E\u6536\u652F";
               otherNativeKeys.add(hash + "|" + wallet);
@@ -7157,8 +10885,8 @@ var require_engine = __commonJS({
           var from = t.from.toLowerCase(), to = t.to.toLowerCase(), internal = addresses.has(from) && addresses.has(to), amount = esimLedgerRaw_(t.amountRaw, "native amount");
           [[from, -1n], [to, 1n]].forEach(function(part) {
             if (!addresses.has(part[0])) return;
-            var category = buyKeys.has(t.hash + "|" + part[0]) ? "buy" : internal ? "internal" : otherNativeKeys.has(t.hash + "|" + part[0]) ? "other" : part[1] > 0n ? "deposit" : "withdraw";
-            esimLedgerAdd_(nativeTotals[part[0]], category, amount * (category === "buy" || category === "internal" || category === "other" ? part[1] : 1n));
+            var category = buyKeys.has(t.hash + "|" + part[0]) ? "buy" : sellKeys.has(t.hash + "|" + part[0]) ? "sell" : internal ? "internal" : otherNativeKeys.has(t.hash + "|" + part[0]) ? "other" : part[1] > 0n ? "deposit" : "withdraw";
+            esimLedgerAdd_(nativeTotals[part[0]], category, amount * (category === "buy" || category === "sell" || category === "internal" || category === "other" ? part[1] : 1n));
           });
         });
         wallets.forEach(function(wallet) {
@@ -7179,6 +10907,7 @@ var require_engine = __commonJS({
           rec.gas = esimLedgerUnit_(esimLedgerGet_(c, "gas"));
           rec.bnbBuyCost = esimLedgerUnit_(esimLedgerGet_(c, "bnbBuyCost"));
           rec.lpUnsplit = Number(esimLedgerGet_(c, "lpUnsplit"));
+          rec.raw.gas = String(esimLedgerGet_(c, "gas"));
           ["ESIM", "USDT"].forEach(function(sym) {
             ["\u4E70\u5165", "\u5356\u51FA", "lpIn", "lpOut", "lpFee", "deposit", "withdraw", "other", "internalIn", "internalOut", "bnbBuy"].forEach(function(prefix) {
               var raw = esimLedgerGet_(c, prefix + sym);
@@ -7193,7 +10922,7 @@ var require_engine = __commonJS({
           rec.classificationNotes = classificationNotes[wallet] || [];
           daily.push(rec);
           var n = { day, wallet, raw: {} };
-          ["buy", "internal", "deposit", "withdraw", "other"].forEach(function(key2) {
+          ["buy", "sell", "internal", "deposit", "withdraw", "other"].forEach(function(key2) {
             var raw = esimLedgerGet_(nativeTotals[wallet], key2);
             n[key2] = esimLedgerUnit_(raw);
             n.raw[key2] = String(raw);
@@ -7270,6 +10999,27 @@ var require_engine = __commonJS({
         if (w.length < 2) return null;
         var sign = kind === "infswap" || kind === "uniswap" ? 1n : -1n;
         return [BigInt.asIntN(256, w[0]) * sign, BigInt.asIntN(256, w[1]) * sign];
+      }
+      function esimLedgerNativeSale_(receipt, native, wallet, token, sold, received) {
+        var entry = "0x07964f135f276412b3182a3b2407b8dd45000000", wrapped = "0xbb4cdb9cbd36b01bd1cbaebf2de08d9173bc095c", zero = "0x0000000000000000000000000000000000000000";
+        var settlements = [], withdrawals = [];
+        receipt.logs.forEach(function(log) {
+          if (log.removed) return;
+          var topics = log.topics || [];
+          if (log.address.toLowerCase() === entry && topics[0] === "0x2251435bd151cd72851a82be055bf6d1c3d7f34d08d56493dddf874229b8e897" && topics.length === 4 && esimLedgerAddress_("0x" + topics[1].slice(-40)) === token.toLowerCase() && "0x" + topics[2].slice(-40) === zero && "0x" + topics[3].slice(-40) === wallet) {
+            var words = esimLedgerWords_(log.data);
+            if (words.length >= 2 && words[0] === sold && words[1] === received) settlements.push(log);
+          }
+          if (log.address.toLowerCase() === wrapped && topics[0] === "0x7fcf532c15f0a6db0bd6d0e038bea71d30d808c7d98cb3bf7268a95bf5081b65" && topics.length === 2 && BigInt(log.data) === received) withdrawals.push("0x" + topics[1].slice(-40));
+        });
+        var legs = native.filter(function(t) {
+          return t.from.toLowerCase() === wallet || t.to.toLowerCase() === wallet;
+        });
+        return settlements.length === 1 && withdrawals.length === 1 && legs.length > 0 && legs.every(function(t) {
+          return t.from.toLowerCase() === withdrawals[0] && t.to.toLowerCase() === wallet;
+        }) && legs.reduce(function(n, t) {
+          return n + BigInt(t.amountRaw);
+        }, 0n) === received;
       }
       function esimLedgerSwapRoute_(edges, from, to) {
         var zero = "0x0000000000000000000000000000000000000000", wrapped = "0xbb4cdb9cbd36b01bd1cbaebf2de08d9173bc095c";
@@ -8079,7 +11829,7 @@ var require_engine = __commonJS({
             if (asset === "BNB") {
               var n = ns[r.wallet];
               if (!n) throw new Error("BNB\u5206\u7C7B\u7F3A\u5931");
-              vals = [r.openingBNB, -r.bnbBuyCost, 0, 0, 0, 0, n.deposit, n.withdraw, n.internal, n.other === void 0 ? 0 : n.other, r.gas, r.closingBNB, null, null];
+              vals = [r.openingBNB, -r.bnbBuyCost, n.sell || 0, 0, 0, 0, n.deposit, n.withdraw, n.internal, n.other === void 0 ? 0 : n.other, r.gas, r.closingBNB, null, null];
             } else vals = [r["opening" + asset], r["\u4E70\u5165" + asset] + r["bnbBuy" + asset], r["\u5356\u51FA" + asset], r["lpIn" + asset], r["lpOut" + asset], r["lpFee" + asset], r["deposit" + asset], r["withdraw" + asset], r["internalIn" + asset] - r["internalOut" + asset], r["other" + asset], 0, r["closing" + asset], r["openingLP" + asset], r["closingLP" + asset]];
             if (vals.some((v) => v !== null && !Number.isFinite(v))) throw new Error("\u6536\u652F\u6570\u636E\u7F3A\u5C11\u6570\u503C\uFF0C\u505C\u6B62\u53D1\u5E03");
             var line = start + newDetail.length + 8, formula = "=ROUND(O" + line + "-(SUM(D" + line + ":F" + line + ")-G" + line + "+SUM(H" + line + ":J" + line + ")-K" + line + "+SUM(L" + line + ":M" + line + ")-N" + line + ")," + (asset === "BNB" ? 10 : 8) + ")";
@@ -8735,14 +12485,14 @@ var require_engine = __commonJS({
   }
 });
 
-// ../../../../ESIM市值统计/工程/esim-daily-ledger/web/scripts/server-backfill.js
+// ../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/scripts/server-backfill.js
 import { setTimeout as sleep } from "node:timers/promises";
 
-// ../../../../ESIM市值统计/工程/esim-daily-ledger/web/lib/collector.js
+// ../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/lib/collector.js
 import { createHash as createHash4 } from "node:crypto";
 import { isDeepStrictEqual } from "node:util";
 
-// ../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/pg/esm/index.mjs
+// ../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/pg/esm/index.mjs
 var import_lib = __toESM(require_lib2(), 1);
 var Client = import_lib.default.Client;
 var Pool = import_lib.default.Pool;
@@ -8757,7 +12507,7 @@ var TypeOverrides = import_lib.default.TypeOverrides;
 var defaults = import_lib.default.defaults;
 var esm_default = import_lib.default;
 
-// ../../../../ESIM市值统计/工程/esim-daily-ledger/web/lib/db.js
+// ../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/lib/db.js
 var import_functions = __toESM(require_functions(), 1);
 esm_default.types.setTypeParser(1082, (v) => v);
 var cache = globalThis;
@@ -8795,10 +12545,10 @@ async function transaction(fn) {
   }
 }
 
-// ../../../../ESIM市值统计/工程/esim-daily-ledger/web/lib/rpc.js
+// ../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/lib/rpc.js
 import { createHash as createHash2 } from "node:crypto";
 
-// ../../../../ESIM市值统计/工程/esim-daily-ledger/web/lib/sync-plan.js
+// ../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/lib/sync-plan.js
 import { createHash } from "node:crypto";
 var DEFAULT_START = "2026-09-30";
 function validStartDay(day) {
@@ -8849,7 +12599,7 @@ function isTransientSyncError(error) {
   return isBoundaryPending(error) || ["TimeoutError", "AbortError"].includes(error?.name) || [429, -32005].includes(error?.code) || /timeout|timed out|operation was aborted|fetch failed|ECONNRESET|ETIMEDOUT|链上接口暂不可用|Internal error/i.test(error?.message || "");
 }
 
-// ../../../../ESIM市值统计/工程/esim-daily-ledger/web/lib/rpc.js
+// ../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/lib/rpc.js
 var NeedRpc = class extends Error {
   constructor(calls) {
     super("NEED_RPC");
@@ -8937,7 +12687,7 @@ async function rpc(method, params, cache2 = {}, trim = (m, x) => x) {
   return cache2[key(q)];
 }
 
-// ../../../../ESIM市值统计/工程/esim-daily-ledger/web/lib/write-snapshot.js
+// ../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/lib/write-snapshot.js
 async function insertRows(c, table, columns, rows) {
   for (let i = 0; i < rows.length; i += 150) {
     const chunk = rows.slice(i, i + 150), values = chunk.flat(), sql = chunk.map((r, j) => "(" + r.map((_, k) => "$" + (j * r.length + k + 1)).join(",") + ")").join(",");
@@ -8967,7 +12717,7 @@ async function publish(snapshot2, lease) {
   });
 }
 
-// ../../../../ESIM市值统计/工程/esim-daily-ledger/web/lib/verified-exchange.js
+// ../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/lib/verified-exchange.js
 import { createHash as createHash3 } from "node:crypto";
 var ENTRY = "0x07964f135f276412b3182a3b2407b8dd45000000";
 var U = "0x55d398326f99059ff775485246999027b3197955";
@@ -9024,7 +12774,7 @@ function verifyGasExchange({ wallet, esim, tx, receipt, trace }) {
   }
 }
 
-// ../../../../ESIM市值统计/工程/esim-daily-ledger/web/lib/transfer-fees.js
+// ../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/lib/transfer-fees.js
 var TRANSFER2 = "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef";
 var USEROP = "0x49628fd1471006c1482da88028e9ce4dbb080b815c9b0344d39e5a8e6ec1419f";
 var ENTRY2 = "0x4337084d9e255ff0702461cf8895ce9e3b5ff108";
@@ -9047,7 +12797,7 @@ function verifiedTransferFees(result, receipts, usdt) {
   return fees;
 }
 
-// ../../../../ESIM市值统计/工程/esim-daily-ledger/web/lib/collector.js
+// ../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/lib/collector.js
 var import_engine = __toESM(require_engine(), 1);
 var BOT = "0xe1de6ac2ee058df5d3be8edeb62a8815fd13ff5a";
 var EVENT = "0x7530424e0c452360e492059aa00e241fcb95eef959a0d17221f75f464f49eb3e";
@@ -9059,6 +12809,9 @@ var adr = (t) => "0x" + t.slice(-40).toLowerCase();
 var labels = { init: "\u786E\u8BA4\u7EDF\u8BA1\u65F6\u95F4", transfers: "\u8BFB\u53D6\u666E\u901A\u94B1\u5305\u6D41\u6C34", nfts: "\u6838\u5BF9LP\u5F52\u5C5E", transactions: "\u8BFB\u53D6\u666E\u901A\u94B1\u5305\u51ED\u8BC1", balances: "\u6838\u5BF9\u671F\u521D\u671F\u672B\u4F59\u989D", nonces: "\u8865\u67E5\u9057\u6F0F\u6D41\u6C34", traces: "\u533A\u5206\u8F6C\u8D26\u4E0E\u624B\u7EED\u8D39", lp: "\u6838\u5BF9LP\u672C\u91D1", times: "\u6838\u5BF9\u6D41\u6C34\u65F6\u95F4", analyze: "\u6838\u5BF9\u4F59\u989D", residual: "\u8865\u67E5\u4F59\u989D\u5DEE\u989D", extra: "\u8865\u5145\u94FE\u4E0A\u51ED\u8BC1", ready: "\u4FDD\u5B58\u5DF2\u6838\u9A8C\u7ED3\u679C" };
 function transactionHashes(transfers) {
   return [...new Set(transfers.map((t) => t.hash))];
+}
+function nativeReceiptQueries(j, wallets) {
+  return [...new Set(j.nativeTransfers.filter((t) => wallets.includes(t.to.toLowerCase()) && j.receipts[t.hash]?.esimReceiptSchema !== 3).map((t) => t.hash))].map((h) => ["eth_getTransactionReceipt", [h]]);
 }
 function positionsFromView(view, day) {
   return view.rows.map((r, i) => [day, r[1].match(/address\/(0x[0-9a-f]+)/)[1], r[2], ...r.slice(3, 17).map((x) => String(x ?? 0)), "0", view.notes[i] || ""]);
@@ -9090,10 +12843,17 @@ function exactPositions(view, day, result, balanceOnly, receipts = {}, usdt = ""
     r.withdrawUSDT = String(BigInt(r.withdrawUSDT) - n);
     r.otherUSDT = String(BigInt(r.otherUSDT) - n);
   }
+  const native = new Map((result.nativeCategories || []).map((r) => [r.wallet, r.raw]));
   return positionsFromView(view, day).map((p) => {
-    if (!["ESIM", "USDT"].includes(p[2])) return p;
     const r = raw.get(p[1]), a = p[2];
     if (!r) throw Error("\u7F3A\u5C11\u539F\u59CB\u6574\u6570\u8D26\u76EE");
+    if (a === "BNB") {
+      const n = native.get(p[1]);
+      if (!n || r.gas === void 0) throw Error("\u7F3A\u5C11BNB\u539F\u59CB\u6574\u6570\u8D26\u76EE");
+      [r.openingBNB, n.buy, n.sell, n.deposit, n.withdraw, n.internal, n.other, r.gas, r.closingBNB].forEach((v2, i) => p[[3, 4, 5, 9, 10, 11, 12, 13, 14][i]] = tokenUnits(v2));
+      return p;
+    }
+    if (!["ESIM", "USDT"].includes(a)) return p;
     const v = [r["opening" + a], String(BigInt(r["\u4E70\u5165" + a]) + BigInt(r["bnbBuy" + a])), r["\u5356\u51FA" + a], r["lpIn" + a], r["lpOut" + a], r["lpFee" + a], r["deposit" + a], r["withdraw" + a], String(BigInt(r["internalIn" + a]) - BigInt(r["internalOut" + a])), r["other" + a], "0", r["closing" + a]];
     v.forEach((n, i) => p[i + 3] = tokenUnits(n));
     return p;
@@ -9260,6 +13020,7 @@ async function runSync(id, budget = 45e3) {
       engine.setRPC(reader(s.cache));
       engine.setJob(j);
       s.stage = `${s.index + 1}/${s.plan.length}\u5929 \xB7 ${planned.day} \xB7 ${labels[j.stage] || j.stage}`;
+      if (j.stage === "ready" && j.result?.daily.some((r) => r.raw?.gas === void 0)) j.stage = "analyze";
       try {
         if (j.stage === "transfers" && j.index === 0) {
           const qs = walletTransferQueries(scope.wallets, j);
@@ -9288,6 +13049,15 @@ async function runSync(id, budget = 45e3) {
           s.cache = {};
           s.retryCount = 0;
           continue;
+        }
+        if (j.stage === "analyze") {
+          const qs = nativeReceiptQueries(j, scope.wallets), restored = {};
+          if (qs.length) await fill(qs, restored, (m, r) => engine.trim(m, r));
+          for (const q of qs) {
+            const h = q[1][0], receipt = restored[key(q)];
+            if (!receipt || receipt.transactionHash !== h || receipt.blockHash !== j.receipts[h]?.blockHash) throw Error("BNB\u7ED3\u7B97\u539F\u59CB\u56DE\u6267\u7F3A\u5931\u6216\u533A\u5757\u4E0D\u4E00\u81F4");
+            j.receipts[h] = receipt;
+          }
         }
         const draft = structuredClone(j);
         engine.setJob(draft);
@@ -9326,7 +13096,7 @@ async function runSync(id, budget = 45e3) {
   }
 }
 
-// ../../../../ESIM市值统计/工程/esim-daily-ledger/web/lib/worker-loop.js
+// ../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/lib/worker-loop.js
 async function continueJob({ id, read, step, sleep: sleep2, now = Date.now, onProgress = () => {
 }, budget = 6e4, maxMs = 144e5 }) {
   if (!/^[0-9a-f-]{36}$/.test(id || "") || !Number.isInteger(budget) || budget < 1 || budget > 9e4) throw Error("INVALID_BACKFILL_JOB");
@@ -9354,7 +13124,7 @@ async function continueJob({ id, read, step, sleep: sleep2, now = Date.now, onPr
   throw Error("BACKFILL_WINDOW_ENDED");
 }
 
-// ../../../../ESIM市值统计/工程/esim-daily-ledger/web/scripts/server-backfill.js
+// ../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/scripts/server-backfill.js
 process.env.DATABASE_URL ||= process.env.ESIM_REALTIME_DATABASE_URL;
 process.env.BNB_RPC_URL ||= process.env.ALCHEMY_API_KEY ? `https://bnb-mainnet.g.alchemy.com/v2/${process.env.ALCHEMY_API_KEY}` : "";
 try {
