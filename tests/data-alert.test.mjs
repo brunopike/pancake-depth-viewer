@@ -78,3 +78,17 @@ test('initial cache display is a loading state, not a failed update; a real fail
  const failed=snapshotStatus(entries,{now,realtime:true,loading:true,failed:true,retained:true});
  assert.equal(failed.alert.severity,'error');assert.match(failed.alert.reason,/读取失败/);
 });
+test('routine fresh backfill stays quiet; overdue backfill and incomplete historical data still alert',()=>{
+ const entries=[['交易',{cutoff:now/1000-60}],['持仓',{cutoff:now/1000-30}]];
+ assert.equal(snapshotStatus(entries,{now,realtime:true,health:{error:'BACKFILL_IN_PROGRESS'}}).alert,null);
+ assert(snapshotStatus([['交易',{cutoff:now/1000-901}]],{now,realtime:true,health:{error:'BACKFILL_IN_PROGRESS'}}).alert);
+ const auxiliary={provenance:{cutoff:now/1000-7201},cohort:{cutoff:now/1000},archive:{cutoff:now/1000}};
+ assert.match(snapshotStatus(entries,{now,realtime:true,health:{error:'BACKFILL_IN_PROGRESS',auxiliary}}).alert.reason,/超过两小时/);
+});
+test('the ordinary status strip stays hidden; unresolved problems use only the top alert',()=>{
+ const status={},button={dataset:{},disabled:false},entries=[['交易',{cutoff:Date.now()/1000-30}]];
+ showSnapshotStatus(status,button,entries,{realtime:true});assert.equal(status.hidden,true);
+ showSnapshotStatus(status,button,entries,{realtime:true,loading:true});assert.equal(status.hidden,true);
+ showSnapshotStatus(status,button,entries,{realtime:true,failed:true});assert.equal(status.hidden,true);assert.equal(button.dataset.snapshotWarning,'true');
+ showSnapshotStatus(status,button,entries,{realtime:true});assert.equal(status.hidden,true);
+});

@@ -23,9 +23,10 @@ export function snapshotStatus(entries,{retained=false,failed=false,loading=fals
  const running=kind=>health?.auxiliaryJobs?.[kind]?.running===true;
  const auxiliaryReason=auxiliary.map(issue=>{const kind=issue.split(':')[0];return labels[kind]+(issue.endsWith(':FUTURE_TIME')?'数据时间异常':running(kind)?'正在补算，已发布结果尚未更新':issue.endsWith(':PENDING')?'尚未完成':'已发布数据超过两小时未更新');}).join('；');
  const future=times.some(([,value])=>value.cutoff*1000>now+60000);
- const historyOnly=realtime&&auxiliary.length>0&&!retained&&!failed&&!missing&&!stale&&!future&&!health?.error&&!health?.unavailable&&!auxiliary.some(i=>i.endsWith(':FUTURE_TIME'));
+ const backfill=health?.error==='BACKFILL_IN_PROGRESS',routineBackfill=backfill&&!retained&&!failed&&!missing&&!stale&&!future;
+ const historyOnly=realtime&&auxiliary.length>0&&!retained&&!failed&&!missing&&!stale&&!future&&(!health?.error||backfill)&&!health?.unavailable&&!auxiliary.some(i=>i.endsWith(':FUTURE_TIME'));
  const historyRunning=auxiliary.some(i=>running(i.split(':')[0]));
- const reason=realtime&&[health?.unavailable?'实时通道暂不可用，将使用定时快照补查':health?.error==='BACKFILL_IN_PROGRESS'?'正在补齐停更期间的链上记录':health?.error==='RPC_CAPACITY_EXCEEDED'?'链上数据源额度受限，自动更新暂停':health?.error?chainFailureReason(health.error):'',auxiliaryReason].filter(Boolean).join('；');
+ const reason=realtime&&[health?.unavailable?'实时通道暂不可用，将使用定时快照补查':backfill?(routineBackfill?'':'正在补齐停更期间的链上记录'):health?.error==='RPC_CAPACITY_EXCEEDED'?'链上数据源额度受限，自动更新暂停':health?.error?chainFailureReason(health.error):'',auxiliaryReason].filter(Boolean).join('；');
  const date=s=>new Date(s*1000).toLocaleString('zh-CN',{timeZone:'Asia/Shanghai',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hour12:false});
  const prefix=historyOnly?entries.map(([label])=>label).join('和')+'已更新，部分历史统计待更新':stale?`快照已过期，最早距今 ${ageMinutes} 分钟`:retained||failed?'更新未完成，保留已显示数据':reason?'当前显示上次核验快照':'已读取最新可用快照';
  const details=entries.map(([label,value])=>Number.isFinite(value?.cutoff)?`${label}截至 ${date(value.cutoff)}`:`${label}数据暂缺`);
@@ -48,7 +49,7 @@ export function showSnapshotStatus(status,button,entries,options){
  readFailed=options?.failed===true;
  lastDisplay=[status,button,entries,options];
  const result=snapshotStatus(entries,options);
- status.textContent=result.text;status.className=result.warning?'notice':'success';
+ status.textContent=result.text;status.className=result.warning?'notice':'success';status.hidden=true;
  renderDataAlert(result.alert);
  button.dataset.snapshotWarning=String(result.warning);button.title=result.text;
  if(!button.disabled)button.textContent=refreshButtonLabel(button);

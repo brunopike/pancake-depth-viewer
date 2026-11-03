@@ -16,7 +16,7 @@ test('minute updates warn at fifteen minutes and expose capacity or backfill wit
  const now=1791918000000,entries=[['交易',{cutoff:now/1000-900}]];
  assert.equal(snapshotStatus(entries,{now,realtime:true}).warning,true);
  assert.equal(snapshotStatus(entries,{now,realtime:false}).warning,false);
- for(const [error,message] of [['RPC_CAPACITY_EXCEEDED','额度受限'],['BACKFILL_IN_PROGRESS','补齐停更'],['private details','自动重试']]){
+ for(const [error,message] of [['RPC_CAPACITY_EXCEEDED','额度受限'],['private details','自动重试']]){
   const r=snapshotStatus([['交易',{cutoff:now/1000-60}]],{now,realtime:true,health:{error}});
   assert.equal(r.warning,true);assert.match(r.text,new RegExp(message));assert.doesNotMatch(r.text,/private details|已读取最新可用/);
  }
