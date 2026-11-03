@@ -75,6 +75,7 @@ test('initial cache display is a loading state, not a failed update; a real fail
  const entries=[['交易',{cutoff:now/1000-10}],['持仓',null]];
  const pending=snapshotStatus(entries,{now,realtime:true,loading:true});
  assert.equal(pending.alert,null);assert.equal(pending.warning,false);assert.match(pending.text,/正在读取最新/);
+ assert.equal(snapshotStatus(entries,{now,realtime:true,loading:true,health:{error:'BACKFILL_IN_PROGRESS'}}).alert,null);
  const failed=snapshotStatus(entries,{now,realtime:true,loading:true,failed:true,retained:true});
  assert.equal(failed.alert.severity,'error');assert.match(failed.alert.reason,/读取失败/);
 });
