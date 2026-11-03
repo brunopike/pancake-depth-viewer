@@ -26,6 +26,7 @@ export function snapshotStatus(entries,{retained=false,failed=false,loading=fals
  const backfill=health?.error==='BACKFILL_IN_PROGRESS',routineBackfill=backfill&&!retained&&!failed&&!missing&&!stale&&!future;
  const historyOnly=realtime&&auxiliary.length>0&&!retained&&!failed&&!missing&&!stale&&!future&&(!health?.error||backfill)&&!health?.unavailable&&!auxiliary.some(i=>i.endsWith(':FUTURE_TIME'));
  const historyRunning=auxiliary.some(i=>running(i.split(':')[0]));
+ const historyProgress=historyOnly&&auxiliary.every(i=>running(i.split(':')[0]));
  const reason=realtime&&[health?.unavailable?'实时通道暂不可用，将使用定时快照补查':backfill?(routineBackfill?'':'正在补齐停更期间的链上记录'):health?.error==='RPC_CAPACITY_EXCEEDED'?'链上数据源额度受限，自动更新暂停':health?.error?chainFailureReason(health.error):'',auxiliaryReason].filter(Boolean).join('；');
  const date=s=>new Date(s*1000).toLocaleString('zh-CN',{timeZone:'Asia/Shanghai',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hour12:false});
  const prefix=historyOnly?entries.map(([label])=>label).join('和')+'已更新，部分历史统计待更新':stale?`快照已过期，最早距今 ${ageMinutes} 分钟`:retained||failed?'更新未完成，保留已显示数据':reason?'当前显示上次核验快照':'已读取最新可用快照';
@@ -43,7 +44,7 @@ export function snapshotStatus(entries,{retained=false,failed=false,loading=fals
  else if(Number(health?.pendingBlock)>Number(health?.processedBlock)&&now-Date.parse(health?.lastProcessed)<300000)recovery='正在恢复：后台正在补齐后续区块';
  const updates=[...times.map(([,v])=>v.cutoff),...auxiliary.map(issue=>health.auxiliary[issue.split(':')[0]]?.cutoff).filter(Number.isFinite)];
  const lastUpdated=updates.length&&!auxiliary.some(issue=>issue.endsWith(':PENDING'))?new Date(Math.min(...updates)*1000).toISOString():null;
- return {warning,alert:warning?{severity:historyOnly?'warning':'error',scope:historyOnly?'history':'core',title:historyOnly?'ESIM 链上 · 历史统计待更新':'ESIM 链上 · 数据更新异常',reason:causes.join('；')||'数据更新状态异常',lastUpdated,recovery}:null,text:[prefix,reason,...details,warning?recovery:null,realtime?'北京时间 · Webhook 触发核验；10 分钟兜底补查；每小时存档':'北京时间 · 后台目标每 60 分钟更新；页面刷新读取可用快照'].filter(Boolean).join(' · ')};
+ return {warning,alert:warning?{severity:historyProgress?'progress':historyOnly?'warning':'error',scope:historyOnly?'history':'core',title:historyProgress?'历史数据补充进行中':historyOnly?'ESIM 链上 · 历史统计待更新':'ESIM 链上 · 数据更新异常',reason:causes.join('；')||'数据更新状态异常',lastUpdated,recovery}:null,text:[prefix,reason,...details,warning?recovery:null,realtime?'北京时间 · Webhook 触发核验；10 分钟兜底补查；每小时存档':'北京时间 · 后台目标每 60 分钟更新；页面刷新读取可用快照'].filter(Boolean).join(' · ')};
 }
 export function showSnapshotStatus(status,button,entries,options){
  readFailed=options?.failed===true;

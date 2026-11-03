@@ -51,7 +51,7 @@ test('historical lag is scoped amber and reports a running verifier without clai
  const auxiliary=Object.fromEntries(['provenance','cohort','archive'].map(k=>[k,{cutoff:now/1000-60}]));auxiliary.provenance.cutoff=now/1000-7201;
  const options={now,realtime:true,health:{auxiliary,auxiliaryJobs:{provenance:{running:true}}}};
  const r=snapshotStatus([['交易',{cutoff:now/1000-10}],['持仓',{cutoff:now/1000-20}]],options);
- assert.equal(r.alert.severity,'warning');assert.equal(r.alert.scope,'history');assert.match(r.alert.title,/历史统计/);
+ assert.equal(r.alert.severity,'progress');assert.equal(r.alert.scope,'history');assert.match(r.alert.title,/进行中/);
  assert.match(r.alert.recovery,/正在运行/);assert.match(r.text,/交易和持仓已更新/);assert.doesNotMatch(r.text,/当前显示上次核验快照/);
  assert.equal(r.alert.lastUpdated,new Date(auxiliary.provenance.cutoff*1000).toISOString());
  const real=snapshotStatus([['交易',{cutoff:now/1000-901}]],options);assert.equal(real.alert.severity,'error');assert.match(real.alert.title,/数据更新异常/);
@@ -70,6 +70,16 @@ test('banner restores error appearance after a historical-only warning',()=>{
  renderDataAlert({reason:'read failed',recovery:'retry'},root);
  assert.equal(root.dataset.severity,'error');assert.equal(root.role,'alert');assert.match(nodes.get('.data-alert-heading strong').textContent,/数据更新异常/);
  assert.equal(nodes.get('.data-alert-fields>div:nth-child(2)>dt').textContent,'最后更新时间');
+});
+test('minor active work uses a status notice; a failed or stale core read still uses an alert',()=>{
+ const nodes=new Map(),root={dataset:{},querySelector:s=>{if(!nodes.has(s))nodes.set(s,{textContent:''});return nodes.get(s);},setAttribute(k,v){this[k]=v;}};
+ renderDataAlert({severity:'progress',title:'历史数据补充进行中',reason:'补查新增地址',recovery:'正在补查'},root);
+ assert.equal(root.dataset.severity,'progress');assert.equal(root.role,'status');
+ renderDataAlert({reason:'读取失败',recovery:'等待重试'},root);
+ assert.equal(root.dataset.severity,'error');assert.equal(root.role,'alert');
+ const live={timestamp:now-60000,pools:[{}],failed:[{id:'one'}]};
+ assert.equal(depthDataAlert(live,{now,recovering:true}).severity,'progress');
+ assert.equal(depthDataAlert({...live,timestamp:now-901000},{now,recovering:true}).severity,'error');
 });
 test('initial cache display is a loading state, not a failed update; a real failed read still alerts',()=>{
  const entries=[['交易',{cutoff:now/1000-10}],['持仓',null]];
