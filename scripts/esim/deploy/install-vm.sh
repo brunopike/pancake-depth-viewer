@@ -55,6 +55,11 @@ LOGROTATE
 ln -sfn "$release" /opt/esim-worker/current
 sed "s|@RELEASE_PATH@|$release|g" "$release/scripts/esim/deploy/esim-worker.service" > /etc/systemd/system/esim-worker.service
 chmod 0644 /etc/systemd/system/esim-worker.service
+for unit in esim-freshness-guard.service esim-freshness-guard.timer esim-mm-recovery.service esim-mm-recovery.timer; do
+ sed "s|@RELEASE_PATH@|$release|g" "$release/scripts/esim/deploy/$unit" > "/etc/systemd/system/$unit"
+ chmod 0644 "/etc/systemd/system/$unit"
+done
 systemctl daemon-reload
 echo 'Installed reviewed collector. Configure /etc/esim-worker/worker.env and verify database migration before starting.'
 echo 'No service was started; the current production writers are unchanged.'
+echo 'After verifying the release, explicitly enable the reviewed freshness and MM recovery timers.'

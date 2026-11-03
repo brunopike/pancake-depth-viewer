@@ -1,0 +1,19 @@
+[Unit]
+Description=ESIM and MM independent read-only freshness check
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=esim-worker
+Group=esim-worker
+WorkingDirectory=@RELEASE_PATH@
+ExecStart=/opt/esim-worker/node/bin/node --max-old-space-size=64 @RELEASE_PATH@/scripts/esim/check-freshness.mjs
+TimeoutStartSec=150
+MemoryMax=128M
+CPUQuota=10%
+Nice=10
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectHome=true
+ProtectSystem=strict

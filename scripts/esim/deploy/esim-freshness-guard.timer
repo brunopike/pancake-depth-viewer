@@ -1,0 +1,12 @@
+[Unit]
+Description=Check ESIM and both MM views independently of the main collector
+
+[Timer]
+OnBootSec=2min
+OnUnitInactiveSec=5min
+AccuracySec=15s
+RandomizedDelaySec=15s
+Unit=esim-freshness-guard.service
+
+[Install]
+WantedBy=timers.target

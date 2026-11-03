@@ -108,3 +108,17 @@ Persistent catch-up yields after a complete checkpoint once a pass exceeds 90
 seconds. It never publishes an incomplete interval or suppresses reconciliation
 errors. A local checkpoint remains usable when remote metadata is temporarily
 unavailable; the next chain read still verifies its canonical hash.
+
+The installer also writes `esim-freshness-guard.timer` and
+`esim-mm-recovery.timer`; it never enables or starts them automatically. After
+reviewing the deployed release, enable both with `systemctl enable --now`.
+They run independently of the main collector and wait five minutes after each
+completed attempt. The freshness service uses only the existing public GET
+checks and has no credential file or external notification sender.
+
+MM recovery uses the same database fencing and checkpoint continuation as the
+normal worker. It defers when the primary exceeds 2100 MiB or host available
+memory is below 1280 MiB. These are admission checks, not mutual exclusion;
+the service also has a 640 MiB limit, low CPU priority and an elevated OOM score
+to protect the primary. Provider errors can resume after their cooldown;
+accounting mismatches still require review and remain visible on the page.

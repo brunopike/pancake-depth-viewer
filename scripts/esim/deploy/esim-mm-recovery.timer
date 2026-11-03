@@ -1,0 +1,12 @@
+[Unit]
+Description=Retry stalled MM work independently of the main collector
+
+[Timer]
+OnBootSec=2min
+OnUnitInactiveSec=5min
+AccuracySec=15s
+RandomizedDelaySec=15s
+Unit=esim-mm-recovery.service
+
+[Install]
+WantedBy=timers.target

@@ -1,0 +1,26 @@
+[Unit]
+Description=Resume stale MM checkpoints under the existing database lease
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=esim-worker
+Group=esim-worker
+WorkingDirectory=@RELEASE_PATH@
+EnvironmentFile=/etc/esim-worker/worker.env
+ExecCondition=/opt/esim-worker/node/bin/node --max-old-space-size=64 @RELEASE_PATH@/scripts/esim/mm-recovery-preflight.mjs
+ExecStart=/opt/esim-worker/node/bin/node --max-old-space-size=384 @RELEASE_PATH@/server/mm-ledger/recover.mjs
+TimeoutStartSec=330
+TimeoutStopSec=15
+KillMode=control-group
+MemoryHigh=512M
+MemoryMax=640M
+MemorySwapMax=0
+CPUQuota=25%
+Nice=10
+OOMScoreAdjust=750
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectHome=true
+ProtectSystem=strict
