@@ -18,3 +18,10 @@ test('chunked checkpoints preserve every JSON field and ledger row exactly',asyn
   assert.equal(gunzipSync(await readFile(join(dir,'state.json.gz'))).toString(),expected,'failed write must preserve last complete checkpoint');
  }finally{await rm(dir,{recursive:true,force:true});}
 });
+
+test('nested provenance arrays are emitted in bounded chunks without stringifying the whole object',()=>{
+ const state={claimFlow:{version:1,sales:Array.from({length:20000},(_,i)=>({address:'0x'+String(i).padStart(40,'0'),amount_wei:String(BigInt(i)*10n**18n),examples:[{path:['source','relay'],confirmed:true}]})),totals:{issued_wei:'123456789012345678901234567890'}},longUnicode:'😀'.repeat(50000)};
+ let count=0;const chunks=[];for(const chunk of checkpointChunks(state)){assert(chunk.length<66000);chunks.push(chunk);count++;}
+ assert(count>20);assert.equal(chunks.join(''),JSON.stringify(state));
+ const cycle={};cycle.self=cycle;assert.throws(()=>[...checkpointChunks(cycle)],/circular/i);
+});

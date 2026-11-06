@@ -20,7 +20,7 @@ try {
   // Yield only after a verified checkpoint so independent tasks keep updating.
   const passStarted=Date.now();
   for (let i = 0; i < 160; i++) {
-    const next = await refreshState(state, transport, { maxBlocks:5000,targetBlock, progress: e => console.log(JSON.stringify(e)) });
+    const next = await refreshState(state, transport, { maxBlocks:24000,targetBlock, progress: e => console.log(JSON.stringify(e)) });
     const advanced=next.block>state.block;
     state = next;
     await saveState(state,work);

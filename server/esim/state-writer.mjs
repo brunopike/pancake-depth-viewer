@@ -4,25 +4,28 @@ import {Readable} from 'node:stream';
 import {pipeline} from 'node:stream/promises';
 import {createGzip} from 'node:zlib';
 
-// Checkpoints contain plain JSON records. Their large ledgers are top-level
-// arrays: stringify one row at a time instead of allocating a second complete
-// ledger string and UTF-8 buffer alongside the in-memory state.
-function* pieces(state){
- yield '{';let first=true;
- for(const [key,value] of Object.entries(state)){
-  const array=Array.isArray(value),encoded=array?null:JSON.stringify(value);
-  if(!array&&encoded===undefined)continue;
-  if(!first)yield ',';first=false;yield JSON.stringify(key)+':';
-  if(!array){yield encoded;continue;}
-  yield '[';
-  for(let i=0;i<value.length;i++){if(i)yield ',';yield JSON.stringify(value[i])??'null';}
-  yield ']';
- }
- yield '}';
+const jsonValue=(value,key)=>typeof value?.toJSON==='function'?value.toJSON(key):value;
+const omitted=value=>['undefined','function','symbol'].includes(typeof value);
+// Provenance now contains large nested arrays too; never stringify a whole container.
+function* pieces(value,parents=new Set()){
+ if(value===null||typeof value!=='object'){yield JSON.stringify(value);return;}
+ if(parents.has(value))throw TypeError('Circular checkpoint');
+ parents.add(value);
+ try{
+  if(Array.isArray(value)){
+   yield '[';for(let i=0;i<value.length;i++){if(i)yield ',';const item=jsonValue(value[i],String(i));yield* pieces(omitted(item)?null:item,parents);}yield ']';
+  }else{
+   yield '{';let first=true;
+   for(const key of Object.keys(value)){const item=jsonValue(value[key],key);if(omitted(item))continue;if(!first)yield ',';first=false;yield JSON.stringify(key)+':';yield* pieces(item,parents);}
+   yield '}';
+  }
+ }finally{parents.delete(value);}
 }
 export function* checkpointChunks(state){
  let parts=[],size=0;
- for(const part of pieces(state)){
+ for(let part of pieces(jsonValue(state,''))){
+  if(size+part.length>65536&&size){yield parts.join('');parts=[];size=0;}
+  while(part.length>65536){let end=65536;if(/[\uD800-\uDBFF]/.test(part[end-1])&&/[\uDC00-\uDFFF]/.test(part[end]))end--;yield part.slice(0,end);part=part.slice(end);}
   parts.push(part);size+=part.length;
   if(size>=65536){yield parts.join('');parts=[];size=0;}
  }
