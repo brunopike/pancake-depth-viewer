@@ -10,6 +10,8 @@ const work = '.goodway/esim-monitor';
 const inlinePublish=process.env.ESIM_INLINE_CORE_PUBLISH==='true';
 await mkdir(work, { recursive: true });
 try {
+  let stageStarted=Date.now();
+  const stage=name=>{console.log(JSON.stringify({phase:'core-stage',stage:name,elapsedMs:Date.now()-stageStarted,rss:process.memoryUsage().rss}));stageStarted=Date.now();};
   if(inlinePublish){const lease=leaseFromEnvironment();if(!lease)throw Error('WORKER_LEASE_REQUIRED');await requireLease(lease);}
   let state;
   try { state = await readState(`${work}/state.json.gz`); }
@@ -17,6 +19,7 @@ try {
   if (process.env.ESIM_REMOTE_START === 'true') {
     state = mergeCheckpointState(state,await loadState({currentState:state,includeRemoteCore:process.env.ESIM_PERSISTENT_WORKER!=='true'||process.env.ESIM_REMOTE_BOOTSTRAP==='true'}));
   }
+  stage('read-and-merge-state');
   const budget = Number(process.env.ESIM_RPC_BUDGET || 600), targetBlock = process.env.ESIM_TARGET_BLOCK ? Number(process.env.ESIM_TARGET_BLOCK) : undefined;
   if (!Number.isInteger(budget) || budget < 1 || budget > 2000) throw new Error('BAD_BUDGET');
   const transport = makeRpc({ endpoint: process.env.ESIM_RPC_URL, budget, timeoutMs: 1500000,
@@ -25,9 +28,11 @@ try {
   const passStarted=Date.now();
   for (let i = 0; i < 160; i++) {
     const next = await refreshState(state, transport, { maxBlocks:24000,targetBlock, progress: e => console.log(JSON.stringify(e)) });
+    stage('refresh-state');
     const advanced=next.block>state.block;
     state = next;
     await saveState(state,work);
+    stage('save-state');
     if(!inlinePublish)await writeFile(`${work}/latest.json`, JSON.stringify(buildReport(state)));
     console.log(JSON.stringify({ phase: 'checkpoint', block: state.block, cutoff: state.cutoff, calls: state.calls.length, trades: state.trades.length, ...transport.stats }));
     if (!advanced) break;

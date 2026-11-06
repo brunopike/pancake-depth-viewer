@@ -27,7 +27,24 @@ export function aggregateTrades(rows) {
   }));
 }
 
-export function windowMetrics(state, start, end) {
+function reportContext(state){
+  const firstCaller=new Map();
+  for(const c of state.calls)firstCaller.set(c.from,Math.min(firstCaller.get(c.from)??Infinity,c.timestamp));
+  let balanceAt=()=>null;
+  if(state.nativeComplete&&state.balance!=null){
+    const native=[...state.native].sort((a,b)=>a.timestamp-b.timestamp),prefix=[0n];
+    for(const r of native)prefix.push(prefix.at(-1)+BigInt(r.value)*(r.side==='out'?-1n:1n));
+    balanceAt=boundary=>{
+      if(!(boundary<=state.cutoff))return null;
+      let lo=0,hi=native.length;
+      while(lo<hi){const mid=(lo+hi)>>>1;if(native[mid].timestamp<boundary)lo=mid+1;else hi=mid;}
+      return (BigInt(state.balance)-(prefix.at(-1)-prefix[lo])).toString();
+    };
+  }
+  return {firstCaller,balanceAt};
+}
+
+export function windowMetrics(state, start, end, context=reportContext(state)) {
   const within = rows => rows.filter(r => r.timestamp >= start && r.timestamp < end);
   const trades = within(state.trades), distributions = within(state.distributions), calls = within(state.calls), native = within(state.native);
   const paid = calls.filter(r => BigInt(r.value) > 0n);
@@ -35,13 +52,9 @@ export function windowMetrics(state, start, end) {
   const direct = sum(paid, 'value');
   const internal = sum(native.filter(r => r.side === 'internal'), 'value');
   const outflow = sum(native.filter(r => r.side === 'out'), 'value');
-  const firstCaller = new Map();
-  for (const c of state.calls) firstCaller.set(c.from, Math.min(firstCaller.get(c.from) ?? Infinity, c.timestamp));
+  const {firstCaller,balanceAt}=context;
   const recipients = new Set(distributions.map(r => r.recipient));
   const callers = new Set(calls.map(r => r.from));
-  const balanceAt = boundary => state.nativeComplete && state.balance != null && boundary <= state.cutoff
-    ? (BigInt(state.balance) - state.native.filter(r => r.timestamp >= boundary)
-      .reduce((n, r) => n + BigInt(r.value) * (r.side === 'out' ? -1n : 1n), 0n)).toString() : null;
   return {
     start, end, availableThrough: knownTo, complete: state.cutoff >= end,
     available: knownTo > knownFrom, groups: aggregateTrades(trades), executionBreakdown: executionBreakdown(trades),
@@ -62,10 +75,11 @@ export function windowMetrics(state, start, end) {
 
 export function buildReport(state, now = Date.now() / 1000) {
   if (state.token !== TOKEN || state.source !== SOURCE || state.version !== 1) throw new Error('Invalid ESIM state');
+  const context=reportContext(state);
   const today = beijingDayStart(now), yesterday = today - DAY;
   const end = Math.min(now, state.cutoff);
-  const windows = { today: windowMetrics(state, today, now), yesterday: windowMetrics(state, yesterday, today),
-    history: windowMetrics(state, state.origin, end) };
+  const windows = { today: windowMetrics(state, today, now,context), yesterday: windowMetrics(state, yesterday, today,context),
+    history: windowMetrics(state, state.origin, end,context) };
   const hourly = {};
   for (const [name, start, finish] of [['today', today, now], ['yesterday', yesterday, today]]) {
     hourly[name] = [];
@@ -79,7 +93,7 @@ export function buildReport(state, now = Date.now() / 1000) {
   const history = [];
   for (let start = beijingDayStart(state.origin); start < end; start += DAY) {
     history.push({ date: beijingDate(start), partialFirstDay: start < state.origin,
-      ...windowMetrics(state, Math.max(start, state.origin), Math.min(start + DAY, end)) });
+      ...windowMetrics(state, Math.max(start, state.origin), Math.min(start + DAY, end),context) });
   }
   const totals = new Map();
   for (const r of state.trades) if (r.group === 'source_recipients' && r.side === 'sell' && r.address) totals.set(r.address, (totals.get(r.address) || 0n) + BigInt(r.amount_wei));

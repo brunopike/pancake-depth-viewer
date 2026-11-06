@@ -19,10 +19,17 @@ export function refreshNeeded({now,lastRun,cutoff,pendingBlock,block}){
  return pendingBlock>block||now-cutoff*1000>=CORE_POLL_INTERVAL;
 }
 export async function publishCore(state,publish=publishRealtime){
+ let started=Date.now();
+ const stage=name=>{console.log(JSON.stringify({phase:'core-stage',stage:name,elapsedMs:Date.now()-started,rss:process.memoryUsage().rss}));started=Date.now();};
  await loadSharedRegistry();
+ stage('shared-registry');
  const report=buildReport(state);
+ stage('build-report');
  if(!isSourceInflowAligned(report.sourceInflow,report))throw Error('SOURCE_INFLOW_NOT_SYNCHRONIZED');
- await publish([{kind:'report',data:report},{kind:'addresses',data:buildAddressReport(state)}],{processedBlock:state.block});
+ const addresses=buildAddressReport(state);
+ stage('build-addresses');
+ await publish([{kind:'report',data:report},{kind:'addresses',data:addresses}],{processedBlock:state.block});
+ stage('publish');
   return {block:state.block,cutoff:state.cutoff,flowBlock:state.claimFlow?.throughBlock||0};
 }
 // A failed refresh may not have created a local checkpoint yet. Preserve the

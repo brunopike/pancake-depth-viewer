@@ -1,0 +1,4649 @@
+{
+  "now": 1793966400,
+  "state": {
+    "version": 1,
+    "token": "0x7765a659c5b0cfbfd9fbc2ef2298b75a598f2d2d",
+    "source": "0x67b97c3845438f264965ca154ba13051c6c73416",
+    "origin": 1790992790,
+    "block": 127754210,
+    "blockHash": "0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "cutoff": 1793966400,
+    "balance": "100",
+    "nativeComplete": true,
+    "coverage": {},
+    "firstRecipient": {
+      "0x1111111111111111111111111111111111111111": {
+        "timestamp": 1790992791
+      }
+    },
+    "sourceInflow": {
+      "version": 1,
+      "chainId": 56,
+      "token": "0x7765a659c5b0cfbfd9fbc2ef2298b75a598f2d2d",
+      "source": "0x67b97c3845438f264965ca154ba13051c6c73416",
+      "decimals": 18,
+      "scope": "all-history-gross",
+      "throughBlock": 127754110,
+      "blockHash": "0x66cd8f3d63e909d4b08f97130163068f82523a4a1d5fb1e5f6f035a231f3a3b6",
+      "cutoff": 1792052672,
+      "total_wei": "30107845345513670974954265",
+      "transfer_events": 1575,
+      "balance_wei": "1771865534556842255701393",
+      "verification": "Prior fixed-block audit: first two inbound transfers before the first distribution, complete ESIM Transfer ledger, pinned tail scan and balance reconciliation. Includes returns and repeated transfers.",
+      "seedBlock": 127754110,
+      "reconciled": true
+    },
+    "pools": {},
+    "topBalances": {
+      "0x1111111111111111111111111111111111111111": "3"
+    },
+    "warnings": [],
+    "calls": [
+      {
+        "timestamp": 1790992795,
+        "from": "0x1111111111111111111111111111111111111111",
+        "value": "10",
+        "tx": "c1"
+      },
+      {
+        "timestamp": 1793879995,
+        "from": "0x1111111111111111111111111111111111111111",
+        "value": "15",
+        "tx": "c2"
+      },
+      {
+        "timestamp": 1793966390,
+        "from": "0x2222222222222222222222222222222222222222",
+        "value": "20",
+        "tx": "c3"
+      }
+    ],
+    "native": [
+      {
+        "timestamp": 1790992795,
+        "side": "direct",
+        "value": "10"
+      },
+      {
+        "timestamp": 1793879995,
+        "side": "direct",
+        "value": "15"
+      },
+      {
+        "timestamp": 1793966390,
+        "side": "direct",
+        "value": "20"
+      },
+      {
+        "timestamp": 1793966390,
+        "side": "out",
+        "value": "5"
+      },
+      {
+        "timestamp": 1793966399,
+        "side": "internal",
+        "value": "20"
+      }
+    ],
+    "trades": [
+      {
+        "timestamp": 1790992800,
+        "side": "buy",
+        "amount_wei": "12",
+        "group": "source_recipients",
+        "address": "0x1111111111111111111111111111111111111111",
+        "initiator": "0x1111111111111111111111111111111111111111",
+        "executor": "0x3333333333333333333333333333333333333333",
+        "tx": "t1"
+      },
+      {
+        "timestamp": 1793879999,
+        "side": "sell",
+        "amount_wei": "8",
+        "group": "source_recipients",
+        "address": "0x1111111111111111111111111111111111111111",
+        "initiator": "0x1111111111111111111111111111111111111111",
+        "executor": "0x3333333333333333333333333333333333333333",
+        "tx": "t2"
+      },
+      {
+        "timestamp": 1793966380,
+        "side": "sell",
+        "amount_wei": "3",
+        "group": "other_wallet_candidates",
+        "address": "0x2222222222222222222222222222222222222222",
+        "initiator": "0x2222222222222222222222222222222222222222",
+        "executor": "0x21a0541e4122090c30fbc04e98cf27430608e007",
+        "tx": "t3"
+      }
+    ],
+    "distributions": [
+      {
+        "timestamp": 1790992791,
+        "recipient": "0x1111111111111111111111111111111111111111",
+        "value": "20",
+        "tx": "d1"
+      }
+    ],
+    "claimFlow": {
+      "version": 1,
+      "modelRevision": 2,
+      "method": "proportional-v1",
+      "cutoff": 1793966400,
+      "throughBlock": 127754210,
+      "sales": [
+        {
+          "timestamp": 1793879999,
+          "direct_wei": "6",
+          "relay_wei": "2",
+          "address": "0x1111111111111111111111111111111111111111",
+          "tx": "t2",
+          "examples": [
+            {
+              "root": "0x2222222222222222222222222222222222222222"
+            }
+          ]
+        }
+      ],
+      "unconfirmedFlows": []
+    }
+  },
+  "report": {
+    "version": 1,
+    "token": "0x7765a659c5b0cfbfd9fbc2ef2298b75a598f2d2d",
+    "source": "0x67b97c3845438f264965ca154ba13051c6c73416",
+    "origin": 1790992790,
+    "cutoff": 1793966400,
+    "generatedAt": 1793966400,
+    "block": 127754210,
+    "blockHash": "0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "coverage": {},
+    "balance_wei": "100",
+    "sourceInflow": {
+      "version": 1,
+      "chainId": 56,
+      "token": "0x7765a659c5b0cfbfd9fbc2ef2298b75a598f2d2d",
+      "source": "0x67b97c3845438f264965ca154ba13051c6c73416",
+      "decimals": 18,
+      "scope": "all-history-gross",
+      "throughBlock": 127754110,
+      "blockHash": "0x66cd8f3d63e909d4b08f97130163068f82523a4a1d5fb1e5f6f035a231f3a3b6",
+      "cutoff": 1792052672,
+      "total_wei": "30107845345513670974954265",
+      "transfer_events": 1575,
+      "balance_wei": "1771865534556842255701393",
+      "verification": "Prior fixed-block audit: first two inbound transfers before the first distribution, complete ESIM Transfer ledger, pinned tail scan and balance reconciliation. Includes returns and repeated transfers.",
+      "seedBlock": 127754110,
+      "reconciled": true
+    },
+    "windows": {
+      "today": {
+        "start": 1793894400,
+        "end": 1793966400,
+        "availableThrough": 1793966400,
+        "complete": true,
+        "available": true,
+        "groups": {
+          "source_recipients": {
+            "sold_wei": "0",
+            "sell_txs": 0,
+            "sell_addresses": 0,
+            "sell_addresses_lower_bound": false,
+            "bought_wei": "0",
+            "buy_txs": 0,
+            "buy_addresses": 0,
+            "buy_addresses_lower_bound": false,
+            "net_sold_wei": "0"
+          },
+          "other_wallet_candidates": {
+            "sold_wei": "3",
+            "sell_txs": 1,
+            "sell_addresses": 1,
+            "sell_addresses_lower_bound": false,
+            "bought_wei": "0",
+            "buy_txs": 0,
+            "buy_addresses": 0,
+            "buy_addresses_lower_bound": false,
+            "net_sold_wei": "3"
+          },
+          "remaining_unattributed": {
+            "sold_wei": "0",
+            "sell_txs": 0,
+            "sell_addresses": 0,
+            "sell_addresses_lower_bound": false,
+            "bought_wei": "0",
+            "buy_txs": 0,
+            "buy_addresses": 0,
+            "buy_addresses_lower_bound": false,
+            "net_sold_wei": "0"
+          },
+          "all_pools": {
+            "sold_wei": "3",
+            "sell_txs": 1,
+            "sell_addresses": 1,
+            "sell_addresses_lower_bound": false,
+            "bought_wei": "0",
+            "buy_txs": 0,
+            "buy_addresses": 0,
+            "buy_addresses_lower_bound": false,
+            "net_sold_wei": "3"
+          }
+        },
+        "executionBreakdown": [],
+        "claimFlow": {
+          "modelRevision": 2,
+          "method": "proportional-v1",
+          "cutoff": 1793966400,
+          "throughBlock": 127754210,
+          "direct_wei": "0",
+          "relay_wei": "0",
+          "sold_wei": "0",
+          "pending_wei": "0",
+          "pendingTransactions": 0,
+          "complete": true,
+          "transactions": 0,
+          "relayAddresses": 0,
+          "examples": []
+        },
+        "distribution": {
+          "total_wei": "0",
+          "recipients": 0,
+          "transactions": 0,
+          "transfer_events": 0,
+          "new_recipients": 0
+        },
+        "interaction": {
+          "successful_calls": 1,
+          "successful_addresses": 1,
+          "new_callers": 1
+        },
+        "bnb": {
+          "direct_inflow_wei": "20",
+          "direct_inflow_txs": 1,
+          "direct_inflow_addresses": 1,
+          "internal_inflow_wei": "20",
+          "outflow_wei": "5",
+          "net_inflow_wei": "35",
+          "balance_start_wei": "65",
+          "balance_end_wei": "100",
+          "internal_coverage": "complete"
+        }
+      },
+      "yesterday": {
+        "start": 1793808000,
+        "end": 1793894400,
+        "availableThrough": 1793894400,
+        "complete": true,
+        "available": true,
+        "groups": {
+          "source_recipients": {
+            "sold_wei": "8",
+            "sell_txs": 1,
+            "sell_addresses": 1,
+            "sell_addresses_lower_bound": false,
+            "bought_wei": "0",
+            "buy_txs": 0,
+            "buy_addresses": 0,
+            "buy_addresses_lower_bound": false,
+            "net_sold_wei": "8"
+          },
+          "other_wallet_candidates": {
+            "sold_wei": "0",
+            "sell_txs": 0,
+            "sell_addresses": 0,
+            "sell_addresses_lower_bound": false,
+            "bought_wei": "0",
+            "buy_txs": 0,
+            "buy_addresses": 0,
+            "buy_addresses_lower_bound": false,
+            "net_sold_wei": "0"
+          },
+          "remaining_unattributed": {
+            "sold_wei": "0",
+            "sell_txs": 0,
+            "sell_addresses": 0,
+            "sell_addresses_lower_bound": false,
+            "bought_wei": "0",
+            "buy_txs": 0,
+            "buy_addresses": 0,
+            "buy_addresses_lower_bound": false,
+            "net_sold_wei": "0"
+          },
+          "all_pools": {
+            "sold_wei": "8",
+            "sell_txs": 1,
+            "sell_addresses": 1,
+            "sell_addresses_lower_bound": false,
+            "bought_wei": "0",
+            "buy_txs": 0,
+            "buy_addresses": 0,
+            "buy_addresses_lower_bound": false,
+            "net_sold_wei": "8"
+          }
+        },
+        "executionBreakdown": [],
+        "claimFlow": {
+          "modelRevision": 2,
+          "method": "proportional-v1",
+          "cutoff": 1793966400,
+          "throughBlock": 127754210,
+          "direct_wei": "6",
+          "relay_wei": "2",
+          "sold_wei": "8",
+          "pending_wei": "0",
+          "pendingTransactions": 0,
+          "complete": true,
+          "transactions": 1,
+          "relayAddresses": 1,
+          "examples": [
+            {
+              "address": "0x1111111111111111111111111111111111111111",
+              "amount": "2",
+              "example": {
+                "root": "0x2222222222222222222222222222222222222222"
+              },
+              "tx": "t2"
+            }
+          ]
+        },
+        "distribution": {
+          "total_wei": "0",
+          "recipients": 0,
+          "transactions": 0,
+          "transfer_events": 0,
+          "new_recipients": 0
+        },
+        "interaction": {
+          "successful_calls": 1,
+          "successful_addresses": 1,
+          "new_callers": 0
+        },
+        "bnb": {
+          "direct_inflow_wei": "15",
+          "direct_inflow_txs": 1,
+          "direct_inflow_addresses": 1,
+          "internal_inflow_wei": "0",
+          "outflow_wei": "0",
+          "net_inflow_wei": "15",
+          "balance_start_wei": "50",
+          "balance_end_wei": "65",
+          "internal_coverage": "complete"
+        }
+      },
+      "history": {
+        "start": 1790992790,
+        "end": 1793966400,
+        "availableThrough": 1793966400,
+        "complete": true,
+        "available": true,
+        "groups": {
+          "source_recipients": {
+            "sold_wei": "8",
+            "sell_txs": 1,
+            "sell_addresses": 1,
+            "sell_addresses_lower_bound": false,
+            "bought_wei": "12",
+            "buy_txs": 1,
+            "buy_addresses": 1,
+            "buy_addresses_lower_bound": false,
+            "net_sold_wei": "-4"
+          },
+          "other_wallet_candidates": {
+            "sold_wei": "3",
+            "sell_txs": 1,
+            "sell_addresses": 1,
+            "sell_addresses_lower_bound": false,
+            "bought_wei": "0",
+            "buy_txs": 0,
+            "buy_addresses": 0,
+            "buy_addresses_lower_bound": false,
+            "net_sold_wei": "3"
+          },
+          "remaining_unattributed": {
+            "sold_wei": "0",
+            "sell_txs": 0,
+            "sell_addresses": 0,
+            "sell_addresses_lower_bound": false,
+            "bought_wei": "0",
+            "buy_txs": 0,
+            "buy_addresses": 0,
+            "buy_addresses_lower_bound": false,
+            "net_sold_wei": "0"
+          },
+          "all_pools": {
+            "sold_wei": "11",
+            "sell_txs": 2,
+            "sell_addresses": 2,
+            "sell_addresses_lower_bound": false,
+            "bought_wei": "12",
+            "buy_txs": 1,
+            "buy_addresses": 1,
+            "buy_addresses_lower_bound": false,
+            "net_sold_wei": "-1"
+          }
+        },
+        "executionBreakdown": [],
+        "claimFlow": {
+          "modelRevision": 2,
+          "method": "proportional-v1",
+          "cutoff": 1793966400,
+          "throughBlock": 127754210,
+          "direct_wei": "6",
+          "relay_wei": "2",
+          "sold_wei": "8",
+          "pending_wei": "0",
+          "pendingTransactions": 0,
+          "complete": true,
+          "transactions": 1,
+          "relayAddresses": 1,
+          "examples": [
+            {
+              "address": "0x1111111111111111111111111111111111111111",
+              "amount": "2",
+              "example": {
+                "root": "0x2222222222222222222222222222222222222222"
+              },
+              "tx": "t2"
+            }
+          ]
+        },
+        "distribution": {
+          "total_wei": "20",
+          "recipients": 1,
+          "transactions": 1,
+          "transfer_events": 1,
+          "new_recipients": 1
+        },
+        "interaction": {
+          "successful_calls": 3,
+          "successful_addresses": 2,
+          "new_callers": 2
+        },
+        "bnb": {
+          "direct_inflow_wei": "45",
+          "direct_inflow_txs": 3,
+          "direct_inflow_addresses": 2,
+          "internal_inflow_wei": "20",
+          "outflow_wei": "5",
+          "net_inflow_wei": "60",
+          "balance_start_wei": "40",
+          "balance_end_wei": "100",
+          "internal_coverage": "complete"
+        }
+      }
+    },
+    "hourly": {
+      "today": [
+        {
+          "start": 1793894400,
+          "end": 1793898000,
+          "available": true,
+          "sold_wei": "0",
+          "sell_txs": 0,
+          "sell_addresses": 0,
+          "sell_addresses_lower_bound": false,
+          "bought_wei": "0",
+          "buy_txs": 0,
+          "buy_addresses": 0,
+          "buy_addresses_lower_bound": false,
+          "net_sold_wei": "0"
+        },
+        {
+          "start": 1793898000,
+          "end": 1793901600,
+          "available": true,
+          "sold_wei": "0",
+          "sell_txs": 0,
+          "sell_addresses": 0,
+          "sell_addresses_lower_bound": false,
+          "bought_wei": "0",
+          "buy_txs": 0,
+          "buy_addresses": 0,
+          "buy_addresses_lower_bound": false,
+          "net_sold_wei": "0"
+        },
+        {
+          "start": 1793901600,
+          "end": 1793905200,
+          "available": true,
+          "sold_wei": "0",
+          "sell_txs": 0,
+          "sell_addresses": 0,
+          "sell_addresses_lower_bound": false,
+          "bought_wei": "0",
+          "buy_txs": 0,
+          "buy_addresses": 0,
+          "buy_addresses_lower_bound": false,
+          "net_sold_wei": "0"
+        },
+        {
+          "start": 1793905200,
+          "end": 1793908800,
+          "available": true,
+          "sold_wei": "0",
+          "sell_txs": 0,
+          "sell_addresses": 0,
+          "sell_addresses_lower_bound": false,
+          "bought_wei": "0",
+          "buy_txs": 0,
+          "buy_addresses": 0,
+          "buy_addresses_lower_bound": false,
+          "net_sold_wei": "0"
+        },
+        {
+          "start": 1793908800,
+          "end": 1793912400,
+          "available": true,
+          "sold_wei": "0",
+          "sell_txs": 0,
+          "sell_addresses": 0,
+          "sell_addresses_lower_bound": false,
+          "bought_wei": "0",
+          "buy_txs": 0,
+          "buy_addresses": 0,
+          "buy_addresses_lower_bound": false,
+          "net_sold_wei": "0"
+        },
+        {
+          "start": 1793912400,
+          "end": 1793916000,
+          "available": true,
+          "sold_wei": "0",
+          "sell_txs": 0,
+          "sell_addresses": 0,
+          "sell_addresses_lower_bound": false,
+          "bought_wei": "0",
+          "buy_txs": 0,
+          "buy_addresses": 0,
+          "buy_addresses_lower_bound": false,
+          "net_sold_wei": "0"
+        },
+        {
+          "start": 1793916000,
+          "end": 1793919600,
+          "available": true,
+          "sold_wei": "0",
+          "sell_txs": 0,
+          "sell_addresses": 0,
+          "sell_addresses_lower_bound": false,
+          "bought_wei": "0",
+          "buy_txs": 0,
+          "buy_addresses": 0,
+          "buy_addresses_lower_bound": false,
+          "net_sold_wei": "0"
+        },
+        {
+          "start": 1793919600,
+          "end": 1793923200,
+          "available": true,
+          "sold_wei": "0",
+          "sell_txs": 0,
+          "sell_addresses": 0,
+          "sell_addresses_lower_bound": false,
+          "bought_wei": "0",
+          "buy_txs": 0,
+          "buy_addresses": 0,
+          "buy_addresses_lower_bound": false,
+          "net_sold_wei": "0"
+        },
+        {
+          "start": 1793923200,
+          "end": 1793926800,
+          "available": true,
+          "sold_wei": "0",
+          "sell_txs": 0,
+          "sell_addresses": 0,
+          "sell_addresses_lower_bound": false,
+          "bought_wei": "0",
+          "buy_txs": 0,
+          "buy_addresses": 0,
+          "buy_addresses_lower_bound": false,
+          "net_sold_wei": "0"
+        },
+        {
+          "start": 1793926800,
+          "end": 1793930400,
+          "available": true,
+          "sold_wei": "0",
+          "sell_txs": 0,
+          "sell_addresses": 0,
+          "sell_addresses_lower_bound": false,
+          "bought_wei": "0",
+          "buy_txs": 0,
+          "buy_addresses": 0,
+          "buy_addresses_lower_bound": false,
+          "net_sold_wei": "0"
+        },
+        {
+          "start": 1793930400,
+          "end": 1793934000,
+          "available": true,
+          "sold_wei": "0",
+          "sell_txs": 0,
+          "sell_addresses": 0,
+          "sell_addresses_lower_bound": false,
+          "bought_wei": "0",
+          "buy_txs": 0,
+          "buy_addresses": 0,
+          "buy_addresses_lower_bound": false,
+          "net_sold_wei": "0"
+        },
+        {
+          "start": 1793934000,
+          "end": 1793937600,
+          "available": true,
+          "sold_wei": "0",
+          "sell_txs": 0,
+          "sell_addresses": 0,
+          "sell_addresses_lower_bound": false,
+          "bought_wei": "0",
+          "buy_txs": 0,
+          "buy_addresses": 0,
+          "buy_addresses_lower_bound": false,
+          "net_sold_wei": "0"
+        },
+        {
+          "start": 1793937600,
+          "end": 1793941200,
+          "available": true,
+          "sold_wei": "0",
+          "sell_txs": 0,
+          "sell_addresses": 0,
+          "sell_addresses_lower_bound": false,
+          "bought_wei": "0",
+          "buy_txs": 0,
+          "buy_addresses": 0,
+          "buy_addresses_lower_bound": false,
+          "net_sold_wei": "0"
+        },
+        {
+          "start": 1793941200,
+          "end": 1793944800,
+          "available": true,
+          "sold_wei": "0",
+          "sell_txs": 0,
+          "sell_addresses": 0,
+          "sell_addresses_lower_bound": false,
+          "bought_wei": "0",
+          "buy_txs": 0,
+          "buy_addresses": 0,
+          "buy_addresses_lower_bound": false,
+          "net_sold_wei": "0"
+        },
+        {
+          "start": 1793944800,
+          "end": 1793948400,
+          "available": true,
+          "sold_wei": "0",
+          "sell_txs": 0,
+          "sell_addresses": 0,
+          "sell_addresses_lower_bound": false,
+          "bought_wei": "0",
+          "buy_txs": 0,
+          "buy_addresses": 0,
+          "buy_addresses_lower_bound": false,
+          "net_sold_wei": "0"
+        },
+        {
+          "start": 1793948400,
+          "end": 1793952000,
+          "available": true,
+          "sold_wei": "0",
+          "sell_txs": 0,
+          "sell_addresses": 0,
+          "sell_addresses_lower_bound": false,
+          "bought_wei": "0",
+          "buy_txs": 0,
+          "buy_addresses": 0,
+          "buy_addresses_lower_bound": false,
+          "net_sold_wei": "0"
+        },
+        {
+          "start": 1793952000,
+          "end": 1793955600,
+          "available": true,
+          "sold_wei": "0",
+          "sell_txs": 0,
+          "sell_addresses": 0,
+          "sell_addresses_lower_bound": false,
+          "bought_wei": "0",
+          "buy_txs": 0,
+          "buy_addresses": 0,
+          "buy_addresses_lower_bound": false,
+          "net_sold_wei": "0"
+        },
+        {
+          "start": 1793955600,
+          "end": 1793959200,
+          "available": true,
+          "sold_wei": "0",
+          "sell_txs": 0,
+          "sell_addresses": 0,
+          "sell_addresses_lower_bound": false,
+          "bought_wei": "0",
+          "buy_txs": 0,
+          "buy_addresses": 0,
+          "buy_addresses_lower_bound": false,
+          "net_sold_wei": "0"
+        },
+        {
+          "start": 1793959200,
+          "end": 1793962800,
+          "available": true,
+          "sold_wei": "0",
+          "sell_txs": 0,
+          "sell_addresses": 0,
+          "sell_addresses_lower_bound": false,
+          "bought_wei": "0",
+          "buy_txs": 0,
+          "buy_addresses": 0,
+          "buy_addresses_lower_bound": false,
+          "net_sold_wei": "0"
+        },
+        {
+          "start": 1793962800,
+          "end": 1793966400,
+          "available": true,
+          "sold_wei": "3",
+          "sell_txs": 1,
+          "sell_addresses": 1,
+          "sell_addresses_lower_bound": false,
+          "bought_wei": "0",
+          "buy_txs": 0,
+          "buy_addresses": 0,
+          "buy_addresses_lower_bound": false,
+          "net_sold_wei": "3"
+        }
+      ],
+      "yesterday": [
+        {
+          "start": 1793808000,
+          "end": 1793811600,
+          "available": true,
+          "sold_wei": "0",
+          "sell_txs": 0,
+          "sell_addresses": 0,
+          "sell_addresses_lower_bound": false,
+          "bought_wei": "0",
+          "buy_txs": 0,
+          "buy_addresses": 0,
+          "buy_addresses_lower_bound": false,
+          "net_sold_wei": "0"
+        },
+        {
+          "start": 1793811600,
+          "end": 1793815200,
+          "available": true,
+          "sold_wei": "0",
+          "sell_txs": 0,
+          "sell_addresses": 0,
+          "sell_addresses_lower_bound": false,
+          "bought_wei": "0",
+          "buy_txs": 0,
+          "buy_addresses": 0,
+          "buy_addresses_lower_bound": false,
+          "net_sold_wei": "0"
+        },
+        {
+          "start": 1793815200,
+          "end": 1793818800,
+          "available": true,
+          "sold_wei": "0",
+          "sell_txs": 0,
+          "sell_addresses": 0,
+          "sell_addresses_lower_bound": false,
+          "bought_wei": "0",
+          "buy_txs": 0,
+          "buy_addresses": 0,
+          "buy_addresses_lower_bound": false,
+          "net_sold_wei": "0"
+        },
+        {
+          "start": 1793818800,
+          "end": 1793822400,
+          "available": true,
+          "sold_wei": "0",
+          "sell_txs": 0,
+          "sell_addresses": 0,
+          "sell_addresses_lower_bound": false,
+          "bought_wei": "0",
+          "buy_txs": 0,
+          "buy_addresses": 0,
+          "buy_addresses_lower_bound": false,
+          "net_sold_wei": "0"
+        },
+        {
+          "start": 1793822400,
+          "end": 1793826000,
+          "available": true,
+          "sold_wei": "0",
+          "sell_txs": 0,
+          "sell_addresses": 0,
+          "sell_addresses_lower_bound": false,
+          "bought_wei": "0",
+          "buy_txs": 0,
+          "buy_addresses": 0,
+          "buy_addresses_lower_bound": false,
+          "net_sold_wei": "0"
+        },
+        {
+          "start": 1793826000,
+          "end": 1793829600,
+          "available": true,
+          "sold_wei": "0",
+          "sell_txs": 0,
+          "sell_addresses": 0,
+          "sell_addresses_lower_bound": false,
+          "bought_wei": "0",
+          "buy_txs": 0,
+          "buy_addresses": 0,
+          "buy_addresses_lower_bound": false,
+          "net_sold_wei": "0"
+        },
+        {
+          "start": 1793829600,
+          "end": 1793833200,
+          "available": true,
+          "sold_wei": "0",
+          "sell_txs": 0,
+          "sell_addresses": 0,
+          "sell_addresses_lower_bound": false,
+          "bought_wei": "0",
+          "buy_txs": 0,
+          "buy_addresses": 0,
+          "buy_addresses_lower_bound": false,
+          "net_sold_wei": "0"
+        },
+        {
+          "start": 1793833200,
+          "end": 1793836800,
+          "available": true,
+          "sold_wei": "0",
+          "sell_txs": 0,
+          "sell_addresses": 0,
+          "sell_addresses_lower_bound": false,
+          "bought_wei": "0",
+          "buy_txs": 0,
+          "buy_addresses": 0,
+          "buy_addresses_lower_bound": false,
+          "net_sold_wei": "0"
+        },
+        {
+          "start": 1793836800,
+          "end": 1793840400,
+          "available": true,
+          "sold_wei": "0",
+          "sell_txs": 0,
+          "sell_addresses": 0,
+          "sell_addresses_lower_bound": false,
+          "bought_wei": "0",
+          "buy_txs": 0,
+          "buy_addresses": 0,
+          "buy_addresses_lower_bound": false,
+          "net_sold_wei": "0"
+        },
+        {
+          "start": 1793840400,
+          "end": 1793844000,
+          "available": true,
+          "sold_wei": "0",
+          "sell_txs": 0,
+          "sell_addresses": 0,
+          "sell_addresses_lower_bound": false,
+          "bought_wei": "0",
+          "buy_txs": 0,
+          "buy_addresses": 0,
+          "buy_addresses_lower_bound": false,
+          "net_sold_wei": "0"
+        },
+        {
+          "start": 1793844000,
+          "end": 1793847600,
+          "available": true,
+          "sold_wei": "0",
+          "sell_txs": 0,
+          "sell_addresses": 0,
+          "sell_addresses_lower_bound": false,
+          "bought_wei": "0",
+          "buy_txs": 0,
+          "buy_addresses": 0,
+          "buy_addresses_lower_bound": false,
+          "net_sold_wei": "0"
+        },
+        {
+          "start": 1793847600,
+          "end": 1793851200,
+          "available": true,
+          "sold_wei": "0",
+          "sell_txs": 0,
+          "sell_addresses": 0,
+          "sell_addresses_lower_bound": false,
+          "bought_wei": "0",
+          "buy_txs": 0,
+          "buy_addresses": 0,
+          "buy_addresses_lower_bound": false,
+          "net_sold_wei": "0"
+        },
+        {
+          "start": 1793851200,
+          "end": 1793854800,
+          "available": true,
+          "sold_wei": "0",
+          "sell_txs": 0,
+          "sell_addresses": 0,
+          "sell_addresses_lower_bound": false,
+          "bought_wei": "0",
+          "buy_txs": 0,
+          "buy_addresses": 0,
+          "buy_addresses_lower_bound": false,
+          "net_sold_wei": "0"
+        },
+        {
+          "start": 1793854800,
+          "end": 1793858400,
+          "available": true,
+          "sold_wei": "0",
+          "sell_txs": 0,
+          "sell_addresses": 0,
+          "sell_addresses_lower_bound": false,
+          "bought_wei": "0",
+          "buy_txs": 0,
+          "buy_addresses": 0,
+          "buy_addresses_lower_bound": false,
+          "net_sold_wei": "0"
+        },
+        {
+          "start": 1793858400,
+          "end": 1793862000,
+          "available": true,
+          "sold_wei": "0",
+          "sell_txs": 0,
+          "sell_addresses": 0,
+          "sell_addresses_lower_bound": false,
+          "bought_wei": "0",
+          "buy_txs": 0,
+          "buy_addresses": 0,
+          "buy_addresses_lower_bound": false,
+          "net_sold_wei": "0"
+        },
+        {
+          "start": 1793862000,
+          "end": 1793865600,
+          "available": true,
+          "sold_wei": "0",
+          "sell_txs": 0,
+          "sell_addresses": 0,
+          "sell_addresses_lower_bound": false,
+          "bought_wei": "0",
+          "buy_txs": 0,
+          "buy_addresses": 0,
+          "buy_addresses_lower_bound": false,
+          "net_sold_wei": "0"
+        },
+        {
+          "start": 1793865600,
+          "end": 1793869200,
+          "available": true,
+          "sold_wei": "0",
+          "sell_txs": 0,
+          "sell_addresses": 0,
+          "sell_addresses_lower_bound": false,
+          "bought_wei": "0",
+          "buy_txs": 0,
+          "buy_addresses": 0,
+          "buy_addresses_lower_bound": false,
+          "net_sold_wei": "0"
+        },
+        {
+          "start": 1793869200,
+          "end": 1793872800,
+          "available": true,
+          "sold_wei": "0",
+          "sell_txs": 0,
+          "sell_addresses": 0,
+          "sell_addresses_lower_bound": false,
+          "bought_wei": "0",
+          "buy_txs": 0,
+          "buy_addresses": 0,
+          "buy_addresses_lower_bound": false,
+          "net_sold_wei": "0"
+        },
+        {
+          "start": 1793872800,
+          "end": 1793876400,
+          "available": true,
+          "sold_wei": "0",
+          "sell_txs": 0,
+          "sell_addresses": 0,
+          "sell_addresses_lower_bound": false,
+          "bought_wei": "0",
+          "buy_txs": 0,
+          "buy_addresses": 0,
+          "buy_addresses_lower_bound": false,
+          "net_sold_wei": "0"
+        },
+        {
+          "start": 1793876400,
+          "end": 1793880000,
+          "available": true,
+          "sold_wei": "8",
+          "sell_txs": 1,
+          "sell_addresses": 1,
+          "sell_addresses_lower_bound": false,
+          "bought_wei": "0",
+          "buy_txs": 0,
+          "buy_addresses": 0,
+          "buy_addresses_lower_bound": false,
+          "net_sold_wei": "8"
+        },
+        {
+          "start": 1793880000,
+          "end": 1793883600,
+          "available": true,
+          "sold_wei": "0",
+          "sell_txs": 0,
+          "sell_addresses": 0,
+          "sell_addresses_lower_bound": false,
+          "bought_wei": "0",
+          "buy_txs": 0,
+          "buy_addresses": 0,
+          "buy_addresses_lower_bound": false,
+          "net_sold_wei": "0"
+        },
+        {
+          "start": 1793883600,
+          "end": 1793887200,
+          "available": true,
+          "sold_wei": "0",
+          "sell_txs": 0,
+          "sell_addresses": 0,
+          "sell_addresses_lower_bound": false,
+          "bought_wei": "0",
+          "buy_txs": 0,
+          "buy_addresses": 0,
+          "buy_addresses_lower_bound": false,
+          "net_sold_wei": "0"
+        },
+        {
+          "start": 1793887200,
+          "end": 1793890800,
+          "available": true,
+          "sold_wei": "0",
+          "sell_txs": 0,
+          "sell_addresses": 0,
+          "sell_addresses_lower_bound": false,
+          "bought_wei": "0",
+          "buy_txs": 0,
+          "buy_addresses": 0,
+          "buy_addresses_lower_bound": false,
+          "net_sold_wei": "0"
+        },
+        {
+          "start": 1793890800,
+          "end": 1793894400,
+          "available": true,
+          "sold_wei": "0",
+          "sell_txs": 0,
+          "sell_addresses": 0,
+          "sell_addresses_lower_bound": false,
+          "bought_wei": "0",
+          "buy_txs": 0,
+          "buy_addresses": 0,
+          "buy_addresses_lower_bound": false,
+          "net_sold_wei": "0"
+        }
+      ]
+    },
+    "history": [
+      {
+        "date": "2026-11-06",
+        "partialFirstDay": false,
+        "start": 1793894400,
+        "end": 1793966400,
+        "availableThrough": 1793966400,
+        "complete": true,
+        "available": true,
+        "groups": {
+          "source_recipients": {
+            "sold_wei": "0",
+            "sell_txs": 0,
+            "sell_addresses": 0,
+            "sell_addresses_lower_bound": false,
+            "bought_wei": "0",
+            "buy_txs": 0,
+            "buy_addresses": 0,
+            "buy_addresses_lower_bound": false,
+            "net_sold_wei": "0"
+          },
+          "other_wallet_candidates": {
+            "sold_wei": "3",
+            "sell_txs": 1,
+            "sell_addresses": 1,
+            "sell_addresses_lower_bound": false,
+            "bought_wei": "0",
+            "buy_txs": 0,
+            "buy_addresses": 0,
+            "buy_addresses_lower_bound": false,
+            "net_sold_wei": "3"
+          },
+          "remaining_unattributed": {
+            "sold_wei": "0",
+            "sell_txs": 0,
+            "sell_addresses": 0,
+            "sell_addresses_lower_bound": false,
+            "bought_wei": "0",
+            "buy_txs": 0,
+            "buy_addresses": 0,
+            "buy_addresses_lower_bound": false,
+            "net_sold_wei": "0"
+          },
+          "all_pools": {
+            "sold_wei": "3",
+            "sell_txs": 1,
+            "sell_addresses": 1,
+            "sell_addresses_lower_bound": false,
+            "bought_wei": "0",
+            "buy_txs": 0,
+            "buy_addresses": 0,
+            "buy_addresses_lower_bound": false,
+            "net_sold_wei": "3"
+          }
+        },
+        "executionBreakdown": [],
+        "claimFlow": {
+          "modelRevision": 2,
+          "method": "proportional-v1",
+          "cutoff": 1793966400,
+          "throughBlock": 127754210,
+          "direct_wei": "0",
+          "relay_wei": "0",
+          "sold_wei": "0",
+          "pending_wei": "0",
+          "pendingTransactions": 0,
+          "complete": true,
+          "transactions": 0,
+          "relayAddresses": 0,
+          "examples": []
+        },
+        "distribution": {
+          "total_wei": "0",
+          "recipients": 0,
+          "transactions": 0,
+          "transfer_events": 0,
+          "new_recipients": 0
+        },
+        "interaction": {
+          "successful_calls": 1,
+          "successful_addresses": 1,
+          "new_callers": 1
+        },
+        "bnb": {
+          "direct_inflow_wei": "20",
+          "direct_inflow_txs": 1,
+          "direct_inflow_addresses": 1,
+          "internal_inflow_wei": "20",
+          "outflow_wei": "5",
+          "net_inflow_wei": "35",
+          "balance_start_wei": "65",
+          "balance_end_wei": "100",
+          "internal_coverage": "complete"
+        }
+      },
+      {
+        "date": "2026-11-05",
+        "partialFirstDay": false,
+        "start": 1793808000,
+        "end": 1793894400,
+        "availableThrough": 1793894400,
+        "complete": true,
+        "available": true,
+        "groups": {
+          "source_recipients": {
+            "sold_wei": "8",
+            "sell_txs": 1,
+            "sell_addresses": 1,
+            "sell_addresses_lower_bound": false,
+            "bought_wei": "0",
+            "buy_txs": 0,
+            "buy_addresses": 0,
+            "buy_addresses_lower_bound": false,
+            "net_sold_wei": "8"
+          },
+          "other_wallet_candidates": {
+            "sold_wei": "0",
+            "sell_txs": 0,
+            "sell_addresses": 0,
+            "sell_addresses_lower_bound": false,
+            "bought_wei": "0",
+            "buy_txs": 0,
+            "buy_addresses": 0,
+            "buy_addresses_lower_bound": false,
+            "net_sold_wei": "0"
+          },
+          "remaining_unattributed": {
+            "sold_wei": "0",
+            "sell_txs": 0,
+            "sell_addresses": 0,
+            "sell_addresses_lower_bound": false,
+            "bought_wei": "0",
+            "buy_txs": 0,
+            "buy_addresses": 0,
+            "buy_addresses_lower_bound": false,
+            "net_sold_wei": "0"
+          },
+          "all_pools": {
+            "sold_wei": "8",
+            "sell_txs": 1,
+            "sell_addresses": 1,
+            "sell_addresses_lower_bound": false,
+            "bought_wei": "0",
+            "buy_txs": 0,
+            "buy_addresses": 0,
+            "buy_addresses_lower_bound": false,
+            "net_sold_wei": "8"
+          }
+        },
+        "executionBreakdown": [],
+        "claimFlow": {
+          "modelRevision": 2,
+          "method": "proportional-v1",
+          "cutoff": 1793966400,
+          "throughBlock": 127754210,
+          "direct_wei": "6",
+          "relay_wei": "2",
+          "sold_wei": "8",
+          "pending_wei": "0",
+          "pendingTransactions": 0,
+          "complete": true,
+          "transactions": 1,
+          "relayAddresses": 1,
+          "examples": [
+            {
+              "address": "0x1111111111111111111111111111111111111111",
+              "amount": "2",
+              "example": {
+                "root": "0x2222222222222222222222222222222222222222"
+              },
+              "tx": "t2"
+            }
+          ]
+        },
+        "distribution": {
+          "total_wei": "0",
+          "recipients": 0,
+          "transactions": 0,
+          "transfer_events": 0,
+          "new_recipients": 0
+        },
+        "interaction": {
+          "successful_calls": 1,
+          "successful_addresses": 1,
+          "new_callers": 0
+        },
+        "bnb": {
+          "direct_inflow_wei": "15",
+          "direct_inflow_txs": 1,
+          "direct_inflow_addresses": 1,
+          "internal_inflow_wei": "0",
+          "outflow_wei": "0",
+          "net_inflow_wei": "15",
+          "balance_start_wei": "50",
+          "balance_end_wei": "65",
+          "internal_coverage": "complete"
+        }
+      },
+      {
+        "date": "2026-11-04",
+        "partialFirstDay": false,
+        "start": 1793721600,
+        "end": 1793808000,
+        "availableThrough": 1793808000,
+        "complete": true,
+        "available": true,
+        "groups": {
+          "source_recipients": {
+            "sold_wei": "0",
+            "sell_txs": 0,
+            "sell_addresses": 0,
+            "sell_addresses_lower_bound": false,
+            "bought_wei": "0",
+            "buy_txs": 0,
+            "buy_addresses": 0,
+            "buy_addresses_lower_bound": false,
+            "net_sold_wei": "0"
+          },
+          "other_wallet_candidates": {
+            "sold_wei": "0",
+            "sell_txs": 0,
+            "sell_addresses": 0,
+            "sell_addresses_lower_bound": false,
+            "bought_wei": "0",
+            "buy_txs": 0,
+            "buy_addresses": 0,
+            "buy_addresses_lower_bound": false,
+            "net_sold_wei": "0"
+          },
+          "remaining_unattributed": {
+            "sold_wei": "0",
+            "sell_txs": 0,
+            "sell_addresses": 0,
+            "sell_addresses_lower_bound": false,
+            "bought_wei": "0",
+            "buy_txs": 0,
+            "buy_addresses": 0,
+            "buy_addresses_lower_bound": false,
+            "net_sold_wei": "0"
+          },
+          "all_pools": {
+            "sold_wei": "0",
+            "sell_txs": 0,
+            "sell_addresses": 0,
+            "sell_addresses_lower_bound": false,
+            "bought_wei": "0",
+            "buy_txs": 0,
+            "buy_addresses": 0,
+            "buy_addresses_lower_bound": false,
+            "net_sold_wei": "0"
+          }
+        },
+        "executionBreakdown": [],
+        "claimFlow": {
+          "modelRevision": 2,
+          "method": "proportional-v1",
+          "cutoff": 1793966400,
+          "throughBlock": 127754210,
+          "direct_wei": "0",
+          "relay_wei": "0",
+          "sold_wei": "0",
+          "pending_wei": "0",
+          "pendingTransactions": 0,
+          "complete": true,
+          "transactions": 0,
+          "relayAddresses": 0,
+          "examples": []
+        },
+        "distribution": {
+          "total_wei": "0",
+          "recipients": 0,
+          "transactions": 0,
+          "transfer_events": 0,
+          "new_recipients": 0
+        },
+        "interaction": {
+          "successful_calls": 0,
+          "successful_addresses": 0,
+          "new_callers": 0
+        },
+        "bnb": {
+          "direct_inflow_wei": "0",
+          "direct_inflow_txs": 0,
+          "direct_inflow_addresses": 0,
+          "internal_inflow_wei": "0",
+          "outflow_wei": "0",
+          "net_inflow_wei": "0",
+          "balance_start_wei": "50",
+          "balance_end_wei": "50",
+          "internal_coverage": "complete"
+        }
+      },
+      {
+        "date": "2026-11-03",
+        "partialFirstDay": false,
+        "start": 1793635200,
+        "end": 1793721600,
+        "availableThrough": 1793721600,
+        "complete": true,
+        "available": true,
+        "groups": {
+          "source_recipients": {
+            "sold_wei": "0",
+            "sell_txs": 0,
+            "sell_addresses": 0,
+            "sell_addresses_lower_bound": false,
+            "bought_wei": "0",
+            "buy_txs": 0,
+            "buy_addresses": 0,
+            "buy_addresses_lower_bound": false,
+            "net_sold_wei": "0"
+          },
+          "other_wallet_candidates": {
+            "sold_wei": "0",
+            "sell_txs": 0,
+            "sell_addresses": 0,
+            "sell_addresses_lower_bound": false,
+            "bought_wei": "0",
+            "buy_txs": 0,
+            "buy_addresses": 0,
+            "buy_addresses_lower_bound": false,
+            "net_sold_wei": "0"
+          },
+          "remaining_unattributed": {
+            "sold_wei": "0",
+            "sell_txs": 0,
+            "sell_addresses": 0,
+            "sell_addresses_lower_bound": false,
+            "bought_wei": "0",
+            "buy_txs": 0,
+            "buy_addresses": 0,
+            "buy_addresses_lower_bound": false,
+            "net_sold_wei": "0"
+          },
+          "all_pools": {
+            "sold_wei": "0",
+            "sell_txs": 0,
+            "sell_addresses": 0,
+            "sell_addresses_lower_bound": false,
+            "bought_wei": "0",
+            "buy_txs": 0,
+            "buy_addresses": 0,
+            "buy_addresses_lower_bound": false,
+            "net_sold_wei": "0"
+          }
+        },
+        "executionBreakdown": [],
+        "claimFlow": {
+          "modelRevision": 2,
+          "method": "proportional-v1",
+          "cutoff": 1793966400,
+          "throughBlock": 127754210,
+          "direct_wei": "0",
+          "relay_wei": "0",
+          "sold_wei": "0",
+          "pending_wei": "0",
+          "pendingTransactions": 0,
+          "complete": true,
+          "transactions": 0,
+          "relayAddresses": 0,
+          "examples": []
+        },
+        "distribution": {
+          "total_wei": "0",
+          "recipients": 0,
+          "transactions": 0,
+          "transfer_events": 0,
+          "new_recipients": 0
+        },
+        "interaction": {
+          "successful_calls": 0,
+          "successful_addresses": 0,
+          "new_callers": 0
+        },
+        "bnb": {
+          "direct_inflow_wei": "0",
+          "direct_inflow_txs": 0,
+          "direct_inflow_addresses": 0,
+          "internal_inflow_wei": "0",
+          "outflow_wei": "0",
+          "net_inflow_wei": "0",
+          "balance_start_wei": "50",
+          "balance_end_wei": "50",
+          "internal_coverage": "complete"
+        }
+      },
+      {
+        "date": "2026-11-02",
+        "partialFirstDay": false,
+        "start": 1793548800,
+        "end": 1793635200,
+        "availableThrough": 1793635200,
+        "complete": true,
+        "available": true,
+        "groups": {
+          "source_recipients": {
+            "sold_wei": "0",
+            "sell_txs": 0,
+            "sell_addresses": 0,
+            "sell_addresses_lower_bound": false,
+            "bought_wei": "0",
+            "buy_txs": 0,
+            "buy_addresses": 0,
+            "buy_addresses_lower_bound": false,
+            "net_sold_wei": "0"
+          },
+          "other_wallet_candidates": {
+            "sold_wei": "0",
+            "sell_txs": 0,
+            "sell_addresses": 0,
+            "sell_addresses_lower_bound": false,
+            "bought_wei": "0",
+            "buy_txs": 0,
+            "buy_addresses": 0,
+            "buy_addresses_lower_bound": false,
+            "net_sold_wei": "0"
+          },
+          "remaining_unattributed": {
+            "sold_wei": "0",
+            "sell_txs": 0,
+            "sell_addresses": 0,
+            "sell_addresses_lower_bound": false,
+            "bought_wei": "0",
+            "buy_txs": 0,
+            "buy_addresses": 0,
+            "buy_addresses_lower_bound": false,
+            "net_sold_wei": "0"
+          },
+          "all_pools": {
+            "sold_wei": "0",
+            "sell_txs": 0,
+            "sell_addresses": 0,
+            "sell_addresses_lower_bound": false,
+            "bought_wei": "0",
+            "buy_txs": 0,
+            "buy_addresses": 0,
+            "buy_addresses_lower_bound": false,
+            "net_sold_wei": "0"
+          }
+        },
+        "executionBreakdown": [],
+        "claimFlow": {
+          "modelRevision": 2,
+          "method": "proportional-v1",
+          "cutoff": 1793966400,
+          "throughBlock": 127754210,
+          "direct_wei": "0",
+          "relay_wei": "0",
+          "sold_wei": "0",
+          "pending_wei": "0",
+          "pendingTransactions": 0,
+          "complete": true,
+          "transactions": 0,
+          "relayAddresses": 0,
+          "examples": []
+        },
+        "distribution": {
+          "total_wei": "0",
+          "recipients": 0,
+          "transactions": 0,
+          "transfer_events": 0,
+          "new_recipients": 0
+        },
+        "interaction": {
+          "successful_calls": 0,
+          "successful_addresses": 0,
+          "new_callers": 0
+        },
+        "bnb": {
+          "direct_inflow_wei": "0",
+          "direct_inflow_txs": 0,
+          "direct_inflow_addresses": 0,
+          "internal_inflow_wei": "0",
+          "outflow_wei": "0",
+          "net_inflow_wei": "0",
+          "balance_start_wei": "50",
+          "balance_end_wei": "50",
+          "internal_coverage": "complete"
+        }
+      },
+      {
+        "date": "2026-11-01",
+        "partialFirstDay": false,
+        "start": 1793462400,
+        "end": 1793548800,
+        "availableThrough": 1793548800,
+        "complete": true,
+        "available": true,
+        "groups": {
+          "source_recipients": {
+            "sold_wei": "0",
+            "sell_txs": 0,
+            "sell_addresses": 0,
+            "sell_addresses_lower_bound": false,
+            "bought_wei": "0",
+            "buy_txs": 0,
+            "buy_addresses": 0,
+            "buy_addresses_lower_bound": false,
+            "net_sold_wei": "0"
+          },
+          "other_wallet_candidates": {
+            "sold_wei": "0",
+            "sell_txs": 0,
+            "sell_addresses": 0,
+            "sell_addresses_lower_bound": false,
+            "bought_wei": "0",
+            "buy_txs": 0,
+            "buy_addresses": 0,
+            "buy_addresses_lower_bound": false,
+            "net_sold_wei": "0"
+          },
+          "remaining_unattributed": {
+            "sold_wei": "0",
+            "sell_txs": 0,
+            "sell_addresses": 0,
+            "sell_addresses_lower_bound": false,
+            "bought_wei": "0",
+            "buy_txs": 0,
+            "buy_addresses": 0,
+            "buy_addresses_lower_bound": false,
+            "net_sold_wei": "0"
+          },
+          "all_pools": {
+            "sold_wei": "0",
+            "sell_txs": 0,
+            "sell_addresses": 0,
+            "sell_addresses_lower_bound": false,
+            "bought_wei": "0",
+            "buy_txs": 0,
+            "buy_addresses": 0,
+            "buy_addresses_lower_bound": false,
+            "net_sold_wei": "0"
+          }
+        },
+        "executionBreakdown": [],
+        "claimFlow": {
+          "modelRevision": 2,
+          "method": "proportional-v1",
+          "cutoff": 1793966400,
+          "throughBlock": 127754210,
+          "direct_wei": "0",
+          "relay_wei": "0",
+          "sold_wei": "0",
+          "pending_wei": "0",
+          "pendingTransactions": 0,
+          "complete": true,
+          "transactions": 0,
+          "relayAddresses": 0,
+          "examples": []
+        },
+        "distribution": {
+          "total_wei": "0",
+          "recipients": 0,
+          "transactions": 0,
+          "transfer_events": 0,
+          "new_recipients": 0
+        },
+        "interaction": {
+          "successful_calls": 0,
+          "successful_addresses": 0,
+          "new_callers": 0
+        },
+        "bnb": {
+          "direct_inflow_wei": "0",
+          "direct_inflow_txs": 0,
+          "direct_inflow_addresses": 0,
+          "internal_inflow_wei": "0",
+          "outflow_wei": "0",
+          "net_inflow_wei": "0",
+          "balance_start_wei": "50",
+          "balance_end_wei": "50",
+          "internal_coverage": "complete"
+        }
+      },
+      {
+        "date": "2026-10-31",
+        "partialFirstDay": false,
+        "start": 1793376000,
+        "end": 1793462400,
+        "availableThrough": 1793462400,
+        "complete": true,
+        "available": true,
+        "groups": {
+          "source_recipients": {
+            "sold_wei": "0",
+            "sell_txs": 0,
+            "sell_addresses": 0,
+            "sell_addresses_lower_bound": false,
+            "bought_wei": "0",
+            "buy_txs": 0,
+            "buy_addresses": 0,
+            "buy_addresses_lower_bound": false,
+            "net_sold_wei": "0"
+          },
+          "other_wallet_candidates": {
+            "sold_wei": "0",
+            "sell_txs": 0,
+            "sell_addresses": 0,
+            "sell_addresses_lower_bound": false,
+            "bought_wei": "0",
+            "buy_txs": 0,
+            "buy_addresses": 0,
+            "buy_addresses_lower_bound": false,
+            "net_sold_wei": "0"
+          },
+          "remaining_unattributed": {
+            "sold_wei": "0",
+            "sell_txs": 0,
+            "sell_addresses": 0,
+            "sell_addresses_lower_bound": false,
+            "bought_wei": "0",
+            "buy_txs": 0,
+            "buy_addresses": 0,
+            "buy_addresses_lower_bound": false,
+            "net_sold_wei": "0"
+          },
+          "all_pools": {
+            "sold_wei": "0",
+            "sell_txs": 0,
+            "sell_addresses": 0,
+            "sell_addresses_lower_bound": false,
+            "bought_wei": "0",
+            "buy_txs": 0,
+            "buy_addresses": 0,
+            "buy_addresses_lower_bound": false,
+            "net_sold_wei": "0"
+          }
+        },
+        "executionBreakdown": [],
+        "claimFlow": {
+          "modelRevision": 2,
+          "method": "proportional-v1",
+          "cutoff": 1793966400,
+          "throughBlock": 127754210,
+          "direct_wei": "0",
+          "relay_wei": "0",
+          "sold_wei": "0",
+          "pending_wei": "0",
+          "pendingTransactions": 0,
+          "complete": true,
+          "transactions": 0,
+          "relayAddresses": 0,
+          "examples": []
+        },
+        "distribution": {
+          "total_wei": "0",
+          "recipients": 0,
+          "transactions": 0,
+          "transfer_events": 0,
+          "new_recipients": 0
+        },
+        "interaction": {
+          "successful_calls": 0,
+          "successful_addresses": 0,
+          "new_callers": 0
+        },
+        "bnb": {
+          "direct_inflow_wei": "0",
+          "direct_inflow_txs": 0,
+          "direct_inflow_addresses": 0,
+          "internal_inflow_wei": "0",
+          "outflow_wei": "0",
+          "net_inflow_wei": "0",
+          "balance_start_wei": "50",
+          "balance_end_wei": "50",
+          "internal_coverage": "complete"
+        }
+      },
+      {
+        "date": "2026-10-30",
+        "partialFirstDay": false,
+        "start": 1793289600,
+        "end": 1793376000,
+        "availableThrough": 1793376000,
+        "complete": true,
+        "available": true,
+        "groups": {
+          "source_recipients": {
+            "sold_wei": "0",
+            "sell_txs": 0,
+            "sell_addresses": 0,
+            "sell_addresses_lower_bound": false,
+            "bought_wei": "0",
+            "buy_txs": 0,
+            "buy_addresses": 0,
+            "buy_addresses_lower_bound": false,
+            "net_sold_wei": "0"
+          },
+          "other_wallet_candidates": {
+            "sold_wei": "0",
+            "sell_txs": 0,
+            "sell_addresses": 0,
+            "sell_addresses_lower_bound": false,
+            "bought_wei": "0",
+            "buy_txs": 0,
+            "buy_addresses": 0,
+            "buy_addresses_lower_bound": false,
+            "net_sold_wei": "0"
+          },
+          "remaining_unattributed": {
+            "sold_wei": "0",
+            "sell_txs": 0,
+            "sell_addresses": 0,
+            "sell_addresses_lower_bound": false,
+            "bought_wei": "0",
+            "buy_txs": 0,
+            "buy_addresses": 0,
+            "buy_addresses_lower_bound": false,
+            "net_sold_wei": "0"
+          },
+          "all_pools": {
+            "sold_wei": "0",
+            "sell_txs": 0,
+            "sell_addresses": 0,
+            "sell_addresses_lower_bound": false,
+            "bought_wei": "0",
+            "buy_txs": 0,
+            "buy_addresses": 0,
+            "buy_addresses_lower_bound": false,
+            "net_sold_wei": "0"
+          }
+        },
+        "executionBreakdown": [],
+        "claimFlow": {
+          "modelRevision": 2,
+          "method": "proportional-v1",
+          "cutoff": 1793966400,
+          "throughBlock": 127754210,
+          "direct_wei": "0",
+          "relay_wei": "0",
+          "sold_wei": "0",
+          "pending_wei": "0",
+          "pendingTransactions": 0,
+          "complete": true,
+          "transactions": 0,
+          "relayAddresses": 0,
+          "examples": []
+        },
+        "distribution": {
+          "total_wei": "0",
+          "recipients": 0,
+          "transactions": 0,
+          "transfer_events": 0,
+          "new_recipients": 0
+        },
+        "interaction": {
+          "successful_calls": 0,
+          "successful_addresses": 0,
+          "new_callers": 0
+        },
+        "bnb": {
+          "direct_inflow_wei": "0",
+          "direct_inflow_txs": 0,
+          "direct_inflow_addresses": 0,
+          "internal_inflow_wei": "0",
+          "outflow_wei": "0",
+          "net_inflow_wei": "0",
+          "balance_start_wei": "50",
+          "balance_end_wei": "50",
+          "internal_coverage": "complete"
+        }
+      },
+      {
+        "date": "2026-10-29",
+        "partialFirstDay": false,
+        "start": 1793203200,
+        "end": 1793289600,
+        "availableThrough": 1793289600,
+        "complete": true,
+        "available": true,
+        "groups": {
+          "source_recipients": {
+            "sold_wei": "0",
+            "sell_txs": 0,
+            "sell_addresses": 0,
+            "sell_addresses_lower_bound": false,
+            "bought_wei": "0",
+            "buy_txs": 0,
+            "buy_addresses": 0,
+            "buy_addresses_lower_bound": false,
+            "net_sold_wei": "0"
+          },
+          "other_wallet_candidates": {
+            "sold_wei": "0",
+            "sell_txs": 0,
+            "sell_addresses": 0,
+            "sell_addresses_lower_bound": false,
+            "bought_wei": "0",
+            "buy_txs": 0,
+            "buy_addresses": 0,
+            "buy_addresses_lower_bound": false,
+            "net_sold_wei": "0"
+          },
+          "remaining_unattributed": {
+            "sold_wei": "0",
+            "sell_txs": 0,
+            "sell_addresses": 0,
+            "sell_addresses_lower_bound": false,
+            "bought_wei": "0",
+            "buy_txs": 0,
+            "buy_addresses": 0,
+            "buy_addresses_lower_bound": false,
+            "net_sold_wei": "0"
+          },
+          "all_pools": {
+            "sold_wei": "0",
+            "sell_txs": 0,
+            "sell_addresses": 0,
+            "sell_addresses_lower_bound": false,
+            "bought_wei": "0",
+            "buy_txs": 0,
+            "buy_addresses": 0,
+            "buy_addresses_lower_bound": false,
+            "net_sold_wei": "0"
+          }
+        },
+        "executionBreakdown": [],
+        "claimFlow": {
+          "modelRevision": 2,
+          "method": "proportional-v1",
+          "cutoff": 1793966400,
+          "throughBlock": 127754210,
+          "direct_wei": "0",
+          "relay_wei": "0",
+          "sold_wei": "0",
+          "pending_wei": "0",
+          "pendingTransactions": 0,
+          "complete": true,
+          "transactions": 0,
+          "relayAddresses": 0,
+          "examples": []
+        },
+        "distribution": {
+          "total_wei": "0",
+          "recipients": 0,
+          "transactions": 0,
+          "transfer_events": 0,
+          "new_recipients": 0
+        },
+        "interaction": {
+          "successful_calls": 0,
+          "successful_addresses": 0,
+          "new_callers": 0
+        },
+        "bnb": {
+          "direct_inflow_wei": "0",
+          "direct_inflow_txs": 0,
+          "direct_inflow_addresses": 0,
+          "internal_inflow_wei": "0",
+          "outflow_wei": "0",
+          "net_inflow_wei": "0",
+          "balance_start_wei": "50",
+          "balance_end_wei": "50",
+          "internal_coverage": "complete"
+        }
+      },
+      {
+        "date": "2026-10-28",
+        "partialFirstDay": false,
+        "start": 1793116800,
+        "end": 1793203200,
+        "availableThrough": 1793203200,
+        "complete": true,
+        "available": true,
+        "groups": {
+          "source_recipients": {
+            "sold_wei": "0",
+            "sell_txs": 0,
+            "sell_addresses": 0,
+            "sell_addresses_lower_bound": false,
+            "bought_wei": "0",
+            "buy_txs": 0,
+            "buy_addresses": 0,
+            "buy_addresses_lower_bound": false,
+            "net_sold_wei": "0"
+          },
+          "other_wallet_candidates": {
+            "sold_wei": "0",
+            "sell_txs": 0,
+            "sell_addresses": 0,
+            "sell_addresses_lower_bound": false,
+            "bought_wei": "0",
+            "buy_txs": 0,
+            "buy_addresses": 0,
+            "buy_addresses_lower_bound": false,
+            "net_sold_wei": "0"
+          },
+          "remaining_unattributed": {
+            "sold_wei": "0",
+            "sell_txs": 0,
+            "sell_addresses": 0,
+            "sell_addresses_lower_bound": false,
+            "bought_wei": "0",
+            "buy_txs": 0,
+            "buy_addresses": 0,
+            "buy_addresses_lower_bound": false,
+            "net_sold_wei": "0"
+          },
+          "all_pools": {
+            "sold_wei": "0",
+            "sell_txs": 0,
+            "sell_addresses": 0,
+            "sell_addresses_lower_bound": false,
+            "bought_wei": "0",
+            "buy_txs": 0,
+            "buy_addresses": 0,
+            "buy_addresses_lower_bound": false,
+            "net_sold_wei": "0"
+          }
+        },
+        "executionBreakdown": [],
+        "claimFlow": {
+          "modelRevision": 2,
+          "method": "proportional-v1",
+          "cutoff": 1793966400,
+          "throughBlock": 127754210,
+          "direct_wei": "0",
+          "relay_wei": "0",
+          "sold_wei": "0",
+          "pending_wei": "0",
+          "pendingTransactions": 0,
+          "complete": true,
+          "transactions": 0,
+          "relayAddresses": 0,
+          "examples": []
+        },
+        "distribution": {
+          "total_wei": "0",
+          "recipients": 0,
+          "transactions": 0,
+          "transfer_events": 0,
+          "new_recipients": 0
+        },
+        "interaction": {
+          "successful_calls": 0,
+          "successful_addresses": 0,
+          "new_callers": 0
+        },
+        "bnb": {
+          "direct_inflow_wei": "0",
+          "direct_inflow_txs": 0,
+          "direct_inflow_addresses": 0,
+          "internal_inflow_wei": "0",
+          "outflow_wei": "0",
+          "net_inflow_wei": "0",
+          "balance_start_wei": "50",
+          "balance_end_wei": "50",
+          "internal_coverage": "complete"
+        }
+      },
+      {
+        "date": "2026-10-27",
+        "partialFirstDay": false,
+        "start": 1793030400,
+        "end": 1793116800,
+        "availableThrough": 1793116800,
+        "complete": true,
+        "available": true,
+        "groups": {
+          "source_recipients": {
+            "sold_wei": "0",
+            "sell_txs": 0,
+            "sell_addresses": 0,
+            "sell_addresses_lower_bound": false,
+            "bought_wei": "0",
+            "buy_txs": 0,
+            "buy_addresses": 0,
+            "buy_addresses_lower_bound": false,
+            "net_sold_wei": "0"
+          },
+          "other_wallet_candidates": {
+            "sold_wei": "0",
+            "sell_txs": 0,
+            "sell_addresses": 0,
+            "sell_addresses_lower_bound": false,
+            "bought_wei": "0",
+            "buy_txs": 0,
+            "buy_addresses": 0,
+            "buy_addresses_lower_bound": false,
+            "net_sold_wei": "0"
+          },
+          "remaining_unattributed": {
+            "sold_wei": "0",
+            "sell_txs": 0,
+            "sell_addresses": 0,
+            "sell_addresses_lower_bound": false,
+            "bought_wei": "0",
+            "buy_txs": 0,
+            "buy_addresses": 0,
+            "buy_addresses_lower_bound": false,
+            "net_sold_wei": "0"
+          },
+          "all_pools": {
+            "sold_wei": "0",
+            "sell_txs": 0,
+            "sell_addresses": 0,
+            "sell_addresses_lower_bound": false,
+            "bought_wei": "0",
+            "buy_txs": 0,
+            "buy_addresses": 0,
+            "buy_addresses_lower_bound": false,
+            "net_sold_wei": "0"
+          }
+        },
+        "executionBreakdown": [],
+        "claimFlow": {
+          "modelRevision": 2,
+          "method": "proportional-v1",
+          "cutoff": 1793966400,
+          "throughBlock": 127754210,
+          "direct_wei": "0",
+          "relay_wei": "0",
+          "sold_wei": "0",
+          "pending_wei": "0",
+          "pendingTransactions": 0,
+          "complete": true,
+          "transactions": 0,
+          "relayAddresses": 0,
+          "examples": []
+        },
+        "distribution": {
+          "total_wei": "0",
+          "recipients": 0,
+          "transactions": 0,
+          "transfer_events": 0,
+          "new_recipients": 0
+        },
+        "interaction": {
+          "successful_calls": 0,
+          "successful_addresses": 0,
+          "new_callers": 0
+        },
+        "bnb": {
+          "direct_inflow_wei": "0",
+          "direct_inflow_txs": 0,
+          "direct_inflow_addresses": 0,
+          "internal_inflow_wei": "0",
+          "outflow_wei": "0",
+          "net_inflow_wei": "0",
+          "balance_start_wei": "50",
+          "balance_end_wei": "50",
+          "internal_coverage": "complete"
+        }
+      },
+      {
+        "date": "2026-10-26",
+        "partialFirstDay": false,
+        "start": 1792944000,
+        "end": 1793030400,
+        "availableThrough": 1793030400,
+        "complete": true,
+        "available": true,
+        "groups": {
+          "source_recipients": {
+            "sold_wei": "0",
+            "sell_txs": 0,
+            "sell_addresses": 0,
+            "sell_addresses_lower_bound": false,
+            "bought_wei": "0",
+            "buy_txs": 0,
+            "buy_addresses": 0,
+            "buy_addresses_lower_bound": false,
+            "net_sold_wei": "0"
+          },
+          "other_wallet_candidates": {
+            "sold_wei": "0",
+            "sell_txs": 0,
+            "sell_addresses": 0,
+            "sell_addresses_lower_bound": false,
+            "bought_wei": "0",
+            "buy_txs": 0,
+            "buy_addresses": 0,
+            "buy_addresses_lower_bound": false,
+            "net_sold_wei": "0"
+          },
+          "remaining_unattributed": {
+            "sold_wei": "0",
+            "sell_txs": 0,
+            "sell_addresses": 0,
+            "sell_addresses_lower_bound": false,
+            "bought_wei": "0",
+            "buy_txs": 0,
+            "buy_addresses": 0,
+            "buy_addresses_lower_bound": false,
+            "net_sold_wei": "0"
+          },
+          "all_pools": {
+            "sold_wei": "0",
+            "sell_txs": 0,
+            "sell_addresses": 0,
+            "sell_addresses_lower_bound": false,
+            "bought_wei": "0",
+            "buy_txs": 0,
+            "buy_addresses": 0,
+            "buy_addresses_lower_bound": false,
+            "net_sold_wei": "0"
+          }
+        },
+        "executionBreakdown": [],
+        "claimFlow": {
+          "modelRevision": 2,
+          "method": "proportional-v1",
+          "cutoff": 1793966400,
+          "throughBlock": 127754210,
+          "direct_wei": "0",
+          "relay_wei": "0",
+          "sold_wei": "0",
+          "pending_wei": "0",
+          "pendingTransactions": 0,
+          "complete": true,
+          "transactions": 0,
+          "relayAddresses": 0,
+          "examples": []
+        },
+        "distribution": {
+          "total_wei": "0",
+          "recipients": 0,
+          "transactions": 0,
+          "transfer_events": 0,
+          "new_recipients": 0
+        },
+        "interaction": {
+          "successful_calls": 0,
+          "successful_addresses": 0,
+          "new_callers": 0
+        },
+        "bnb": {
+          "direct_inflow_wei": "0",
+          "direct_inflow_txs": 0,
+          "direct_inflow_addresses": 0,
+          "internal_inflow_wei": "0",
+          "outflow_wei": "0",
+          "net_inflow_wei": "0",
+          "balance_start_wei": "50",
+          "balance_end_wei": "50",
+          "internal_coverage": "complete"
+        }
+      },
+      {
+        "date": "2026-10-25",
+        "partialFirstDay": false,
+        "start": 1792857600,
+        "end": 1792944000,
+        "availableThrough": 1792944000,
+        "complete": true,
+        "available": true,
+        "groups": {
+          "source_recipients": {
+            "sold_wei": "0",
+            "sell_txs": 0,
+            "sell_addresses": 0,
+            "sell_addresses_lower_bound": false,
+            "bought_wei": "0",
+            "buy_txs": 0,
+            "buy_addresses": 0,
+            "buy_addresses_lower_bound": false,
+            "net_sold_wei": "0"
+          },
+          "other_wallet_candidates": {
+            "sold_wei": "0",
+            "sell_txs": 0,
+            "sell_addresses": 0,
+            "sell_addresses_lower_bound": false,
+            "bought_wei": "0",
+            "buy_txs": 0,
+            "buy_addresses": 0,
+            "buy_addresses_lower_bound": false,
+            "net_sold_wei": "0"
+          },
+          "remaining_unattributed": {
+            "sold_wei": "0",
+            "sell_txs": 0,
+            "sell_addresses": 0,
+            "sell_addresses_lower_bound": false,
+            "bought_wei": "0",
+            "buy_txs": 0,
+            "buy_addresses": 0,
+            "buy_addresses_lower_bound": false,
+            "net_sold_wei": "0"
+          },
+          "all_pools": {
+            "sold_wei": "0",
+            "sell_txs": 0,
+            "sell_addresses": 0,
+            "sell_addresses_lower_bound": false,
+            "bought_wei": "0",
+            "buy_txs": 0,
+            "buy_addresses": 0,
+            "buy_addresses_lower_bound": false,
+            "net_sold_wei": "0"
+          }
+        },
+        "executionBreakdown": [],
+        "claimFlow": {
+          "modelRevision": 2,
+          "method": "proportional-v1",
+          "cutoff": 1793966400,
+          "throughBlock": 127754210,
+          "direct_wei": "0",
+          "relay_wei": "0",
+          "sold_wei": "0",
+          "pending_wei": "0",
+          "pendingTransactions": 0,
+          "complete": true,
+          "transactions": 0,
+          "relayAddresses": 0,
+          "examples": []
+        },
+        "distribution": {
+          "total_wei": "0",
+          "recipients": 0,
+          "transactions": 0,
+          "transfer_events": 0,
+          "new_recipients": 0
+        },
+        "interaction": {
+          "successful_calls": 0,
+          "successful_addresses": 0,
+          "new_callers": 0
+        },
+        "bnb": {
+          "direct_inflow_wei": "0",
+          "direct_inflow_txs": 0,
+          "direct_inflow_addresses": 0,
+          "internal_inflow_wei": "0",
+          "outflow_wei": "0",
+          "net_inflow_wei": "0",
+          "balance_start_wei": "50",
+          "balance_end_wei": "50",
+          "internal_coverage": "complete"
+        }
+      },
+      {
+        "date": "2026-10-24",
+        "partialFirstDay": false,
+        "start": 1792771200,
+        "end": 1792857600,
+        "availableThrough": 1792857600,
+        "complete": true,
+        "available": true,
+        "groups": {
+          "source_recipients": {
+            "sold_wei": "0",
+            "sell_txs": 0,
+            "sell_addresses": 0,
+            "sell_addresses_lower_bound": false,
+            "bought_wei": "0",
+            "buy_txs": 0,
+            "buy_addresses": 0,
+            "buy_addresses_lower_bound": false,
+            "net_sold_wei": "0"
+          },
+          "other_wallet_candidates": {
+            "sold_wei": "0",
+            "sell_txs": 0,
+            "sell_addresses": 0,
+            "sell_addresses_lower_bound": false,
+            "bought_wei": "0",
+            "buy_txs": 0,
+            "buy_addresses": 0,
+            "buy_addresses_lower_bound": false,
+            "net_sold_wei": "0"
+          },
+          "remaining_unattributed": {
+            "sold_wei": "0",
+            "sell_txs": 0,
+            "sell_addresses": 0,
+            "sell_addresses_lower_bound": false,
+            "bought_wei": "0",
+            "buy_txs": 0,
+            "buy_addresses": 0,
+            "buy_addresses_lower_bound": false,
+            "net_sold_wei": "0"
+          },
+          "all_pools": {
+            "sold_wei": "0",
+            "sell_txs": 0,
+            "sell_addresses": 0,
+            "sell_addresses_lower_bound": false,
+            "bought_wei": "0",
+            "buy_txs": 0,
+            "buy_addresses": 0,
+            "buy_addresses_lower_bound": false,
+            "net_sold_wei": "0"
+          }
+        },
+        "executionBreakdown": [],
+        "claimFlow": {
+          "modelRevision": 2,
+          "method": "proportional-v1",
+          "cutoff": 1793966400,
+          "throughBlock": 127754210,
+          "direct_wei": "0",
+          "relay_wei": "0",
+          "sold_wei": "0",
+          "pending_wei": "0",
+          "pendingTransactions": 0,
+          "complete": true,
+          "transactions": 0,
+          "relayAddresses": 0,
+          "examples": []
+        },
+        "distribution": {
+          "total_wei": "0",
+          "recipients": 0,
+          "transactions": 0,
+          "transfer_events": 0,
+          "new_recipients": 0
+        },
+        "interaction": {
+          "successful_calls": 0,
+          "successful_addresses": 0,
+          "new_callers": 0
+        },
+        "bnb": {
+          "direct_inflow_wei": "0",
+          "direct_inflow_txs": 0,
+          "direct_inflow_addresses": 0,
+          "internal_inflow_wei": "0",
+          "outflow_wei": "0",
+          "net_inflow_wei": "0",
+          "balance_start_wei": "50",
+          "balance_end_wei": "50",
+          "internal_coverage": "complete"
+        }
+      },
+      {
+        "date": "2026-10-23",
+        "partialFirstDay": false,
+        "start": 1792684800,
+        "end": 1792771200,
+        "availableThrough": 1792771200,
+        "complete": true,
+        "available": true,
+        "groups": {
+          "source_recipients": {
+            "sold_wei": "0",
+            "sell_txs": 0,
+            "sell_addresses": 0,
+            "sell_addresses_lower_bound": false,
+            "bought_wei": "0",
+            "buy_txs": 0,
+            "buy_addresses": 0,
+            "buy_addresses_lower_bound": false,
+            "net_sold_wei": "0"
+          },
+          "other_wallet_candidates": {
+            "sold_wei": "0",
+            "sell_txs": 0,
+            "sell_addresses": 0,
+            "sell_addresses_lower_bound": false,
+            "bought_wei": "0",
+            "buy_txs": 0,
+            "buy_addresses": 0,
+            "buy_addresses_lower_bound": false,
+            "net_sold_wei": "0"
+          },
+          "remaining_unattributed": {
+            "sold_wei": "0",
+            "sell_txs": 0,
+            "sell_addresses": 0,
+            "sell_addresses_lower_bound": false,
+            "bought_wei": "0",
+            "buy_txs": 0,
+            "buy_addresses": 0,
+            "buy_addresses_lower_bound": false,
+            "net_sold_wei": "0"
+          },
+          "all_pools": {
+            "sold_wei": "0",
+            "sell_txs": 0,
+            "sell_addresses": 0,
+            "sell_addresses_lower_bound": false,
+            "bought_wei": "0",
+            "buy_txs": 0,
+            "buy_addresses": 0,
+            "buy_addresses_lower_bound": false,
+            "net_sold_wei": "0"
+          }
+        },
+        "executionBreakdown": [],
+        "claimFlow": {
+          "modelRevision": 2,
+          "method": "proportional-v1",
+          "cutoff": 1793966400,
+          "throughBlock": 127754210,
+          "direct_wei": "0",
+          "relay_wei": "0",
+          "sold_wei": "0",
+          "pending_wei": "0",
+          "pendingTransactions": 0,
+          "complete": true,
+          "transactions": 0,
+          "relayAddresses": 0,
+          "examples": []
+        },
+        "distribution": {
+          "total_wei": "0",
+          "recipients": 0,
+          "transactions": 0,
+          "transfer_events": 0,
+          "new_recipients": 0
+        },
+        "interaction": {
+          "successful_calls": 0,
+          "successful_addresses": 0,
+          "new_callers": 0
+        },
+        "bnb": {
+          "direct_inflow_wei": "0",
+          "direct_inflow_txs": 0,
+          "direct_inflow_addresses": 0,
+          "internal_inflow_wei": "0",
+          "outflow_wei": "0",
+          "net_inflow_wei": "0",
+          "balance_start_wei": "50",
+          "balance_end_wei": "50",
+          "internal_coverage": "complete"
+        }
+      },
+      {
+        "date": "2026-10-22",
+        "partialFirstDay": false,
+        "start": 1792598400,
+        "end": 1792684800,
+        "availableThrough": 1792684800,
+        "complete": true,
+        "available": true,
+        "groups": {
+          "source_recipients": {
+            "sold_wei": "0",
+            "sell_txs": 0,
+            "sell_addresses": 0,
+            "sell_addresses_lower_bound": false,
+            "bought_wei": "0",
+            "buy_txs": 0,
+            "buy_addresses": 0,
+            "buy_addresses_lower_bound": false,
+            "net_sold_wei": "0"
+          },
+          "other_wallet_candidates": {
+            "sold_wei": "0",
+            "sell_txs": 0,
+            "sell_addresses": 0,
+            "sell_addresses_lower_bound": false,
+            "bought_wei": "0",
+            "buy_txs": 0,
+            "buy_addresses": 0,
+            "buy_addresses_lower_bound": false,
+            "net_sold_wei": "0"
+          },
+          "remaining_unattributed": {
+            "sold_wei": "0",
+            "sell_txs": 0,
+            "sell_addresses": 0,
+            "sell_addresses_lower_bound": false,
+            "bought_wei": "0",
+            "buy_txs": 0,
+            "buy_addresses": 0,
+            "buy_addresses_lower_bound": false,
+            "net_sold_wei": "0"
+          },
+          "all_pools": {
+            "sold_wei": "0",
+            "sell_txs": 0,
+            "sell_addresses": 0,
+            "sell_addresses_lower_bound": false,
+            "bought_wei": "0",
+            "buy_txs": 0,
+            "buy_addresses": 0,
+            "buy_addresses_lower_bound": false,
+            "net_sold_wei": "0"
+          }
+        },
+        "executionBreakdown": [],
+        "claimFlow": {
+          "modelRevision": 2,
+          "method": "proportional-v1",
+          "cutoff": 1793966400,
+          "throughBlock": 127754210,
+          "direct_wei": "0",
+          "relay_wei": "0",
+          "sold_wei": "0",
+          "pending_wei": "0",
+          "pendingTransactions": 0,
+          "complete": true,
+          "transactions": 0,
+          "relayAddresses": 0,
+          "examples": []
+        },
+        "distribution": {
+          "total_wei": "0",
+          "recipients": 0,
+          "transactions": 0,
+          "transfer_events": 0,
+          "new_recipients": 0
+        },
+        "interaction": {
+          "successful_calls": 0,
+          "successful_addresses": 0,
+          "new_callers": 0
+        },
+        "bnb": {
+          "direct_inflow_wei": "0",
+          "direct_inflow_txs": 0,
+          "direct_inflow_addresses": 0,
+          "internal_inflow_wei": "0",
+          "outflow_wei": "0",
+          "net_inflow_wei": "0",
+          "balance_start_wei": "50",
+          "balance_end_wei": "50",
+          "internal_coverage": "complete"
+        }
+      },
+      {
+        "date": "2026-10-21",
+        "partialFirstDay": false,
+        "start": 1792512000,
+        "end": 1792598400,
+        "availableThrough": 1792598400,
+        "complete": true,
+        "available": true,
+        "groups": {
+          "source_recipients": {
+            "sold_wei": "0",
+            "sell_txs": 0,
+            "sell_addresses": 0,
+            "sell_addresses_lower_bound": false,
+            "bought_wei": "0",
+            "buy_txs": 0,
+            "buy_addresses": 0,
+            "buy_addresses_lower_bound": false,
+            "net_sold_wei": "0"
+          },
+          "other_wallet_candidates": {
+            "sold_wei": "0",
+            "sell_txs": 0,
+            "sell_addresses": 0,
+            "sell_addresses_lower_bound": false,
+            "bought_wei": "0",
+            "buy_txs": 0,
+            "buy_addresses": 0,
+            "buy_addresses_lower_bound": false,
+            "net_sold_wei": "0"
+          },
+          "remaining_unattributed": {
+            "sold_wei": "0",
+            "sell_txs": 0,
+            "sell_addresses": 0,
+            "sell_addresses_lower_bound": false,
+            "bought_wei": "0",
+            "buy_txs": 0,
+            "buy_addresses": 0,
+            "buy_addresses_lower_bound": false,
+            "net_sold_wei": "0"
+          },
+          "all_pools": {
+            "sold_wei": "0",
+            "sell_txs": 0,
+            "sell_addresses": 0,
+            "sell_addresses_lower_bound": false,
+            "bought_wei": "0",
+            "buy_txs": 0,
+            "buy_addresses": 0,
+            "buy_addresses_lower_bound": false,
+            "net_sold_wei": "0"
+          }
+        },
+        "executionBreakdown": [],
+        "claimFlow": {
+          "modelRevision": 2,
+          "method": "proportional-v1",
+          "cutoff": 1793966400,
+          "throughBlock": 127754210,
+          "direct_wei": "0",
+          "relay_wei": "0",
+          "sold_wei": "0",
+          "pending_wei": "0",
+          "pendingTransactions": 0,
+          "complete": true,
+          "transactions": 0,
+          "relayAddresses": 0,
+          "examples": []
+        },
+        "distribution": {
+          "total_wei": "0",
+          "recipients": 0,
+          "transactions": 0,
+          "transfer_events": 0,
+          "new_recipients": 0
+        },
+        "interaction": {
+          "successful_calls": 0,
+          "successful_addresses": 0,
+          "new_callers": 0
+        },
+        "bnb": {
+          "direct_inflow_wei": "0",
+          "direct_inflow_txs": 0,
+          "direct_inflow_addresses": 0,
+          "internal_inflow_wei": "0",
+          "outflow_wei": "0",
+          "net_inflow_wei": "0",
+          "balance_start_wei": "50",
+          "balance_end_wei": "50",
+          "internal_coverage": "complete"
+        }
+      },
+      {
+        "date": "2026-10-20",
+        "partialFirstDay": false,
+        "start": 1792425600,
+        "end": 1792512000,
+        "availableThrough": 1792512000,
+        "complete": true,
+        "available": true,
+        "groups": {
+          "source_recipients": {
+            "sold_wei": "0",
+            "sell_txs": 0,
+            "sell_addresses": 0,
+            "sell_addresses_lower_bound": false,
+            "bought_wei": "0",
+            "buy_txs": 0,
+            "buy_addresses": 0,
+            "buy_addresses_lower_bound": false,
+            "net_sold_wei": "0"
+          },
+          "other_wallet_candidates": {
+            "sold_wei": "0",
+            "sell_txs": 0,
+            "sell_addresses": 0,
+            "sell_addresses_lower_bound": false,
+            "bought_wei": "0",
+            "buy_txs": 0,
+            "buy_addresses": 0,
+            "buy_addresses_lower_bound": false,
+            "net_sold_wei": "0"
+          },
+          "remaining_unattributed": {
+            "sold_wei": "0",
+            "sell_txs": 0,
+            "sell_addresses": 0,
+            "sell_addresses_lower_bound": false,
+            "bought_wei": "0",
+            "buy_txs": 0,
+            "buy_addresses": 0,
+            "buy_addresses_lower_bound": false,
+            "net_sold_wei": "0"
+          },
+          "all_pools": {
+            "sold_wei": "0",
+            "sell_txs": 0,
+            "sell_addresses": 0,
+            "sell_addresses_lower_bound": false,
+            "bought_wei": "0",
+            "buy_txs": 0,
+            "buy_addresses": 0,
+            "buy_addresses_lower_bound": false,
+            "net_sold_wei": "0"
+          }
+        },
+        "executionBreakdown": [],
+        "claimFlow": {
+          "modelRevision": 2,
+          "method": "proportional-v1",
+          "cutoff": 1793966400,
+          "throughBlock": 127754210,
+          "direct_wei": "0",
+          "relay_wei": "0",
+          "sold_wei": "0",
+          "pending_wei": "0",
+          "pendingTransactions": 0,
+          "complete": true,
+          "transactions": 0,
+          "relayAddresses": 0,
+          "examples": []
+        },
+        "distribution": {
+          "total_wei": "0",
+          "recipients": 0,
+          "transactions": 0,
+          "transfer_events": 0,
+          "new_recipients": 0
+        },
+        "interaction": {
+          "successful_calls": 0,
+          "successful_addresses": 0,
+          "new_callers": 0
+        },
+        "bnb": {
+          "direct_inflow_wei": "0",
+          "direct_inflow_txs": 0,
+          "direct_inflow_addresses": 0,
+          "internal_inflow_wei": "0",
+          "outflow_wei": "0",
+          "net_inflow_wei": "0",
+          "balance_start_wei": "50",
+          "balance_end_wei": "50",
+          "internal_coverage": "complete"
+        }
+      },
+      {
+        "date": "2026-10-19",
+        "partialFirstDay": false,
+        "start": 1792339200,
+        "end": 1792425600,
+        "availableThrough": 1792425600,
+        "complete": true,
+        "available": true,
+        "groups": {
+          "source_recipients": {
+            "sold_wei": "0",
+            "sell_txs": 0,
+            "sell_addresses": 0,
+            "sell_addresses_lower_bound": false,
+            "bought_wei": "0",
+            "buy_txs": 0,
+            "buy_addresses": 0,
+            "buy_addresses_lower_bound": false,
+            "net_sold_wei": "0"
+          },
+          "other_wallet_candidates": {
+            "sold_wei": "0",
+            "sell_txs": 0,
+            "sell_addresses": 0,
+            "sell_addresses_lower_bound": false,
+            "bought_wei": "0",
+            "buy_txs": 0,
+            "buy_addresses": 0,
+            "buy_addresses_lower_bound": false,
+            "net_sold_wei": "0"
+          },
+          "remaining_unattributed": {
+            "sold_wei": "0",
+            "sell_txs": 0,
+            "sell_addresses": 0,
+            "sell_addresses_lower_bound": false,
+            "bought_wei": "0",
+            "buy_txs": 0,
+            "buy_addresses": 0,
+            "buy_addresses_lower_bound": false,
+            "net_sold_wei": "0"
+          },
+          "all_pools": {
+            "sold_wei": "0",
+            "sell_txs": 0,
+            "sell_addresses": 0,
+            "sell_addresses_lower_bound": false,
+            "bought_wei": "0",
+            "buy_txs": 0,
+            "buy_addresses": 0,
+            "buy_addresses_lower_bound": false,
+            "net_sold_wei": "0"
+          }
+        },
+        "executionBreakdown": [],
+        "claimFlow": {
+          "modelRevision": 2,
+          "method": "proportional-v1",
+          "cutoff": 1793966400,
+          "throughBlock": 127754210,
+          "direct_wei": "0",
+          "relay_wei": "0",
+          "sold_wei": "0",
+          "pending_wei": "0",
+          "pendingTransactions": 0,
+          "complete": true,
+          "transactions": 0,
+          "relayAddresses": 0,
+          "examples": []
+        },
+        "distribution": {
+          "total_wei": "0",
+          "recipients": 0,
+          "transactions": 0,
+          "transfer_events": 0,
+          "new_recipients": 0
+        },
+        "interaction": {
+          "successful_calls": 0,
+          "successful_addresses": 0,
+          "new_callers": 0
+        },
+        "bnb": {
+          "direct_inflow_wei": "0",
+          "direct_inflow_txs": 0,
+          "direct_inflow_addresses": 0,
+          "internal_inflow_wei": "0",
+          "outflow_wei": "0",
+          "net_inflow_wei": "0",
+          "balance_start_wei": "50",
+          "balance_end_wei": "50",
+          "internal_coverage": "complete"
+        }
+      },
+      {
+        "date": "2026-10-18",
+        "partialFirstDay": false,
+        "start": 1792252800,
+        "end": 1792339200,
+        "availableThrough": 1792339200,
+        "complete": true,
+        "available": true,
+        "groups": {
+          "source_recipients": {
+            "sold_wei": "0",
+            "sell_txs": 0,
+            "sell_addresses": 0,
+            "sell_addresses_lower_bound": false,
+            "bought_wei": "0",
+            "buy_txs": 0,
+            "buy_addresses": 0,
+            "buy_addresses_lower_bound": false,
+            "net_sold_wei": "0"
+          },
+          "other_wallet_candidates": {
+            "sold_wei": "0",
+            "sell_txs": 0,
+            "sell_addresses": 0,
+            "sell_addresses_lower_bound": false,
+            "bought_wei": "0",
+            "buy_txs": 0,
+            "buy_addresses": 0,
+            "buy_addresses_lower_bound": false,
+            "net_sold_wei": "0"
+          },
+          "remaining_unattributed": {
+            "sold_wei": "0",
+            "sell_txs": 0,
+            "sell_addresses": 0,
+            "sell_addresses_lower_bound": false,
+            "bought_wei": "0",
+            "buy_txs": 0,
+            "buy_addresses": 0,
+            "buy_addresses_lower_bound": false,
+            "net_sold_wei": "0"
+          },
+          "all_pools": {
+            "sold_wei": "0",
+            "sell_txs": 0,
+            "sell_addresses": 0,
+            "sell_addresses_lower_bound": false,
+            "bought_wei": "0",
+            "buy_txs": 0,
+            "buy_addresses": 0,
+            "buy_addresses_lower_bound": false,
+            "net_sold_wei": "0"
+          }
+        },
+        "executionBreakdown": [],
+        "claimFlow": {
+          "modelRevision": 2,
+          "method": "proportional-v1",
+          "cutoff": 1793966400,
+          "throughBlock": 127754210,
+          "direct_wei": "0",
+          "relay_wei": "0",
+          "sold_wei": "0",
+          "pending_wei": "0",
+          "pendingTransactions": 0,
+          "complete": true,
+          "transactions": 0,
+          "relayAddresses": 0,
+          "examples": []
+        },
+        "distribution": {
+          "total_wei": "0",
+          "recipients": 0,
+          "transactions": 0,
+          "transfer_events": 0,
+          "new_recipients": 0
+        },
+        "interaction": {
+          "successful_calls": 0,
+          "successful_addresses": 0,
+          "new_callers": 0
+        },
+        "bnb": {
+          "direct_inflow_wei": "0",
+          "direct_inflow_txs": 0,
+          "direct_inflow_addresses": 0,
+          "internal_inflow_wei": "0",
+          "outflow_wei": "0",
+          "net_inflow_wei": "0",
+          "balance_start_wei": "50",
+          "balance_end_wei": "50",
+          "internal_coverage": "complete"
+        }
+      },
+      {
+        "date": "2026-10-17",
+        "partialFirstDay": false,
+        "start": 1792166400,
+        "end": 1792252800,
+        "availableThrough": 1792252800,
+        "complete": true,
+        "available": true,
+        "groups": {
+          "source_recipients": {
+            "sold_wei": "0",
+            "sell_txs": 0,
+            "sell_addresses": 0,
+            "sell_addresses_lower_bound": false,
+            "bought_wei": "0",
+            "buy_txs": 0,
+            "buy_addresses": 0,
+            "buy_addresses_lower_bound": false,
+            "net_sold_wei": "0"
+          },
+          "other_wallet_candidates": {
+            "sold_wei": "0",
+            "sell_txs": 0,
+            "sell_addresses": 0,
+            "sell_addresses_lower_bound": false,
+            "bought_wei": "0",
+            "buy_txs": 0,
+            "buy_addresses": 0,
+            "buy_addresses_lower_bound": false,
+            "net_sold_wei": "0"
+          },
+          "remaining_unattributed": {
+            "sold_wei": "0",
+            "sell_txs": 0,
+            "sell_addresses": 0,
+            "sell_addresses_lower_bound": false,
+            "bought_wei": "0",
+            "buy_txs": 0,
+            "buy_addresses": 0,
+            "buy_addresses_lower_bound": false,
+            "net_sold_wei": "0"
+          },
+          "all_pools": {
+            "sold_wei": "0",
+            "sell_txs": 0,
+            "sell_addresses": 0,
+            "sell_addresses_lower_bound": false,
+            "bought_wei": "0",
+            "buy_txs": 0,
+            "buy_addresses": 0,
+            "buy_addresses_lower_bound": false,
+            "net_sold_wei": "0"
+          }
+        },
+        "executionBreakdown": [],
+        "claimFlow": {
+          "modelRevision": 2,
+          "method": "proportional-v1",
+          "cutoff": 1793966400,
+          "throughBlock": 127754210,
+          "direct_wei": "0",
+          "relay_wei": "0",
+          "sold_wei": "0",
+          "pending_wei": "0",
+          "pendingTransactions": 0,
+          "complete": true,
+          "transactions": 0,
+          "relayAddresses": 0,
+          "examples": []
+        },
+        "distribution": {
+          "total_wei": "0",
+          "recipients": 0,
+          "transactions": 0,
+          "transfer_events": 0,
+          "new_recipients": 0
+        },
+        "interaction": {
+          "successful_calls": 0,
+          "successful_addresses": 0,
+          "new_callers": 0
+        },
+        "bnb": {
+          "direct_inflow_wei": "0",
+          "direct_inflow_txs": 0,
+          "direct_inflow_addresses": 0,
+          "internal_inflow_wei": "0",
+          "outflow_wei": "0",
+          "net_inflow_wei": "0",
+          "balance_start_wei": "50",
+          "balance_end_wei": "50",
+          "internal_coverage": "complete"
+        }
+      },
+      {
+        "date": "2026-10-16",
+        "partialFirstDay": false,
+        "start": 1792080000,
+        "end": 1792166400,
+        "availableThrough": 1792166400,
+        "complete": true,
+        "available": true,
+        "groups": {
+          "source_recipients": {
+            "sold_wei": "0",
+            "sell_txs": 0,
+            "sell_addresses": 0,
+            "sell_addresses_lower_bound": false,
+            "bought_wei": "0",
+            "buy_txs": 0,
+            "buy_addresses": 0,
+            "buy_addresses_lower_bound": false,
+            "net_sold_wei": "0"
+          },
+          "other_wallet_candidates": {
+            "sold_wei": "0",
+            "sell_txs": 0,
+            "sell_addresses": 0,
+            "sell_addresses_lower_bound": false,
+            "bought_wei": "0",
+            "buy_txs": 0,
+            "buy_addresses": 0,
+            "buy_addresses_lower_bound": false,
+            "net_sold_wei": "0"
+          },
+          "remaining_unattributed": {
+            "sold_wei": "0",
+            "sell_txs": 0,
+            "sell_addresses": 0,
+            "sell_addresses_lower_bound": false,
+            "bought_wei": "0",
+            "buy_txs": 0,
+            "buy_addresses": 0,
+            "buy_addresses_lower_bound": false,
+            "net_sold_wei": "0"
+          },
+          "all_pools": {
+            "sold_wei": "0",
+            "sell_txs": 0,
+            "sell_addresses": 0,
+            "sell_addresses_lower_bound": false,
+            "bought_wei": "0",
+            "buy_txs": 0,
+            "buy_addresses": 0,
+            "buy_addresses_lower_bound": false,
+            "net_sold_wei": "0"
+          }
+        },
+        "executionBreakdown": [],
+        "claimFlow": {
+          "modelRevision": 2,
+          "method": "proportional-v1",
+          "cutoff": 1793966400,
+          "throughBlock": 127754210,
+          "direct_wei": "0",
+          "relay_wei": "0",
+          "sold_wei": "0",
+          "pending_wei": "0",
+          "pendingTransactions": 0,
+          "complete": true,
+          "transactions": 0,
+          "relayAddresses": 0,
+          "examples": []
+        },
+        "distribution": {
+          "total_wei": "0",
+          "recipients": 0,
+          "transactions": 0,
+          "transfer_events": 0,
+          "new_recipients": 0
+        },
+        "interaction": {
+          "successful_calls": 0,
+          "successful_addresses": 0,
+          "new_callers": 0
+        },
+        "bnb": {
+          "direct_inflow_wei": "0",
+          "direct_inflow_txs": 0,
+          "direct_inflow_addresses": 0,
+          "internal_inflow_wei": "0",
+          "outflow_wei": "0",
+          "net_inflow_wei": "0",
+          "balance_start_wei": "50",
+          "balance_end_wei": "50",
+          "internal_coverage": "complete"
+        }
+      },
+      {
+        "date": "2026-10-15",
+        "partialFirstDay": false,
+        "start": 1791993600,
+        "end": 1792080000,
+        "availableThrough": 1792080000,
+        "complete": true,
+        "available": true,
+        "groups": {
+          "source_recipients": {
+            "sold_wei": "0",
+            "sell_txs": 0,
+            "sell_addresses": 0,
+            "sell_addresses_lower_bound": false,
+            "bought_wei": "0",
+            "buy_txs": 0,
+            "buy_addresses": 0,
+            "buy_addresses_lower_bound": false,
+            "net_sold_wei": "0"
+          },
+          "other_wallet_candidates": {
+            "sold_wei": "0",
+            "sell_txs": 0,
+            "sell_addresses": 0,
+            "sell_addresses_lower_bound": false,
+            "bought_wei": "0",
+            "buy_txs": 0,
+            "buy_addresses": 0,
+            "buy_addresses_lower_bound": false,
+            "net_sold_wei": "0"
+          },
+          "remaining_unattributed": {
+            "sold_wei": "0",
+            "sell_txs": 0,
+            "sell_addresses": 0,
+            "sell_addresses_lower_bound": false,
+            "bought_wei": "0",
+            "buy_txs": 0,
+            "buy_addresses": 0,
+            "buy_addresses_lower_bound": false,
+            "net_sold_wei": "0"
+          },
+          "all_pools": {
+            "sold_wei": "0",
+            "sell_txs": 0,
+            "sell_addresses": 0,
+            "sell_addresses_lower_bound": false,
+            "bought_wei": "0",
+            "buy_txs": 0,
+            "buy_addresses": 0,
+            "buy_addresses_lower_bound": false,
+            "net_sold_wei": "0"
+          }
+        },
+        "executionBreakdown": [],
+        "claimFlow": {
+          "modelRevision": 2,
+          "method": "proportional-v1",
+          "cutoff": 1793966400,
+          "throughBlock": 127754210,
+          "direct_wei": "0",
+          "relay_wei": "0",
+          "sold_wei": "0",
+          "pending_wei": "0",
+          "pendingTransactions": 0,
+          "complete": true,
+          "transactions": 0,
+          "relayAddresses": 0,
+          "examples": []
+        },
+        "distribution": {
+          "total_wei": "0",
+          "recipients": 0,
+          "transactions": 0,
+          "transfer_events": 0,
+          "new_recipients": 0
+        },
+        "interaction": {
+          "successful_calls": 0,
+          "successful_addresses": 0,
+          "new_callers": 0
+        },
+        "bnb": {
+          "direct_inflow_wei": "0",
+          "direct_inflow_txs": 0,
+          "direct_inflow_addresses": 0,
+          "internal_inflow_wei": "0",
+          "outflow_wei": "0",
+          "net_inflow_wei": "0",
+          "balance_start_wei": "50",
+          "balance_end_wei": "50",
+          "internal_coverage": "complete"
+        }
+      },
+      {
+        "date": "2026-10-14",
+        "partialFirstDay": false,
+        "start": 1791907200,
+        "end": 1791993600,
+        "availableThrough": 1791993600,
+        "complete": true,
+        "available": true,
+        "groups": {
+          "source_recipients": {
+            "sold_wei": "0",
+            "sell_txs": 0,
+            "sell_addresses": 0,
+            "sell_addresses_lower_bound": false,
+            "bought_wei": "0",
+            "buy_txs": 0,
+            "buy_addresses": 0,
+            "buy_addresses_lower_bound": false,
+            "net_sold_wei": "0"
+          },
+          "other_wallet_candidates": {
+            "sold_wei": "0",
+            "sell_txs": 0,
+            "sell_addresses": 0,
+            "sell_addresses_lower_bound": false,
+            "bought_wei": "0",
+            "buy_txs": 0,
+            "buy_addresses": 0,
+            "buy_addresses_lower_bound": false,
+            "net_sold_wei": "0"
+          },
+          "remaining_unattributed": {
+            "sold_wei": "0",
+            "sell_txs": 0,
+            "sell_addresses": 0,
+            "sell_addresses_lower_bound": false,
+            "bought_wei": "0",
+            "buy_txs": 0,
+            "buy_addresses": 0,
+            "buy_addresses_lower_bound": false,
+            "net_sold_wei": "0"
+          },
+          "all_pools": {
+            "sold_wei": "0",
+            "sell_txs": 0,
+            "sell_addresses": 0,
+            "sell_addresses_lower_bound": false,
+            "bought_wei": "0",
+            "buy_txs": 0,
+            "buy_addresses": 0,
+            "buy_addresses_lower_bound": false,
+            "net_sold_wei": "0"
+          }
+        },
+        "executionBreakdown": [],
+        "claimFlow": {
+          "modelRevision": 2,
+          "method": "proportional-v1",
+          "cutoff": 1793966400,
+          "throughBlock": 127754210,
+          "direct_wei": "0",
+          "relay_wei": "0",
+          "sold_wei": "0",
+          "pending_wei": "0",
+          "pendingTransactions": 0,
+          "complete": true,
+          "transactions": 0,
+          "relayAddresses": 0,
+          "examples": []
+        },
+        "distribution": {
+          "total_wei": "0",
+          "recipients": 0,
+          "transactions": 0,
+          "transfer_events": 0,
+          "new_recipients": 0
+        },
+        "interaction": {
+          "successful_calls": 0,
+          "successful_addresses": 0,
+          "new_callers": 0
+        },
+        "bnb": {
+          "direct_inflow_wei": "0",
+          "direct_inflow_txs": 0,
+          "direct_inflow_addresses": 0,
+          "internal_inflow_wei": "0",
+          "outflow_wei": "0",
+          "net_inflow_wei": "0",
+          "balance_start_wei": "50",
+          "balance_end_wei": "50",
+          "internal_coverage": "complete"
+        }
+      },
+      {
+        "date": "2026-10-13",
+        "partialFirstDay": false,
+        "start": 1791820800,
+        "end": 1791907200,
+        "availableThrough": 1791907200,
+        "complete": true,
+        "available": true,
+        "groups": {
+          "source_recipients": {
+            "sold_wei": "0",
+            "sell_txs": 0,
+            "sell_addresses": 0,
+            "sell_addresses_lower_bound": false,
+            "bought_wei": "0",
+            "buy_txs": 0,
+            "buy_addresses": 0,
+            "buy_addresses_lower_bound": false,
+            "net_sold_wei": "0"
+          },
+          "other_wallet_candidates": {
+            "sold_wei": "0",
+            "sell_txs": 0,
+            "sell_addresses": 0,
+            "sell_addresses_lower_bound": false,
+            "bought_wei": "0",
+            "buy_txs": 0,
+            "buy_addresses": 0,
+            "buy_addresses_lower_bound": false,
+            "net_sold_wei": "0"
+          },
+          "remaining_unattributed": {
+            "sold_wei": "0",
+            "sell_txs": 0,
+            "sell_addresses": 0,
+            "sell_addresses_lower_bound": false,
+            "bought_wei": "0",
+            "buy_txs": 0,
+            "buy_addresses": 0,
+            "buy_addresses_lower_bound": false,
+            "net_sold_wei": "0"
+          },
+          "all_pools": {
+            "sold_wei": "0",
+            "sell_txs": 0,
+            "sell_addresses": 0,
+            "sell_addresses_lower_bound": false,
+            "bought_wei": "0",
+            "buy_txs": 0,
+            "buy_addresses": 0,
+            "buy_addresses_lower_bound": false,
+            "net_sold_wei": "0"
+          }
+        },
+        "executionBreakdown": [],
+        "claimFlow": {
+          "modelRevision": 2,
+          "method": "proportional-v1",
+          "cutoff": 1793966400,
+          "throughBlock": 127754210,
+          "direct_wei": "0",
+          "relay_wei": "0",
+          "sold_wei": "0",
+          "pending_wei": "0",
+          "pendingTransactions": 0,
+          "complete": true,
+          "transactions": 0,
+          "relayAddresses": 0,
+          "examples": []
+        },
+        "distribution": {
+          "total_wei": "0",
+          "recipients": 0,
+          "transactions": 0,
+          "transfer_events": 0,
+          "new_recipients": 0
+        },
+        "interaction": {
+          "successful_calls": 0,
+          "successful_addresses": 0,
+          "new_callers": 0
+        },
+        "bnb": {
+          "direct_inflow_wei": "0",
+          "direct_inflow_txs": 0,
+          "direct_inflow_addresses": 0,
+          "internal_inflow_wei": "0",
+          "outflow_wei": "0",
+          "net_inflow_wei": "0",
+          "balance_start_wei": "50",
+          "balance_end_wei": "50",
+          "internal_coverage": "complete"
+        }
+      },
+      {
+        "date": "2026-10-12",
+        "partialFirstDay": false,
+        "start": 1791734400,
+        "end": 1791820800,
+        "availableThrough": 1791820800,
+        "complete": true,
+        "available": true,
+        "groups": {
+          "source_recipients": {
+            "sold_wei": "0",
+            "sell_txs": 0,
+            "sell_addresses": 0,
+            "sell_addresses_lower_bound": false,
+            "bought_wei": "0",
+            "buy_txs": 0,
+            "buy_addresses": 0,
+            "buy_addresses_lower_bound": false,
+            "net_sold_wei": "0"
+          },
+          "other_wallet_candidates": {
+            "sold_wei": "0",
+            "sell_txs": 0,
+            "sell_addresses": 0,
+            "sell_addresses_lower_bound": false,
+            "bought_wei": "0",
+            "buy_txs": 0,
+            "buy_addresses": 0,
+            "buy_addresses_lower_bound": false,
+            "net_sold_wei": "0"
+          },
+          "remaining_unattributed": {
+            "sold_wei": "0",
+            "sell_txs": 0,
+            "sell_addresses": 0,
+            "sell_addresses_lower_bound": false,
+            "bought_wei": "0",
+            "buy_txs": 0,
+            "buy_addresses": 0,
+            "buy_addresses_lower_bound": false,
+            "net_sold_wei": "0"
+          },
+          "all_pools": {
+            "sold_wei": "0",
+            "sell_txs": 0,
+            "sell_addresses": 0,
+            "sell_addresses_lower_bound": false,
+            "bought_wei": "0",
+            "buy_txs": 0,
+            "buy_addresses": 0,
+            "buy_addresses_lower_bound": false,
+            "net_sold_wei": "0"
+          }
+        },
+        "executionBreakdown": [],
+        "claimFlow": {
+          "modelRevision": 2,
+          "method": "proportional-v1",
+          "cutoff": 1793966400,
+          "throughBlock": 127754210,
+          "direct_wei": "0",
+          "relay_wei": "0",
+          "sold_wei": "0",
+          "pending_wei": "0",
+          "pendingTransactions": 0,
+          "complete": true,
+          "transactions": 0,
+          "relayAddresses": 0,
+          "examples": []
+        },
+        "distribution": {
+          "total_wei": "0",
+          "recipients": 0,
+          "transactions": 0,
+          "transfer_events": 0,
+          "new_recipients": 0
+        },
+        "interaction": {
+          "successful_calls": 0,
+          "successful_addresses": 0,
+          "new_callers": 0
+        },
+        "bnb": {
+          "direct_inflow_wei": "0",
+          "direct_inflow_txs": 0,
+          "direct_inflow_addresses": 0,
+          "internal_inflow_wei": "0",
+          "outflow_wei": "0",
+          "net_inflow_wei": "0",
+          "balance_start_wei": "50",
+          "balance_end_wei": "50",
+          "internal_coverage": "complete"
+        }
+      },
+      {
+        "date": "2026-10-11",
+        "partialFirstDay": false,
+        "start": 1791648000,
+        "end": 1791734400,
+        "availableThrough": 1791734400,
+        "complete": true,
+        "available": true,
+        "groups": {
+          "source_recipients": {
+            "sold_wei": "0",
+            "sell_txs": 0,
+            "sell_addresses": 0,
+            "sell_addresses_lower_bound": false,
+            "bought_wei": "0",
+            "buy_txs": 0,
+            "buy_addresses": 0,
+            "buy_addresses_lower_bound": false,
+            "net_sold_wei": "0"
+          },
+          "other_wallet_candidates": {
+            "sold_wei": "0",
+            "sell_txs": 0,
+            "sell_addresses": 0,
+            "sell_addresses_lower_bound": false,
+            "bought_wei": "0",
+            "buy_txs": 0,
+            "buy_addresses": 0,
+            "buy_addresses_lower_bound": false,
+            "net_sold_wei": "0"
+          },
+          "remaining_unattributed": {
+            "sold_wei": "0",
+            "sell_txs": 0,
+            "sell_addresses": 0,
+            "sell_addresses_lower_bound": false,
+            "bought_wei": "0",
+            "buy_txs": 0,
+            "buy_addresses": 0,
+            "buy_addresses_lower_bound": false,
+            "net_sold_wei": "0"
+          },
+          "all_pools": {
+            "sold_wei": "0",
+            "sell_txs": 0,
+            "sell_addresses": 0,
+            "sell_addresses_lower_bound": false,
+            "bought_wei": "0",
+            "buy_txs": 0,
+            "buy_addresses": 0,
+            "buy_addresses_lower_bound": false,
+            "net_sold_wei": "0"
+          }
+        },
+        "executionBreakdown": [],
+        "claimFlow": {
+          "modelRevision": 2,
+          "method": "proportional-v1",
+          "cutoff": 1793966400,
+          "throughBlock": 127754210,
+          "direct_wei": "0",
+          "relay_wei": "0",
+          "sold_wei": "0",
+          "pending_wei": "0",
+          "pendingTransactions": 0,
+          "complete": true,
+          "transactions": 0,
+          "relayAddresses": 0,
+          "examples": []
+        },
+        "distribution": {
+          "total_wei": "0",
+          "recipients": 0,
+          "transactions": 0,
+          "transfer_events": 0,
+          "new_recipients": 0
+        },
+        "interaction": {
+          "successful_calls": 0,
+          "successful_addresses": 0,
+          "new_callers": 0
+        },
+        "bnb": {
+          "direct_inflow_wei": "0",
+          "direct_inflow_txs": 0,
+          "direct_inflow_addresses": 0,
+          "internal_inflow_wei": "0",
+          "outflow_wei": "0",
+          "net_inflow_wei": "0",
+          "balance_start_wei": "50",
+          "balance_end_wei": "50",
+          "internal_coverage": "complete"
+        }
+      },
+      {
+        "date": "2026-10-10",
+        "partialFirstDay": false,
+        "start": 1791561600,
+        "end": 1791648000,
+        "availableThrough": 1791648000,
+        "complete": true,
+        "available": true,
+        "groups": {
+          "source_recipients": {
+            "sold_wei": "0",
+            "sell_txs": 0,
+            "sell_addresses": 0,
+            "sell_addresses_lower_bound": false,
+            "bought_wei": "0",
+            "buy_txs": 0,
+            "buy_addresses": 0,
+            "buy_addresses_lower_bound": false,
+            "net_sold_wei": "0"
+          },
+          "other_wallet_candidates": {
+            "sold_wei": "0",
+            "sell_txs": 0,
+            "sell_addresses": 0,
+            "sell_addresses_lower_bound": false,
+            "bought_wei": "0",
+            "buy_txs": 0,
+            "buy_addresses": 0,
+            "buy_addresses_lower_bound": false,
+            "net_sold_wei": "0"
+          },
+          "remaining_unattributed": {
+            "sold_wei": "0",
+            "sell_txs": 0,
+            "sell_addresses": 0,
+            "sell_addresses_lower_bound": false,
+            "bought_wei": "0",
+            "buy_txs": 0,
+            "buy_addresses": 0,
+            "buy_addresses_lower_bound": false,
+            "net_sold_wei": "0"
+          },
+          "all_pools": {
+            "sold_wei": "0",
+            "sell_txs": 0,
+            "sell_addresses": 0,
+            "sell_addresses_lower_bound": false,
+            "bought_wei": "0",
+            "buy_txs": 0,
+            "buy_addresses": 0,
+            "buy_addresses_lower_bound": false,
+            "net_sold_wei": "0"
+          }
+        },
+        "executionBreakdown": [],
+        "claimFlow": {
+          "modelRevision": 2,
+          "method": "proportional-v1",
+          "cutoff": 1793966400,
+          "throughBlock": 127754210,
+          "direct_wei": "0",
+          "relay_wei": "0",
+          "sold_wei": "0",
+          "pending_wei": "0",
+          "pendingTransactions": 0,
+          "complete": true,
+          "transactions": 0,
+          "relayAddresses": 0,
+          "examples": []
+        },
+        "distribution": {
+          "total_wei": "0",
+          "recipients": 0,
+          "transactions": 0,
+          "transfer_events": 0,
+          "new_recipients": 0
+        },
+        "interaction": {
+          "successful_calls": 0,
+          "successful_addresses": 0,
+          "new_callers": 0
+        },
+        "bnb": {
+          "direct_inflow_wei": "0",
+          "direct_inflow_txs": 0,
+          "direct_inflow_addresses": 0,
+          "internal_inflow_wei": "0",
+          "outflow_wei": "0",
+          "net_inflow_wei": "0",
+          "balance_start_wei": "50",
+          "balance_end_wei": "50",
+          "internal_coverage": "complete"
+        }
+      },
+      {
+        "date": "2026-10-09",
+        "partialFirstDay": false,
+        "start": 1791475200,
+        "end": 1791561600,
+        "availableThrough": 1791561600,
+        "complete": true,
+        "available": true,
+        "groups": {
+          "source_recipients": {
+            "sold_wei": "0",
+            "sell_txs": 0,
+            "sell_addresses": 0,
+            "sell_addresses_lower_bound": false,
+            "bought_wei": "0",
+            "buy_txs": 0,
+            "buy_addresses": 0,
+            "buy_addresses_lower_bound": false,
+            "net_sold_wei": "0"
+          },
+          "other_wallet_candidates": {
+            "sold_wei": "0",
+            "sell_txs": 0,
+            "sell_addresses": 0,
+            "sell_addresses_lower_bound": false,
+            "bought_wei": "0",
+            "buy_txs": 0,
+            "buy_addresses": 0,
+            "buy_addresses_lower_bound": false,
+            "net_sold_wei": "0"
+          },
+          "remaining_unattributed": {
+            "sold_wei": "0",
+            "sell_txs": 0,
+            "sell_addresses": 0,
+            "sell_addresses_lower_bound": false,
+            "bought_wei": "0",
+            "buy_txs": 0,
+            "buy_addresses": 0,
+            "buy_addresses_lower_bound": false,
+            "net_sold_wei": "0"
+          },
+          "all_pools": {
+            "sold_wei": "0",
+            "sell_txs": 0,
+            "sell_addresses": 0,
+            "sell_addresses_lower_bound": false,
+            "bought_wei": "0",
+            "buy_txs": 0,
+            "buy_addresses": 0,
+            "buy_addresses_lower_bound": false,
+            "net_sold_wei": "0"
+          }
+        },
+        "executionBreakdown": [],
+        "claimFlow": {
+          "modelRevision": 2,
+          "method": "proportional-v1",
+          "cutoff": 1793966400,
+          "throughBlock": 127754210,
+          "direct_wei": "0",
+          "relay_wei": "0",
+          "sold_wei": "0",
+          "pending_wei": "0",
+          "pendingTransactions": 0,
+          "complete": true,
+          "transactions": 0,
+          "relayAddresses": 0,
+          "examples": []
+        },
+        "distribution": {
+          "total_wei": "0",
+          "recipients": 0,
+          "transactions": 0,
+          "transfer_events": 0,
+          "new_recipients": 0
+        },
+        "interaction": {
+          "successful_calls": 0,
+          "successful_addresses": 0,
+          "new_callers": 0
+        },
+        "bnb": {
+          "direct_inflow_wei": "0",
+          "direct_inflow_txs": 0,
+          "direct_inflow_addresses": 0,
+          "internal_inflow_wei": "0",
+          "outflow_wei": "0",
+          "net_inflow_wei": "0",
+          "balance_start_wei": "50",
+          "balance_end_wei": "50",
+          "internal_coverage": "complete"
+        }
+      },
+      {
+        "date": "2026-10-08",
+        "partialFirstDay": false,
+        "start": 1791388800,
+        "end": 1791475200,
+        "availableThrough": 1791475200,
+        "complete": true,
+        "available": true,
+        "groups": {
+          "source_recipients": {
+            "sold_wei": "0",
+            "sell_txs": 0,
+            "sell_addresses": 0,
+            "sell_addresses_lower_bound": false,
+            "bought_wei": "0",
+            "buy_txs": 0,
+            "buy_addresses": 0,
+            "buy_addresses_lower_bound": false,
+            "net_sold_wei": "0"
+          },
+          "other_wallet_candidates": {
+            "sold_wei": "0",
+            "sell_txs": 0,
+            "sell_addresses": 0,
+            "sell_addresses_lower_bound": false,
+            "bought_wei": "0",
+            "buy_txs": 0,
+            "buy_addresses": 0,
+            "buy_addresses_lower_bound": false,
+            "net_sold_wei": "0"
+          },
+          "remaining_unattributed": {
+            "sold_wei": "0",
+            "sell_txs": 0,
+            "sell_addresses": 0,
+            "sell_addresses_lower_bound": false,
+            "bought_wei": "0",
+            "buy_txs": 0,
+            "buy_addresses": 0,
+            "buy_addresses_lower_bound": false,
+            "net_sold_wei": "0"
+          },
+          "all_pools": {
+            "sold_wei": "0",
+            "sell_txs": 0,
+            "sell_addresses": 0,
+            "sell_addresses_lower_bound": false,
+            "bought_wei": "0",
+            "buy_txs": 0,
+            "buy_addresses": 0,
+            "buy_addresses_lower_bound": false,
+            "net_sold_wei": "0"
+          }
+        },
+        "executionBreakdown": [],
+        "claimFlow": {
+          "modelRevision": 2,
+          "method": "proportional-v1",
+          "cutoff": 1793966400,
+          "throughBlock": 127754210,
+          "direct_wei": "0",
+          "relay_wei": "0",
+          "sold_wei": "0",
+          "pending_wei": "0",
+          "pendingTransactions": 0,
+          "complete": true,
+          "transactions": 0,
+          "relayAddresses": 0,
+          "examples": []
+        },
+        "distribution": {
+          "total_wei": "0",
+          "recipients": 0,
+          "transactions": 0,
+          "transfer_events": 0,
+          "new_recipients": 0
+        },
+        "interaction": {
+          "successful_calls": 0,
+          "successful_addresses": 0,
+          "new_callers": 0
+        },
+        "bnb": {
+          "direct_inflow_wei": "0",
+          "direct_inflow_txs": 0,
+          "direct_inflow_addresses": 0,
+          "internal_inflow_wei": "0",
+          "outflow_wei": "0",
+          "net_inflow_wei": "0",
+          "balance_start_wei": "50",
+          "balance_end_wei": "50",
+          "internal_coverage": "complete"
+        }
+      },
+      {
+        "date": "2026-10-07",
+        "partialFirstDay": false,
+        "start": 1791302400,
+        "end": 1791388800,
+        "availableThrough": 1791388800,
+        "complete": true,
+        "available": true,
+        "groups": {
+          "source_recipients": {
+            "sold_wei": "0",
+            "sell_txs": 0,
+            "sell_addresses": 0,
+            "sell_addresses_lower_bound": false,
+            "bought_wei": "0",
+            "buy_txs": 0,
+            "buy_addresses": 0,
+            "buy_addresses_lower_bound": false,
+            "net_sold_wei": "0"
+          },
+          "other_wallet_candidates": {
+            "sold_wei": "0",
+            "sell_txs": 0,
+            "sell_addresses": 0,
+            "sell_addresses_lower_bound": false,
+            "bought_wei": "0",
+            "buy_txs": 0,
+            "buy_addresses": 0,
+            "buy_addresses_lower_bound": false,
+            "net_sold_wei": "0"
+          },
+          "remaining_unattributed": {
+            "sold_wei": "0",
+            "sell_txs": 0,
+            "sell_addresses": 0,
+            "sell_addresses_lower_bound": false,
+            "bought_wei": "0",
+            "buy_txs": 0,
+            "buy_addresses": 0,
+            "buy_addresses_lower_bound": false,
+            "net_sold_wei": "0"
+          },
+          "all_pools": {
+            "sold_wei": "0",
+            "sell_txs": 0,
+            "sell_addresses": 0,
+            "sell_addresses_lower_bound": false,
+            "bought_wei": "0",
+            "buy_txs": 0,
+            "buy_addresses": 0,
+            "buy_addresses_lower_bound": false,
+            "net_sold_wei": "0"
+          }
+        },
+        "executionBreakdown": [],
+        "claimFlow": {
+          "modelRevision": 2,
+          "method": "proportional-v1",
+          "cutoff": 1793966400,
+          "throughBlock": 127754210,
+          "direct_wei": "0",
+          "relay_wei": "0",
+          "sold_wei": "0",
+          "pending_wei": "0",
+          "pendingTransactions": 0,
+          "complete": true,
+          "transactions": 0,
+          "relayAddresses": 0,
+          "examples": []
+        },
+        "distribution": {
+          "total_wei": "0",
+          "recipients": 0,
+          "transactions": 0,
+          "transfer_events": 0,
+          "new_recipients": 0
+        },
+        "interaction": {
+          "successful_calls": 0,
+          "successful_addresses": 0,
+          "new_callers": 0
+        },
+        "bnb": {
+          "direct_inflow_wei": "0",
+          "direct_inflow_txs": 0,
+          "direct_inflow_addresses": 0,
+          "internal_inflow_wei": "0",
+          "outflow_wei": "0",
+          "net_inflow_wei": "0",
+          "balance_start_wei": "50",
+          "balance_end_wei": "50",
+          "internal_coverage": "complete"
+        }
+      },
+      {
+        "date": "2026-10-06",
+        "partialFirstDay": false,
+        "start": 1791216000,
+        "end": 1791302400,
+        "availableThrough": 1791302400,
+        "complete": true,
+        "available": true,
+        "groups": {
+          "source_recipients": {
+            "sold_wei": "0",
+            "sell_txs": 0,
+            "sell_addresses": 0,
+            "sell_addresses_lower_bound": false,
+            "bought_wei": "0",
+            "buy_txs": 0,
+            "buy_addresses": 0,
+            "buy_addresses_lower_bound": false,
+            "net_sold_wei": "0"
+          },
+          "other_wallet_candidates": {
+            "sold_wei": "0",
+            "sell_txs": 0,
+            "sell_addresses": 0,
+            "sell_addresses_lower_bound": false,
+            "bought_wei": "0",
+            "buy_txs": 0,
+            "buy_addresses": 0,
+            "buy_addresses_lower_bound": false,
+            "net_sold_wei": "0"
+          },
+          "remaining_unattributed": {
+            "sold_wei": "0",
+            "sell_txs": 0,
+            "sell_addresses": 0,
+            "sell_addresses_lower_bound": false,
+            "bought_wei": "0",
+            "buy_txs": 0,
+            "buy_addresses": 0,
+            "buy_addresses_lower_bound": false,
+            "net_sold_wei": "0"
+          },
+          "all_pools": {
+            "sold_wei": "0",
+            "sell_txs": 0,
+            "sell_addresses": 0,
+            "sell_addresses_lower_bound": false,
+            "bought_wei": "0",
+            "buy_txs": 0,
+            "buy_addresses": 0,
+            "buy_addresses_lower_bound": false,
+            "net_sold_wei": "0"
+          }
+        },
+        "executionBreakdown": [],
+        "claimFlow": {
+          "modelRevision": 2,
+          "method": "proportional-v1",
+          "cutoff": 1793966400,
+          "throughBlock": 127754210,
+          "direct_wei": "0",
+          "relay_wei": "0",
+          "sold_wei": "0",
+          "pending_wei": "0",
+          "pendingTransactions": 0,
+          "complete": true,
+          "transactions": 0,
+          "relayAddresses": 0,
+          "examples": []
+        },
+        "distribution": {
+          "total_wei": "0",
+          "recipients": 0,
+          "transactions": 0,
+          "transfer_events": 0,
+          "new_recipients": 0
+        },
+        "interaction": {
+          "successful_calls": 0,
+          "successful_addresses": 0,
+          "new_callers": 0
+        },
+        "bnb": {
+          "direct_inflow_wei": "0",
+          "direct_inflow_txs": 0,
+          "direct_inflow_addresses": 0,
+          "internal_inflow_wei": "0",
+          "outflow_wei": "0",
+          "net_inflow_wei": "0",
+          "balance_start_wei": "50",
+          "balance_end_wei": "50",
+          "internal_coverage": "complete"
+        }
+      },
+      {
+        "date": "2026-10-05",
+        "partialFirstDay": false,
+        "start": 1791129600,
+        "end": 1791216000,
+        "availableThrough": 1791216000,
+        "complete": true,
+        "available": true,
+        "groups": {
+          "source_recipients": {
+            "sold_wei": "0",
+            "sell_txs": 0,
+            "sell_addresses": 0,
+            "sell_addresses_lower_bound": false,
+            "bought_wei": "0",
+            "buy_txs": 0,
+            "buy_addresses": 0,
+            "buy_addresses_lower_bound": false,
+            "net_sold_wei": "0"
+          },
+          "other_wallet_candidates": {
+            "sold_wei": "0",
+            "sell_txs": 0,
+            "sell_addresses": 0,
+            "sell_addresses_lower_bound": false,
+            "bought_wei": "0",
+            "buy_txs": 0,
+            "buy_addresses": 0,
+            "buy_addresses_lower_bound": false,
+            "net_sold_wei": "0"
+          },
+          "remaining_unattributed": {
+            "sold_wei": "0",
+            "sell_txs": 0,
+            "sell_addresses": 0,
+            "sell_addresses_lower_bound": false,
+            "bought_wei": "0",
+            "buy_txs": 0,
+            "buy_addresses": 0,
+            "buy_addresses_lower_bound": false,
+            "net_sold_wei": "0"
+          },
+          "all_pools": {
+            "sold_wei": "0",
+            "sell_txs": 0,
+            "sell_addresses": 0,
+            "sell_addresses_lower_bound": false,
+            "bought_wei": "0",
+            "buy_txs": 0,
+            "buy_addresses": 0,
+            "buy_addresses_lower_bound": false,
+            "net_sold_wei": "0"
+          }
+        },
+        "executionBreakdown": [],
+        "claimFlow": {
+          "modelRevision": 2,
+          "method": "proportional-v1",
+          "cutoff": 1793966400,
+          "throughBlock": 127754210,
+          "direct_wei": "0",
+          "relay_wei": "0",
+          "sold_wei": "0",
+          "pending_wei": "0",
+          "pendingTransactions": 0,
+          "complete": true,
+          "transactions": 0,
+          "relayAddresses": 0,
+          "examples": []
+        },
+        "distribution": {
+          "total_wei": "0",
+          "recipients": 0,
+          "transactions": 0,
+          "transfer_events": 0,
+          "new_recipients": 0
+        },
+        "interaction": {
+          "successful_calls": 0,
+          "successful_addresses": 0,
+          "new_callers": 0
+        },
+        "bnb": {
+          "direct_inflow_wei": "0",
+          "direct_inflow_txs": 0,
+          "direct_inflow_addresses": 0,
+          "internal_inflow_wei": "0",
+          "outflow_wei": "0",
+          "net_inflow_wei": "0",
+          "balance_start_wei": "50",
+          "balance_end_wei": "50",
+          "internal_coverage": "complete"
+        }
+      },
+      {
+        "date": "2026-10-04",
+        "partialFirstDay": false,
+        "start": 1791043200,
+        "end": 1791129600,
+        "availableThrough": 1791129600,
+        "complete": true,
+        "available": true,
+        "groups": {
+          "source_recipients": {
+            "sold_wei": "0",
+            "sell_txs": 0,
+            "sell_addresses": 0,
+            "sell_addresses_lower_bound": false,
+            "bought_wei": "0",
+            "buy_txs": 0,
+            "buy_addresses": 0,
+            "buy_addresses_lower_bound": false,
+            "net_sold_wei": "0"
+          },
+          "other_wallet_candidates": {
+            "sold_wei": "0",
+            "sell_txs": 0,
+            "sell_addresses": 0,
+            "sell_addresses_lower_bound": false,
+            "bought_wei": "0",
+            "buy_txs": 0,
+            "buy_addresses": 0,
+            "buy_addresses_lower_bound": false,
+            "net_sold_wei": "0"
+          },
+          "remaining_unattributed": {
+            "sold_wei": "0",
+            "sell_txs": 0,
+            "sell_addresses": 0,
+            "sell_addresses_lower_bound": false,
+            "bought_wei": "0",
+            "buy_txs": 0,
+            "buy_addresses": 0,
+            "buy_addresses_lower_bound": false,
+            "net_sold_wei": "0"
+          },
+          "all_pools": {
+            "sold_wei": "0",
+            "sell_txs": 0,
+            "sell_addresses": 0,
+            "sell_addresses_lower_bound": false,
+            "bought_wei": "0",
+            "buy_txs": 0,
+            "buy_addresses": 0,
+            "buy_addresses_lower_bound": false,
+            "net_sold_wei": "0"
+          }
+        },
+        "executionBreakdown": [],
+        "claimFlow": {
+          "modelRevision": 2,
+          "method": "proportional-v1",
+          "cutoff": 1793966400,
+          "throughBlock": 127754210,
+          "direct_wei": "0",
+          "relay_wei": "0",
+          "sold_wei": "0",
+          "pending_wei": "0",
+          "pendingTransactions": 0,
+          "complete": true,
+          "transactions": 0,
+          "relayAddresses": 0,
+          "examples": []
+        },
+        "distribution": {
+          "total_wei": "0",
+          "recipients": 0,
+          "transactions": 0,
+          "transfer_events": 0,
+          "new_recipients": 0
+        },
+        "interaction": {
+          "successful_calls": 0,
+          "successful_addresses": 0,
+          "new_callers": 0
+        },
+        "bnb": {
+          "direct_inflow_wei": "0",
+          "direct_inflow_txs": 0,
+          "direct_inflow_addresses": 0,
+          "internal_inflow_wei": "0",
+          "outflow_wei": "0",
+          "net_inflow_wei": "0",
+          "balance_start_wei": "50",
+          "balance_end_wei": "50",
+          "internal_coverage": "complete"
+        }
+      },
+      {
+        "date": "2026-10-03",
+        "partialFirstDay": true,
+        "start": 1790992790,
+        "end": 1791043200,
+        "availableThrough": 1791043200,
+        "complete": true,
+        "available": true,
+        "groups": {
+          "source_recipients": {
+            "sold_wei": "0",
+            "sell_txs": 0,
+            "sell_addresses": 0,
+            "sell_addresses_lower_bound": false,
+            "bought_wei": "12",
+            "buy_txs": 1,
+            "buy_addresses": 1,
+            "buy_addresses_lower_bound": false,
+            "net_sold_wei": "-12"
+          },
+          "other_wallet_candidates": {
+            "sold_wei": "0",
+            "sell_txs": 0,
+            "sell_addresses": 0,
+            "sell_addresses_lower_bound": false,
+            "bought_wei": "0",
+            "buy_txs": 0,
+            "buy_addresses": 0,
+            "buy_addresses_lower_bound": false,
+            "net_sold_wei": "0"
+          },
+          "remaining_unattributed": {
+            "sold_wei": "0",
+            "sell_txs": 0,
+            "sell_addresses": 0,
+            "sell_addresses_lower_bound": false,
+            "bought_wei": "0",
+            "buy_txs": 0,
+            "buy_addresses": 0,
+            "buy_addresses_lower_bound": false,
+            "net_sold_wei": "0"
+          },
+          "all_pools": {
+            "sold_wei": "0",
+            "sell_txs": 0,
+            "sell_addresses": 0,
+            "sell_addresses_lower_bound": false,
+            "bought_wei": "12",
+            "buy_txs": 1,
+            "buy_addresses": 1,
+            "buy_addresses_lower_bound": false,
+            "net_sold_wei": "-12"
+          }
+        },
+        "executionBreakdown": [],
+        "claimFlow": {
+          "modelRevision": 2,
+          "method": "proportional-v1",
+          "cutoff": 1793966400,
+          "throughBlock": 127754210,
+          "direct_wei": "0",
+          "relay_wei": "0",
+          "sold_wei": "0",
+          "pending_wei": "0",
+          "pendingTransactions": 0,
+          "complete": true,
+          "transactions": 0,
+          "relayAddresses": 0,
+          "examples": []
+        },
+        "distribution": {
+          "total_wei": "20",
+          "recipients": 1,
+          "transactions": 1,
+          "transfer_events": 1,
+          "new_recipients": 1
+        },
+        "interaction": {
+          "successful_calls": 1,
+          "successful_addresses": 1,
+          "new_callers": 1
+        },
+        "bnb": {
+          "direct_inflow_wei": "10",
+          "direct_inflow_txs": 1,
+          "direct_inflow_addresses": 1,
+          "internal_inflow_wei": "0",
+          "outflow_wei": "0",
+          "net_inflow_wei": "10",
+          "balance_start_wei": "40",
+          "balance_end_wei": "50",
+          "internal_coverage": "complete"
+        }
+      }
+    ],
+    "top": [
+      {
+        "address": "0x1111111111111111111111111111111111111111",
+        "sold_wei": "8",
+        "received_wei": "20",
+        "balance_wei": "3"
+      }
+    ],
+    "warnings": []
+  },
+  "addresses": {
+    "version": 1,
+    "generatedAt": 1793966400,
+    "cutoff": 1793966400,
+    "block": 127754210,
+    "blockHash": "0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "ownProgramCount": 1,
+    "ownExecutor": "0x21a0541e4122090c30fbc04e98cf27430608e007",
+    "ownExecutors": [
+      "0x21a0541e4122090c30fbc04e98cf27430608e007",
+      "0xe1de6ac2ee058df5d3be8edeb62a8815fd13ff5a"
+    ],
+    "highFrequencyThreshold": 100,
+    "windows": {
+      "today": {
+        "start": 1793894400,
+        "end": 1793966400,
+        "available": true,
+        "initiator": {
+          "missingSold": "0",
+          "missingBought": "0",
+          "rows": [
+            {
+              "address": "0x2222222222222222222222222222222222222222",
+              "sold": "3",
+              "bought": "0",
+              "netSold": "3",
+              "sellCount": 1,
+              "buyCount": 0,
+              "trades": 1,
+              "peakDailyTrades": 1,
+              "highFrequency": false,
+              "own": true,
+              "ownType": "刷量",
+              "received": false,
+              "firstReceived": null,
+              "firstReceivedSale": null,
+              "receivedSold": false,
+              "firstRelaySale": null,
+              "relaySold": false,
+              "first": 1793966380,
+              "last": 1793966380
+            }
+          ],
+          "buyOnlyRows": []
+        },
+        "funding": {
+          "missingSold": "0",
+          "missingBought": "0",
+          "rows": [
+            {
+              "address": "0x2222222222222222222222222222222222222222",
+              "sold": "3",
+              "bought": "0",
+              "netSold": "3",
+              "sellCount": 1,
+              "buyCount": 0,
+              "trades": 1,
+              "peakDailyTrades": 1,
+              "highFrequency": false,
+              "own": true,
+              "ownType": "刷量",
+              "received": false,
+              "firstReceived": null,
+              "firstReceivedSale": null,
+              "receivedSold": false,
+              "firstRelaySale": null,
+              "relaySold": false,
+              "first": 1793966380,
+              "last": 1793966380
+            }
+          ],
+          "buyOnlyRows": []
+        }
+      },
+      "yesterday": {
+        "start": 1793808000,
+        "end": 1793894400,
+        "available": true,
+        "initiator": {
+          "missingSold": "0",
+          "missingBought": "0",
+          "rows": [
+            {
+              "address": "0x1111111111111111111111111111111111111111",
+              "sold": "8",
+              "bought": "0",
+              "netSold": "8",
+              "sellCount": 1,
+              "buyCount": 0,
+              "trades": 1,
+              "peakDailyTrades": 1,
+              "highFrequency": false,
+              "own": false,
+              "ownType": null,
+              "received": true,
+              "firstReceived": 1790992791,
+              "firstReceivedSale": 1793879999,
+              "receivedSold": true,
+              "firstRelaySale": 1793879999,
+              "relaySold": true,
+              "first": 1793879999,
+              "last": 1793879999
+            }
+          ],
+          "buyOnlyRows": []
+        },
+        "funding": {
+          "missingSold": "0",
+          "missingBought": "0",
+          "rows": [
+            {
+              "address": "0x1111111111111111111111111111111111111111",
+              "sold": "8",
+              "bought": "0",
+              "netSold": "8",
+              "sellCount": 1,
+              "buyCount": 0,
+              "trades": 1,
+              "peakDailyTrades": 1,
+              "highFrequency": false,
+              "own": false,
+              "ownType": null,
+              "received": true,
+              "firstReceived": 1790992791,
+              "firstReceivedSale": 1793879999,
+              "receivedSold": true,
+              "firstRelaySale": 1793879999,
+              "relaySold": true,
+              "first": 1793879999,
+              "last": 1793879999
+            }
+          ],
+          "buyOnlyRows": []
+        }
+      },
+      "history": {
+        "start": 1790992790,
+        "end": 1793966400,
+        "available": true,
+        "initiator": {
+          "missingSold": "0",
+          "missingBought": "0",
+          "rows": [
+            {
+              "address": "0x1111111111111111111111111111111111111111",
+              "sold": "8",
+              "bought": "12",
+              "netSold": "-4",
+              "sellCount": 1,
+              "buyCount": 1,
+              "trades": 2,
+              "peakDailyTrades": 1,
+              "highFrequency": false,
+              "own": false,
+              "ownType": null,
+              "received": true,
+              "firstReceived": 1790992791,
+              "firstReceivedSale": 1793879999,
+              "receivedSold": true,
+              "firstRelaySale": 1793879999,
+              "relaySold": true,
+              "first": 1790992800,
+              "last": 1793879999
+            },
+            {
+              "address": "0x2222222222222222222222222222222222222222",
+              "sold": "3",
+              "bought": "0",
+              "netSold": "3",
+              "sellCount": 1,
+              "buyCount": 0,
+              "trades": 1,
+              "peakDailyTrades": 1,
+              "highFrequency": false,
+              "own": true,
+              "ownType": "刷量",
+              "received": false,
+              "firstReceived": null,
+              "firstReceivedSale": null,
+              "receivedSold": false,
+              "firstRelaySale": null,
+              "relaySold": false,
+              "first": 1793966380,
+              "last": 1793966380
+            }
+          ],
+          "buyOnlyRows": []
+        },
+        "funding": {
+          "missingSold": "0",
+          "missingBought": "0",
+          "rows": [
+            {
+              "address": "0x1111111111111111111111111111111111111111",
+              "sold": "8",
+              "bought": "12",
+              "netSold": "-4",
+              "sellCount": 1,
+              "buyCount": 1,
+              "trades": 2,
+              "peakDailyTrades": 1,
+              "highFrequency": false,
+              "own": false,
+              "ownType": null,
+              "received": true,
+              "firstReceived": 1790992791,
+              "firstReceivedSale": 1793879999,
+              "receivedSold": true,
+              "firstRelaySale": 1793879999,
+              "relaySold": true,
+              "first": 1790992800,
+              "last": 1793879999
+            },
+            {
+              "address": "0x2222222222222222222222222222222222222222",
+              "sold": "3",
+              "bought": "0",
+              "netSold": "3",
+              "sellCount": 1,
+              "buyCount": 0,
+              "trades": 1,
+              "peakDailyTrades": 1,
+              "highFrequency": false,
+              "own": true,
+              "ownType": "刷量",
+              "received": false,
+              "firstReceived": null,
+              "firstReceivedSale": null,
+              "receivedSold": false,
+              "firstRelaySale": null,
+              "relaySold": false,
+              "first": 1793966380,
+              "last": 1793966380
+            }
+          ],
+          "buyOnlyRows": []
+        }
+      }
+    }
+  }
+}

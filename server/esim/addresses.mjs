@@ -8,14 +8,18 @@ const knownLabels=new Proxy(holderSeed.labels,{get:(target,key)=>CONFIRMED_HOLDE
 const lp = new Set(tags.lpAddresses);
 export const OWN_EXECUTOR = tags.ownExecutor;
 function ownProgramAddresses(state) { return ownTradingInitiators(state.trades); }
-export function addressRanking(state, start, end, mode = 'initiator') {
-  const rows = new Map(), ownProgram = ownProgramAddresses(state); let missingSold = 0n, missingBought = 0n;
+function rankingContext(state){
+  const ownProgram=ownProgramAddresses(state);
   const firstSales = new Map();
   const relaySales = new Map();
   for (const t of state.claimFlow?.sales || []) if (BigInt(t.relay_wei)>0n)
     relaySales.set(t.address,Math.min(relaySales.get(t.address)??Infinity,t.timestamp));
   for (const t of state.trades) if (t.group === 'source_recipients' && t.side === 'sell' && t.address)
     firstSales.set(t.address, Math.min(firstSales.get(t.address) ?? Infinity, t.timestamp));
+  return {ownProgram,firstSales,relaySales};
+}
+export function addressRanking(state, start, end, mode = 'initiator',context=rankingContext(state)) {
+  const rows = new Map(),{ownProgram,firstSales,relaySales}=context; let missingSold = 0n, missingBought = 0n;
   for (const t of state.trades) {
     if (t.timestamp < start || t.timestamp >= end) continue;
     const address = mode === 'initiator' ? t.initiator : t.address;
@@ -46,13 +50,13 @@ export function addressRanking(state, start, end, mode = 'initiator') {
   return {missingSold:missingSold.toString(),missingBought:missingBought.toString(),rows:activityRows.filter(r=>BigInt(r.sold)>0n),buyOnlyRows:activityRows.filter(r=>BigInt(r.sold)===0n)};
 }
 export function buildAddressReport(state, now = Date.now() / 1000) {
-  const day = beijingDayStart(now), windows = {};
+  const day = beijingDayStart(now), windows = {},context=rankingContext(state);
   for (const [key, start, end] of [['today', day, now], ['yesterday', day - 86400, day], ['history', state.origin, now]]) {
     windows[key] = { start, end: Math.min(end, state.cutoff), available: state.cutoff > start,
-      initiator: addressRanking(state, start, end, 'initiator'), funding: addressRanking(state, start, end, 'funding') };
+      initiator: addressRanking(state, start, end, 'initiator',context), funding: addressRanking(state, start, end, 'funding',context) };
   }
   return { version: 1, generatedAt: now, cutoff: state.cutoff, block: state.block, blockHash: state.blockHash,
-    ownProgramCount: ownProgramAddresses(state).size, ownExecutor: OWN_EXECUTOR, ownExecutors:[...OWN_EXECUTORS], highFrequencyThreshold: 100, windows };
+    ownProgramCount: context.ownProgram.size, ownExecutor: OWN_EXECUTOR, ownExecutors:[...OWN_EXECUTORS], highFrequencyThreshold: 100, windows };
 }
 export function knownTradingAddresses(state) {
   return new Set(state.trades.flatMap(t => [t.address, t.initiator]).filter(a => /^0x[0-9a-f]{40}$/.test(a || '')));
