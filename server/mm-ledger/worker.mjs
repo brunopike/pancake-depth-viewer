@@ -16518,7 +16518,7 @@ async function runSync(id, budget = 45e3) {
 process.env.DATABASE_URL ||= process.env.ESIM_REALTIME_DATABASE_URL;
 process.env.BNB_RPC_URL ||= process.env.ALCHEMY_API_KEY ? `https://bnb-mainnet.g.alchemy.com/v2/${process.env.ALCHEMY_API_KEY}` : "";
 try {
-  const job = await startSync("server");
+  const job = await startSync(process.argv.includes("--manual") ? "manual" : "server");
   const result = job.id ? await runSync(job.id, Number(process.env.MM_STEP_MS || 2e4)) : job;
   const cutoff = result?.status === "complete" ? (await db().query("SELECT max(end_at) AS cutoff FROM esim_ledger.periods")).rows[0]?.cutoff : null;
   console.log(JSON.stringify({ phase: "mm-server-step", ...result, cutoff }));
