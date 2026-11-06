@@ -24,7 +24,7 @@ export async function runDepthPass(command,{lease,dryRun}){
  if(!dryRun)await command('scripts/publish-snapshot.mjs',[],{lease,timeout:120000});
 }
 export async function manualSyncPending(sql){
- return (await sql.query("SELECT id FROM (SELECT id,status,state FROM esim_ledger.sync_runs WHERE source='manual' ORDER BY started_at DESC LIMIT 1) latest WHERE status IN ('queued','running') OR status='failed' AND state->>'retryable'='true'")).rows.length>0;
+ return (await sql.query("SELECT id FROM (SELECT id,status,state FROM esim_ledger.sync_runs WHERE source='manual' ORDER BY started_at DESC LIMIT 1) latest WHERE status IN ('queued','running') OR status='failed' AND state->>'retryable'='true'")).length>0;
 }
 export async function runMmPass(command,sql){
  if(!await manualSyncPending(sql))return JSON.stringify({phase:'mm-server-step',status:'idle',mode:'manual'});
