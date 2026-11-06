@@ -55,7 +55,7 @@ async function main() {
       console.log(`Next hourly read: ${new Date(nextRefreshAt).toISOString()}`);
       return nextRefreshAt;
     },
-    onError: () => console.error('Hourly read failed; the previous valid snapshot is preserved. The next hourly read will retry.'),
+    onError: () => { throw Error('DEPTH_REFRESH_FAILED'); },
     handoff: async () => {
       for (let attempt = 0; attempt < 3; attempt++) {
         try {

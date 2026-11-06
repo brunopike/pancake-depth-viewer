@@ -29,6 +29,12 @@ test('Slow reads never overlap or create catch-up request storms', async () => {
   assert.deepEqual(refreshed, [0, 7200000]);
 });
 
+test('an unrecovered depth failure exits its leased session instead of retaining ownership for an hour',async()=>{
+ let refreshed=0,handoff=0;
+ await assert.rejects(runHourlyWorker({refresh:async()=>{refreshed++;throw Error('provider unavailable');},onError:()=>{throw Error('DEPTH_REFRESH_FAILED');},handoff:async()=>{handoff++;}}),/DEPTH_REFRESH_FAILED/);
+ assert.equal(refreshed,1);assert.equal(handoff,0);
+});
+
 test('Invalid worker duration cannot create an unbounded background loop', async () => {
   for (const sessionMs of [0, -1, Infinity, 21600000]) {
     await assert.rejects(() => runHourlyWorker({ sessionMs, refresh: async () => {}, handoff: async () => {} }), /duration/i);
