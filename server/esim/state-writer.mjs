@@ -40,7 +40,7 @@ export function* checkpointChunks(state){
 export async function writeCheckpoint(state,dir){
  await mkdir(dir,{recursive:true});const temp=`${dir}/state.tmp`;
  try{
-  await pipeline(Readable.from(checkpointChunks(state),{objectMode:false}),createGzip(),createWriteStream(temp,{mode:0o600}));
+  await pipeline(Readable.from(checkpointChunks(state),{objectMode:false}),createGzip({level:3}),createWriteStream(temp,{mode:0o600}));
   await rename(temp,`${dir}/state.json.gz`);
  }catch(error){await rm(temp,{force:true});throw error;}
 }
