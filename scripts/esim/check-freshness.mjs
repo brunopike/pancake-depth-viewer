@@ -4,7 +4,7 @@ const issues=[],summary={at:new Date().toISOString(),ledgers:{}};
 try{
  const response=await fetch('https://esimonchain.imstark.site/api/esim-snapshot?kind=status&_fresh='+Date.now(),{signal:AbortSignal.timeout(30000)});
  if(!response.ok)throw Error('HTTP_'+response.status);
- const status=await response.json();summary.snapshots=status.snapshots;summary.lastDelivery=status.lastDelivery;issues.push(...snapshotIssues(status));
+ const status=await response.json();summary.snapshots=status.snapshots;summary.lastDelivery=status.lastDelivery;summary.webhookRequired=status.webhookRequired!==false;issues.push(...snapshotIssues(status));
 }catch{issues.push('chain:HEALTH_UNAVAILABLE');}
 for(const host of ['mmledger.imstark.site','mmreport.imstark.site']){
  try{

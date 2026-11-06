@@ -1,6 +1,11 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {snapshotStatus} from '../src/snapshot-status.mjs';
+test('poll-only health describes the actual update source without claiming active webhooks',()=>{
+ const now=1791918000000;
+ const result=snapshotStatus([['交易',{cutoff:now/1000-60}]],{now,realtime:true,health:{webhookRequired:false}});
+ assert.match(result.text,/定时核验/);assert.doesNotMatch(result.text,/Webhook/);
+});
 test('the oldest dataset drives expiry and old data cannot be reported as a successful update',()=>{
  const now=1791918000000;
  const result=snapshotStatus([['交易',{cutoff:now/1000-7200}],['持仓',{cutoff:now/1000-60}]],{now});

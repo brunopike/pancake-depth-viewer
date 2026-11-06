@@ -44,7 +44,7 @@ export function snapshotStatus(entries,{retained=false,failed=false,loading=fals
  else if(Number(health?.pendingBlock)>Number(health?.processedBlock)&&now-Date.parse(health?.lastProcessed)<300000)recovery='正在恢复：后台正在补齐后续区块';
  const updates=[...times.map(([,v])=>v.cutoff),...auxiliary.map(issue=>health.auxiliary[issue.split(':')[0]]?.cutoff).filter(Number.isFinite)];
  const lastUpdated=updates.length&&!auxiliary.some(issue=>issue.endsWith(':PENDING'))?new Date(Math.min(...updates)*1000).toISOString():null;
- return {warning,alert:warning?{severity:historyProgress?'progress':historyOnly?'warning':'error',scope:historyOnly?'history':'core',title:historyProgress?'历史数据补充进行中':historyOnly?'ESIM 链上 · 历史统计待更新':'ESIM 链上 · 数据更新异常',reason:causes.join('；')||'数据更新状态异常',lastUpdated,recovery}:null,text:[prefix,reason,...details,warning?recovery:null,realtime?'北京时间 · Webhook 触发核验；10 分钟兜底补查；每小时存档':'北京时间 · 后台目标每 60 分钟更新；页面刷新读取可用快照'].filter(Boolean).join(' · ')};
+ return {warning,alert:warning?{severity:historyProgress?'progress':historyOnly?'warning':'error',scope:historyOnly?'history':'core',title:historyProgress?'历史数据补充进行中':historyOnly?'ESIM 链上 · 历史统计待更新':'ESIM 链上 · 数据更新异常',reason:causes.join('；')||'数据更新状态异常',lastUpdated,recovery}:null,text:[prefix,reason,...details,warning?recovery:null,realtime?(health?.webhookRequired===false?'北京时间 · 定时核验与主动补查；每小时存档':'北京时间 · Webhook 触发核验与主动补查；每小时存档'):'北京时间 · 后台目标每 60 分钟更新；页面刷新读取可用快照'].filter(Boolean).join(' · ')};
 }
 export function showSnapshotStatus(status,button,entries,options){
  readFailed=options?.failed===true;

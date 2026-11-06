@@ -14,7 +14,7 @@ confirmed blocks, receipts and ledger reconciliation before publishing snapshots
   `ALCHEMY_WEBHOOK_KEYS` JSON map of webhook IDs to signing secrets.
 - `scripts/esim/realtime-worker.mjs`: one writer under the existing Actions
   concurrency group. Coalesce notifications for 3 minutes; perform fallback
-  collection after 10 minutes without a current snapshot. The collector retains
+  collection when the data cutoff is 120 seconds old, even without notifications. The collector retains
   its 20-block confirmation delay. Advance processed block only with snapshots.
 - `GET /api/esim-snapshot?kind=report|addresses|holders|status`: gzip snapshots and
   lightweight revisions. Pages poll once per minute when visible; unchanged or
@@ -40,6 +40,16 @@ Never log signing keys or connection strings. Rotate by provisioning replacement
 subscriptions, updating the sensitive key map, deploying and checking real
 deliveries, then pausing retired subscriptions. A paused provider subscription
 alone does not revoke its key from previously deployed receivers; update the map.
+
+## Optional notifications
+
+After verifying notification-free collection, set `ESIM_UPDATE_MODE=poll` on the
+production status API. It reports `webhookRequired:false`; health checks still
+validate every data cutoff, core view pair, error and independent historical job.
+Only the incoming-notification silence check is skipped. Missing or other mode
+values preserve that check. Keep the signed receiver available for rollback.
+Confirm the live status flag and real collection progress before pausing the
+last subscription; setting this flag is not proof of collection performance.
 
 ## Verification and recovery
 

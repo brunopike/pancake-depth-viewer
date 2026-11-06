@@ -22,7 +22,7 @@ export function snapshotIssues(status,now=Date.now()){
  if(status?.error)issues.push('core:'+status.error);
  issues.push(...auxiliaryIssues(status?.auxiliary,now));
  const delivered=Date.parse(status?.lastDelivery);
- if(!Number.isFinite(delivered)||now-delivered>3600000)issues.push('webhook:SILENT');
+ if(status?.webhookRequired!==false&&(!Number.isFinite(delivered)||now-delivered>3600000))issues.push('webhook:SILENT');
  return issues;
 }
 export function ledgerIssues(health,now=Date.now()){

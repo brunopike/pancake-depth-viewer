@@ -19,6 +19,15 @@ test('missing snapshots, mismatched core views and silent notifications are visi
  const status=healthy();delete status.snapshots.depth;status.snapshots.addresses.block=99;status.lastDelivery=new Date(now-3600001).toISOString();
  const issues=snapshotIssues(status,now);assert(issues.includes('depth:MISSING'));assert(issues.includes('core:VIEW_MISMATCH'));assert(issues.includes('webhook:SILENT'));
 });
+
+test('explicit polling mode needs fresh data rather than incoming notifications',()=>{
+ const status={...healthy(),lastDelivery:null,webhookRequired:false};
+ assert.deepEqual(snapshotIssues(status,now),[]);
+ status.snapshots.report.cutoff=now/1000-901;
+ assert(snapshotIssues(status,now).includes('report:STALE'));
+ status.webhookRequired='false';
+ assert(snapshotIssues(status,now).includes('webhook:SILENT'));
+});
 test('persistent catch-up yields only after a complete checkpoint and keeps ordinary batch behavior',()=>{
  assert.equal(checkpointPassComplete(1000,90999,true),false);assert.equal(checkpointPassComplete(1000,91000,true),true);
  assert.equal(checkpointPassComplete(1000,1_000_000,false),false);
