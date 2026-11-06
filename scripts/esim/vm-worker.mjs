@@ -18,6 +18,11 @@ export async function runCorePass(command,{remote,bootstrap,block}){
  await command('scripts/esim/vm-task.mjs',['core'],{extra:{ESIM_MIN_BLOCK:String(block+1)}});
  return true;
 }
+export async function runDepthPass(command,{lease,dryRun}){
+ if(!lease)throw Error('DEPTH_LEASE_UNAVAILABLE');
+ await command('scripts/snapshot.mjs',[],{lease,extra:{ESIM_SNAPSHOT_INTERVAL_MS:'600000'},timeout:600000});
+ if(!dryRun)await command('scripts/publish-snapshot.mjs',[],{lease,timeout:120000});
+}
 function mmStepResult(output){
  for(const line of String(output).trim().split('\n').reverse())try{const row=JSON.parse(line);if(row.phase==='mm-server-step')return row;}catch{}
  return null;
@@ -39,7 +44,10 @@ export function dueTask({now,last,cutoff,pendingBlock,block,publishedFlowBlock=0
  ].filter(([task,needed])=>needed&&ready(task)).map(([task])=>task);
  // An overdue core may yield one background pass, never the entire queue.
  if(due.includes('core')&&(last.backgroundAttemptAt||0)>(last.core||0))return 'core';
- return due.sort((a,b)=>(last[a]||0)-(last[b]||0))[0]||null;
+ // A long hourly archive must not jump ahead of already due live snapshots.
+ const snapshots=due.filter(task=>['depth','holders'].includes(task)&&!(retryAt[task]>(last[task]||0)));
+ if(snapshots.length)return snapshots.sort((a,b)=>(last[a]||0)-(last[b]||0))[0];
+ return due.sort((a,b)=>Math.max(last[a]||0,retryAt[a]||0)-Math.max(last[b]||0,retryAt[b]||0))[0]||null;
 }
 const local='.goodway/vm';
 export function restoredSchedule(saved,dryRun){
@@ -141,7 +149,7 @@ export async function main(){
       if(!dryRun){const output=await command('server/mm-ledger/worker.mjs',[],{lease:null,timeout:210000});last.mmPending=mmStepPending(output);if(!last.mmPending)last.mmCutoff=mmStepCutoff(output);}
      }else if(task==='depth'){
       if(!depthGuard)depthGuard=await startLease(dryRun?'shadow-depth':'depth',{onLost:lost});
-      if(depthGuard){await command('scripts/snapshot.mjs',[],{lease:depthGuard,extra:{ESIM_SNAPSHOT_INTERVAL_MS:'600000'},timeout:600000});if(!dryRun)await command('scripts/publish-snapshot.mjs',[],{lease:depthGuard,timeout:120000});}
+      await runDepthPass(command,{lease:depthGuard,dryRun});
      }
      last[task]=Date.now();await save(`${local}/schedule.json`,last);
      await save(`${local}/health.json`,{at:new Date().toISOString(),dryRun,task,block,cutoff,pendingBlock:Number(status.pending_block)||0,elapsedMs:Date.now()-started,error:null});

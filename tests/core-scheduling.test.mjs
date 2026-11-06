@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {dueTask,mmStepPending,mmStepCutoff} from '../scripts/esim/vm-worker.mjs';
+import {dueTask,mmStepPending,mmStepCutoff,runDepthPass} from '../scripts/esim/vm-worker.mjs';
 
 test('an aged core resumes after one background job, even within the old cooldown',()=>{
  const now=10_000_000,last={core:now-40_000,holders:now-700_000,depth:now-1000,mm:now-650_000,archive:now,backgroundAttemptAt:now-1000};
@@ -55,4 +55,30 @@ test('MM starts from the data deadline, allowing for work already spent before c
  assert.equal(mmStepCutoff(output,now),last.mmCutoff);
  assert.equal(mmStepCutoff(output.replace(new Date(last.mmCutoff).toISOString(),new Date(now+120000).toISOString()),now),0);
  assert.equal(mmStepCutoff('{}',now),0);
+});
+
+test('overdue live snapshots run before an hourly archive',()=>{
+ const now=20_000_000,last={core:now-1000,holders:now-4*60000,depth:now-16*60000,archive:now-61*60000,mm:now-8*60000,mmPending:true};
+ assert.equal(dueTask({now,last,cutoff:(now-60000)/1000,block:1,pendingBlock:0}),'depth');
+});
+
+
+test('an unowned depth lease cannot be recorded as a successful pass',async()=>{
+ const called=[];await assert.rejects(runDepthPass(async(...args)=>called.push(args),{lease:null,dryRun:false}),/DEPTH_LEASE_UNAVAILABLE/);assert.deepEqual(called,[]);
+});
+test('depth publication follows a successful fenced snapshot only',async()=>{
+ const lease={id:'fixture'},calls=[];await runDepthPass(async(...args)=>calls.push(args),{lease,dryRun:false});
+ assert.deepEqual(calls.map(c=>c[0]),['scripts/snapshot.mjs','scripts/publish-snapshot.mjs']);assert(calls.every(c=>c[2].lease===lease));
+ let count=0;await assert.rejects(runDepthPass(async()=>{count++;throw Error('READ_FAILED');},{lease,dryRun:false}),/READ_FAILED/);assert.equal(count,1);
+});
+
+test('an unavailable depth lease cannot starve the other background jobs across slow core passes',()=>{
+ let now=20_000_000;const last={core:now-1000,holders:1,depth:1,archive:1,mm:1,mmPending:true},retryAt={},seen=[];
+ for(let i=0;i<12;i++){
+  const task=dueTask({now,last,retryAt,cutoff:(now-200000)/1000,block:1,pendingBlock:0});seen.push(task);
+  if(task==='depth'){retryAt.depth=now+60000;now+=100;}
+  else {now+=task==='core'?142000:1000;last[task]=now;}
+  if(task!=='core')last.backgroundAttemptAt=now;
+ }
+ for(const task of ['core','holders','archive','mm'])assert(seen.includes(task),task+': '+seen.join(','));
 });
