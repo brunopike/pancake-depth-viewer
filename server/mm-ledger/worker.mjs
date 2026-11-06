@@ -608,7 +608,7 @@ var require_pg_int8 = __commonJS({
       var carry;
       var t;
       var digits;
-      var pad;
+      var pad2;
       var l;
       var i;
       {
@@ -620,12 +620,12 @@ var require_pg_int8 = __commonJS({
         if (low === 0 && high === 0) {
           return sign + digits + result;
         }
-        pad = "";
+        pad2 = "";
         l = 6 - digits.length;
         for (i = 0; i < l; i++) {
-          pad += "0";
+          pad2 += "0";
         }
-        result = pad + digits + result;
+        result = pad2 + digits + result;
       }
       {
         carry = high % BASE;
@@ -636,12 +636,12 @@ var require_pg_int8 = __commonJS({
         if (low === 0 && high === 0) {
           return sign + digits + result;
         }
-        pad = "";
+        pad2 = "";
         l = 6 - digits.length;
         for (i = 0; i < l; i++) {
-          pad += "0";
+          pad2 += "0";
         }
-        result = pad + digits + result;
+        result = pad2 + digits + result;
       }
       {
         carry = high % BASE;
@@ -652,12 +652,12 @@ var require_pg_int8 = __commonJS({
         if (low === 0 && high === 0) {
           return sign + digits + result;
         }
-        pad = "";
+        pad2 = "";
         l = 6 - digits.length;
         for (i = 0; i < l; i++) {
-          pad += "0";
+          pad2 += "0";
         }
-        result = pad + digits + result;
+        result = pad2 + digits + result;
       }
       {
         carry = high % BASE;
@@ -1236,8 +1236,8 @@ var require_utils2 = __commonJS({
         return nodeCrypto.createHash("md5").update(string, "utf-8").digest("hex");
       } catch (e) {
         const data = typeof string === "string" ? textEncoder.encode(string) : string;
-        const hash = await subtleCrypto.digest("MD5", data);
-        return Array.from(new Uint8Array(hash)).map((b) => b.toString(16).padStart(2, "0")).join("");
+        const hash2 = await subtleCrypto.digest("MD5", data);
+        return Array.from(new Uint8Array(hash2)).map((b) => b.toString(16).padStart(2, "0")).join("");
       }
     }
     async function postgresMd5PasswordHash(user, password, salt) {
@@ -2400,17 +2400,17 @@ var require_buffer_writer = __commonJS({
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.Writer = void 0;
     var Writer = class {
-      constructor(size = 256) {
-        this.size = size;
+      constructor(size2 = 256) {
+        this.size = size2;
         this.offset = 5;
         this.headerPosition = 0;
-        this.buffer = Buffer.allocUnsafe(size);
+        this.buffer = Buffer.allocUnsafe(size2);
       }
-      ensure(size) {
+      ensure(size2) {
         const remaining = this.buffer.length - this.offset;
-        if (remaining < size) {
+        if (remaining < size2) {
           const oldBuffer = this.buffer;
-          const newSize = oldBuffer.length + (oldBuffer.length >> 1) + size;
+          const newSize = oldBuffer.length + (oldBuffer.length >> 1) + size2;
           this.buffer = Buffer.allocUnsafe(newSize);
           oldBuffer.copy(this.buffer, 0, 0, this.offset);
         }
@@ -2476,10 +2476,10 @@ var require_buffer_writer = __commonJS({
       /**
        * Appends an uninitialized block of {@link size} bytes to the buffer and returns its offset.
        */
-      reserveUnsafe(size) {
+      reserveUnsafe(size2) {
         const offset = this.offset;
-        this.ensure(size);
-        this.offset += size;
+        this.ensure(size2);
+        this.offset += size2;
         return offset;
       }
       join(code) {
@@ -3441,7 +3441,7 @@ var require_split2 = __commonJS({
     function noop(incoming) {
       return incoming;
     }
-    function split(matcher, mapper, options) {
+    function split2(matcher, mapper, options) {
       matcher = matcher || /\r?\n/;
       mapper = mapper || noop;
       options = options || {};
@@ -3484,7 +3484,7 @@ var require_split2 = __commonJS({
       };
       return stream;
     }
-    module.exports = split;
+    module.exports = split2;
   }
 });
 
@@ -3494,7 +3494,7 @@ var require_helper = __commonJS({
     "use strict";
     var path = __require("path");
     var Stream = __require("stream").Stream;
-    var split = require_split2();
+    var split2 = require_split2();
     var util = __require("util");
     var defaultPort = 5432;
     var isWin = process.platform === "win32";
@@ -3564,7 +3564,7 @@ var require_helper = __commonJS({
     };
     module.exports.getPassword = function(connInfo, stream, cb) {
       var pass;
-      var lineStream = stream.pipe(split());
+      var lineStream = stream.pipe(split2());
       function onLine(line) {
         var entry = parseLine(line);
         if (entry && isValidEntry(entry) && matcher(connInfo, entry)) {
@@ -6106,11 +6106,11 @@ var require_cache = __commonJS({
     var import_in_memory_cache = require_in_memory_cache();
     var import_build_client = require_build_client();
     var defaultKeyHashFunction = (key2) => {
-      let hash = 5381;
+      let hash2 = 5381;
       for (let i = 0; i < key2.length; i++) {
-        hash = hash * 33 ^ key2.charCodeAt(i);
+        hash2 = hash2 * 33 ^ key2.charCodeAt(i);
       }
-      return (hash >>> 0).toString(16);
+      return (hash2 >>> 0).toString(16);
     };
     var defaultNamespaceSeparator = "$";
     var inMemoryCacheInstance = null;
@@ -9961,7 +9961,7 @@ var require_websocket_server = __commonJS({
         socket.on("error", socketOnError);
         const key2 = req.headers["sec-websocket-key"];
         const upgrade = req.headers.upgrade;
-        const version = +req.headers["sec-websocket-version"];
+        const version3 = +req.headers["sec-websocket-version"];
         if (req.method !== "GET") {
           const message = "Invalid HTTP method";
           abortHandshakeOrEmitwsClientError(this, req, socket, 405, message);
@@ -9977,7 +9977,7 @@ var require_websocket_server = __commonJS({
           abortHandshakeOrEmitwsClientError(this, req, socket, 400, message);
           return;
         }
-        if (version !== 13 && version !== 8) {
+        if (version3 !== 13 && version3 !== 8) {
           const message = "Missing or invalid Sec-WebSocket-Version header";
           abortHandshakeOrEmitwsClientError(this, req, socket, 400, message, {
             "Sec-WebSocket-Version": "13, 8"
@@ -10021,7 +10021,7 @@ var require_websocket_server = __commonJS({
         }
         if (this.options.verifyClient) {
           const info = {
-            origin: req.headers[`${version === 8 ? "sec-websocket-origin" : "origin"}`],
+            origin: req.headers[`${version3 === 8 ? "sec-websocket-origin" : "origin"}`],
             secure: !!(req.socket.authorized || req.socket.encrypted),
             req
           };
@@ -10307,7 +10307,7 @@ var require_functions = __commonJS({
       experimental_attachDatabasePool: () => import_db_connections.experimental_attachDatabasePool,
       experimental_upgradeWebSocket: () => import_websocket2.experimental_upgradeWebSocket,
       geolocation: () => import_headers.geolocation,
-      getCache: () => import_cache.getCache,
+      getCache: () => import_cache2.getCache,
       getDeadline: () => import_deadline.getDeadline,
       getEnv: () => import_get_env.getEnv,
       invalidateBySrcImage: () => import_purge.invalidateBySrcImage,
@@ -10326,11 +10326,2938 @@ var require_functions = __commonJS({
     var import_wait_until = require_wait_until();
     var import_metric = require_metric();
     var import_middleware = require_middleware();
-    var import_cache = require_cache();
+    var import_cache2 = require_cache();
     var import_db_connections = require_db_connections();
     var import_purge = require_purge();
     var import_addcachetag = require_addcachetag();
     var import_websocket2 = require_websocket2();
+  }
+});
+
+// ../../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/abitype/dist/esm/version.js
+var version;
+var init_version = __esm({
+  "../../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/abitype/dist/esm/version.js"() {
+    version = "1.2.3";
+  }
+});
+
+// ../../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/abitype/dist/esm/errors.js
+var BaseError;
+var init_errors = __esm({
+  "../../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/abitype/dist/esm/errors.js"() {
+    init_version();
+    BaseError = class _BaseError extends Error {
+      constructor(shortMessage, args = {}) {
+        const details = args.cause instanceof _BaseError ? args.cause.details : args.cause?.message ? args.cause.message : args.details;
+        const docsPath3 = args.cause instanceof _BaseError ? args.cause.docsPath || args.docsPath : args.docsPath;
+        const message = [
+          shortMessage || "An error occurred.",
+          "",
+          ...args.metaMessages ? [...args.metaMessages, ""] : [],
+          ...docsPath3 ? [`Docs: https://abitype.dev${docsPath3}`] : [],
+          ...details ? [`Details: ${details}`] : [],
+          `Version: abitype@${version}`
+        ].join("\n");
+        super(message);
+        Object.defineProperty(this, "details", {
+          enumerable: true,
+          configurable: true,
+          writable: true,
+          value: void 0
+        });
+        Object.defineProperty(this, "docsPath", {
+          enumerable: true,
+          configurable: true,
+          writable: true,
+          value: void 0
+        });
+        Object.defineProperty(this, "metaMessages", {
+          enumerable: true,
+          configurable: true,
+          writable: true,
+          value: void 0
+        });
+        Object.defineProperty(this, "shortMessage", {
+          enumerable: true,
+          configurable: true,
+          writable: true,
+          value: void 0
+        });
+        Object.defineProperty(this, "name", {
+          enumerable: true,
+          configurable: true,
+          writable: true,
+          value: "AbiTypeError"
+        });
+        if (args.cause)
+          this.cause = args.cause;
+        this.details = details;
+        this.docsPath = docsPath3;
+        this.metaMessages = args.metaMessages;
+        this.shortMessage = shortMessage;
+      }
+    };
+  }
+});
+
+// ../../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/abitype/dist/esm/regex.js
+function execTyped(regex, string) {
+  const match = regex.exec(string);
+  return match?.groups;
+}
+var bytesRegex, integerRegex, isTupleRegex;
+var init_regex = __esm({
+  "../../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/abitype/dist/esm/regex.js"() {
+    bytesRegex = /^bytes([1-9]|1[0-9]|2[0-9]|3[0-2])?$/;
+    integerRegex = /^u?int(8|16|24|32|40|48|56|64|72|80|88|96|104|112|120|128|136|144|152|160|168|176|184|192|200|208|216|224|232|240|248|256)?$/;
+    isTupleRegex = /^\(.+?\).*?$/;
+  }
+});
+
+// ../../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/abitype/dist/esm/human-readable/formatAbiParameter.js
+function formatAbiParameter(abiParameter) {
+  let type = abiParameter.type;
+  if (tupleRegex.test(abiParameter.type) && "components" in abiParameter) {
+    type = "(";
+    const length = abiParameter.components.length;
+    for (let i = 0; i < length; i++) {
+      const component = abiParameter.components[i];
+      type += formatAbiParameter(component);
+      if (i < length - 1)
+        type += ", ";
+    }
+    const result = execTyped(tupleRegex, abiParameter.type);
+    type += `)${result?.array || ""}`;
+    return formatAbiParameter({
+      ...abiParameter,
+      type
+    });
+  }
+  if ("indexed" in abiParameter && abiParameter.indexed)
+    type = `${type} indexed`;
+  if (abiParameter.name)
+    return `${type} ${abiParameter.name}`;
+  return type;
+}
+var tupleRegex;
+var init_formatAbiParameter = __esm({
+  "../../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/abitype/dist/esm/human-readable/formatAbiParameter.js"() {
+    init_regex();
+    tupleRegex = /^tuple(?<array>(\[(\d*)\])*)$/;
+  }
+});
+
+// ../../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/abitype/dist/esm/human-readable/formatAbiParameters.js
+function formatAbiParameters(abiParameters) {
+  let params = "";
+  const length = abiParameters.length;
+  for (let i = 0; i < length; i++) {
+    const abiParameter = abiParameters[i];
+    params += formatAbiParameter(abiParameter);
+    if (i !== length - 1)
+      params += ", ";
+  }
+  return params;
+}
+var init_formatAbiParameters = __esm({
+  "../../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/abitype/dist/esm/human-readable/formatAbiParameters.js"() {
+    init_formatAbiParameter();
+  }
+});
+
+// ../../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/abitype/dist/esm/human-readable/formatAbiItem.js
+function formatAbiItem(abiItem) {
+  if (abiItem.type === "function")
+    return `function ${abiItem.name}(${formatAbiParameters(abiItem.inputs)})${abiItem.stateMutability && abiItem.stateMutability !== "nonpayable" ? ` ${abiItem.stateMutability}` : ""}${abiItem.outputs?.length ? ` returns (${formatAbiParameters(abiItem.outputs)})` : ""}`;
+  if (abiItem.type === "event")
+    return `event ${abiItem.name}(${formatAbiParameters(abiItem.inputs)})`;
+  if (abiItem.type === "error")
+    return `error ${abiItem.name}(${formatAbiParameters(abiItem.inputs)})`;
+  if (abiItem.type === "constructor")
+    return `constructor(${formatAbiParameters(abiItem.inputs)})${abiItem.stateMutability === "payable" ? " payable" : ""}`;
+  if (abiItem.type === "fallback")
+    return `fallback() external${abiItem.stateMutability === "payable" ? " payable" : ""}`;
+  return "receive() external payable";
+}
+var init_formatAbiItem = __esm({
+  "../../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/abitype/dist/esm/human-readable/formatAbiItem.js"() {
+    init_formatAbiParameters();
+  }
+});
+
+// ../../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/abitype/dist/esm/human-readable/runtime/signatures.js
+function isErrorSignature(signature) {
+  return errorSignatureRegex.test(signature);
+}
+function execErrorSignature(signature) {
+  return execTyped(errorSignatureRegex, signature);
+}
+function isEventSignature(signature) {
+  return eventSignatureRegex.test(signature);
+}
+function execEventSignature(signature) {
+  return execTyped(eventSignatureRegex, signature);
+}
+function isFunctionSignature(signature) {
+  return functionSignatureRegex.test(signature);
+}
+function execFunctionSignature(signature) {
+  return execTyped(functionSignatureRegex, signature);
+}
+function isStructSignature(signature) {
+  return structSignatureRegex.test(signature);
+}
+function execStructSignature(signature) {
+  return execTyped(structSignatureRegex, signature);
+}
+function isConstructorSignature(signature) {
+  return constructorSignatureRegex.test(signature);
+}
+function execConstructorSignature(signature) {
+  return execTyped(constructorSignatureRegex, signature);
+}
+function isFallbackSignature(signature) {
+  return fallbackSignatureRegex.test(signature);
+}
+function execFallbackSignature(signature) {
+  return execTyped(fallbackSignatureRegex, signature);
+}
+function isReceiveSignature(signature) {
+  return receiveSignatureRegex.test(signature);
+}
+var errorSignatureRegex, eventSignatureRegex, functionSignatureRegex, structSignatureRegex, constructorSignatureRegex, fallbackSignatureRegex, receiveSignatureRegex, eventModifiers, functionModifiers;
+var init_signatures = __esm({
+  "../../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/abitype/dist/esm/human-readable/runtime/signatures.js"() {
+    init_regex();
+    errorSignatureRegex = /^error (?<name>[a-zA-Z$_][a-zA-Z0-9$_]*)\((?<parameters>.*?)\)$/;
+    eventSignatureRegex = /^event (?<name>[a-zA-Z$_][a-zA-Z0-9$_]*)\((?<parameters>.*?)\)$/;
+    functionSignatureRegex = /^function (?<name>[a-zA-Z$_][a-zA-Z0-9$_]*)\((?<parameters>.*?)\)(?: (?<scope>external|public{1}))?(?: (?<stateMutability>pure|view|nonpayable|payable{1}))?(?: returns\s?\((?<returns>.*?)\))?$/;
+    structSignatureRegex = /^struct (?<name>[a-zA-Z$_][a-zA-Z0-9$_]*) \{(?<properties>.*?)\}$/;
+    constructorSignatureRegex = /^constructor\((?<parameters>.*?)\)(?:\s(?<stateMutability>payable{1}))?$/;
+    fallbackSignatureRegex = /^fallback\(\) external(?:\s(?<stateMutability>payable{1}))?$/;
+    receiveSignatureRegex = /^receive\(\) external payable$/;
+    eventModifiers = /* @__PURE__ */ new Set(["indexed"]);
+    functionModifiers = /* @__PURE__ */ new Set([
+      "calldata",
+      "memory",
+      "storage"
+    ]);
+  }
+});
+
+// ../../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/abitype/dist/esm/human-readable/errors/abiItem.js
+var UnknownTypeError, UnknownSolidityTypeError;
+var init_abiItem = __esm({
+  "../../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/abitype/dist/esm/human-readable/errors/abiItem.js"() {
+    init_errors();
+    UnknownTypeError = class extends BaseError {
+      constructor({ type }) {
+        super("Unknown type.", {
+          metaMessages: [
+            `Type "${type}" is not a valid ABI type. Perhaps you forgot to include a struct signature?`
+          ]
+        });
+        Object.defineProperty(this, "name", {
+          enumerable: true,
+          configurable: true,
+          writable: true,
+          value: "UnknownTypeError"
+        });
+      }
+    };
+    UnknownSolidityTypeError = class extends BaseError {
+      constructor({ type }) {
+        super("Unknown type.", {
+          metaMessages: [`Type "${type}" is not a valid ABI type.`]
+        });
+        Object.defineProperty(this, "name", {
+          enumerable: true,
+          configurable: true,
+          writable: true,
+          value: "UnknownSolidityTypeError"
+        });
+      }
+    };
+  }
+});
+
+// ../../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/abitype/dist/esm/human-readable/errors/abiParameter.js
+var InvalidParameterError, SolidityProtectedKeywordError, InvalidModifierError, InvalidFunctionModifierError, InvalidAbiTypeParameterError;
+var init_abiParameter = __esm({
+  "../../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/abitype/dist/esm/human-readable/errors/abiParameter.js"() {
+    init_errors();
+    InvalidParameterError = class extends BaseError {
+      constructor({ param }) {
+        super("Invalid ABI parameter.", {
+          details: param
+        });
+        Object.defineProperty(this, "name", {
+          enumerable: true,
+          configurable: true,
+          writable: true,
+          value: "InvalidParameterError"
+        });
+      }
+    };
+    SolidityProtectedKeywordError = class extends BaseError {
+      constructor({ param, name }) {
+        super("Invalid ABI parameter.", {
+          details: param,
+          metaMessages: [
+            `"${name}" is a protected Solidity keyword. More info: https://docs.soliditylang.org/en/latest/cheatsheet.html`
+          ]
+        });
+        Object.defineProperty(this, "name", {
+          enumerable: true,
+          configurable: true,
+          writable: true,
+          value: "SolidityProtectedKeywordError"
+        });
+      }
+    };
+    InvalidModifierError = class extends BaseError {
+      constructor({ param, type, modifier }) {
+        super("Invalid ABI parameter.", {
+          details: param,
+          metaMessages: [
+            `Modifier "${modifier}" not allowed${type ? ` in "${type}" type` : ""}.`
+          ]
+        });
+        Object.defineProperty(this, "name", {
+          enumerable: true,
+          configurable: true,
+          writable: true,
+          value: "InvalidModifierError"
+        });
+      }
+    };
+    InvalidFunctionModifierError = class extends BaseError {
+      constructor({ param, type, modifier }) {
+        super("Invalid ABI parameter.", {
+          details: param,
+          metaMessages: [
+            `Modifier "${modifier}" not allowed${type ? ` in "${type}" type` : ""}.`,
+            `Data location can only be specified for array, struct, or mapping types, but "${modifier}" was given.`
+          ]
+        });
+        Object.defineProperty(this, "name", {
+          enumerable: true,
+          configurable: true,
+          writable: true,
+          value: "InvalidFunctionModifierError"
+        });
+      }
+    };
+    InvalidAbiTypeParameterError = class extends BaseError {
+      constructor({ abiParameter }) {
+        super("Invalid ABI parameter.", {
+          details: JSON.stringify(abiParameter, null, 2),
+          metaMessages: ["ABI parameter type is invalid."]
+        });
+        Object.defineProperty(this, "name", {
+          enumerable: true,
+          configurable: true,
+          writable: true,
+          value: "InvalidAbiTypeParameterError"
+        });
+      }
+    };
+  }
+});
+
+// ../../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/abitype/dist/esm/human-readable/errors/signature.js
+var InvalidSignatureError, UnknownSignatureError, InvalidStructSignatureError;
+var init_signature = __esm({
+  "../../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/abitype/dist/esm/human-readable/errors/signature.js"() {
+    init_errors();
+    InvalidSignatureError = class extends BaseError {
+      constructor({ signature, type }) {
+        super(`Invalid ${type} signature.`, {
+          details: signature
+        });
+        Object.defineProperty(this, "name", {
+          enumerable: true,
+          configurable: true,
+          writable: true,
+          value: "InvalidSignatureError"
+        });
+      }
+    };
+    UnknownSignatureError = class extends BaseError {
+      constructor({ signature }) {
+        super("Unknown signature.", {
+          details: signature
+        });
+        Object.defineProperty(this, "name", {
+          enumerable: true,
+          configurable: true,
+          writable: true,
+          value: "UnknownSignatureError"
+        });
+      }
+    };
+    InvalidStructSignatureError = class extends BaseError {
+      constructor({ signature }) {
+        super("Invalid struct signature.", {
+          details: signature,
+          metaMessages: ["No properties exist."]
+        });
+        Object.defineProperty(this, "name", {
+          enumerable: true,
+          configurable: true,
+          writable: true,
+          value: "InvalidStructSignatureError"
+        });
+      }
+    };
+  }
+});
+
+// ../../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/abitype/dist/esm/human-readable/errors/struct.js
+var CircularReferenceError;
+var init_struct = __esm({
+  "../../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/abitype/dist/esm/human-readable/errors/struct.js"() {
+    init_errors();
+    CircularReferenceError = class extends BaseError {
+      constructor({ type }) {
+        super("Circular reference detected.", {
+          metaMessages: [`Struct "${type}" is a circular reference.`]
+        });
+        Object.defineProperty(this, "name", {
+          enumerable: true,
+          configurable: true,
+          writable: true,
+          value: "CircularReferenceError"
+        });
+      }
+    };
+  }
+});
+
+// ../../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/abitype/dist/esm/human-readable/errors/splitParameters.js
+var InvalidParenthesisError;
+var init_splitParameters = __esm({
+  "../../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/abitype/dist/esm/human-readable/errors/splitParameters.js"() {
+    init_errors();
+    InvalidParenthesisError = class extends BaseError {
+      constructor({ current, depth }) {
+        super("Unbalanced parentheses.", {
+          metaMessages: [
+            `"${current.trim()}" has too many ${depth > 0 ? "opening" : "closing"} parentheses.`
+          ],
+          details: `Depth "${depth}"`
+        });
+        Object.defineProperty(this, "name", {
+          enumerable: true,
+          configurable: true,
+          writable: true,
+          value: "InvalidParenthesisError"
+        });
+      }
+    };
+  }
+});
+
+// ../../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/abitype/dist/esm/human-readable/runtime/cache.js
+function getParameterCacheKey(param, type, structs) {
+  let structKey = "";
+  if (structs)
+    for (const struct of Object.entries(structs)) {
+      if (!struct)
+        continue;
+      let propertyKey = "";
+      for (const property of struct[1]) {
+        propertyKey += `[${property.type}${property.name ? `:${property.name}` : ""}]`;
+      }
+      structKey += `(${struct[0]}{${propertyKey}})`;
+    }
+  if (type)
+    return `${type}:${param}${structKey}`;
+  return `${param}${structKey}`;
+}
+var parameterCache;
+var init_cache = __esm({
+  "../../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/abitype/dist/esm/human-readable/runtime/cache.js"() {
+    parameterCache = /* @__PURE__ */ new Map([
+      // Unnamed
+      ["address", { type: "address" }],
+      ["bool", { type: "bool" }],
+      ["bytes", { type: "bytes" }],
+      ["bytes32", { type: "bytes32" }],
+      ["int", { type: "int256" }],
+      ["int256", { type: "int256" }],
+      ["string", { type: "string" }],
+      ["uint", { type: "uint256" }],
+      ["uint8", { type: "uint8" }],
+      ["uint16", { type: "uint16" }],
+      ["uint24", { type: "uint24" }],
+      ["uint32", { type: "uint32" }],
+      ["uint64", { type: "uint64" }],
+      ["uint96", { type: "uint96" }],
+      ["uint112", { type: "uint112" }],
+      ["uint160", { type: "uint160" }],
+      ["uint192", { type: "uint192" }],
+      ["uint256", { type: "uint256" }],
+      // Named
+      ["address owner", { type: "address", name: "owner" }],
+      ["address to", { type: "address", name: "to" }],
+      ["bool approved", { type: "bool", name: "approved" }],
+      ["bytes _data", { type: "bytes", name: "_data" }],
+      ["bytes data", { type: "bytes", name: "data" }],
+      ["bytes signature", { type: "bytes", name: "signature" }],
+      ["bytes32 hash", { type: "bytes32", name: "hash" }],
+      ["bytes32 r", { type: "bytes32", name: "r" }],
+      ["bytes32 root", { type: "bytes32", name: "root" }],
+      ["bytes32 s", { type: "bytes32", name: "s" }],
+      ["string name", { type: "string", name: "name" }],
+      ["string symbol", { type: "string", name: "symbol" }],
+      ["string tokenURI", { type: "string", name: "tokenURI" }],
+      ["uint tokenId", { type: "uint256", name: "tokenId" }],
+      ["uint8 v", { type: "uint8", name: "v" }],
+      ["uint256 balance", { type: "uint256", name: "balance" }],
+      ["uint256 tokenId", { type: "uint256", name: "tokenId" }],
+      ["uint256 value", { type: "uint256", name: "value" }],
+      // Indexed
+      [
+        "event:address indexed from",
+        { type: "address", name: "from", indexed: true }
+      ],
+      ["event:address indexed to", { type: "address", name: "to", indexed: true }],
+      [
+        "event:uint indexed tokenId",
+        { type: "uint256", name: "tokenId", indexed: true }
+      ],
+      [
+        "event:uint256 indexed tokenId",
+        { type: "uint256", name: "tokenId", indexed: true }
+      ]
+    ]);
+  }
+});
+
+// ../../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/abitype/dist/esm/human-readable/runtime/utils.js
+function parseSignature(signature, structs = {}) {
+  if (isFunctionSignature(signature))
+    return parseFunctionSignature(signature, structs);
+  if (isEventSignature(signature))
+    return parseEventSignature(signature, structs);
+  if (isErrorSignature(signature))
+    return parseErrorSignature(signature, structs);
+  if (isConstructorSignature(signature))
+    return parseConstructorSignature(signature, structs);
+  if (isFallbackSignature(signature))
+    return parseFallbackSignature(signature);
+  if (isReceiveSignature(signature))
+    return {
+      type: "receive",
+      stateMutability: "payable"
+    };
+  throw new UnknownSignatureError({ signature });
+}
+function parseFunctionSignature(signature, structs = {}) {
+  const match = execFunctionSignature(signature);
+  if (!match)
+    throw new InvalidSignatureError({ signature, type: "function" });
+  const inputParams = splitParameters(match.parameters);
+  const inputs = [];
+  const inputLength = inputParams.length;
+  for (let i = 0; i < inputLength; i++) {
+    inputs.push(parseAbiParameter(inputParams[i], {
+      modifiers: functionModifiers,
+      structs,
+      type: "function"
+    }));
+  }
+  const outputs = [];
+  if (match.returns) {
+    const outputParams = splitParameters(match.returns);
+    const outputLength = outputParams.length;
+    for (let i = 0; i < outputLength; i++) {
+      outputs.push(parseAbiParameter(outputParams[i], {
+        modifiers: functionModifiers,
+        structs,
+        type: "function"
+      }));
+    }
+  }
+  return {
+    name: match.name,
+    type: "function",
+    stateMutability: match.stateMutability ?? "nonpayable",
+    inputs,
+    outputs
+  };
+}
+function parseEventSignature(signature, structs = {}) {
+  const match = execEventSignature(signature);
+  if (!match)
+    throw new InvalidSignatureError({ signature, type: "event" });
+  const params = splitParameters(match.parameters);
+  const abiParameters = [];
+  const length = params.length;
+  for (let i = 0; i < length; i++)
+    abiParameters.push(parseAbiParameter(params[i], {
+      modifiers: eventModifiers,
+      structs,
+      type: "event"
+    }));
+  return { name: match.name, type: "event", inputs: abiParameters };
+}
+function parseErrorSignature(signature, structs = {}) {
+  const match = execErrorSignature(signature);
+  if (!match)
+    throw new InvalidSignatureError({ signature, type: "error" });
+  const params = splitParameters(match.parameters);
+  const abiParameters = [];
+  const length = params.length;
+  for (let i = 0; i < length; i++)
+    abiParameters.push(parseAbiParameter(params[i], { structs, type: "error" }));
+  return { name: match.name, type: "error", inputs: abiParameters };
+}
+function parseConstructorSignature(signature, structs = {}) {
+  const match = execConstructorSignature(signature);
+  if (!match)
+    throw new InvalidSignatureError({ signature, type: "constructor" });
+  const params = splitParameters(match.parameters);
+  const abiParameters = [];
+  const length = params.length;
+  for (let i = 0; i < length; i++)
+    abiParameters.push(parseAbiParameter(params[i], { structs, type: "constructor" }));
+  return {
+    type: "constructor",
+    stateMutability: match.stateMutability ?? "nonpayable",
+    inputs: abiParameters
+  };
+}
+function parseFallbackSignature(signature) {
+  const match = execFallbackSignature(signature);
+  if (!match)
+    throw new InvalidSignatureError({ signature, type: "fallback" });
+  return {
+    type: "fallback",
+    stateMutability: match.stateMutability ?? "nonpayable"
+  };
+}
+function parseAbiParameter(param, options) {
+  const parameterCacheKey = getParameterCacheKey(param, options?.type, options?.structs);
+  if (parameterCache.has(parameterCacheKey))
+    return parameterCache.get(parameterCacheKey);
+  const isTuple = isTupleRegex.test(param);
+  const match = execTyped(isTuple ? abiParameterWithTupleRegex : abiParameterWithoutTupleRegex, param);
+  if (!match)
+    throw new InvalidParameterError({ param });
+  if (match.name && isSolidityKeyword(match.name))
+    throw new SolidityProtectedKeywordError({ param, name: match.name });
+  const name = match.name ? { name: match.name } : {};
+  const indexed = match.modifier === "indexed" ? { indexed: true } : {};
+  const structs = options?.structs ?? {};
+  let type;
+  let components = {};
+  if (isTuple) {
+    type = "tuple";
+    const params = splitParameters(match.type);
+    const components_ = [];
+    const length = params.length;
+    for (let i = 0; i < length; i++) {
+      components_.push(parseAbiParameter(params[i], { structs }));
+    }
+    components = { components: components_ };
+  } else if (match.type in structs) {
+    type = "tuple";
+    components = { components: structs[match.type] };
+  } else if (dynamicIntegerRegex.test(match.type)) {
+    type = `${match.type}256`;
+  } else if (match.type === "address payable") {
+    type = "address";
+  } else {
+    type = match.type;
+    if (!(options?.type === "struct") && !isSolidityType(type))
+      throw new UnknownSolidityTypeError({ type });
+  }
+  if (match.modifier) {
+    if (!options?.modifiers?.has?.(match.modifier))
+      throw new InvalidModifierError({
+        param,
+        type: options?.type,
+        modifier: match.modifier
+      });
+    if (functionModifiers.has(match.modifier) && !isValidDataLocation(type, !!match.array))
+      throw new InvalidFunctionModifierError({
+        param,
+        type: options?.type,
+        modifier: match.modifier
+      });
+  }
+  const abiParameter = {
+    type: `${type}${match.array ?? ""}`,
+    ...name,
+    ...indexed,
+    ...components
+  };
+  parameterCache.set(parameterCacheKey, abiParameter);
+  return abiParameter;
+}
+function splitParameters(params, result = [], current = "", depth = 0) {
+  const length = params.trim().length;
+  for (let i = 0; i < length; i++) {
+    const char = params[i];
+    const tail = params.slice(i + 1);
+    switch (char) {
+      case ",":
+        return depth === 0 ? splitParameters(tail, [...result, current.trim()]) : splitParameters(tail, result, `${current}${char}`, depth);
+      case "(":
+        return splitParameters(tail, result, `${current}${char}`, depth + 1);
+      case ")":
+        return splitParameters(tail, result, `${current}${char}`, depth - 1);
+      default:
+        return splitParameters(tail, result, `${current}${char}`, depth);
+    }
+  }
+  if (current === "")
+    return result;
+  if (depth !== 0)
+    throw new InvalidParenthesisError({ current, depth });
+  result.push(current.trim());
+  return result;
+}
+function isSolidityType(type) {
+  return type === "address" || type === "bool" || type === "function" || type === "string" || bytesRegex.test(type) || integerRegex.test(type);
+}
+function isSolidityKeyword(name) {
+  return name === "address" || name === "bool" || name === "function" || name === "string" || name === "tuple" || bytesRegex.test(name) || integerRegex.test(name) || protectedKeywordsRegex.test(name);
+}
+function isValidDataLocation(type, isArray) {
+  return isArray || type === "bytes" || type === "string" || type === "tuple";
+}
+var abiParameterWithoutTupleRegex, abiParameterWithTupleRegex, dynamicIntegerRegex, protectedKeywordsRegex;
+var init_utils = __esm({
+  "../../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/abitype/dist/esm/human-readable/runtime/utils.js"() {
+    init_regex();
+    init_abiItem();
+    init_abiParameter();
+    init_signature();
+    init_splitParameters();
+    init_cache();
+    init_signatures();
+    abiParameterWithoutTupleRegex = /^(?<type>[a-zA-Z$_][a-zA-Z0-9$_]*(?:\spayable)?)(?<array>(?:\[\d*?\])+?)?(?:\s(?<modifier>calldata|indexed|memory|storage{1}))?(?:\s(?<name>[a-zA-Z$_][a-zA-Z0-9$_]*))?$/;
+    abiParameterWithTupleRegex = /^\((?<type>.+?)\)(?<array>(?:\[\d*?\])+?)?(?:\s(?<modifier>calldata|indexed|memory|storage{1}))?(?:\s(?<name>[a-zA-Z$_][a-zA-Z0-9$_]*))?$/;
+    dynamicIntegerRegex = /^u?int$/;
+    protectedKeywordsRegex = /^(?:after|alias|anonymous|apply|auto|byte|calldata|case|catch|constant|copyof|default|defined|error|event|external|false|final|function|immutable|implements|in|indexed|inline|internal|let|mapping|match|memory|mutable|null|of|override|partial|private|promise|public|pure|reference|relocatable|return|returns|sizeof|static|storage|struct|super|supports|switch|this|true|try|typedef|typeof|var|view|virtual)$/;
+  }
+});
+
+// ../../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/abitype/dist/esm/human-readable/runtime/structs.js
+function parseStructs(signatures) {
+  const shallowStructs = {};
+  const signaturesLength = signatures.length;
+  for (let i = 0; i < signaturesLength; i++) {
+    const signature = signatures[i];
+    if (!isStructSignature(signature))
+      continue;
+    const match = execStructSignature(signature);
+    if (!match)
+      throw new InvalidSignatureError({ signature, type: "struct" });
+    const properties = match.properties.split(";");
+    const components = [];
+    const propertiesLength = properties.length;
+    for (let k = 0; k < propertiesLength; k++) {
+      const property = properties[k];
+      const trimmed = property.trim();
+      if (!trimmed)
+        continue;
+      const abiParameter = parseAbiParameter(trimmed, {
+        type: "struct"
+      });
+      components.push(abiParameter);
+    }
+    if (!components.length)
+      throw new InvalidStructSignatureError({ signature });
+    shallowStructs[match.name] = components;
+  }
+  const resolvedStructs = {};
+  const entries = Object.entries(shallowStructs);
+  const entriesLength = entries.length;
+  for (let i = 0; i < entriesLength; i++) {
+    const [name, parameters] = entries[i];
+    resolvedStructs[name] = resolveStructs(parameters, shallowStructs);
+  }
+  return resolvedStructs;
+}
+function resolveStructs(abiParameters = [], structs = {}, ancestors = /* @__PURE__ */ new Set()) {
+  const components = [];
+  const length = abiParameters.length;
+  for (let i = 0; i < length; i++) {
+    const abiParameter = abiParameters[i];
+    const isTuple = isTupleRegex.test(abiParameter.type);
+    if (isTuple)
+      components.push(abiParameter);
+    else {
+      const match = execTyped(typeWithoutTupleRegex, abiParameter.type);
+      if (!match?.type)
+        throw new InvalidAbiTypeParameterError({ abiParameter });
+      const { array, type } = match;
+      if (type in structs) {
+        if (ancestors.has(type))
+          throw new CircularReferenceError({ type });
+        components.push({
+          ...abiParameter,
+          type: `tuple${array ?? ""}`,
+          components: resolveStructs(structs[type], structs, /* @__PURE__ */ new Set([...ancestors, type]))
+        });
+      } else {
+        if (isSolidityType(type))
+          components.push(abiParameter);
+        else
+          throw new UnknownTypeError({ type });
+      }
+    }
+  }
+  return components;
+}
+var typeWithoutTupleRegex;
+var init_structs = __esm({
+  "../../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/abitype/dist/esm/human-readable/runtime/structs.js"() {
+    init_regex();
+    init_abiItem();
+    init_abiParameter();
+    init_signature();
+    init_struct();
+    init_signatures();
+    init_utils();
+    typeWithoutTupleRegex = /^(?<type>[a-zA-Z$_][a-zA-Z0-9$_]*)(?<array>(?:\[\d*?\])+?)?$/;
+  }
+});
+
+// ../../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/abitype/dist/esm/human-readable/parseAbi.js
+function parseAbi(signatures) {
+  const structs = parseStructs(signatures);
+  const abi = [];
+  const length = signatures.length;
+  for (let i = 0; i < length; i++) {
+    const signature = signatures[i];
+    if (isStructSignature(signature))
+      continue;
+    abi.push(parseSignature(signature, structs));
+  }
+  return abi;
+}
+var init_parseAbi = __esm({
+  "../../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/abitype/dist/esm/human-readable/parseAbi.js"() {
+    init_signatures();
+    init_structs();
+    init_utils();
+  }
+});
+
+// ../../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/abitype/dist/esm/exports/index.js
+var init_exports = __esm({
+  "../../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/abitype/dist/esm/exports/index.js"() {
+    init_formatAbiItem();
+    init_parseAbi();
+  }
+});
+
+// ../../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/viem/_esm/utils/abi/formatAbiItem.js
+function formatAbiItem2(abiItem, { includeName = false } = {}) {
+  if (abiItem.type !== "function" && abiItem.type !== "event" && abiItem.type !== "error")
+    throw new InvalidDefinitionTypeError(abiItem.type);
+  return `${abiItem.name}(${formatAbiParams(abiItem.inputs, { includeName })})`;
+}
+function formatAbiParams(params, { includeName = false } = {}) {
+  if (!params)
+    return "";
+  return params.map((param) => formatAbiParam(param, { includeName })).join(includeName ? ", " : ",");
+}
+function formatAbiParam(param, { includeName }) {
+  if (param.type.startsWith("tuple")) {
+    return `(${formatAbiParams(param.components, { includeName })})${param.type.slice("tuple".length)}`;
+  }
+  return param.type + (includeName && param.name ? ` ${param.name}` : "");
+}
+var init_formatAbiItem2 = __esm({
+  "../../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/viem/_esm/utils/abi/formatAbiItem.js"() {
+    init_abi();
+  }
+});
+
+// ../../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/viem/_esm/utils/data/isHex.js
+function isHex(value, { even = false, strict = true } = {}) {
+  if (!value)
+    return false;
+  if (typeof value !== "string")
+    return false;
+  if (even && value.length % 2 !== 0)
+    return false;
+  return strict ? /^0x[0-9a-fA-F]*$/.test(value) : value.startsWith("0x");
+}
+var init_isHex = __esm({
+  "../../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/viem/_esm/utils/data/isHex.js"() {
+  }
+});
+
+// ../../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/viem/_esm/utils/data/size.js
+function size(value) {
+  if (isHex(value, { strict: false }))
+    return Math.ceil((value.length - 2) / 2);
+  return value.length;
+}
+var init_size = __esm({
+  "../../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/viem/_esm/utils/data/size.js"() {
+    init_isHex();
+  }
+});
+
+// ../../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/viem/_esm/errors/version.js
+var version2;
+var init_version2 = __esm({
+  "../../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/viem/_esm/errors/version.js"() {
+    version2 = "2.57.14";
+  }
+});
+
+// ../../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/viem/_esm/errors/base.js
+function walk(err, fn) {
+  if (fn?.(err))
+    return err;
+  if (err && typeof err === "object" && "cause" in err && err.cause !== void 0)
+    return walk(err.cause, fn);
+  return fn ? null : err;
+}
+var errorConfig, BaseError2;
+var init_base = __esm({
+  "../../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/viem/_esm/errors/base.js"() {
+    init_version2();
+    errorConfig = {
+      getDocsUrl: ({ docsBaseUrl, docsPath: docsPath3 = "", docsSlug }) => docsPath3 ? `${docsBaseUrl ?? "https://viem.sh"}${docsPath3}${docsSlug ? `#${docsSlug}` : ""}` : void 0,
+      version: `viem@${version2}`
+    };
+    BaseError2 = class _BaseError extends Error {
+      constructor(shortMessage, args = {}) {
+        const details = (() => {
+          if (args.cause instanceof _BaseError)
+            return args.cause.details;
+          if (args.cause?.message)
+            return args.cause.message;
+          return args.details;
+        })();
+        const docsPath3 = (() => {
+          if (args.cause instanceof _BaseError)
+            return args.cause.docsPath || args.docsPath;
+          return args.docsPath;
+        })();
+        const docsUrl = errorConfig.getDocsUrl?.({ ...args, docsPath: docsPath3 });
+        const message = [
+          shortMessage || "An error occurred.",
+          "",
+          ...args.metaMessages ? [...args.metaMessages, ""] : [],
+          ...docsUrl ? [`Docs: ${docsUrl}`] : [],
+          ...details ? [`Details: ${details}`] : [],
+          ...errorConfig.version ? [`Version: ${errorConfig.version}`] : []
+        ].join("\n");
+        super(message, args.cause ? { cause: args.cause } : void 0);
+        Object.defineProperty(this, "details", {
+          enumerable: true,
+          configurable: true,
+          writable: true,
+          value: void 0
+        });
+        Object.defineProperty(this, "docsPath", {
+          enumerable: true,
+          configurable: true,
+          writable: true,
+          value: void 0
+        });
+        Object.defineProperty(this, "metaMessages", {
+          enumerable: true,
+          configurable: true,
+          writable: true,
+          value: void 0
+        });
+        Object.defineProperty(this, "shortMessage", {
+          enumerable: true,
+          configurable: true,
+          writable: true,
+          value: void 0
+        });
+        Object.defineProperty(this, "version", {
+          enumerable: true,
+          configurable: true,
+          writable: true,
+          value: void 0
+        });
+        Object.defineProperty(this, "name", {
+          enumerable: true,
+          configurable: true,
+          writable: true,
+          value: "BaseError"
+        });
+        this.details = details;
+        this.docsPath = docsPath3;
+        this.metaMessages = args.metaMessages;
+        this.name = args.name ?? this.name;
+        this.shortMessage = shortMessage;
+        this.version = version2;
+      }
+      walk(fn) {
+        return walk(this, fn);
+      }
+    };
+  }
+});
+
+// ../../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/viem/_esm/errors/abi.js
+var AbiDecodingDataSizeTooSmallError, AbiDecodingZeroDataError, AbiEncodingArrayLengthMismatchError, AbiEncodingBytesSizeMismatchError, AbiEncodingLengthMismatchError, AbiFunctionNotFoundError, AbiFunctionOutputsNotFoundError, AbiItemAmbiguityError, InvalidAbiEncodingTypeError, InvalidAbiDecodingTypeError, InvalidArrayError, InvalidDefinitionTypeError;
+var init_abi = __esm({
+  "../../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/viem/_esm/errors/abi.js"() {
+    init_formatAbiItem2();
+    init_size();
+    init_base();
+    AbiDecodingDataSizeTooSmallError = class extends BaseError2 {
+      constructor({ data, params, size: size2 }) {
+        super([`Data size of ${size2} bytes is too small for given parameters.`].join("\n"), {
+          metaMessages: [
+            `Params: (${formatAbiParams(params, { includeName: true })})`,
+            `Data:   ${data} (${size2} bytes)`
+          ],
+          name: "AbiDecodingDataSizeTooSmallError"
+        });
+        Object.defineProperty(this, "data", {
+          enumerable: true,
+          configurable: true,
+          writable: true,
+          value: void 0
+        });
+        Object.defineProperty(this, "params", {
+          enumerable: true,
+          configurable: true,
+          writable: true,
+          value: void 0
+        });
+        Object.defineProperty(this, "size", {
+          enumerable: true,
+          configurable: true,
+          writable: true,
+          value: void 0
+        });
+        this.data = data;
+        this.params = params;
+        this.size = size2;
+      }
+    };
+    AbiDecodingZeroDataError = class extends BaseError2 {
+      constructor({ cause } = {}) {
+        super('Cannot decode zero data ("0x") with ABI parameters.', {
+          name: "AbiDecodingZeroDataError",
+          cause
+        });
+      }
+    };
+    AbiEncodingArrayLengthMismatchError = class extends BaseError2 {
+      constructor({ expectedLength, givenLength, type }) {
+        super([
+          `ABI encoding array length mismatch for type ${type}.`,
+          `Expected length: ${expectedLength}`,
+          `Given length: ${givenLength}`
+        ].join("\n"), { name: "AbiEncodingArrayLengthMismatchError" });
+      }
+    };
+    AbiEncodingBytesSizeMismatchError = class extends BaseError2 {
+      constructor({ expectedSize, value }) {
+        super(`Size of bytes "${value}" (bytes${size(value)}) does not match expected size (bytes${expectedSize}).`, { name: "AbiEncodingBytesSizeMismatchError" });
+      }
+    };
+    AbiEncodingLengthMismatchError = class extends BaseError2 {
+      constructor({ expectedLength, givenLength }) {
+        super([
+          "ABI encoding params/values length mismatch.",
+          `Expected length (params): ${expectedLength}`,
+          `Given length (values): ${givenLength}`
+        ].join("\n"), { name: "AbiEncodingLengthMismatchError" });
+      }
+    };
+    AbiFunctionNotFoundError = class extends BaseError2 {
+      constructor(functionName, { docsPath: docsPath3 } = {}) {
+        super([
+          `Function ${functionName ? `"${functionName}" ` : ""}not found on ABI.`,
+          "Make sure you are using the correct ABI and that the function exists on it."
+        ].join("\n"), {
+          docsPath: docsPath3,
+          name: "AbiFunctionNotFoundError"
+        });
+      }
+    };
+    AbiFunctionOutputsNotFoundError = class extends BaseError2 {
+      constructor(functionName, { docsPath: docsPath3 }) {
+        super([
+          `Function "${functionName}" does not contain any \`outputs\` on ABI.`,
+          "Cannot decode function result without knowing what the parameter types are.",
+          "Make sure you are using the correct ABI and that the function exists on it."
+        ].join("\n"), {
+          docsPath: docsPath3,
+          name: "AbiFunctionOutputsNotFoundError"
+        });
+      }
+    };
+    AbiItemAmbiguityError = class extends BaseError2 {
+      constructor(x, y) {
+        super("Found ambiguous types in overloaded ABI items.", {
+          metaMessages: [
+            `\`${x.type}\` in \`${formatAbiItem2(x.abiItem)}\`, and`,
+            `\`${y.type}\` in \`${formatAbiItem2(y.abiItem)}\``,
+            "",
+            "These types encode differently and cannot be distinguished at runtime.",
+            "Remove one of the ambiguous items in the ABI."
+          ],
+          name: "AbiItemAmbiguityError"
+        });
+      }
+    };
+    InvalidAbiEncodingTypeError = class extends BaseError2 {
+      constructor(type, { docsPath: docsPath3 }) {
+        super([
+          `Type "${type}" is not a valid encoding type.`,
+          "Please provide a valid ABI type."
+        ].join("\n"), { docsPath: docsPath3, name: "InvalidAbiEncodingType" });
+      }
+    };
+    InvalidAbiDecodingTypeError = class extends BaseError2 {
+      constructor(type, { docsPath: docsPath3 }) {
+        super([
+          `Type "${type}" is not a valid decoding type.`,
+          "Please provide a valid ABI type."
+        ].join("\n"), { docsPath: docsPath3, name: "InvalidAbiDecodingType" });
+      }
+    };
+    InvalidArrayError = class extends BaseError2 {
+      constructor(value) {
+        super([`Value "${value}" is not a valid array.`].join("\n"), {
+          name: "InvalidArrayError"
+        });
+      }
+    };
+    InvalidDefinitionTypeError = class extends BaseError2 {
+      constructor(type) {
+        super([
+          `"${type}" is not a valid definition type.`,
+          'Valid types: "function", "event", "error"'
+        ].join("\n"), { name: "InvalidDefinitionTypeError" });
+      }
+    };
+  }
+});
+
+// ../../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/viem/_esm/errors/data.js
+var SliceOffsetOutOfBoundsError, SizeExceedsPaddingSizeError;
+var init_data = __esm({
+  "../../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/viem/_esm/errors/data.js"() {
+    init_base();
+    SliceOffsetOutOfBoundsError = class extends BaseError2 {
+      constructor({ offset, position, size: size2 }) {
+        super(`Slice ${position === "start" ? "starting" : "ending"} at offset "${offset}" is out-of-bounds (size: ${size2}).`, { name: "SliceOffsetOutOfBoundsError" });
+      }
+    };
+    SizeExceedsPaddingSizeError = class extends BaseError2 {
+      constructor({ size: size2, targetSize, type }) {
+        super(`${type.charAt(0).toUpperCase()}${type.slice(1).toLowerCase()} size (${size2}) exceeds padding size (${targetSize}).`, { name: "SizeExceedsPaddingSizeError" });
+      }
+    };
+  }
+});
+
+// ../../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/viem/_esm/utils/data/pad.js
+function pad(hexOrBytes, { dir, size: size2 = 32 } = {}) {
+  if (typeof hexOrBytes === "string")
+    return padHex(hexOrBytes, { dir, size: size2 });
+  return padBytes(hexOrBytes, { dir, size: size2 });
+}
+function padHex(hex_, { dir, size: size2 = 32 } = {}) {
+  if (size2 === null)
+    return hex_;
+  const hex2 = hex_.replace("0x", "");
+  if (hex2.length > size2 * 2)
+    throw new SizeExceedsPaddingSizeError({
+      size: Math.ceil(hex2.length / 2),
+      targetSize: size2,
+      type: "hex"
+    });
+  return `0x${hex2[dir === "right" ? "padEnd" : "padStart"](size2 * 2, "0")}`;
+}
+function padBytes(bytes, { dir, size: size2 = 32 } = {}) {
+  if (size2 === null)
+    return bytes;
+  if (bytes.length > size2)
+    throw new SizeExceedsPaddingSizeError({
+      size: bytes.length,
+      targetSize: size2,
+      type: "bytes"
+    });
+  const paddedBytes = new Uint8Array(size2);
+  for (let i = 0; i < size2; i++) {
+    const padEnd = dir === "right";
+    paddedBytes[padEnd ? i : size2 - i - 1] = bytes[padEnd ? i : bytes.length - i - 1];
+  }
+  return paddedBytes;
+}
+var init_pad = __esm({
+  "../../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/viem/_esm/utils/data/pad.js"() {
+    init_data();
+  }
+});
+
+// ../../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/viem/_esm/errors/encoding.js
+var IntegerOutOfRangeError, InvalidBytesBooleanError, SizeOverflowError;
+var init_encoding = __esm({
+  "../../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/viem/_esm/errors/encoding.js"() {
+    init_base();
+    IntegerOutOfRangeError = class extends BaseError2 {
+      constructor({ max, min, signed, size: size2, value }) {
+        super(`Number "${value}" is not in safe ${size2 ? `${size2 * 8}-bit ${signed ? "signed" : "unsigned"} ` : ""}integer range ${max ? `(${min} to ${max})` : `(above ${min})`}`, { name: "IntegerOutOfRangeError" });
+      }
+    };
+    InvalidBytesBooleanError = class extends BaseError2 {
+      constructor(bytes) {
+        super(`Bytes value "${bytes}" is not a valid boolean. The bytes array must contain a single byte of either a 0 or 1 value.`, {
+          name: "InvalidBytesBooleanError"
+        });
+      }
+    };
+    SizeOverflowError = class extends BaseError2 {
+      constructor({ givenSize, maxSize }) {
+        super(`Size cannot exceed ${maxSize} bytes. Given size: ${givenSize} bytes.`, { name: "SizeOverflowError" });
+      }
+    };
+  }
+});
+
+// ../../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/viem/_esm/utils/data/trim.js
+function trim(hexOrBytes, { dir = "left" } = {}) {
+  let data = typeof hexOrBytes === "string" ? hexOrBytes.replace("0x", "") : hexOrBytes;
+  let sliceLength = 0;
+  for (let i = 0; i < data.length - 1; i++) {
+    if (data[dir === "left" ? i : data.length - i - 1].toString() === "0")
+      sliceLength++;
+    else
+      break;
+  }
+  data = dir === "left" ? data.slice(sliceLength) : data.slice(0, data.length - sliceLength);
+  if (typeof hexOrBytes === "string") {
+    if (data.length === 1 && dir === "right")
+      data = `${data}0`;
+    return `0x${data.length % 2 === 1 ? `0${data}` : data}`;
+  }
+  return data;
+}
+var init_trim = __esm({
+  "../../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/viem/_esm/utils/data/trim.js"() {
+  }
+});
+
+// ../../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/viem/_esm/utils/encoding/fromHex.js
+function assertSize(hexOrBytes, { size: size2 }) {
+  if (size(hexOrBytes) > size2)
+    throw new SizeOverflowError({
+      givenSize: size(hexOrBytes),
+      maxSize: size2
+    });
+}
+function hexToBigInt(hex2, opts = {}) {
+  const { signed } = opts;
+  if (opts.size)
+    assertSize(hex2, { size: opts.size });
+  const value = BigInt(hex2);
+  if (!signed)
+    return value;
+  const size2 = Math.ceil((hex2.length - 2) / 2);
+  const max = (1n << BigInt(size2) * 8n - 1n) - 1n;
+  if (value <= max)
+    return value;
+  return value - BigInt(`0x${"f".padStart(size2 * 2, "f")}`) - 1n;
+}
+function hexToNumber(hex2, opts = {}) {
+  const value = hexToBigInt(hex2, opts);
+  const number = Number(value);
+  if (!Number.isSafeInteger(number))
+    throw new IntegerOutOfRangeError({
+      max: `${Number.MAX_SAFE_INTEGER}`,
+      min: `${Number.MIN_SAFE_INTEGER}`,
+      signed: opts.signed,
+      size: opts.size,
+      value: `${value}n`
+    });
+  return number;
+}
+var init_fromHex = __esm({
+  "../../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/viem/_esm/utils/encoding/fromHex.js"() {
+    init_encoding();
+    init_size();
+  }
+});
+
+// ../../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/viem/_esm/utils/encoding/toHex.js
+function toHex(value, opts = {}) {
+  if (typeof value === "number" || typeof value === "bigint")
+    return numberToHex(value, opts);
+  if (typeof value === "string") {
+    return stringToHex(value, opts);
+  }
+  if (typeof value === "boolean")
+    return boolToHex(value, opts);
+  return bytesToHex(value, opts);
+}
+function boolToHex(value, opts = {}) {
+  const hex2 = `0x${Number(value)}`;
+  if (typeof opts.size === "number") {
+    assertSize(hex2, { size: opts.size });
+    return pad(hex2, { size: opts.size });
+  }
+  return hex2;
+}
+function bytesToHex(value, opts = {}) {
+  let string = "";
+  for (let i = 0; i < value.length; i++) {
+    string += hexes[value[i]];
+  }
+  const hex2 = `0x${string}`;
+  if (typeof opts.size === "number") {
+    assertSize(hex2, { size: opts.size });
+    return pad(hex2, { dir: "right", size: opts.size });
+  }
+  return hex2;
+}
+function numberToHex(value_, opts = {}) {
+  const { signed, size: size2 } = opts;
+  const value = BigInt(value_);
+  let maxValue;
+  if (size2) {
+    if (signed)
+      maxValue = (1n << BigInt(size2) * 8n - 1n) - 1n;
+    else
+      maxValue = 2n ** (BigInt(size2) * 8n) - 1n;
+  } else if (typeof value_ === "number") {
+    maxValue = BigInt(Number.MAX_SAFE_INTEGER);
+  }
+  const minValue = typeof maxValue === "bigint" && signed ? -maxValue - 1n : 0;
+  if (maxValue && value > maxValue || value < minValue) {
+    const suffix = typeof value_ === "bigint" ? "n" : "";
+    throw new IntegerOutOfRangeError({
+      max: maxValue ? `${maxValue}${suffix}` : void 0,
+      min: `${minValue}${suffix}`,
+      signed,
+      size: size2,
+      value: `${value_}${suffix}`
+    });
+  }
+  const hex2 = `0x${(signed && value < 0 ? (1n << BigInt(size2 * 8)) + BigInt(value) : value).toString(16)}`;
+  if (size2)
+    return pad(hex2, { size: size2 });
+  return hex2;
+}
+function stringToHex(value_, opts = {}) {
+  const value = encoder.encode(value_);
+  return bytesToHex(value, opts);
+}
+var hexes, encoder;
+var init_toHex = __esm({
+  "../../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/viem/_esm/utils/encoding/toHex.js"() {
+    init_encoding();
+    init_pad();
+    init_fromHex();
+    hexes = /* @__PURE__ */ Array.from({ length: 256 }, (_v, i) => i.toString(16).padStart(2, "0"));
+    encoder = /* @__PURE__ */ new TextEncoder();
+  }
+});
+
+// ../../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/viem/_esm/utils/encoding/toBytes.js
+function toBytes(value, opts = {}) {
+  if (typeof value === "number" || typeof value === "bigint")
+    return numberToBytes(value, opts);
+  if (typeof value === "boolean")
+    return boolToBytes(value, opts);
+  if (isHex(value))
+    return hexToBytes(value, opts);
+  return stringToBytes(value, opts);
+}
+function boolToBytes(value, opts = {}) {
+  const bytes = new Uint8Array(1);
+  bytes[0] = Number(value);
+  if (typeof opts.size === "number") {
+    assertSize(bytes, { size: opts.size });
+    return pad(bytes, { size: opts.size });
+  }
+  return bytes;
+}
+function charCodeToBase16(char) {
+  if (char >= charCodeMap.zero && char <= charCodeMap.nine)
+    return char - charCodeMap.zero;
+  if (char >= charCodeMap.A && char <= charCodeMap.F)
+    return char - (charCodeMap.A - 10);
+  if (char >= charCodeMap.a && char <= charCodeMap.f)
+    return char - (charCodeMap.a - 10);
+  return void 0;
+}
+function hexToBytes(hex_, opts = {}) {
+  let hex2 = hex_;
+  if (opts.size) {
+    assertSize(hex2, { size: opts.size });
+    hex2 = pad(hex2, { dir: "right", size: opts.size });
+  }
+  let hexString = hex2.slice(2);
+  if (hexString.length % 2)
+    hexString = `0${hexString}`;
+  const length = hexString.length / 2;
+  const bytes = new Uint8Array(length);
+  for (let index = 0, j = 0; index < length; index++) {
+    const nibbleLeft = charCodeToBase16(hexString.charCodeAt(j++));
+    const nibbleRight = charCodeToBase16(hexString.charCodeAt(j++));
+    if (nibbleLeft === void 0 || nibbleRight === void 0) {
+      throw new BaseError2(`Invalid byte sequence ("${hexString[j - 2]}${hexString[j - 1]}" in "${hexString}").`);
+    }
+    bytes[index] = nibbleLeft * 16 + nibbleRight;
+  }
+  return bytes;
+}
+function numberToBytes(value, opts) {
+  const hex2 = numberToHex(value, opts);
+  return hexToBytes(hex2);
+}
+function stringToBytes(value, opts = {}) {
+  const bytes = encoder2.encode(value);
+  if (typeof opts.size === "number") {
+    assertSize(bytes, { size: opts.size });
+    return pad(bytes, { dir: "right", size: opts.size });
+  }
+  return bytes;
+}
+var encoder2, charCodeMap;
+var init_toBytes = __esm({
+  "../../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/viem/_esm/utils/encoding/toBytes.js"() {
+    init_base();
+    init_isHex();
+    init_pad();
+    init_fromHex();
+    init_toHex();
+    encoder2 = /* @__PURE__ */ new TextEncoder();
+    charCodeMap = {
+      zero: 48,
+      nine: 57,
+      A: 65,
+      F: 70,
+      a: 97,
+      f: 102
+    };
+  }
+});
+
+// ../../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/@noble/hashes/esm/_u64.js
+function fromBig(n, le = false) {
+  if (le)
+    return { h: Number(n & U32_MASK64), l: Number(n >> _32n & U32_MASK64) };
+  return { h: Number(n >> _32n & U32_MASK64) | 0, l: Number(n & U32_MASK64) | 0 };
+}
+function split(lst, le = false) {
+  const len = lst.length;
+  let Ah = new Uint32Array(len);
+  let Al = new Uint32Array(len);
+  for (let i = 0; i < len; i++) {
+    const { h, l } = fromBig(lst[i], le);
+    [Ah[i], Al[i]] = [h, l];
+  }
+  return [Ah, Al];
+}
+var U32_MASK64, _32n, rotlSH, rotlSL, rotlBH, rotlBL;
+var init_u64 = __esm({
+  "../../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/@noble/hashes/esm/_u64.js"() {
+    U32_MASK64 = /* @__PURE__ */ BigInt(2 ** 32 - 1);
+    _32n = /* @__PURE__ */ BigInt(32);
+    rotlSH = (h, l, s) => h << s | l >>> 32 - s;
+    rotlSL = (h, l, s) => l << s | h >>> 32 - s;
+    rotlBH = (h, l, s) => l << s - 32 | h >>> 64 - s;
+    rotlBL = (h, l, s) => h << s - 32 | l >>> 64 - s;
+  }
+});
+
+// ../../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/@noble/hashes/esm/utils.js
+function isBytes(a) {
+  return a instanceof Uint8Array || ArrayBuffer.isView(a) && a.constructor.name === "Uint8Array";
+}
+function anumber(n) {
+  if (!Number.isSafeInteger(n) || n < 0)
+    throw new Error("positive integer expected, got " + n);
+}
+function abytes(b, ...lengths) {
+  if (!isBytes(b))
+    throw new Error("Uint8Array expected");
+  if (lengths.length > 0 && !lengths.includes(b.length))
+    throw new Error("Uint8Array expected of length " + lengths + ", got length=" + b.length);
+}
+function aexists(instance, checkFinished = true) {
+  if (instance.destroyed)
+    throw new Error("Hash instance has been destroyed");
+  if (checkFinished && instance.finished)
+    throw new Error("Hash#digest() has already been called");
+}
+function aoutput(out, instance) {
+  abytes(out);
+  const min = instance.outputLen;
+  if (out.length < min) {
+    throw new Error("digestInto() expects output buffer of length at least " + min);
+  }
+}
+function u32(arr) {
+  return new Uint32Array(arr.buffer, arr.byteOffset, Math.floor(arr.byteLength / 4));
+}
+function clean(...arrays) {
+  for (let i = 0; i < arrays.length; i++) {
+    arrays[i].fill(0);
+  }
+}
+function byteSwap(word) {
+  return word << 24 & 4278190080 | word << 8 & 16711680 | word >>> 8 & 65280 | word >>> 24 & 255;
+}
+function byteSwap32(arr) {
+  for (let i = 0; i < arr.length; i++) {
+    arr[i] = byteSwap(arr[i]);
+  }
+  return arr;
+}
+function utf8ToBytes(str) {
+  if (typeof str !== "string")
+    throw new Error("string expected");
+  return new Uint8Array(new TextEncoder().encode(str));
+}
+function toBytes2(data) {
+  if (typeof data === "string")
+    data = utf8ToBytes(data);
+  abytes(data);
+  return data;
+}
+function createHasher(hashCons) {
+  const hashC = (msg) => hashCons().update(toBytes2(msg)).digest();
+  const tmp = hashCons();
+  hashC.outputLen = tmp.outputLen;
+  hashC.blockLen = tmp.blockLen;
+  hashC.create = () => hashCons();
+  return hashC;
+}
+var isLE, swap32IfBE, Hash;
+var init_utils2 = __esm({
+  "../../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/@noble/hashes/esm/utils.js"() {
+    isLE = /* @__PURE__ */ (() => new Uint8Array(new Uint32Array([287454020]).buffer)[0] === 68)();
+    swap32IfBE = isLE ? (u) => u : byteSwap32;
+    Hash = class {
+    };
+  }
+});
+
+// ../../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/@noble/hashes/esm/sha3.js
+function keccakP(s, rounds = 24) {
+  const B = new Uint32Array(5 * 2);
+  for (let round = 24 - rounds; round < 24; round++) {
+    for (let x = 0; x < 10; x++)
+      B[x] = s[x] ^ s[x + 10] ^ s[x + 20] ^ s[x + 30] ^ s[x + 40];
+    for (let x = 0; x < 10; x += 2) {
+      const idx1 = (x + 8) % 10;
+      const idx0 = (x + 2) % 10;
+      const B0 = B[idx0];
+      const B1 = B[idx0 + 1];
+      const Th = rotlH(B0, B1, 1) ^ B[idx1];
+      const Tl = rotlL(B0, B1, 1) ^ B[idx1 + 1];
+      for (let y = 0; y < 50; y += 10) {
+        s[x + y] ^= Th;
+        s[x + y + 1] ^= Tl;
+      }
+    }
+    let curH = s[2];
+    let curL = s[3];
+    for (let t = 0; t < 24; t++) {
+      const shift = SHA3_ROTL[t];
+      const Th = rotlH(curH, curL, shift);
+      const Tl = rotlL(curH, curL, shift);
+      const PI = SHA3_PI[t];
+      curH = s[PI];
+      curL = s[PI + 1];
+      s[PI] = Th;
+      s[PI + 1] = Tl;
+    }
+    for (let y = 0; y < 50; y += 10) {
+      for (let x = 0; x < 10; x++)
+        B[x] = s[y + x];
+      for (let x = 0; x < 10; x++)
+        s[y + x] ^= ~B[(x + 2) % 10] & B[(x + 4) % 10];
+    }
+    s[0] ^= SHA3_IOTA_H[round];
+    s[1] ^= SHA3_IOTA_L[round];
+  }
+  clean(B);
+}
+var _0n, _1n, _2n, _7n, _256n, _0x71n, SHA3_PI, SHA3_ROTL, _SHA3_IOTA, IOTAS, SHA3_IOTA_H, SHA3_IOTA_L, rotlH, rotlL, Keccak, gen, keccak_256;
+var init_sha3 = __esm({
+  "../../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/@noble/hashes/esm/sha3.js"() {
+    init_u64();
+    init_utils2();
+    _0n = BigInt(0);
+    _1n = BigInt(1);
+    _2n = BigInt(2);
+    _7n = BigInt(7);
+    _256n = BigInt(256);
+    _0x71n = BigInt(113);
+    SHA3_PI = [];
+    SHA3_ROTL = [];
+    _SHA3_IOTA = [];
+    for (let round = 0, R = _1n, x = 1, y = 0; round < 24; round++) {
+      [x, y] = [y, (2 * x + 3 * y) % 5];
+      SHA3_PI.push(2 * (5 * y + x));
+      SHA3_ROTL.push((round + 1) * (round + 2) / 2 % 64);
+      let t = _0n;
+      for (let j = 0; j < 7; j++) {
+        R = (R << _1n ^ (R >> _7n) * _0x71n) % _256n;
+        if (R & _2n)
+          t ^= _1n << (_1n << /* @__PURE__ */ BigInt(j)) - _1n;
+      }
+      _SHA3_IOTA.push(t);
+    }
+    IOTAS = split(_SHA3_IOTA, true);
+    SHA3_IOTA_H = IOTAS[0];
+    SHA3_IOTA_L = IOTAS[1];
+    rotlH = (h, l, s) => s > 32 ? rotlBH(h, l, s) : rotlSH(h, l, s);
+    rotlL = (h, l, s) => s > 32 ? rotlBL(h, l, s) : rotlSL(h, l, s);
+    Keccak = class _Keccak extends Hash {
+      // NOTE: we accept arguments in bytes instead of bits here.
+      constructor(blockLen, suffix, outputLen, enableXOF = false, rounds = 24) {
+        super();
+        this.pos = 0;
+        this.posOut = 0;
+        this.finished = false;
+        this.destroyed = false;
+        this.enableXOF = false;
+        this.blockLen = blockLen;
+        this.suffix = suffix;
+        this.outputLen = outputLen;
+        this.enableXOF = enableXOF;
+        this.rounds = rounds;
+        anumber(outputLen);
+        if (!(0 < blockLen && blockLen < 200))
+          throw new Error("only keccak-f1600 function is supported");
+        this.state = new Uint8Array(200);
+        this.state32 = u32(this.state);
+      }
+      clone() {
+        return this._cloneInto();
+      }
+      keccak() {
+        swap32IfBE(this.state32);
+        keccakP(this.state32, this.rounds);
+        swap32IfBE(this.state32);
+        this.posOut = 0;
+        this.pos = 0;
+      }
+      update(data) {
+        aexists(this);
+        data = toBytes2(data);
+        abytes(data);
+        const { blockLen, state } = this;
+        const len = data.length;
+        for (let pos = 0; pos < len; ) {
+          const take = Math.min(blockLen - this.pos, len - pos);
+          for (let i = 0; i < take; i++)
+            state[this.pos++] ^= data[pos++];
+          if (this.pos === blockLen)
+            this.keccak();
+        }
+        return this;
+      }
+      finish() {
+        if (this.finished)
+          return;
+        this.finished = true;
+        const { state, suffix, pos, blockLen } = this;
+        state[pos] ^= suffix;
+        if ((suffix & 128) !== 0 && pos === blockLen - 1)
+          this.keccak();
+        state[blockLen - 1] ^= 128;
+        this.keccak();
+      }
+      writeInto(out) {
+        aexists(this, false);
+        abytes(out);
+        this.finish();
+        const bufferOut = this.state;
+        const { blockLen } = this;
+        for (let pos = 0, len = out.length; pos < len; ) {
+          if (this.posOut >= blockLen)
+            this.keccak();
+          const take = Math.min(blockLen - this.posOut, len - pos);
+          out.set(bufferOut.subarray(this.posOut, this.posOut + take), pos);
+          this.posOut += take;
+          pos += take;
+        }
+        return out;
+      }
+      xofInto(out) {
+        if (!this.enableXOF)
+          throw new Error("XOF is not possible for this instance");
+        return this.writeInto(out);
+      }
+      xof(bytes) {
+        anumber(bytes);
+        return this.xofInto(new Uint8Array(bytes));
+      }
+      digestInto(out) {
+        aoutput(out, this);
+        if (this.finished)
+          throw new Error("digest() was already called");
+        this.writeInto(out);
+        this.destroy();
+        return out;
+      }
+      digest() {
+        return this.digestInto(new Uint8Array(this.outputLen));
+      }
+      destroy() {
+        this.destroyed = true;
+        clean(this.state);
+      }
+      _cloneInto(to) {
+        const { blockLen, suffix, outputLen, rounds, enableXOF } = this;
+        to || (to = new _Keccak(blockLen, suffix, outputLen, enableXOF, rounds));
+        to.state32.set(this.state32);
+        to.pos = this.pos;
+        to.posOut = this.posOut;
+        to.finished = this.finished;
+        to.rounds = rounds;
+        to.suffix = suffix;
+        to.outputLen = outputLen;
+        to.enableXOF = enableXOF;
+        to.destroyed = this.destroyed;
+        return to;
+      }
+    };
+    gen = (suffix, blockLen, outputLen) => createHasher(() => new Keccak(blockLen, suffix, outputLen));
+    keccak_256 = /* @__PURE__ */ (() => gen(1, 136, 256 / 8))();
+  }
+});
+
+// ../../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/viem/_esm/utils/hash/keccak256.js
+function keccak256(value, to_) {
+  const to = to_ || "hex";
+  const bytes = keccak_256(isHex(value, { strict: false }) ? toBytes(value) : value);
+  if (to === "bytes")
+    return bytes;
+  return toHex(bytes);
+}
+var init_keccak256 = __esm({
+  "../../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/viem/_esm/utils/hash/keccak256.js"() {
+    init_sha3();
+    init_isHex();
+    init_toBytes();
+    init_toHex();
+  }
+});
+
+// ../../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/viem/_esm/utils/hash/hashSignature.js
+function hashSignature(sig) {
+  return hash(sig);
+}
+var hash;
+var init_hashSignature = __esm({
+  "../../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/viem/_esm/utils/hash/hashSignature.js"() {
+    init_toBytes();
+    init_keccak256();
+    hash = (value) => keccak256(toBytes(value));
+  }
+});
+
+// ../../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/viem/_esm/utils/hash/normalizeSignature.js
+function normalizeSignature(signature) {
+  let active = true;
+  let current = "";
+  let level = 0;
+  let result = "";
+  let valid = false;
+  for (let i = 0; i < signature.length; i++) {
+    const char = signature[i];
+    if (["(", ")", ","].includes(char))
+      active = true;
+    if (char === "(")
+      level++;
+    if (char === ")")
+      level--;
+    if (!active)
+      continue;
+    if (level === 0) {
+      if (char === " " && ["event", "function", "error", ""].includes(result))
+        result = "";
+      else {
+        result += char;
+        if (char === ")") {
+          valid = true;
+          break;
+        }
+      }
+      continue;
+    }
+    if (char === " ") {
+      if (!current.endsWith(",") && !current.endsWith("(")) {
+        current = "";
+        active = false;
+      }
+      continue;
+    }
+    result += char;
+    current += char;
+  }
+  if (!valid)
+    throw new BaseError2("Unable to normalize signature.");
+  return result;
+}
+var init_normalizeSignature = __esm({
+  "../../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/viem/_esm/utils/hash/normalizeSignature.js"() {
+    init_base();
+  }
+});
+
+// ../../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/viem/_esm/utils/hash/toSignature.js
+var toSignature;
+var init_toSignature = __esm({
+  "../../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/viem/_esm/utils/hash/toSignature.js"() {
+    init_exports();
+    init_normalizeSignature();
+    toSignature = (def) => {
+      const def_ = (() => {
+        if (typeof def === "string")
+          return def;
+        return formatAbiItem(def);
+      })();
+      return normalizeSignature(def_);
+    };
+  }
+});
+
+// ../../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/viem/_esm/utils/hash/toSignatureHash.js
+function toSignatureHash(fn) {
+  return hashSignature(toSignature(fn));
+}
+var init_toSignatureHash = __esm({
+  "../../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/viem/_esm/utils/hash/toSignatureHash.js"() {
+    init_hashSignature();
+    init_toSignature();
+  }
+});
+
+// ../../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/viem/_esm/utils/hash/toEventSelector.js
+var toEventSelector;
+var init_toEventSelector = __esm({
+  "../../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/viem/_esm/utils/hash/toEventSelector.js"() {
+    init_toSignatureHash();
+    toEventSelector = toSignatureHash;
+  }
+});
+
+// ../../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/viem/_esm/errors/address.js
+var InvalidAddressError;
+var init_address = __esm({
+  "../../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/viem/_esm/errors/address.js"() {
+    init_base();
+    InvalidAddressError = class extends BaseError2 {
+      constructor({ address: address2 }) {
+        super(`Address "${address2}" is invalid.`, {
+          metaMessages: [
+            "- Address must be a hex value of 20 bytes (40 hex characters).",
+            "- Address must match its checksum counterpart."
+          ],
+          name: "InvalidAddressError"
+        });
+      }
+    };
+  }
+});
+
+// ../../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/viem/_esm/utils/lru.js
+var LruMap;
+var init_lru = __esm({
+  "../../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/viem/_esm/utils/lru.js"() {
+    LruMap = class extends Map {
+      constructor(size2) {
+        super();
+        Object.defineProperty(this, "maxSize", {
+          enumerable: true,
+          configurable: true,
+          writable: true,
+          value: void 0
+        });
+        this.maxSize = size2;
+      }
+      get(key2) {
+        const value = super.get(key2);
+        if (super.has(key2)) {
+          super.delete(key2);
+          super.set(key2, value);
+        }
+        return value;
+      }
+      set(key2, value) {
+        if (super.has(key2))
+          super.delete(key2);
+        super.set(key2, value);
+        if (this.maxSize && this.size > this.maxSize) {
+          const firstKey = super.keys().next().value;
+          if (firstKey !== void 0)
+            super.delete(firstKey);
+        }
+        return this;
+      }
+    };
+  }
+});
+
+// ../../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/viem/_esm/utils/address/getAddress.js
+function checksumAddress(address_, chainId) {
+  if (checksumAddressCache.has(`${address_}.${chainId}`))
+    return checksumAddressCache.get(`${address_}.${chainId}`);
+  const hexAddress = chainId ? `${chainId}${address_.toLowerCase()}` : address_.substring(2).toLowerCase();
+  const hash2 = keccak256(stringToBytes(hexAddress), "bytes");
+  const address2 = (chainId ? hexAddress.substring(`${chainId}0x`.length) : hexAddress).split("");
+  for (let i = 0; i < 40; i += 2) {
+    if (hash2[i >> 1] >> 4 >= 8 && address2[i]) {
+      address2[i] = address2[i].toUpperCase();
+    }
+    if ((hash2[i >> 1] & 15) >= 8 && address2[i + 1]) {
+      address2[i + 1] = address2[i + 1].toUpperCase();
+    }
+  }
+  const result = `0x${address2.join("")}`;
+  checksumAddressCache.set(`${address_}.${chainId}`, result);
+  return result;
+}
+var checksumAddressCache;
+var init_getAddress = __esm({
+  "../../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/viem/_esm/utils/address/getAddress.js"() {
+    init_toBytes();
+    init_keccak256();
+    init_lru();
+    checksumAddressCache = /* @__PURE__ */ new LruMap(8192);
+  }
+});
+
+// ../../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/viem/_esm/utils/address/isAddress.js
+function isAddress(address2, options) {
+  const { strict = true } = options ?? {};
+  const cacheKey = `${address2}.${strict}`;
+  if (isAddressCache.has(cacheKey))
+    return isAddressCache.get(cacheKey);
+  const result = (() => {
+    if (!addressRegex.test(address2))
+      return false;
+    if (address2.toLowerCase() === address2)
+      return true;
+    if (strict)
+      return checksumAddress(address2) === address2;
+    return true;
+  })();
+  isAddressCache.set(cacheKey, result);
+  return result;
+}
+var addressRegex, isAddressCache;
+var init_isAddress = __esm({
+  "../../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/viem/_esm/utils/address/isAddress.js"() {
+    init_lru();
+    init_getAddress();
+    addressRegex = /^0x[a-fA-F0-9]{40}$/;
+    isAddressCache = /* @__PURE__ */ new LruMap(8192);
+  }
+});
+
+// ../../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/viem/_esm/utils/data/concat.js
+function concatHex(values) {
+  return `0x${values.reduce((acc, x) => acc + x.replace("0x", ""), "")}`;
+}
+var init_concat = __esm({
+  "../../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/viem/_esm/utils/data/concat.js"() {
+  }
+});
+
+// ../../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/viem/_esm/utils/data/slice.js
+function slice(value, start, end, { strict } = {}) {
+  if (isHex(value, { strict: false }))
+    return sliceHex(value, start, end, {
+      strict
+    });
+  return sliceBytes(value, start, end, {
+    strict
+  });
+}
+function assertStartOffset(value, start) {
+  if (typeof start === "number" && start > 0 && start > size(value) - 1)
+    throw new SliceOffsetOutOfBoundsError({
+      offset: start,
+      position: "start",
+      size: size(value)
+    });
+}
+function assertEndOffset(value, start, end) {
+  if (typeof start === "number" && typeof end === "number" && size(value) !== end - start) {
+    throw new SliceOffsetOutOfBoundsError({
+      offset: end,
+      position: "end",
+      size: size(value)
+    });
+  }
+}
+function sliceBytes(value_, start, end, { strict } = {}) {
+  assertStartOffset(value_, start);
+  const value = value_.slice(start, end);
+  if (strict)
+    assertEndOffset(value, start, end);
+  return value;
+}
+function sliceHex(value_, start, end, { strict } = {}) {
+  assertStartOffset(value_, start);
+  const value = `0x${value_.replace("0x", "").slice((start ?? 0) * 2, (end ?? value_.length) * 2)}`;
+  if (strict)
+    assertEndOffset(value, start, end);
+  return value;
+}
+var init_slice = __esm({
+  "../../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/viem/_esm/utils/data/slice.js"() {
+    init_data();
+    init_isHex();
+    init_size();
+  }
+});
+
+// ../../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/viem/_esm/utils/regex.js
+var integerRegex2;
+var init_regex2 = __esm({
+  "../../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/viem/_esm/utils/regex.js"() {
+    integerRegex2 = /^(u?int)(8|16|24|32|40|48|56|64|72|80|88|96|104|112|120|128|136|144|152|160|168|176|184|192|200|208|216|224|232|240|248|256)?$/;
+  }
+});
+
+// ../../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/viem/_esm/utils/abi/encodeAbiParameters.js
+function encodeAbiParameters(params, values) {
+  if (params.length !== values.length)
+    throw new AbiEncodingLengthMismatchError({
+      expectedLength: params.length,
+      givenLength: values.length
+    });
+  const preparedParams = prepareParams({
+    params,
+    values
+  });
+  return encodeParams(preparedParams);
+}
+function prepareParams({ params, values }) {
+  const preparedParams = [];
+  for (let i = 0; i < params.length; i++) {
+    preparedParams.push(prepareParam({ param: params[i], value: values[i] }));
+  }
+  return preparedParams;
+}
+function prepareParam({ param, value }) {
+  const arrayComponents = getArrayComponents(param.type);
+  if (arrayComponents) {
+    const [length, type] = arrayComponents;
+    return encodeArray(value, { length, param: { ...param, type } });
+  }
+  if (param.type === "tuple") {
+    return encodeTuple(value, {
+      param
+    });
+  }
+  if (param.type === "address") {
+    return encodeAddress(value);
+  }
+  if (param.type === "bool") {
+    return encodeBool(value);
+  }
+  if (param.type.startsWith("uint") || param.type.startsWith("int")) {
+    const signed = param.type.startsWith("int");
+    const [, , size2 = "256"] = integerRegex2.exec(param.type) ?? [];
+    return encodeNumber(value, {
+      signed,
+      size: Number(size2)
+    });
+  }
+  if (param.type.startsWith("bytes")) {
+    return encodeBytes(value, { param });
+  }
+  if (param.type === "string") {
+    return encodeString(value);
+  }
+  throw new InvalidAbiEncodingTypeError(param.type, {
+    docsPath: "/docs/contract/encodeAbiParameters"
+  });
+}
+function encodeParams(preparedParams) {
+  let staticSize = 0;
+  for (let i = 0; i < preparedParams.length; i++) {
+    const { dynamic, encoded } = preparedParams[i];
+    if (dynamic)
+      staticSize += 32;
+    else
+      staticSize += size(encoded);
+  }
+  const staticParams = [];
+  const dynamicParams = [];
+  let dynamicSize = 0;
+  for (let i = 0; i < preparedParams.length; i++) {
+    const { dynamic, encoded } = preparedParams[i];
+    if (dynamic) {
+      staticParams.push(numberToHex(staticSize + dynamicSize, { size: 32 }));
+      dynamicParams.push(encoded);
+      dynamicSize += size(encoded);
+    } else {
+      staticParams.push(encoded);
+    }
+  }
+  return concatHex([...staticParams, ...dynamicParams]);
+}
+function encodeAddress(value) {
+  if (!isAddress(value))
+    throw new InvalidAddressError({ address: value });
+  return { dynamic: false, encoded: padHex(value.toLowerCase()) };
+}
+function encodeArray(value, { length, param }) {
+  const dynamic = length === null;
+  if (!Array.isArray(value))
+    throw new InvalidArrayError(value);
+  if (!dynamic && value.length !== length)
+    throw new AbiEncodingArrayLengthMismatchError({
+      expectedLength: length,
+      givenLength: value.length,
+      type: `${param.type}[${length}]`
+    });
+  let dynamicChild = value.length === 0 && isDynamicType(param);
+  const preparedParams = [];
+  for (let i = 0; i < value.length; i++) {
+    const preparedParam = prepareParam({ param, value: value[i] });
+    if (preparedParam.dynamic)
+      dynamicChild = true;
+    preparedParams.push(preparedParam);
+  }
+  if (dynamic || dynamicChild) {
+    const data = encodeParams(preparedParams);
+    if (dynamic) {
+      const length2 = numberToHex(preparedParams.length, { size: 32 });
+      return {
+        dynamic: true,
+        encoded: concatHex([length2, data])
+      };
+    }
+    if (dynamicChild)
+      return { dynamic: true, encoded: data };
+  }
+  return {
+    dynamic: false,
+    encoded: concatHex(preparedParams.map(({ encoded }) => encoded))
+  };
+}
+function encodeBytes(value, { param }) {
+  const [, paramSize] = param.type.split("bytes");
+  const bytesSize = size(value);
+  if (!paramSize) {
+    let value_ = value;
+    if (bytesSize % 32 !== 0)
+      value_ = padHex(value_, {
+        dir: "right",
+        size: Math.ceil((value.length - 2) / 2 / 32) * 32
+      });
+    return {
+      dynamic: true,
+      encoded: concatHex([
+        padHex(numberToHex(bytesSize, { size: 32 })),
+        value_
+      ])
+    };
+  }
+  if (bytesSize !== Number.parseInt(paramSize, 10))
+    throw new AbiEncodingBytesSizeMismatchError({
+      expectedSize: Number.parseInt(paramSize, 10),
+      value
+    });
+  return { dynamic: false, encoded: padHex(value, { dir: "right" }) };
+}
+function encodeBool(value) {
+  if (typeof value !== "boolean")
+    throw new BaseError2(`Invalid boolean value: "${value}" (type: ${typeof value}). Expected: \`true\` or \`false\`.`);
+  return { dynamic: false, encoded: padHex(boolToHex(value)) };
+}
+function encodeNumber(value, { signed, size: size2 = 256 }) {
+  if (typeof size2 === "number") {
+    const max = 2n ** (BigInt(size2) - (signed ? 1n : 0n)) - 1n;
+    const min = signed ? -max - 1n : 0n;
+    if (value > max || value < min)
+      throw new IntegerOutOfRangeError({
+        max: max.toString(),
+        min: min.toString(),
+        signed,
+        size: size2 / 8,
+        value: value.toString()
+      });
+  }
+  return {
+    dynamic: false,
+    encoded: numberToHex(value, {
+      size: 32,
+      signed
+    })
+  };
+}
+function encodeString(value) {
+  const hexValue = stringToHex(value);
+  const partsLength = Math.ceil(size(hexValue) / 32);
+  const parts = [];
+  for (let i = 0; i < partsLength; i++) {
+    parts.push(padHex(slice(hexValue, i * 32, (i + 1) * 32), {
+      dir: "right"
+    }));
+  }
+  return {
+    dynamic: true,
+    encoded: concatHex([
+      padHex(numberToHex(size(hexValue), { size: 32 })),
+      ...parts
+    ])
+  };
+}
+function encodeTuple(value, { param }) {
+  let dynamic = false;
+  const preparedParams = [];
+  for (let i = 0; i < param.components.length; i++) {
+    const param_ = param.components[i];
+    const index = Array.isArray(value) ? i : param_.name;
+    const preparedParam = prepareParam({
+      param: param_,
+      value: value[index]
+    });
+    preparedParams.push(preparedParam);
+    if (preparedParam.dynamic)
+      dynamic = true;
+  }
+  return {
+    dynamic,
+    encoded: dynamic ? encodeParams(preparedParams) : concatHex(preparedParams.map(({ encoded }) => encoded))
+  };
+}
+function getArrayComponents(type) {
+  const matches = type.match(/^(.*)\[(\d+)?\]$/);
+  return matches ? (
+    // Return `null` if the array is dynamic.
+    [matches[2] ? Number(matches[2]) : null, matches[1]]
+  ) : void 0;
+}
+function isDynamicType(param) {
+  const { type } = param;
+  if (type === "string")
+    return true;
+  if (type === "bytes")
+    return true;
+  if (type.endsWith("[]"))
+    return true;
+  if (type === "tuple")
+    return param.components.some(isDynamicType);
+  const arrayComponents = getArrayComponents(type);
+  if (arrayComponents)
+    return isDynamicType({ ...param, type: arrayComponents[1] });
+  return false;
+}
+var init_encodeAbiParameters = __esm({
+  "../../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/viem/_esm/utils/abi/encodeAbiParameters.js"() {
+    init_abi();
+    init_address();
+    init_base();
+    init_encoding();
+    init_isAddress();
+    init_concat();
+    init_pad();
+    init_size();
+    init_slice();
+    init_toHex();
+    init_regex2();
+  }
+});
+
+// ../../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/viem/_esm/utils/hash/toFunctionSelector.js
+var toFunctionSelector;
+var init_toFunctionSelector = __esm({
+  "../../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/viem/_esm/utils/hash/toFunctionSelector.js"() {
+    init_slice();
+    init_toSignatureHash();
+    toFunctionSelector = (fn) => slice(toSignatureHash(fn), 0, 4);
+  }
+});
+
+// ../../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/viem/_esm/utils/abi/getAbiItem.js
+function getAbiItem(parameters) {
+  const { abi, args = [], name } = parameters;
+  const isSelector = isHex(name, { strict: false });
+  const abiItems = abi.filter((abiItem) => {
+    if (isSelector) {
+      if (abiItem.type === "function")
+        return toFunctionSelector(abiItem) === name;
+      if (abiItem.type === "event")
+        return toEventSelector(abiItem) === name;
+      return false;
+    }
+    return "name" in abiItem && abiItem.name === name;
+  });
+  if (abiItems.length === 0)
+    return void 0;
+  if (abiItems.length === 1)
+    return abiItems[0];
+  let matchedAbiItem;
+  for (const abiItem of abiItems) {
+    if (!("inputs" in abiItem))
+      continue;
+    if (!args || args.length === 0) {
+      if (!abiItem.inputs || abiItem.inputs.length === 0)
+        return abiItem;
+      continue;
+    }
+    if (!abiItem.inputs)
+      continue;
+    if (abiItem.inputs.length === 0)
+      continue;
+    if (abiItem.inputs.length !== args.length)
+      continue;
+    const matched = args.every((arg, index) => {
+      const abiParameter = "inputs" in abiItem && abiItem.inputs[index];
+      if (!abiParameter)
+        return false;
+      return isArgOfType(arg, abiParameter);
+    });
+    if (matched) {
+      if (matchedAbiItem && "inputs" in matchedAbiItem && matchedAbiItem.inputs) {
+        const ambiguousTypes = getAmbiguousTypes(abiItem.inputs, matchedAbiItem.inputs, args);
+        if (ambiguousTypes)
+          throw new AbiItemAmbiguityError({
+            abiItem,
+            type: ambiguousTypes[0]
+          }, {
+            abiItem: matchedAbiItem,
+            type: ambiguousTypes[1]
+          });
+      }
+      matchedAbiItem = abiItem;
+    }
+  }
+  if (matchedAbiItem)
+    return matchedAbiItem;
+  return abiItems[0];
+}
+function isArgOfType(arg, abiParameter) {
+  const argType = typeof arg;
+  const abiParameterType = abiParameter.type;
+  switch (abiParameterType) {
+    case "address":
+      return isAddress(arg, { strict: false });
+    case "bool":
+      return argType === "boolean";
+    case "function":
+      return argType === "string";
+    case "string":
+      return argType === "string";
+    default: {
+      if (abiParameterType === "tuple" && "components" in abiParameter)
+        return Object.values(abiParameter.components).every((component, index) => {
+          return argType === "object" && isArgOfType(getComponentValue(arg, component, index), component);
+        });
+      if (/^u?int(8|16|24|32|40|48|56|64|72|80|88|96|104|112|120|128|136|144|152|160|168|176|184|192|200|208|216|224|232|240|248|256)?$/.test(abiParameterType))
+        return argType === "number" || argType === "bigint";
+      if (/^bytes([1-9]|1[0-9]|2[0-9]|3[0-2])?$/.test(abiParameterType))
+        return argType === "string" || arg instanceof Uint8Array;
+      const arrayComponents = getArrayComponents(abiParameterType);
+      if (arrayComponents) {
+        const [length, type] = arrayComponents;
+        return Array.isArray(arg) && (length === null || arg.length === length) && arg.every((x) => isArgOfType(x, { ...abiParameter, type }));
+      }
+      return false;
+    }
+  }
+}
+function getAmbiguousTypes(sourceParameters, targetParameters, args) {
+  for (const parameterIndex in sourceParameters) {
+    const sourceParameter = sourceParameters[parameterIndex];
+    const targetParameter = targetParameters[parameterIndex];
+    if (!targetParameter)
+      continue;
+    if (sourceParameter.type === "tuple" && targetParameter.type === "tuple" && "components" in sourceParameter && "components" in targetParameter) {
+      const value2 = args[parameterIndex];
+      const types3 = getAmbiguousTypes(sourceParameter.components, targetParameter.components, sourceParameter.components.map((component, index) => getComponentValue(value2, component, index)));
+      if (types3)
+        return types3;
+      continue;
+    }
+    const sourceArray = getArrayComponents(sourceParameter.type);
+    const targetArray = getArrayComponents(targetParameter.type);
+    if (sourceArray && targetArray) {
+      const types3 = getAmbiguousTypes([{ ...sourceParameter, type: sourceArray[1] }], [{ ...targetParameter, type: targetArray[1] }], [args[parameterIndex]?.[0]]);
+      if (types3)
+        return types3;
+      continue;
+    }
+    const types2 = [sourceParameter.type, targetParameter.type];
+    const value = args[parameterIndex];
+    const ambiguous = (() => {
+      if (types2.includes("address") && types2.includes("bytes20"))
+        return true;
+      if (types2.includes("address") && (types2.includes("string") || types2.includes("bytes")))
+        return value === void 0 || isAddress(value, { strict: false });
+      return false;
+    })();
+    if (ambiguous)
+      return types2;
+  }
+  return;
+}
+function getComponentValue(arg, component, index) {
+  if (Array.isArray(arg))
+    return arg[index];
+  return arg?.[component.name];
+}
+var init_getAbiItem = __esm({
+  "../../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/viem/_esm/utils/abi/getAbiItem.js"() {
+    init_abi();
+    init_isHex();
+    init_isAddress();
+    init_toEventSelector();
+    init_toFunctionSelector();
+    init_encodeAbiParameters();
+  }
+});
+
+// ../../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/viem/_esm/utils/abi/prepareEncodeFunctionData.js
+function prepareEncodeFunctionData(parameters) {
+  const { abi, args, functionName } = parameters;
+  let abiItem = abi[0];
+  if (functionName) {
+    const item = getAbiItem({
+      abi,
+      args,
+      name: functionName
+    });
+    if (!item)
+      throw new AbiFunctionNotFoundError(functionName, { docsPath });
+    abiItem = item;
+  }
+  if (abiItem.type !== "function")
+    throw new AbiFunctionNotFoundError(void 0, { docsPath });
+  return {
+    abi: [abiItem],
+    functionName: toFunctionSelector(formatAbiItem2(abiItem))
+  };
+}
+var docsPath;
+var init_prepareEncodeFunctionData = __esm({
+  "../../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/viem/_esm/utils/abi/prepareEncodeFunctionData.js"() {
+    init_abi();
+    init_toFunctionSelector();
+    init_formatAbiItem2();
+    init_getAbiItem();
+    docsPath = "/docs/contract/encodeFunctionData";
+  }
+});
+
+// ../../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/viem/_esm/utils/abi/encodeFunctionData.js
+function encodeFunctionData(parameters) {
+  const { args } = parameters;
+  const { abi, functionName } = (() => {
+    if (parameters.abi.length === 1 && parameters.functionName?.startsWith("0x"))
+      return parameters;
+    return prepareEncodeFunctionData(parameters);
+  })();
+  const abiItem = abi[0];
+  const signature = functionName;
+  const data = "inputs" in abiItem && abiItem.inputs ? encodeAbiParameters(abiItem.inputs, args ?? []) : void 0;
+  return concatHex([signature, data ?? "0x"]);
+}
+var init_encodeFunctionData = __esm({
+  "../../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/viem/_esm/utils/abi/encodeFunctionData.js"() {
+    init_concat();
+    init_encodeAbiParameters();
+    init_prepareEncodeFunctionData();
+  }
+});
+
+// ../../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/viem/_esm/errors/cursor.js
+var NegativeOffsetError, PositionOutOfBoundsError, RecursiveReadLimitExceededError;
+var init_cursor = __esm({
+  "../../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/viem/_esm/errors/cursor.js"() {
+    init_base();
+    NegativeOffsetError = class extends BaseError2 {
+      constructor({ offset }) {
+        super(`Offset \`${offset}\` cannot be negative.`, {
+          name: "NegativeOffsetError"
+        });
+      }
+    };
+    PositionOutOfBoundsError = class extends BaseError2 {
+      constructor({ length, position }) {
+        super(`Position \`${position}\` is out of bounds (\`0 < position < ${length}\`).`, { name: "PositionOutOfBoundsError" });
+      }
+    };
+    RecursiveReadLimitExceededError = class extends BaseError2 {
+      constructor({ count, limit }) {
+        super(`Recursive read limit of \`${limit}\` exceeded (recursive read count: \`${count}\`).`, { name: "RecursiveReadLimitExceededError" });
+      }
+    };
+  }
+});
+
+// ../../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/viem/_esm/utils/cursor.js
+function createCursor(bytes, { recursiveReadLimit = 8192 } = {}) {
+  const cursor = Object.create(staticCursor);
+  cursor.bytes = bytes;
+  cursor.dataView = new DataView(bytes.buffer ?? bytes, bytes.byteOffset, bytes.byteLength);
+  cursor.positionReadCount = /* @__PURE__ */ new Map();
+  cursor.recursiveReadLimit = recursiveReadLimit;
+  return cursor;
+}
+var staticCursor;
+var init_cursor2 = __esm({
+  "../../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/viem/_esm/utils/cursor.js"() {
+    init_cursor();
+    staticCursor = {
+      bytes: new Uint8Array(),
+      dataView: new DataView(new ArrayBuffer(0)),
+      position: 0,
+      positionReadCount: /* @__PURE__ */ new Map(),
+      recursiveReadCount: 0,
+      recursiveReadLimit: Number.POSITIVE_INFINITY,
+      assertReadLimit() {
+        if (this.recursiveReadCount >= this.recursiveReadLimit)
+          throw new RecursiveReadLimitExceededError({
+            count: this.recursiveReadCount + 1,
+            limit: this.recursiveReadLimit
+          });
+      },
+      assertPosition(position) {
+        if (position < 0 || position > this.bytes.length - 1)
+          throw new PositionOutOfBoundsError({
+            length: this.bytes.length,
+            position
+          });
+      },
+      decrementPosition(offset) {
+        if (offset < 0)
+          throw new NegativeOffsetError({ offset });
+        const position = this.position - offset;
+        this.assertPosition(position);
+        this.position = position;
+      },
+      getReadCount(position) {
+        return this.positionReadCount.get(position || this.position) || 0;
+      },
+      incrementPosition(offset) {
+        if (offset < 0)
+          throw new NegativeOffsetError({ offset });
+        const position = this.position + offset;
+        this.assertPosition(position);
+        this.position = position;
+      },
+      inspectByte(position_) {
+        const position = position_ ?? this.position;
+        this.assertPosition(position);
+        return this.bytes[position];
+      },
+      inspectBytes(length, position_) {
+        const position = position_ ?? this.position;
+        this.assertPosition(position + length - 1);
+        return this.bytes.subarray(position, position + length);
+      },
+      inspectUint8(position_) {
+        const position = position_ ?? this.position;
+        this.assertPosition(position);
+        return this.bytes[position];
+      },
+      inspectUint16(position_) {
+        const position = position_ ?? this.position;
+        this.assertPosition(position + 1);
+        return this.dataView.getUint16(position);
+      },
+      inspectUint24(position_) {
+        const position = position_ ?? this.position;
+        this.assertPosition(position + 2);
+        return (this.dataView.getUint16(position) << 8) + this.dataView.getUint8(position + 2);
+      },
+      inspectUint32(position_) {
+        const position = position_ ?? this.position;
+        this.assertPosition(position + 3);
+        return this.dataView.getUint32(position);
+      },
+      pushByte(byte) {
+        this.assertPosition(this.position);
+        this.bytes[this.position] = byte;
+        this.position++;
+      },
+      pushBytes(bytes) {
+        this.assertPosition(this.position + bytes.length - 1);
+        this.bytes.set(bytes, this.position);
+        this.position += bytes.length;
+      },
+      pushUint8(value) {
+        this.assertPosition(this.position);
+        this.bytes[this.position] = value;
+        this.position++;
+      },
+      pushUint16(value) {
+        this.assertPosition(this.position + 1);
+        this.dataView.setUint16(this.position, value);
+        this.position += 2;
+      },
+      pushUint24(value) {
+        this.assertPosition(this.position + 2);
+        this.dataView.setUint16(this.position, value >> 8);
+        this.dataView.setUint8(this.position + 2, value & ~4294967040);
+        this.position += 3;
+      },
+      pushUint32(value) {
+        this.assertPosition(this.position + 3);
+        this.dataView.setUint32(this.position, value);
+        this.position += 4;
+      },
+      readByte() {
+        this.assertReadLimit();
+        this._touch();
+        const value = this.inspectByte();
+        this.position++;
+        return value;
+      },
+      readBytes(length, size2) {
+        this.assertReadLimit();
+        this._touch();
+        const value = this.inspectBytes(length);
+        this.position += size2 ?? length;
+        return value;
+      },
+      readUint8() {
+        this.assertReadLimit();
+        this._touch();
+        const value = this.inspectUint8();
+        this.position += 1;
+        return value;
+      },
+      readUint16() {
+        this.assertReadLimit();
+        this._touch();
+        const value = this.inspectUint16();
+        this.position += 2;
+        return value;
+      },
+      readUint24() {
+        this.assertReadLimit();
+        this._touch();
+        const value = this.inspectUint24();
+        this.position += 3;
+        return value;
+      },
+      readUint32() {
+        this.assertReadLimit();
+        this._touch();
+        const value = this.inspectUint32();
+        this.position += 4;
+        return value;
+      },
+      get remaining() {
+        return this.bytes.length - this.position;
+      },
+      setPosition(position) {
+        const oldPosition = this.position;
+        this.assertPosition(position);
+        this.position = position;
+        return () => this.position = oldPosition;
+      },
+      _touch() {
+        if (this.recursiveReadLimit === Number.POSITIVE_INFINITY)
+          return;
+        const count = this.getReadCount();
+        this.positionReadCount.set(this.position, count + 1);
+        if (count > 0)
+          this.recursiveReadCount++;
+      }
+    };
+  }
+});
+
+// ../../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/viem/_esm/utils/encoding/fromBytes.js
+function bytesToBigInt(bytes, opts = {}) {
+  if (typeof opts.size !== "undefined")
+    assertSize(bytes, { size: opts.size });
+  const hex2 = bytesToHex(bytes);
+  return hexToBigInt(hex2, opts);
+}
+function bytesToBool(bytes_, opts = {}) {
+  let bytes = bytes_;
+  if (typeof opts.size !== "undefined") {
+    assertSize(bytes, { size: opts.size });
+    bytes = trim(bytes);
+  }
+  if (bytes.length > 1 || bytes[0] > 1)
+    throw new InvalidBytesBooleanError(bytes);
+  return Boolean(bytes[0]);
+}
+function bytesToNumber(bytes, opts = {}) {
+  if (typeof opts.size !== "undefined")
+    assertSize(bytes, { size: opts.size });
+  const hex2 = bytesToHex(bytes);
+  return hexToNumber(hex2, opts);
+}
+function bytesToString(bytes_, opts = {}) {
+  let bytes = bytes_;
+  if (typeof opts.size !== "undefined") {
+    assertSize(bytes, { size: opts.size });
+    bytes = trim(bytes, { dir: "right" });
+  }
+  return new TextDecoder().decode(bytes);
+}
+var init_fromBytes = __esm({
+  "../../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/viem/_esm/utils/encoding/fromBytes.js"() {
+    init_encoding();
+    init_trim();
+    init_fromHex();
+    init_toHex();
+  }
+});
+
+// ../../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/viem/_esm/utils/abi/decodeAbiParameters.js
+function decodeAbiParameters(params, data) {
+  const bytes = typeof data === "string" ? hexToBytes(data) : data;
+  const cursor = createCursor(bytes);
+  if (size(bytes) === 0 && params.length > 0)
+    throw new AbiDecodingZeroDataError();
+  if (size(data) && size(data) < 32)
+    throw new AbiDecodingDataSizeTooSmallError({
+      data: typeof data === "string" ? data : bytesToHex(data),
+      params,
+      size: size(data)
+    });
+  let consumed = 0;
+  const values = [];
+  for (let i = 0; i < params.length; ++i) {
+    const param = params[i];
+    if (consumed < bytes.length)
+      cursor.setPosition(consumed);
+    const [data2, consumed_] = decodeParameter(cursor, param, {
+      staticPosition: 0
+    });
+    consumed += consumed_;
+    values.push(data2);
+  }
+  return values;
+}
+function decodeParameter(cursor, param, { staticPosition }) {
+  const arrayComponents = getArrayComponents(param.type);
+  if (arrayComponents) {
+    const [length, type] = arrayComponents;
+    return decodeArray(cursor, { ...param, type }, { length, staticPosition });
+  }
+  if (param.type === "tuple")
+    return decodeTuple(cursor, param, { staticPosition });
+  if (param.type === "address")
+    return decodeAddress(cursor);
+  if (param.type === "bool")
+    return decodeBool(cursor);
+  if (param.type.startsWith("bytes"))
+    return decodeBytes(cursor, param, { staticPosition });
+  if (param.type.startsWith("uint") || param.type.startsWith("int"))
+    return decodeNumber(cursor, param);
+  if (param.type === "string")
+    return decodeString(cursor, { staticPosition });
+  throw new InvalidAbiDecodingTypeError(param.type, {
+    docsPath: "/docs/contract/decodeAbiParameters"
+  });
+}
+function decodeAddress(cursor) {
+  const value = cursor.readBytes(32);
+  return [checksumAddress(bytesToHex(sliceBytes(value, -20))), 32];
+}
+function decodeArray(cursor, param, { length, staticPosition }) {
+  if (length === null) {
+    const offset = bytesToNumber(cursor.readBytes(sizeOfOffset));
+    const start = staticPosition + offset;
+    const startOfData = start + sizeOfLength;
+    cursor.setPosition(start);
+    const length2 = bytesToNumber(cursor.readBytes(sizeOfLength));
+    const dynamicChild = hasDynamicChild(param);
+    let consumed2 = 0;
+    const value2 = [];
+    for (let i = 0; i < length2; ++i) {
+      cursor.setPosition(startOfData + (dynamicChild ? i * 32 : consumed2));
+      const [data, consumed_] = decodeParameter(cursor, param, {
+        staticPosition: startOfData
+      });
+      consumed2 += consumed_;
+      value2.push(data);
+      if (consumed_ === 0) {
+        cursor.assertReadLimit();
+        cursor._touch();
+      }
+    }
+    cursor.setPosition(staticPosition + 32);
+    return [value2, 32];
+  }
+  if (hasDynamicChild(param)) {
+    const offset = bytesToNumber(cursor.readBytes(sizeOfOffset));
+    const start = staticPosition + offset;
+    const value2 = [];
+    for (let i = 0; i < length; ++i) {
+      cursor.setPosition(start + i * 32);
+      const [data] = decodeParameter(cursor, param, {
+        staticPosition: start
+      });
+      value2.push(data);
+    }
+    cursor.setPosition(staticPosition + 32);
+    return [value2, 32];
+  }
+  let consumed = 0;
+  const value = [];
+  for (let i = 0; i < length; ++i) {
+    const [data, consumed_] = decodeParameter(cursor, param, {
+      staticPosition: staticPosition + consumed
+    });
+    consumed += consumed_;
+    value.push(data);
+    if (consumed_ === 0) {
+      cursor.assertReadLimit();
+      cursor._touch();
+    }
+  }
+  return [value, consumed];
+}
+function decodeBool(cursor) {
+  return [bytesToBool(cursor.readBytes(32), { size: 32 }), 32];
+}
+function decodeBytes(cursor, param, { staticPosition }) {
+  const [_, size2] = param.type.split("bytes");
+  if (!size2) {
+    const offset = bytesToNumber(cursor.readBytes(32));
+    cursor.setPosition(staticPosition + offset);
+    const length = bytesToNumber(cursor.readBytes(32));
+    if (length === 0) {
+      cursor.setPosition(staticPosition + 32);
+      return ["0x", 32];
+    }
+    const data = cursor.readBytes(length);
+    cursor.setPosition(staticPosition + 32);
+    return [bytesToHex(data), 32];
+  }
+  const value = bytesToHex(cursor.readBytes(Number.parseInt(size2, 10), 32));
+  return [value, 32];
+}
+function decodeNumber(cursor, param) {
+  const signed = param.type.startsWith("int");
+  const size2 = Number.parseInt(param.type.split("int")[1] || "256", 10);
+  const value = cursor.readBytes(32);
+  return [
+    size2 > 48 ? bytesToBigInt(value, { signed }) : bytesToNumber(value, { signed }),
+    32
+  ];
+}
+function decodeTuple(cursor, param, { staticPosition }) {
+  const hasUnnamedChild = param.components.length === 0 || param.components.some(({ name }) => !name);
+  const value = hasUnnamedChild ? [] : {};
+  let consumed = 0;
+  if (hasDynamicChild(param)) {
+    const offset = bytesToNumber(cursor.readBytes(sizeOfOffset));
+    const start = staticPosition + offset;
+    for (let i = 0; i < param.components.length; ++i) {
+      const component = param.components[i];
+      cursor.setPosition(start + consumed);
+      const [data, consumed_] = decodeParameter(cursor, component, {
+        staticPosition: start
+      });
+      consumed += consumed_;
+      value[hasUnnamedChild ? i : component?.name] = data;
+    }
+    cursor.setPosition(staticPosition + 32);
+    return [value, 32];
+  }
+  for (let i = 0; i < param.components.length; ++i) {
+    const component = param.components[i];
+    const [data, consumed_] = decodeParameter(cursor, component, {
+      staticPosition
+    });
+    value[hasUnnamedChild ? i : component?.name] = data;
+    consumed += consumed_;
+  }
+  return [value, consumed];
+}
+function decodeString(cursor, { staticPosition }) {
+  const offset = bytesToNumber(cursor.readBytes(32));
+  const start = staticPosition + offset;
+  cursor.setPosition(start);
+  const length = bytesToNumber(cursor.readBytes(32));
+  if (length === 0) {
+    cursor.setPosition(staticPosition + 32);
+    return ["", 32];
+  }
+  const data = cursor.readBytes(length, 32);
+  const value = bytesToString(data);
+  cursor.setPosition(staticPosition + 32);
+  return [value, 32];
+}
+function hasDynamicChild(param) {
+  const { type } = param;
+  if (type === "string")
+    return true;
+  if (type === "bytes")
+    return true;
+  if (type.endsWith("[]"))
+    return true;
+  if (type === "tuple")
+    return param.components?.some(hasDynamicChild);
+  const arrayComponents = getArrayComponents(param.type);
+  if (arrayComponents && hasDynamicChild({ ...param, type: arrayComponents[1] }))
+    return true;
+  return false;
+}
+var sizeOfLength, sizeOfOffset;
+var init_decodeAbiParameters = __esm({
+  "../../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/viem/_esm/utils/abi/decodeAbiParameters.js"() {
+    init_abi();
+    init_getAddress();
+    init_cursor2();
+    init_size();
+    init_slice();
+    init_fromBytes();
+    init_toBytes();
+    init_toHex();
+    init_encodeAbiParameters();
+    sizeOfLength = 32;
+    sizeOfOffset = 32;
+  }
+});
+
+// ../../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/viem/_esm/utils/abi/decodeFunctionResult.js
+function decodeFunctionResult(parameters) {
+  const { abi, args, functionName, data } = parameters;
+  let abiItem = abi[0];
+  if (functionName) {
+    const item = getAbiItem({ abi, args, name: functionName });
+    if (!item)
+      throw new AbiFunctionNotFoundError(functionName, { docsPath: docsPath2 });
+    abiItem = item;
+  }
+  if (abiItem.type !== "function")
+    throw new AbiFunctionNotFoundError(void 0, { docsPath: docsPath2 });
+  if (!abiItem.outputs)
+    throw new AbiFunctionOutputsNotFoundError(abiItem.name, { docsPath: docsPath2 });
+  const values = decodeAbiParameters(abiItem.outputs, data);
+  if (values && values.length > 1)
+    return values;
+  if (values && values.length === 1)
+    return values[0];
+  return void 0;
+}
+var docsPath2;
+var init_decodeFunctionResult = __esm({
+  "../../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/viem/_esm/utils/abi/decodeFunctionResult.js"() {
+    init_abi();
+    init_decodeAbiParameters();
+    init_getAbiItem();
+    docsPath2 = "/docs/contract/decodeFunctionResult";
   }
 });
 
@@ -10431,9 +13358,9 @@ var require_engine = __commonJS({
           return b;
         }
         if (method === "debug_traceTransaction") {
-          let trim2 = function(f) {
+          let trim3 = function(f) {
             if (f.error) return { error: f.error };
-            var children = (f.calls || []).map(trim2).filter(Boolean), lp = (f.input || "").startsWith(ESIM_SIGNATURES.modifyLiquidity.slice(0, 10));
+            var children = (f.calls || []).map(trim3).filter(Boolean), lp = (f.input || "").startsWith(ESIM_SIGNATURES.modifyLiquidity.slice(0, 10));
             if (!lp && !children.length && (!f.value || BigInt(f.value) === 0n || !ESIM_CFG.addresses.includes(f.from) && !ESIM_CFG.addresses.includes(f.to))) return null;
             var r = { type: f.type, from: f.from, to: f.to, value: f.value || "0x0" };
             if (lp) {
@@ -10443,8 +13370,8 @@ var require_engine = __commonJS({
             if (children.length) r.calls = children;
             return r;
           };
-          var trim = trim2;
-          return trim2(result) || { type: result.type || "CALL", value: "0x0" };
+          var trim2 = trim3;
+          return trim3(result) || { type: result.type || "CALL", value: "0x0" };
         }
         return result;
       }
@@ -10609,8 +13536,8 @@ var require_engine = __commonJS({
         var transferTopic = "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef";
         var pcs = "0xa0ffb9c1ce1fe56963b0321b32e7a0302114058b";
         var timestamps = {}, transferIds = /* @__PURE__ */ new Set(), nativeByTx = {}, nativeIds = /* @__PURE__ */ new Set();
-        Object.keys(bundle.transactions).forEach(function(hash) {
-          esimLedgerRequire_(bundle.receipts[hash], "Missing transaction receipt: " + hash);
+        Object.keys(bundle.transactions).forEach(function(hash2) {
+          esimLedgerRequire_(bundle.receipts[hash2], "Missing transaction receipt: " + hash2);
         });
         bundle.transfers.forEach(function(t) {
           esimLedgerRequire_(t && t.hash && t.uniqueId && t.metadata && t.metadata.blockTimestamp, "Incomplete transfer");
@@ -10640,16 +13567,16 @@ var require_engine = __commonJS({
         wallets.forEach(function(wallet) {
           totals[wallet] = {};
         });
-        Object.keys(bundle.receipts).forEach(function(hash) {
-          var r = bundle.receipts[hash], tx = bundle.transactions[hash];
-          esimLedgerRequire_(r && tx && Array.isArray(r.logs), "Missing receipt/transaction/logs: " + hash);
-          if (r.transactionHash) esimLedgerRequire_(r.transactionHash === hash, "Receipt hash mismatch");
-          if (tx.hash) esimLedgerRequire_(tx.hash === hash, "Transaction hash mismatch");
+        Object.keys(bundle.receipts).forEach(function(hash2) {
+          var r = bundle.receipts[hash2], tx = bundle.transactions[hash2];
+          esimLedgerRequire_(r && tx && Array.isArray(r.logs), "Missing receipt/transaction/logs: " + hash2);
+          if (r.transactionHash) esimLedgerRequire_(r.transactionHash === hash2, "Receipt hash mismatch");
+          if (tx.hash) esimLedgerRequire_(tx.hash === hash2, "Transaction hash mismatch");
           var block = esimLedgerRange_(r.blockNumber, firstBlock, lastBlock, "receipt");
           if (tx.blockNumber !== void 0) esimLedgerRequire_(esimLedgerNumber_(tx.blockNumber, "tx block") === block, "Transaction block mismatch");
-          var ms = timestamps[hash];
+          var ms = timestamps[hash2];
           if (ms === void 0) ms = Date.parse(bundle.blockTimes[String(block)]);
-          esimLedgerRequire_(Number.isFinite(ms) && ms >= startMs && ms < endMs, "Missing/out-of-range receipt timestamp: " + hash);
+          esimLedgerRequire_(Number.isFinite(ms) && ms >= startMs && ms < endMs, "Missing/out-of-range receipt timestamp: " + hash2);
           if (bundle.blockTimes[String(block)] !== void 0) esimLedgerRequire_(ms === Date.parse(bundle.blockTimes[String(block)]), "Transfer/block timestamp mismatch");
           var txValue = esimLedgerRaw_(tx.value, "transaction value");
           esimLedgerRequire_(txValue >= 0n, "Negative transaction value");
@@ -10662,10 +13589,10 @@ var require_engine = __commonJS({
           r.logs.forEach(function(e) {
             esimLedgerRequire_(e && Array.isArray(e.topics), "Incomplete receipt log");
             var li = esimLedgerNumber_(e.logIndex, "logIndex");
-            esimLedgerRequire_(!logIds.has(li), "Duplicate receipt log: " + hash + ":" + li);
+            esimLedgerRequire_(!logIds.has(li), "Duplicate receipt log: " + hash2 + ":" + li);
             logIds.add(li);
             esimLedgerRequire_(!e.removed, "Removed log cannot enter ledger");
-            if (e.transactionHash) esimLedgerRequire_(e.transactionHash === hash, "Log hash mismatch");
+            if (e.transactionHash) esimLedgerRequire_(e.transactionHash === hash2, "Log hash mismatch");
             if (e.blockNumber !== void 0) esimLedgerRequire_(esimLedgerNumber_(e.blockNumber, "log block") === block, "Log block mismatch");
             if (status === 0n) {
               esimLedgerRequire_(r.logs.length === 0, "Failed receipt contains logs");
@@ -10679,7 +13606,7 @@ var require_engine = __commonJS({
               esimLedgerRequire_(amount >= 0n, "Negative token transfer");
               if (amount && (addresses.has(from) || addresses.has(to))) {
                 var internal = addresses.has(from) && addresses.has(to);
-                flows.push({ day, time, from, to, asset: sym, amount: esimLedgerUnit_(amount), amountRaw: String(amount), internal, hash, block, logIndex: li });
+                flows.push({ day, time, from, to, asset: sym, amount: esimLedgerUnit_(amount), amountRaw: String(amount), internal, hash: hash2, block, logIndex: li });
                 [[from, -1n], [to, 1n]].forEach(function(part) {
                   if (!addresses.has(part[0])) return;
                   var v = walletData(part[0]);
@@ -10718,7 +13645,7 @@ var require_engine = __commonJS({
             if (kind.indexOf("swap") === -1) {
               var words = kind === "inflp" ? esimLedgerWords_(e.data) : [];
               if (kind === "inflp") esimLedgerRequire_(words.length >= 4, "Malformed Infinity liquidity event");
-              lpEvents.push({ day, time, initiator: who, hash, pool: pid, event: kind, logIndex: li, liquidityDelta: kind === "inflp" ? String(BigInt.asIntN(256, words[2])) : "", tokenId: kind === "inflp" ? String(words[3]) : "" });
+              lpEvents.push({ day, time, initiator: who, hash: hash2, pool: pid, event: kind, logIndex: li, liquidityDelta: kind === "inflp" ? String(BigInt.asIntN(256, words[2])) : "", tokenId: kind === "inflp" ? String(words[3]) : "" });
             }
           });
           var swaps = relevant.some(function(k) {
@@ -10734,7 +13661,7 @@ var require_engine = __commonJS({
             payer.sentTransaction = 1n;
             payer.failed = status === 0n ? 1n : 0n;
           }
-          var native = nativeByTx[hash] || [];
+          var native = nativeByTx[hash2] || [];
           esimLedgerRequire_(status === 1n || native.length === 0, "Failed transaction contains native movement");
           native.forEach(function(t) {
             var amount = esimLedgerRaw_(t.amountRaw, "native amount"), from = t.from.toLowerCase(), to = t.to.toLowerCase();
@@ -10744,7 +13671,7 @@ var require_engine = __commonJS({
           if (status === 1n && txValue > 0n && (addresses.has(who) || addresses.has(String(tx.to).toLowerCase()))) {
             esimLedgerRequire_(native.some(function(t) {
               return t.tracePath.length === 0 && t.from.toLowerCase() === who && (!tx.to || t.to.toLowerCase() === String(tx.to).toLowerCase()) && esimLedgerRaw_(t.amountRaw, "native root") === txValue;
-            }), "Missing root native trace: " + hash);
+            }), "Missing root native trace: " + hash2);
           }
           Object.keys(data).forEach(function(wallet) {
             var v = data[wallet], esim = esimLedgerGet_(v, "externalESIM"), usdt = esimLedgerGet_(v, "externalUSDT"), bnb = esimLedgerGet_(v, "BNB");
@@ -10758,7 +13685,7 @@ var require_engine = __commonJS({
               return addresses.has(t.from.toLowerCase()) && addresses.has(t.to.toLowerCase()) && (t.from.toLowerCase() === wallet || t.to.toLowerCase() === wallet);
             }) && esimLedgerNativeSale_(r, native, wallet, cfg.token, -esim, bnb)) {
               kind = "\u5356\u51FA";
-              sellKeys.add(hash + "|" + wallet);
+              sellKeys.add(hash2 + "|" + wallet);
             } else if (swaps && esim > 0n && usdt === 0n && bnb < 0n) kind = "BNB\u4E70\u5165";
             else if (swaps && (esim || usdt)) kind = "\u5176\u4ED6\u5E01\u79CD/\u7EC4\u5408\u5151\u6362";
             else if (esim || usdt) kind = "\u5916\u90E8\u8F6C\u8D26";
@@ -10770,7 +13697,7 @@ var require_engine = __commonJS({
             if (mixedSwapWarning) kind = "\u7EC4\u5408\u4EA4\u6613\u5F85\u62C6\u5206";
             var nonEsimCounterflow = !esim && !lp && usdt * bnb < 0n;
             var route = nonEsimCounterflow ? esimLedgerSwapRoute_(swapRoutes, bnb < 0n ? "0x0000000000000000000000000000000000000000" : cfg.usdt, bnb > 0n ? "0x0000000000000000000000000000000000000000" : cfg.usdt) : null;
-            var resolution = resolutions[hash.toLowerCase() + "|" + wallet];
+            var resolution = resolutions[hash2.toLowerCase() + "|" + wallet];
             if (resolution) {
               var resolutionUsdt = esimLedgerGet_(v, "USDT");
               esimLedgerRequire_(esimLedgerGet_(v, "ESIM") === 0n && !lp && resolutionUsdt * bnb < 0n && status === 1n, "Non-ESIM resolution does not match a successful counterflow");
@@ -10787,17 +13714,17 @@ var require_engine = __commonJS({
               if (route || !nonEsimCounterflow) resolution = null;
             }
             var classificationNote = "";
-            if (sellKeys.has(hash + "|" + wallet)) {
+            if (sellKeys.has(hash2 + "|" + wallet)) {
               classificationNote = "\u5DF2\u6838\u5BF9\u6210\u529F ESIM Swap\u3001\u8DEF\u7531\u7ED3\u7B97\u4E8B\u4EF6\u3001WBNB \u64A4\u56DE\u53CA\u8FD4\u56DE\u94B1\u5305\u7684\u539F\u751F\u5E01\u8C03\u7528\uFF1BBNB \u56DE\u6B3E\u5355\u5217\uFF0C\u4E0D\u6298\u7B97 USDT \u6216\u8BA1\u5916\u90E8\u5165\u91D1\u3002";
-              (classificationNotes[wallet] || (classificationNotes[wallet] = [])).push({ hash, type: "BNB\u7ED3\u7B97\u5356\u51FA", reason: classificationNote, USDT: String(usdt), BNB: String(bnb), amountUnit: "raw-18-decimals" });
+              (classificationNotes[wallet] || (classificationNotes[wallet] = [])).push({ hash: hash2, type: "BNB\u7ED3\u7B97\u5356\u51FA", reason: classificationNote, USDT: String(usdt), BNB: String(bnb), amountUnit: "raw-18-decimals" });
             }
             if (nonEsimCounterflow) {
               kind = resolution ? resolution.type : route ? "\u975EESIM\u5151\u6362" : "\u5176\u4ED6\u5F85\u6838\u5B9E\u6536\u652F";
-              otherNativeKeys.add(hash + "|" + wallet);
+              otherNativeKeys.add(hash2 + "|" + wallet);
               classificationNote = resolution ? resolution.reason : route ? "\u5DF2\u8BC6\u522B\u6210\u529FSwap\u4E8B\u4EF6\u53CA\u5DF2\u9A8C\u8BC1\u6C60\u8D44\u4EA7\u8FDE\u901A\u8DEF\u5F84\uFF1B\u975EESIM\u5151\u6362\u8BA1\u5176\u4ED6\u6536\u652F\uFF0C\u4E0D\u4F5C\u5916\u90E8\u5165\u91D1\u3002" : "USDT\u4E0EBNB\u65B9\u5411\u76F8\u53CD\uFF0C\u4F46\u73B0\u6709\u5DF2\u9A8C\u8BC1\u6C60\u4E8B\u4EF6\u4E0D\u80FD\u5EFA\u7ACB\u5B8C\u6574\u5BF9\u5E94\u8DEF\u5F84\uFF1B\u4EC5\u786E\u8BA4\u91D1\u989D\uFF0C\u5151\u6362\u7C7B\u522B\u5F85\u6838\u5B9E\uFF0C\u4E0D\u4F5C\u5916\u90E8\u5165\u91D1\u3002";
-              (classificationNotes[wallet] || (classificationNotes[wallet] = [])).push({ hash, type: kind, reason: classificationNote, USDT: String(usdt), BNB: String(bnb), amountUnit: "raw-18-decimals" });
+              (classificationNotes[wallet] || (classificationNotes[wallet] = [])).push({ hash: hash2, type: kind, reason: classificationNote, USDT: String(usdt), BNB: String(bnb), amountUnit: "raw-18-decimals" });
             }
-            var cash = {}, supplied = wallet === who ? bundle.lpCashflows.byTransaction[hash] : null;
+            var cash = {}, supplied = wallet === who ? bundle.lpCashflows.byTransaction[hash2] : null;
             var cashvalid = !!supplied;
             ["ESIM", "USDT"].forEach(function(sym) {
               ["lpIn", "lpOut", "lpFee"].forEach(function(prefix) {
@@ -10812,7 +13739,7 @@ var require_engine = __commonJS({
             });
             var unrecognizedExchange = !swaps && !lp && (esim * usdt < 0n || esim * bnb < 0n);
             var needsReview = kind === "\u7EC4\u5408\u4EA4\u6613\u5F85\u62C6\u5206" || kind === "\u5176\u4ED6\u5E01\u79CD/\u7EC4\u5408\u5151\u6362" || lp && !cashvalid || unresolvedPool && !!(esim || lp) || unrecognizedExchange;
-            var row = { day, time, wallet, type: kind, esim: esimLedgerUnit_(esimLedgerGet_(v, "ESIM")), usdt: esimLedgerUnit_(esimLedgerGet_(v, "USDT")), externalEsim: esimLedgerUnit_(esim), externalUsdt: esimLedgerUnit_(usdt), bnb: esimLedgerUnit_(bnb), gas: esimLedgerUnit_(esimLedgerGet_(v, "gas")), hash, block, status: r.status, initiator: who, to: tx.to, internalInEsim: esimLedgerUnit_(esimLedgerGet_(v, "internalInESIM")), internalOutEsim: esimLedgerUnit_(esimLedgerGet_(v, "internalOutESIM")), internalInUsdt: esimLedgerUnit_(esimLedgerGet_(v, "internalInUSDT")), internalOutUsdt: esimLedgerUnit_(esimLedgerGet_(v, "internalOutUSDT")), lpBreakdown: cashvalid ? "\u5DF2\u62C6\u5206\u672C\u91D1\u4E0E\u8D39\u7528" : lp ? "LP\u8D39\u7528\u672A\u5355\u62C6" : "", needsReview };
+            var row = { day, time, wallet, type: kind, esim: esimLedgerUnit_(esimLedgerGet_(v, "ESIM")), usdt: esimLedgerUnit_(esimLedgerGet_(v, "USDT")), externalEsim: esimLedgerUnit_(esim), externalUsdt: esimLedgerUnit_(usdt), bnb: esimLedgerUnit_(bnb), gas: esimLedgerUnit_(esimLedgerGet_(v, "gas")), hash: hash2, block, status: r.status, initiator: who, to: tx.to, internalInEsim: esimLedgerUnit_(esimLedgerGet_(v, "internalInESIM")), internalOutEsim: esimLedgerUnit_(esimLedgerGet_(v, "internalOutESIM")), internalInUsdt: esimLedgerUnit_(esimLedgerGet_(v, "internalInUSDT")), internalOutUsdt: esimLedgerUnit_(esimLedgerGet_(v, "internalOutUSDT")), lpBreakdown: cashvalid ? "\u5DF2\u62C6\u5206\u672C\u91D1\u4E0E\u8D39\u7528" : lp ? "LP\u8D39\u7528\u672A\u5355\u62C6" : "", needsReview };
             row.nonEsimSwapWarning = !esim && (unresolvedPool || usdt * bnb < 0n);
             row.nonEsimClassification = nonEsimCounterflow ? resolution ? "verified-transaction-trace" : route ? "verified-swap-route" : "unverified-counterflow" : "";
             row.nonEsimSwapWarning = nonEsimCounterflow ? !(route || resolution) : row.nonEsimSwapWarning;
@@ -10844,7 +13771,7 @@ var require_engine = __commonJS({
             });
             if (kind === "BNB\u4E70\u5165") {
               esimLedgerAdd_(c, "bnbBuyCost", -bnb);
-              buyKeys.add(hash + "|" + wallet);
+              buyKeys.add(hash2 + "|" + wallet);
             }
             if (lp && !cashvalid) esimLedgerAdd_(c, "lpUnsplit", 1n);
             esimLedgerAdd_(c, "transactions", 1n);
@@ -11221,8 +14148,8 @@ var require_engine = __commonJS({
       }
       function esimResolvePools(receipts, config, signatures, rpc2, endBlock) {
         var inverse = esimLpSignatureIndex(signatures), candidates = {}, result = {}, block = esimLpBlock(endBlock);
-        Object.keys(receipts).forEach(function(hash) {
-          (receipts[hash].logs || []).forEach(function(event) {
+        Object.keys(receipts).forEach(function(hash2) {
+          (receipts[hash2].logs || []).forEach(function(event) {
             if (!event.topics || !event.topics.length) return;
             var kind = inverse[event.topics[0].toLowerCase()], address2 = event.address.toLowerCase(), id, type;
             if (!kind) return;
@@ -11289,8 +14216,8 @@ var require_engine = __commonJS({
       function esimLpCashflows(receipts, transactions, pools, signatures, traces, config) {
         var inverse = esimLpSignatureIndex(signatures), byTransaction = {}, details = [];
         var selector = (signatures.modifyLiquidity || "0x9371d115").slice(0, 10).toLowerCase();
-        Object.keys(receipts).sort().forEach(function(hash) {
-          var receipt = receipts[hash], events = [];
+        Object.keys(receipts).sort().forEach(function(hash2) {
+          var receipt = receipts[hash2], events = [];
           if (receipt.status !== void 0 && BigInt(receipt.status) === 0n) return;
           (receipt.logs || []).forEach(function(event) {
             if (!event.topics || !event.topics.length) return;
@@ -11304,12 +14231,12 @@ var require_engine = __commonJS({
             events.push({ kind, event, pool });
           });
           if (!events.length) return;
-          if (!transactions[hash] || !transactions[hash].from) esimLpFail("LP transaction initiator missing");
-          var wallet = transactions[hash].from.toLowerCase(), total = {}, infEvents = events.filter(function(e) {
+          if (!transactions[hash2] || !transactions[hash2].from) esimLpFail("LP transaction initiator missing");
+          var wallet = transactions[hash2].from.toLowerCase(), total = {}, infEvents = events.filter(function(e) {
             return e.kind === "inflp";
           });
           if (infEvents.length) {
-            var trace = traces[hash];
+            var trace = traces[hash2];
             if (!trace) esimLpFail("Infinity trace missing");
             var todo = [trace], matched = 0, eventPositions = {};
             infEvents.forEach(function(record) {
@@ -11339,7 +14266,7 @@ var require_engine = __commonJS({
                 esimLpAdd(total, "lpOut" + sym, principal > 0n ? principal : 0n);
                 esimLpAdd(total, "lpFee" + sym, fee);
                 details.push({
-                  hash,
+                  hash: hash2,
                   wallet,
                   asset: sym,
                   principalDeltaRaw: principal.toString(),
@@ -11384,12 +14311,12 @@ var require_engine = __commonJS({
               esimLpAdd(total, "lpIn" + sym, principalIn[sym]);
               esimLpAdd(total, "lpOut" + sym, principalOut[sym]);
               esimLpAdd(total, "lpFee" + sym, fee);
-              details.push({ hash, wallet, asset: sym, principalDeltaRaw: (principalOut[sym] - principalIn[sym]).toString(), feeRaw: fee.toString(), positionManager: "Pancake V3", poolManager: v3[0].pool.id, tokenId: "\u89C1NFT\u6D41\u6C34", liquidityDeltaRaw: "" });
+              details.push({ hash: hash2, wallet, asset: sym, principalDeltaRaw: (principalOut[sym] - principalIn[sym]).toString(), feeRaw: fee.toString(), positionManager: "Pancake V3", poolManager: v3[0].pool.id, tokenId: "\u89C1NFT\u6D41\u6C34", liquidityDeltaRaw: "" });
             });
           }
-          byTransaction[hash] = {};
+          byTransaction[hash2] = {};
           Object.keys(total).forEach(function(key2) {
-            byTransaction[hash][key2] = total[key2].toString();
+            byTransaction[hash2][key2] = total[key2].toString();
           });
         });
         return { byTransaction, details };
@@ -11596,7 +14523,7 @@ var require_engine = __commonJS({
           return BigInt(esimRpc("eth_getBalance", [wallet, esimHex(n)]));
         }
         var leaves = [];
-        function walk(lo, hi) {
+        function walk2(lo, hi) {
           esimBudget();
           if (balance(hi) - balance(lo) - prefix[index(hi)] + prefix[index(lo)] === 0n) return;
           if (hi - lo === 1) {
@@ -11604,10 +14531,10 @@ var require_engine = __commonJS({
             return;
           }
           var m = Math.floor((lo + hi) / 2);
-          walk(lo, m);
-          walk(m, hi);
+          walk2(lo, m);
+          walk2(m, hi);
         }
-        walk(start, end);
+        walk2(start, end);
         var hashes = /* @__PURE__ */ new Set();
         leaves.forEach((b) => ["fromAddress", "toAddress"].forEach((dir) => {
           for (var after = 0; after < 1e4; after += 1e3) {
@@ -11984,23 +14911,23 @@ var require_engine = __commonJS({
         req.push({ setDataValidation: { range: esimRect(sid, 6, 7, 5, 6), rule: { condition: { type: "BOOLEAN" }, strict: true, showCustomUi: true } } });
         [7, 9].forEach((c) => req.push({ setDataValidation: { range: esimRect(sid, 6, 7, c, c + 1), rule: { condition: { type: "DATE_IS_VALID" }, strict: true, showCustomUi: true, inputMessage: "\u6309\u7EDF\u8BA1\u65E5\u5F00\u59CB\u65E5\u671F\u9009\u62E9\uFF0C\u5305\u542B\u9996\u5C3E\u4E24\u5929\u3002" } } }));
         req.push({ updateSheetProperties: { properties: { sheetId: sid, gridProperties: { frozenRowCount: 12, frozenColumnCount: 0, hideGridlines: true } }, fields: "gridProperties.frozenRowCount,gridProperties.frozenColumnCount,gridProperties.hideGridlines" } });
-        function size(dim, start, end, pixels) {
+        function size2(dim, start, end, pixels) {
           req.push({ updateDimensionProperties: { range: { sheetId: sid, dimension: dim, startIndex: start, endIndex: end }, properties: { pixelSize: pixels }, fields: "pixelSize" } });
         }
-        size("ROWS", 4, 5, 64);
-        size("ROWS", 5, 6, 12);
-        size("ROWS", 6, 7, 44);
-        size("ROWS", 7, 8, 26);
-        size("ROWS", 8, 9, 34);
-        size("ROWS", 9, 10, 34);
-        size("ROWS", 10, 11, 28);
-        size("ROWS", 11, 12, 42);
-        size("ROWS", 12, lastS, 52);
-        size("COLUMNS", 0, 1, 136);
-        size("COLUMNS", 1, 11, 112);
-        size("COLUMNS", 11, 12, 330);
-        size("COLUMNS", 12, 13, 720);
-        size("COLUMNS", 13, 14, 154);
+        size2("ROWS", 4, 5, 64);
+        size2("ROWS", 5, 6, 12);
+        size2("ROWS", 6, 7, 44);
+        size2("ROWS", 7, 8, 26);
+        size2("ROWS", 8, 9, 34);
+        size2("ROWS", 9, 10, 34);
+        size2("ROWS", 10, 11, 28);
+        size2("ROWS", 11, 12, 42);
+        size2("ROWS", 12, lastS, 52);
+        size2("COLUMNS", 0, 1, 136);
+        size2("COLUMNS", 1, 11, 112);
+        size2("COLUMNS", 11, 12, 330);
+        size2("COLUMNS", 12, 13, 720);
+        size2("COLUMNS", 13, 14, 154);
         req.push({ updateDimensionProperties: { range: { sheetId: sid, dimension: "COLUMNS", startIndex: 14, endIndex: 16 }, properties: { hiddenByUser: true }, fields: "hiddenByUser" } });
         function conditional(range, type, value, format) {
           req.push({ addConditionalFormatRule: { index: 0, rule: { ranges: [range], booleanRule: { condition: { type, values: [{ userEnteredValue: value }] }, format } } } });
@@ -12360,27 +15287,27 @@ var require_engine = __commonJS({
         });
         var list = Array.from(hashes);
         if (!list.length) return;
-        list.forEach((hash) => {
-          var key2 = JSON.stringify(["eth_getTransactionReceipt", [hash]]);
+        list.forEach((hash2) => {
+          var key2 = JSON.stringify(["eth_getTransactionReceipt", [hash2]]);
           if (job.rpc && job.rpc[key2] && job.rpc[key2].esimReceiptSchema !== 2) delete job.rpc[key2];
         });
-        var fresh = esimRpcMany(list.map((hash) => ["eth_getTransactionReceipt", [hash]]));
-        list.forEach((hash, i) => {
+        var fresh = esimRpcMany(list.map((hash2) => ["eth_getTransactionReceipt", [hash2]]));
+        list.forEach((hash2, i) => {
           esimExternalRequire(fresh[i] && fresh[i].esimReceiptSchema === 2, "\u4EE3\u4ED8\u8D39\u7528\u51ED\u8BC1\u672A\u5237\u65B0\uFF0C\u4E0D\u80FD\u5206\u7C7B");
-          job.receipts[hash] = fresh[i];
+          job.receipts[hash2] = fresh[i];
         });
       }
       function esimUpgradeExternalRows(rows, job) {
         rows = esimExternalNormalizeRows(rows);
         if (!rows.length) return rows;
         var hashes = Array.from(new Set(rows.map((r) => r[9])));
-        hashes.forEach((hash) => {
-          var key2 = JSON.stringify(["eth_getTransactionReceipt", [hash]]);
+        hashes.forEach((hash2) => {
+          var key2 = JSON.stringify(["eth_getTransactionReceipt", [hash2]]);
           if (job.rpc && job.rpc[key2] && job.rpc[key2].esimReceiptSchema !== 2) delete job.rpc[key2];
         });
-        var receipts = esimRpcMany(hashes.map((hash) => ["eth_getTransactionReceipt", [hash]])), byHash = {};
-        hashes.forEach((hash, i) => {
-          byHash[hash] = receipts[i];
+        var receipts = esimRpcMany(hashes.map((hash2) => ["eth_getTransactionReceipt", [hash2]])), byHash = {};
+        hashes.forEach((hash2, i) => {
+          byHash[hash2] = receipts[i];
         });
         return rows.filter((row) => {
           var r = byHash[row[9]];
@@ -12575,7 +15502,7 @@ function buildSyncPlan(addresses, periods, { now = /* @__PURE__ */ new Date(), s
   if (!(now instanceof Date) || !Number.isFinite(now.getTime())) throw Error("\u7EDF\u8BA1\u65E5\u671F\u65E0\u6548");
   const today = now.toISOString().slice(0, 10), stamp = Date.parse(start + "T00:00:00Z");
   if (!/^\d{4}-\d{2}-\d{2}$/.test(start) || !Number.isFinite(stamp) || new Date(stamp).toISOString().slice(0, 10) !== start || start > today) throw Error("\u7EDF\u8BA1\u5F00\u59CB\u65E5\u671F\u65E0\u6548");
-  const hash = cohortHash(addresses), known = new Map(periods.map((p) => [p.day, p])), plan = [];
+  const hash2 = cohortHash(addresses), known = new Map(periods.map((p) => [p.day, p])), plan = [];
   for (let day = start; day < today; day = plus(day, 1)) {
     const p = known.get(day);
     if (!p || p.status !== "complete" || p.cohort_hash !== cohortHash(activeAddresses(addresses, day))) plan.push({ day, partial: false });
@@ -12583,7 +15510,7 @@ function buildSyncPlan(addresses, periods, { now = /* @__PURE__ */ new Date(), s
   const pending = addresses.some((a) => a.backfill_pending);
   if ((source === "manual" || source === "backfill" || source === "server" || pending) && now.getTime() > Date.parse(today + "T00:00:00Z") + 65e3)
     plan.push({ day: today, partial: true, end: new Date(now.getTime() - 65e3).toISOString() });
-  return { plan, hash };
+  return { plan, hash: hash2 };
 }
 function extendSyncPlan(plan, addresses, periods, options = {}) {
   const last = plan.at(-1)?.day;
@@ -12613,9 +15540,9 @@ function isTransientSyncError(error) {
   if (["CU_BUDGET_DEFERRED", "CU_METER_UNAVAILABLE"].includes(error?.code || error?.message)) return true;
   return isBoundaryPending(error) || ["TimeoutError", "AbortError"].includes(error?.name) || [429, -32005].includes(error?.code) || /timeout|timed out|operation was aborted|fetch failed|ECONNRESET|ETIMEDOUT|链上接口暂不可用|Internal error/i.test(error?.message || "");
 }
-function canResumeFailed(run, hash, now = /* @__PURE__ */ new Date()) {
+function canResumeFailed(run, hash2, now = /* @__PURE__ */ new Date()) {
   const state = run?.state, count = Number(state?.retryCount ?? 0), after = state?.retryAfter === void 0 ? 0 : Date.parse(state.retryAfter);
-  return state?.cohortHash === hash && Number.isInteger(count) && count >= 0 && (count < 8 || isBoundaryPending({ message: run.error }) || state?.retryable === true && state?.retryAfter !== void 0 && isTransientSyncError({ message: run.error, code: state.retryErrorCode })) && Number.isFinite(after) && after <= now.getTime() && (run.state.retryable === true || isTransientSyncError({ message: run.error }));
+  return state?.cohortHash === hash2 && Number.isInteger(count) && count >= 0 && (count < 8 || isBoundaryPending({ message: run.error }) || state?.retryable === true && state?.retryAfter !== void 0 && isTransientSyncError({ message: run.error, code: state.retryErrorCode })) && Number.isFinite(after) && after <= now.getTime() && (run.state.retryable === true || isTransientSyncError({ message: run.error }));
 }
 
 // ../../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/vendor/cu-budget.mjs
@@ -12715,6 +15642,90 @@ function createCuMeter({
   return { stats, charge, wrapFetch };
 }
 
+// ../../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/viem/_esm/index.js
+init_exports();
+init_decodeFunctionResult();
+init_encodeFunctionData();
+init_keccak256();
+
+// ../../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/lib/balance-multicall.js
+var MULTICALL = { address: "0xca11bde05977b3631167028862be2a173976ca11", hash: "0xd5c15df687b16f2ff992fc8d767b4216323184a2bbc6ee2f9c398c318e770891" };
+var IMPL = { address: "0xa936365df925adbcd0746cc4554ad5c230ece97d", hash: "0x4acb3cb6eb3ec59502958f44acea63fa0dd4d77f99c0d3c249450773f933dfd5" };
+var SLOT = "0x360894a13ba1a3210667c828492db98dca3e2076cc3735a920a3ca505d382bbc";
+var TOKEN = "0x7765a659c5b0cfbfd9fbc2ef2298b75a598f2d2d";
+var TARGETS = {
+  [TOKEN]: "0x864cc9ad53b338b82da1f7cab85ab0b3d5c8861acb422b6fec63cf36234f36a6",
+  "0x55d398326f99059ff775485246999027b3197955": "0x97a48aa4c129657440dafdacd4c836389734d28cc4a0ca7403e68da660a74a59",
+  "0x55f4c8aba71a1e923edc303eb4feff14608cc226": "0xe8fea1721cd1cb164280e02614b06d7d8033dcc81ed6fa97f5e7cc63341d34ed",
+  "0x46a15b0b27311cedf172ab29e4f4766fbe7f4364": "0xf64dd82357e77afddcd6dd56f4ba161f44fe90a6f72da5433f8fc6901440197f"
+};
+var ABI = parseAbi(["function aggregate3((address target, bool allowFailure, bytes callData)[] calls) payable returns ((bool success, bytes returnData)[] returnData)"]);
+var validCode = (v) => typeof v === "string" && /^0x(?:[0-9a-f]{2})+$/i.test(v);
+function tuple(v) {
+  return Array.isArray(v) && Object.getPrototypeOf(v) === Array.prototype && v.length === 2 && !("toJSON" in v) && [0, 1].every((k) => Object.hasOwn(Object.getOwnPropertyDescriptor(v, k) || {}, "value"));
+}
+function balanceCall(q) {
+  if (!tuple(q) || q[0] !== "eth_call" || !tuple(q[1])) return false;
+  const [tx, block] = q[1], proto = tx && Object.getPrototypeOf(tx);
+  if (!tx || ![Object.prototype, null].includes(proto) || "toJSON" in tx || Reflect.ownKeys(tx).length !== 2) return false;
+  for (const k of ["to", "data"]) {
+    const d = Object.getOwnPropertyDescriptor(tx, k);
+    if (!d?.enumerable || !Object.hasOwn(d, "value")) return false;
+  }
+  return typeof block === "string" && /^0x[0-9a-f]+$/i.test(block) && BigInt(block) >= 15921452n && typeof tx.to === "string" && Object.hasOwn(TARGETS, tx.to.toLowerCase()) && typeof tx.data === "string" && /^0x70a082310{24}[0-9a-f]{40}$/i.test(tx.data);
+}
+async function fillBalanceMulticall(calls, read) {
+  const groups = /* @__PURE__ */ new Map(), results = [];
+  for (const q of calls) if (balanceCall(q)) {
+    const block = q[1][1].toLowerCase();
+    if (!groups.has(block)) groups.set(block, []);
+    groups.get(block).push(q);
+  }
+  for (const [block, group] of groups) {
+    if (group.length < 12) continue;
+    const [chain, header] = await read([["eth_chainId", []], ["eth_getBlockByNumber", [block, false]]]);
+    if (chain !== "0x38") throw Object.assign(Error("\u4F59\u989D\u6279\u91CF\u8BFB\u53D6\u7684\u7F51\u7EDC\u4E0D\u662FBNB Smart Chain"), { code: "BSC_CHAIN_MISMATCH" });
+    if (!/^0x[0-9a-f]{64}$/i.test(header?.hash || "") || !/^0x[0-9a-f]+$/i.test(header?.number || "") || BigInt(header.number) !== BigInt(block)) continue;
+    const at = { blockHash: header.hash, requireCanonical: true }, targets = [...new Set(group.map((q) => q[1][0].to.toLowerCase()))];
+    const guards = [["eth_getCode", [MULTICALL.address, at]], ...targets.map((t) => ["eth_getCode", [t, at]])];
+    if (targets.includes(TOKEN)) guards.push(["eth_getStorageAt", [TOKEN, SLOT, at]], ["eth_getCode", [IMPL.address, at]]);
+    let values;
+    try {
+      values = await read(guards);
+    } catch (e) {
+      if (e.code === -32602) continue;
+      throw e;
+    }
+    if (values.length !== guards.length) throw Error("\u4F59\u989D\u6279\u91CF\u8BFB\u53D6\u7684\u4EE3\u7801\u6838\u9A8C\u4E0D\u5B8C\u6574");
+    if (!validCode(values[0]) || keccak256(values[0]) !== MULTICALL.hash) continue;
+    const safe = new Set(targets.filter((t, i) => validCode(values[i + 1]) && keccak256(values[i + 1]) === TARGETS[t]));
+    if (targets.includes(TOKEN) && (values.at(-2) !== "0x" + "0".repeat(24) + IMPL.address.slice(2) || !validCode(values.at(-1)) || keccak256(values.at(-1)) !== IMPL.hash)) safe.delete(TOKEN);
+    const eligible = group.filter((q) => safe.has(q[1][0].to.toLowerCase()));
+    if (eligible.length < 12) continue;
+    const staged = [];
+    for (let i = 0; i < eligible.length; i += 400) {
+      const batch = eligible.slice(i, i + 400), data = encodeFunctionData({ abi: ABI, functionName: "aggregate3", args: [batch.map((q) => ({ target: q[1][0].to.toLowerCase(), allowFailure: true, callData: q[1][0].data }))] });
+      let encoded;
+      try {
+        [encoded] = await read([["eth_call", [{ to: MULTICALL.address, data }, at]]]);
+      } catch (e) {
+        if (e.contractRevert || e.code === -32602) continue;
+        throw e;
+      }
+      let decoded;
+      try {
+        decoded = decodeFunctionResult({ abi: ABI, functionName: "aggregate3", data: encoded });
+      } catch {
+        continue;
+      }
+      if (decoded.length !== batch.length || decoded.some((x) => !x.success || !/^0x[0-9a-f]{64}$/i.test(x.returnData))) continue;
+      staged.push(...batch.map((q, i2) => [q, decoded[i2].returnData]));
+    }
+    results.push(...staged);
+  }
+  return results;
+}
+
 // ../../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/lib/rpc.js
 var meter = createCuMeter({ mode: process.env.ESIM_CU_MODE || "off", task: process.env.ESIM_CU_TASK || "mm", query: (...args) => db().query(...args), warning: (e) => console.warn(JSON.stringify(e)) });
 var NeedRpc = class extends Error {
@@ -12725,19 +15736,24 @@ var NeedRpc = class extends Error {
 };
 var fixedRead = (q) => q[0] !== "eth_blockNumber" && !/"(?:latest|pending|safe|finalized)"/.test(JSON.stringify(q[1]));
 var key = (q) => createHash2("sha256").update("56:" + JSON.stringify(q)).digest("hex");
-var allowed = /* @__PURE__ */ new Set(["eth_chainId", "eth_getBlockByNumber", "eth_getBalance", "eth_getTransactionCount", "eth_call", "eth_getLogs", "eth_getTransactionByHash", "eth_getTransactionReceipt", "alchemy_getAssetTransfers", "web3_sha3", "debug_traceTransaction", "trace_filter"]);
+var allowed = /* @__PURE__ */ new Set(["eth_chainId", "eth_getCode", "eth_getStorageAt", "eth_getBlockByNumber", "eth_getBalance", "eth_getTransactionCount", "eth_call", "eth_getLogs", "eth_getTransactionByHash", "eth_getTransactionReceipt", "alchemy_getAssetTransfers", "web3_sha3", "debug_traceTransaction", "trace_filter"]);
 function batchPlan(calls) {
-  const heavy = calls.some((q) => ["eth_getTransactionReceipt", "debug_traceTransaction"].includes(q[0]) || q[0] === "eth_getBlockByNumber" && q[1][1] === true), size = heavy ? 8 : 30, chunks = [];
-  for (let i = 0; i < calls.length; i += size) chunks.push(calls.slice(i, i + size));
+  const heavy = calls.some((q) => ["eth_getTransactionReceipt", "debug_traceTransaction"].includes(q[0]) || q[0] === "eth_getBlockByNumber" && q[1][1] === true), size2 = heavy ? 8 : 30, chunks = [];
+  for (let i = 0; i < calls.length; i += size2) chunks.push(calls.slice(i, i + size2));
   return { chunks, concurrency: heavy ? 1 : 3 };
 }
-async function fill(calls, cache2, trim = (m, x) => x) {
+async function storeRecords(records) {
+  if (records.length) await db().query("INSERT INTO esim_ledger.rpc_cache(key,method,result) SELECT x.key,x.method,x.result FROM jsonb_to_recordset($1::jsonb) AS x(key text,method text,result jsonb) ON CONFLICT(key)DO UPDATE SET result=excluded.result,created_at=now()", [JSON.stringify(records.map((r) => ({ key: r[0], method: r[1], result: JSON.parse(r[2]) })))]);
+}
+async function fill(calls, cache2, trim2 = (m, x) => x, { fresh = false } = {}) {
+  const destination = cache2;
+  if (fresh) cache2 = {};
   const qs = [...new Map(calls.map((q) => [key(q), q])).values()];
   for (const q of qs) if (!allowed.has(q[0])) throw Error("\u53EA\u5141\u8BB8\u8BFB\u53D6\u94FE\u4E0A\u6570\u636E");
-  const absent = qs.filter((q) => cache2[key(q)] === void 0), persistent = absent.filter((q) => fixedRead(q));
+  const absent = qs.filter((q) => cache2[key(q)] === void 0), persistent = fresh ? [] : absent.filter((q) => fixedRead(q));
   for (const group of batchPlan(persistent).chunks) {
     const old = (await db().query("SELECT key,method,result FROM esim_ledger.rpc_cache WHERE key=ANY($1::text[]) AND created_at>=(SELECT valid_after FROM esim_ledger.rpc_cache_epoch WHERE id=1) AND (method NOT IN ('alchemy_getAssetTransfers','eth_getLogs') OR created_at>now()-interval '1 hour')", [group.map(key)])).rows;
-    for (const x of old) cache2[x.key] = trim(x.method, x.result);
+    for (const x of old) cache2[x.key] = trim2(x.method, x.result);
   }
   for (const q of absent) {
     const filter = q[0] === "eth_getLogs" && q[1][0];
@@ -12746,8 +15762,16 @@ async function fill(calls, cache2, trim = (m, x) => x) {
     if (end - start < 5000n) continue;
     const parts = [];
     for (let lo = start; lo <= end; lo += 5000n) parts.push(["eth_getLogs", [{ ...filter, fromBlock: "0x" + lo.toString(16), toBlock: "0x" + (lo + 4999n < end ? lo + 4999n : end).toString(16) }]]);
-    await fill(parts, cache2, trim);
+    await fill(parts, cache2, trim2, { fresh });
     cache2[key(q)] = parts.flatMap((part) => cache2[key(part)]);
+  }
+  if (!fresh) {
+    const combined = await fillBalanceMulticall(absent.filter((q) => cache2[key(q)] === void 0), freshBatch), records = [];
+    for (const [q, value] of combined) {
+      cache2[key(q)] = trim2(q[0], value);
+      records.push([key(q), q[0], JSON.stringify(value)]);
+    }
+    await storeRecords(records);
   }
   const missing = absent.filter((q) => cache2[key(q)] === void 0), { chunks, concurrency } = batchPlan(missing);
   async function worker() {
@@ -12781,16 +15805,20 @@ async function fill(calls, cache2, trim = (m, x) => x) {
           throw e;
         }
         if (!r || r.result == null) throw Error("\u94FE\u4E0A\u6570\u636E\u7F3A\u5931\uFF1A" + q[0]);
-        const value = trim(q[0], r.result);
+        const value = trim2(q[0], r.result);
         cache2[key(q)] = value;
-        if (fixedRead(q)) records.push([key(q), q[0], JSON.stringify(r.result)]);
+        if (!fresh && fixedRead(q)) records.push([key(q), q[0], JSON.stringify(r.result)]);
       }
-      if (records.length) {
-        await db().query("INSERT INTO esim_ledger.rpc_cache(key,method,result) SELECT x.key,x.method,x.result FROM jsonb_to_recordset($1::jsonb) AS x(key text,method text,result jsonb) ON CONFLICT(key)DO UPDATE SET result=excluded.result,created_at=now()", [JSON.stringify(records.map((r) => ({ key: r[0], method: r[1], result: JSON.parse(r[2]) })))]);
-      }
+      await storeRecords(records);
     }
   }
   await Promise.all(Array.from({ length: Math.min(concurrency, chunks.length) }, worker));
+  if (fresh) Object.assign(destination, cache2);
+}
+async function freshBatch(calls) {
+  const cache2 = {};
+  await fill(calls, cache2, void 0, { fresh: true });
+  return calls.map((q) => cache2[key(q)]);
 }
 function reader(cache2) {
   return (calls) => {
@@ -12799,9 +15827,9 @@ function reader(cache2) {
     return calls.map((q) => cache2[key(q)]);
   };
 }
-async function rpc(method, params, cache2 = {}, trim = (m, x) => x) {
+async function rpc(method, params, cache2 = {}, trim2 = (m, x) => x) {
   const q = [method, params];
-  await fill([q], cache2, trim);
+  await fill([q], cache2, trim2);
   return cache2[key(q)];
 }
 
@@ -12847,7 +15875,7 @@ var sha = (x) => createHash3("sha256").update(JSON.stringify(x)).digest("hex");
 var ROUTER_SWAP = "0x2251435bd151cd72851a82be055bf6d1c3d7f34d08d56493dddf874229b8e897";
 function verifyGasExchange({ wallet, esim, tx, receipt, trace }) {
   try {
-    let walk = function(x) {
+    let walk2 = function(x) {
       if (x.error) return;
       if (x.type === "CALL" && x.from === wallet && x.to === ENTRY) routed = true;
       if (["CALL", "CREATE", "CREATE2", "SELFDESTRUCT"].includes(x.type)) {
@@ -12857,7 +15885,7 @@ function verifyGasExchange({ wallet, esim, tx, receipt, trace }) {
         if (x.from === W && owners.has(x.to)) unwrapped += n;
       }
       if (x.to === W && owners.has(x.from) && /^0x2e1a7d4d[0-9a-f]{64}$/.test(x.input || "")) called += BigInt("0x" + x.input.slice(10));
-      for (const child of x.calls || []) walk(child);
+      for (const child of x.calls || []) walk2(child);
     };
     if (!tx || !receipt || !trace || receipt.status !== "0x1" || tx.from !== wallet || ![ENTRY, wallet].includes(tx.to) || trace.from !== wallet || trace.to !== tx.to || trace.error || receipt.transactionHash !== tx.hash || !/^0x[0-9a-f]{64}$/.test(receipt.blockHash)) return null;
     let debit = 0n, withdrawn = 0n, native = 0n, called = 0n, unwrapped = 0n, routed = false;
@@ -12882,7 +15910,7 @@ function verifyGasExchange({ wallet, esim, tx, receipt, trace }) {
       }
       if (l.address === ENTRY && t[0] === ROUTER_SWAP && t.length === 4 && addr(t[1]) === U && addr(t[2]) === "0x" + "0".repeat(40) && addr(t[3]) === wallet && /^0x[0-9a-f]{128,}$/.test(l.data)) swaps.push([BigInt("0x" + l.data.slice(2, 66)), BigInt("0x" + l.data.slice(66, 130))]);
     }
-    walk(trace);
+    walk2(trace);
     const wrapped = withdrawn > 0n && withdrawn === native && withdrawn === called && withdrawn === unwrapped;
     const direct = swaps.length === 1 && swaps[0][0] === debit && swaps[0][1] === native && routed && BigInt(tx.value || "0x0") === 0n;
     if (debit <= 0n || native <= 0n || !wrapped && !direct) return null;
@@ -12982,15 +16010,15 @@ async function startSync(source = "manual") {
 async function enqueueSync(c, source = "automatic") {
   await c.query("SELECT pg_advisory_xact_lock(7693201)");
   const all = (await c.query("SELECT address,mode,active_from,backfill_pending FROM esim_ledger.addresses ORDER BY ordinal")).rows, dates = (await c.query("SELECT day,status,cohort_hash FROM esim_ledger.periods ORDER BY day")).rows;
-  const { plan, hash } = buildSyncPlan(all, dates, { source });
+  const { plan, hash: hash2 } = buildSyncPlan(all, dates, { source });
   const active = (await c.query("SELECT id,status,stage,state->>'cohortHash' AS cohort_hash FROM esim_ledger.sync_runs WHERE status IN ('queued','running') LIMIT 1 FOR UPDATE")).rows[0];
-  if (active?.cohort_hash === hash) return active;
+  if (active?.cohort_hash === hash2) return active;
   if (active) await c.query("UPDATE esim_ledger.sync_runs SET status='failed',stage='\u5730\u5740\u5E93\u53D8\u5316\uFF0C\u5DF2\u7531\u65B0\u56DE\u6EAF\u66FF\u4EE3',error='\u5730\u5740\u5E93\u53D8\u5316\uFF0C\u65E7\u4EFB\u52A1\u5DF2\u5931\u6548',lease_version=lease_version+1,lease_until=NULL,finished_at=now(),updated_at=now() WHERE id=$1", [active.id]);
   const latest = (await c.query("SELECT id,status,state,error FROM esim_ledger.sync_runs ORDER BY updated_at DESC LIMIT 1")).rows[0], failed = latest?.status === "failed" ? latest : null;
-  if (canResumeFailed(failed, hash)) return (await c.query("UPDATE esim_ledger.sync_runs SET status='queued',stage='\u4ECE\u65AD\u70B9\u7EE7\u7EED\u56DE\u6EAF',lease_until=NULL,finished_at=NULL,updated_at=now() WHERE id=$1 RETURNING id,status,stage", [failed.id])).rows[0];
-  if (failed?.state?.cohortHash === hash && source !== "manual") return { id: failed.id, status: "failed", stage: "\u56DE\u6EAF\u4E2D\u65AD\uFF0C\u9700\u8981\u6838\u5BF9", error: failed.error };
+  if (canResumeFailed(failed, hash2)) return (await c.query("UPDATE esim_ledger.sync_runs SET status='queued',stage='\u4ECE\u65AD\u70B9\u7EE7\u7EED\u56DE\u6EAF',lease_until=NULL,finished_at=NULL,updated_at=now() WHERE id=$1 RETURNING id,status,stage", [failed.id])).rows[0];
+  if (failed?.state?.cohortHash === hash2 && source !== "manual") return { id: failed.id, status: "failed", stage: "\u56DE\u6EAF\u4E2D\u65AD\uFF0C\u9700\u8981\u6838\u5BF9", error: failed.error };
   if (!plan.length) return { id: null, status: "complete", stage: "\u4ECA\u65E5\u5DF2\u66F4\u65B0" };
-  const state = { catalog: all.map(({ address: address2, mode, active_from }) => ({ address: address2, mode, active_from })), addresses: all.map((x) => x.address), wallets: all.filter((a) => a.mode === "wallet").map((a) => a.address), balanceOnly: all.filter((a) => a.mode !== "wallet").map((a) => a.address), plan, index: 0, cache: {}, nfts: null, wallet: null, stage: "\u51C6\u5907", cohortHash: hash };
+  const state = { catalog: all.map(({ address: address2, mode, active_from }) => ({ address: address2, mode, active_from })), addresses: all.map((x) => x.address), wallets: all.filter((a) => a.mode === "wallet").map((a) => a.address), balanceOnly: all.filter((a) => a.mode !== "wallet").map((a) => a.address), plan, index: 0, cache: {}, nfts: null, wallet: null, stage: "\u51C6\u5907", cohortHash: hash2 };
   return (await c.query("INSERT INTO esim_ledger.sync_runs(status,source,state)VALUES('queued',$1,$2)RETURNING id,status,stage", [source, JSON.stringify(state)])).rows[0];
 }
 async function syncStatus(id) {
@@ -13242,3 +16270,8 @@ try {
 } finally {
   await db().end();
 }
+/*! Bundled license information:
+
+@noble/hashes/esm/utils.js:
+  (*! noble-hashes - MIT License (c) 2022 Paul Miller (paulmillr.com) *)
+*/

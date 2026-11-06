@@ -4,12 +4,13 @@
     "scripts/server-step.js": "5231487fae2dfb58a2079e4c1e719e1559877616124282d1385dbe51a35e3021",
     "lib/db.js": "deb52d9734e3baf1959177a5b18b233d020e3bdb9bc853a015188a36e18606cc",
     "lib/collector.js": "3ec0eeabf465fb04f7a9d32e8fbb72ebef22db4c3ab623c5fc6ffd164d8582bb",
+    "lib/rpc.js": "0992fc02569fa6d69afa7ce2415aa0076a8d8aa887947edeb01204ee6b424c25",
     "lib/write-snapshot.js": "65c1f065a8fcd2006f6f837bb2e885f1ea1ab3312c04e1e27c3c222f9c941ed6",
-    "lib/transfer-fees.js": "74ed740a9ba8099516907eb0e037f8116bdaf23e61c266f8918defb7d88b0b0a",
-    "lib/rpc.js": "4f6ab979573b1e59bfe2505cd1049284dfdc40e7e387d5977a564bbee2202fe2",
-    "lib/sync-plan.js": "c685c638ea62b5510543a41a60502ab4babde60ce985c7873b4fd97095f7dfb5",
     "lib/verified-exchange.js": "70cbb1aeb8a93b2493c5c18d4646d0538453c2debd871c7afb5832300c6d7a13",
     "vendor/engine.cjs": "4082a6e858421369592d2f9bcfc6a025fdcdce79e4e868ba9eed249ca7f01544",
-    "vendor/cu-budget.mjs": "e424705e10475615b372b99658215b89ed865a0da00e589aab5261bbc5e0870c"
+    "lib/sync-plan.js": "c685c638ea62b5510543a41a60502ab4babde60ce985c7873b4fd97095f7dfb5",
+    "lib/transfer-fees.js": "74ed740a9ba8099516907eb0e037f8116bdaf23e61c266f8918defb7d88b0b0a",
+    "vendor/cu-budget.mjs": "e424705e10475615b372b99658215b89ed865a0da00e589aab5261bbc5e0870c",
+    "lib/balance-multicall.js": "54166e86d696095de992825f9b302dbe55c18bc42b9af55227a5b05f0518941e"
   }
 }
