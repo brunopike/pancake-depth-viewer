@@ -48,6 +48,7 @@ jobs:
           ESIM_FLOW_CHECKPOINT_FILE: .goodway/checkpoint/claim-flow-state.json.gz
           ESIM_HOLDERS_FILE: .goodway/holder-checkpoint/holders.json
           ALCHEMY_API_KEY: ${{ secrets.ALCHEMY_API_KEY }}
+          ESIM_CU_MODE: ${{ vars.ESIM_CU_MODE || 'off' }}
           ESIM_REALTIME_DATABASE_URL: ${{ secrets.ESIM_REALTIME_DATABASE_URL }}
           NODE_OPTIONS: '--max-old-space-size=6144'
         run: node scripts/esim/run-with-lease.mjs cohort scripts/esim/cohort-refresh.mjs

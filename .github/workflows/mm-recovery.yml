@@ -22,4 +22,5 @@ jobs:
         env:
           ESIM_REALTIME_DATABASE_URL: ${{ secrets.ESIM_REALTIME_DATABASE_URL }}
           ALCHEMY_API_KEY: ${{ secrets.ALCHEMY_API_KEY }}
+          ESIM_CU_MODE: ${{ vars.ESIM_CU_MODE || 'off' }}
         run: node server/mm-ledger/recover.mjs

@@ -29,3 +29,7 @@ test('Malformed, repeated or failed private API responses produce only a generic
     await assert.rejects(() => discoverOwnedInfinity('TEST_ONLY_PLACEHOLDER', fetcher), e => e.message === 'Alchemy LP discovery unavailable');
   }
 });
+
+test('NFT discovery retains the safe CU deferral code for the worker to resume',async()=>{
+ await assert.rejects(discoverOwnedInfinity('TEST_ONLY_PLACEHOLDER',async()=>{throw Error('CU_BUDGET_DEFERRED');}),/^Error: CU_BUDGET_DEFERRED$/);
+});

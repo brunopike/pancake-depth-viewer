@@ -26,7 +26,7 @@ try{
  if(previous?.throughBlock>state.block)throw Error('FLOW_CORE_BEHIND');
  const budget=Number(process.env.ESIM_RPC_BUDGET||600);if(!Number.isInteger(budget)||budget<1||budget>2000)throw Error('BAD_BUDGET');
  const timeoutMs=Number(process.env.ESIM_FLOW_TIMEOUT_MS||1500000);if(!Number.isInteger(timeoutMs)||timeoutMs<60000||timeoutMs>5400000)throw Error('BAD_TIMEOUT');
- const transport=makeRpc({budget,timeoutMs,cacheDir:`${work}/rpc-cache`,progress:e=>{if(e.phase!=='rpc'||e.physical%10===0)console.log(JSON.stringify(e));}});
+ const transport=makeRpc({task:'provenance',budget,timeoutMs,cacheDir:`${work}/rpc-cache`,progress:e=>{if(e.phase!=='rpc'||e.physical%10===0)console.log(JSON.stringify(e));}});
  let next,maxBlocks=600000;
  for(;;){
   const target=await flowTarget(state,previous,transport,maxBlocks);

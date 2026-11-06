@@ -5,9 +5,12 @@ import { client as publicClient, loadPools } from '../src/chain.mjs';
 import { latestSharedURL, parseSnapshot, serializeSnapshot } from '../src/snapshot.mjs';
 import { configuredMarkets, marketPools, snapshotName } from '../src/background-markets.mjs';
 import { discoverOwnedInfinity } from './alchemy-ownership.mjs';
+import {createCuMeter,cuErrorCode} from '../server/esim/cu-budget.mjs';
+import {realtimeSQL} from '../server/esim/realtime-store.mjs';
 
 // Server-only: an explicit allowlist limits every paid chain read to selected pairs.
 const key = process.env.ALCHEMY_API_KEY;
+const meter=createCuMeter({mode:process.env.ESIM_CU_MODE||'off',task:'depth',query:(...args)=>realtimeSQL().query(...args),warning:e=>console.log(JSON.stringify(e))});
 await mkdir('.goodway', { recursive: true });
 await writeFile('.goodway/snapshot-manifest.json', '[]');
 const refreshInterval=Number(process.env.ESIM_SNAPSHOT_INTERVAL_MS||3600000);
@@ -29,7 +32,7 @@ try {
     const catalog = JSON.parse(await readFile('public/data/catalog.json', 'utf8'));
     // Validate every selected pair before making an RPC request; never fall back to all pools.
     const selected = markets.map(market => ({ ...market, metas: marketPools(catalog, market) }));
-    const rpc = key ? createPublicClient({ chain: bsc, transport: http(`https://bnb-mainnet.g.alchemy.com/v2/${key}`, { timeout: 20000, retryCount: 1 }) }) : publicClient;
+    const rpc = key ? createPublicClient({ chain: bsc, transport: http(`https://bnb-mainnet.g.alchemy.com/v2/${key}`, { timeout: 20000, retryCount: 1,fetchFn:meter.wrapFetch(fetch) }) }) : publicClient;
     let ownershipSeed, ownershipDiscovery;
     const manifest = [];
     for (const { name, base, quote, metas } of selected) {
@@ -53,7 +56,7 @@ try {
       }
       const live = await loadPools(metas, base, Infinity, (done, total) => console.log(`${name}: ${done}/${total}`), {
         client: rpc, previous, ownershipSeed,
-        discoverOwnership: key ? () => ownershipDiscovery ||= discoverOwnedInfinity(key) : undefined });
+        discoverOwnership: key ? () => ownershipDiscovery ||= discoverOwnedInfinity(key,meter.wrapFetch(fetch,{method:'getNFTsForOwner'})) : undefined });
       const supported = metas.filter(p => ['v2', 'v3', 'infinityCl'].includes(p.protocol));
       if (!live.pools.length || supported.some(meta => !live.pools.some(p => p.protocol === meta.protocol && p.id.toLowerCase() === meta.id.toLowerCase()))) throw new Error('Incomplete supported-pool snapshot');
       if (live.pools.some(p => p.ownership?.status !== 'verified')) throw new Error('Incomplete LP attribution');
@@ -69,8 +72,11 @@ try {
     await writeFile('.goodway/snapshot-manifest.json', JSON.stringify(manifest));
   }
   await writeFile('.goodway/snapshot-schedule.json', JSON.stringify({ nextRefreshAt }));
-} catch {
+} catch(error) {
   // RPC exceptions may contain the private endpoint. Never log them or publish them.
+  const code=cuErrorCode(error);if(code)console.error(code);
   console.error('后台配置或快照未通过校验；未发布本轮数据，保留上次有效快照。');
   process.exitCode = 1;
+} finally {
+ console.log(JSON.stringify({phase:'rpc-cu',task:'depth',...meter.stats}));
 }

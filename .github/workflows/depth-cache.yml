@@ -26,6 +26,7 @@ jobs:
         id: config
         env:
           ALCHEMY_API_KEY: ${{ secrets.ALCHEMY_API_KEY }}
+          ESIM_CU_MODE: ${{ vars.ESIM_CU_MODE || 'off' }}
         run: |
           if [ -n "$ALCHEMY_API_KEY" ]; then
             echo 'configured=true' >> "$GITHUB_OUTPUT"
@@ -46,6 +47,7 @@ jobs:
         if: steps.config.outputs.configured == 'true'
         env:
           ALCHEMY_API_KEY: ${{ secrets.ALCHEMY_API_KEY }}
+          ESIM_CU_MODE: ${{ vars.ESIM_CU_MODE || 'off' }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           ESIM_REALTIME_DATABASE_URL: ${{ secrets.ESIM_REALTIME_DATABASE_URL }}
           ESIM_SNAPSHOT_INTERVAL_MS: '600000'

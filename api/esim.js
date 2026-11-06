@@ -39,7 +39,7 @@ export default async function handler(req, res) {
     // of MB of transfers/traces used by the historical collector.
     if (balanceRequest && process.env.ESIM_REALTIME_DATABASE_URL) {
       if (!process.env.ALCHEMY_API_KEY) return res.status(503).json({ message:'后台尚未配置 Alchemy，当前显示已保存的数据。' });
-      try { return res.status(200).json({balances:await readSnapshotBalances(body.addresses,makeRpc({budget:8,timeoutMs:45000}))}); }
+      try { return res.status(200).json({balances:await readSnapshotBalances(body.addresses,makeRpc({task:'query',budget:8,timeoutMs:45000}))}); }
       catch(error) { if(error.message==='INVALID_BALANCE_ADDRESSES')return res.status(400).json({message:'仅可查询本页已识别的交易地址，每次最多 25 个。'});throw error; }
     }
     if (process.env.ESIM_REALTIME_DATABASE_URL) {
@@ -56,7 +56,7 @@ export default async function handler(req, res) {
     if (req.method === 'GET') return res.status(200).json({ report: reportFor(current), configured: !!process.env.ALCHEMY_API_KEY });
     if (!process.env.ALCHEMY_API_KEY) return res.status(503).json({ message: '后台尚未配置 Alchemy，当前显示已保存的数据。' });
     if (balanceRequest) {
-      try { return res.status(200).json({ balances: await queryBalances(current, body.addresses, makeRpc({ budget: 8, timeoutMs: 45000 })) }); }
+      try { return res.status(200).json({ balances: await queryBalances(current, body.addresses, makeRpc({ task: 'query', budget: 8, timeoutMs: 45000 })) }); }
       catch (error) { if (error.message === 'INVALID_BALANCE_ADDRESSES') return res.status(400).json({ message: '仅可查询本页已识别的交易地址，每次最多 25 个。' }); throw error; }
     }
     if (Date.now() - checkedAt < 60000) return res.status(200).json({ report: reportFor(current), cached: true, catchingUp: Date.now() / 1000 - current.cutoff > 120 });

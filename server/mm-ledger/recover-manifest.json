@@ -2,15 +2,16 @@
   "source": "esim-daily-ledger/web",
   "inputs": {
     "scripts/server-recover.js": "5107e2e0f94cac392f9efb1fa4d5e5d2d600c3b15a041c5c7ce0e6ee2dd51a44",
-    "lib/collector.js": "76accd9c284e414eda7a875b46777cd96d86ba54dd2a6ba6fccc23b6a0310311",
-    "lib/db.js": "deb52d9734e3baf1959177a5b18b233d020e3bdb9bc853a015188a36e18606cc",
     "lib/worker-loop.js": "b593885adb93fb223b967f450590d93cc0b5a0ba4fa5f8a642012f3a522699b1",
+    "lib/db.js": "deb52d9734e3baf1959177a5b18b233d020e3bdb9bc853a015188a36e18606cc",
+    "lib/collector.js": "3ec0eeabf465fb04f7a9d32e8fbb72ebef22db4c3ab623c5fc6ffd164d8582bb",
     "lib/ledger-health.js": "556b3d0623dccd9c7c7c4095caa1400759ba2047eb9288ffa3c4961e10164fac",
-    "lib/sync-plan.js": "93996c7ea34d62ea57426774712c7e2ab02dcccdbd80993a61ed4b0261a39017",
-    "lib/verified-exchange.js": "70cbb1aeb8a93b2493c5c18d4646d0538453c2debd871c7afb5832300c6d7a13",
+    "lib/sync-plan.js": "c685c638ea62b5510543a41a60502ab4babde60ce985c7873b4fd97095f7dfb5",
+    "lib/write-snapshot.js": "65c1f065a8fcd2006f6f837bb2e885f1ea1ab3312c04e1e27c3c222f9c941ed6",
+    "lib/rpc.js": "4f6ab979573b1e59bfe2505cd1049284dfdc40e7e387d5977a564bbee2202fe2",
     "lib/transfer-fees.js": "74ed740a9ba8099516907eb0e037f8116bdaf23e61c266f8918defb7d88b0b0a",
-    "lib/rpc.js": "8aca4f6f4e911e776bedbc85f203fe792217875cccf8f5417b417efbc39c49db",
+    "lib/verified-exchange.js": "70cbb1aeb8a93b2493c5c18d4646d0538453c2debd871c7afb5832300c6d7a13",
     "vendor/engine.cjs": "4082a6e858421369592d2f9bcfc6a025fdcdce79e4e868ba9eed249ca7f01544",
-    "lib/write-snapshot.js": "65c1f065a8fcd2006f6f837bb2e885f1ea1ab3312c04e1e27c3c222f9c941ed6"
+    "vendor/cu-budget.mjs": "e424705e10475615b372b99658215b89ed865a0da00e589aab5261bbc5e0870c"
   }
 }

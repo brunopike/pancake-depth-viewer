@@ -63,3 +63,9 @@ is a confirmed snapshot, not an instantaneous or unconditional completeness clai
 Neon is currently a free project; provider quotas can interrupt the fast path.
 The hourly GitHub archive and independent snapshot fallback remain available.
 No billing tier upgrade is performed by this integration.
+
+### Paid RPC accounting
+
+`ESIM_CU_MODE=observe` records estimated method CU before actual HTTP attempts in the shared `esim_ledger.rpc_cu_days` and `rpc_cu_attempts` tables. Apply `scripts/esim/cu-budget-schema.sql` once before enabling it. Observation failures retain the data update and report unpersisted CU; they do not claim complete accounting.
+
+Leave `enforce` disabled until VM, Actions, depth/NFT and both MM applications are covered and reconciled with the provider. Default policy is 3,000,000 CU/day with 400,000 reserved for core/recovery; observations may exceed that value. Webhook delivery CU and other account applications are not included in this RPC counter. Cache hits do not charge; retries reserve again, and uncertain reservations are not refunded. Preserve the daily and request records as technical billing evidence.

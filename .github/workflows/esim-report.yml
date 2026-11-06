@@ -43,6 +43,7 @@ jobs:
           ESIM_REALTIME_DATABASE_URL: ${{ secrets.ESIM_REALTIME_DATABASE_URL }}
           ESIM_CHECKPOINT_FILE: .goodway/checkpoint/state.json.gz
           ALCHEMY_API_KEY: ${{ secrets.ALCHEMY_API_KEY }}
+          ESIM_CU_MODE: ${{ vars.ESIM_CU_MODE || 'off' }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_REPOSITORY: ${{ github.repository }}
           SESSION_MINUTES: ${{ inputs.session_minutes || '300' }}

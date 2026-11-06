@@ -3,14 +3,22 @@ import { createHash } from 'node:crypto';
 import { readFile, writeFile, mkdir } from 'node:fs/promises';
 import { gzipSync, gunzipSync } from 'node:zlib';
 import {setTimeout as sleep} from 'node:timers/promises';
+import {createCuMeter} from './cu-budget.mjs';
+import {realtimeSQL} from './realtime-store.mjs';
 
 export function makeRpc({ key = process.env.ALCHEMY_API_KEY, endpoint, budget = 500, timeoutMs = 230000,
-  cacheDir, fetch: request = fetch, progress = () => {}, sleep:wait=sleep, minIntervalMs=250, shared = process.env.ESIM_REALTIME_DATABASE_URL ? sharedCache() : null } = {}) {
+  cacheDir, fetch: request = fetch, progress = () => {}, sleep:wait=sleep, minIntervalMs=250, shared = process.env.ESIM_REALTIME_DATABASE_URL ? sharedCache() : null,
+  task=process.env.ESIM_CU_TASK||'core',
+  meter=createCuMeter({mode:process.env.ESIM_CU_MODE||'off',task,query:(...args)=>realtimeSQL().query(...args),warning:progress}) } = {}) {
   if (!key && !endpoint) throw new Error('ALCHEMY_NOT_CONFIGURED');
   const url = endpoint || `https://bnb-mainnet.g.alchemy.com/v2/${key}`;
   const deadline = Date.now() + timeoutMs;
   const stats = { physical: 0, logical: 0, cacheHits: 0, sharedHits: 0 };
+  for(const name of ['estimatedCu','unpersistedCu'])Object.defineProperty(stats,name,{enumerable:true,get:()=>meter.stats[name]});
+  Object.defineProperty(stats,'cuByMethod',{enumerable:true,get:()=>meter.stats.byMethod});
+  stats.cuTask=task;
   let exhausted=false;
+  let admitting=0;
   let nextRequestAt=0;
   const cacheKey = (method, params) => createHash('sha256').update(JSON.stringify([method, params])).digest('hex');
   async function batch(calls, { fresh = false } = {}) {
@@ -29,13 +37,17 @@ export function makeRpc({ key = process.env.ALCHEMY_API_KEY, endpoint, budget = 
     for (let start = 0; start < missing.length; start += batchSize) chunks.push(missing.slice(start, start + batchSize));
     async function send(chunk, attempt=0) {
       if(exhausted)throw new Error('RPC_CAPACITY_EXCEEDED');
-      if (Date.now() >= deadline || stats.physical >= budget) throw new Error('QUERY_LIMIT');
+      if (Date.now() >= deadline || stats.physical+admitting >= budget) throw new Error('QUERY_LIMIT');
       // Reserve starts synchronously so concurrent chunks do not create CU bursts.
       const delay=Math.max(0,nextRequestAt-Date.now());nextRequestAt=Math.max(nextRequestAt,Date.now())+minIntervalMs;
       if(Date.now()+delay>=deadline)throw new Error('QUERY_LIMIT');
       if(delay)await wait(delay);
       if(exhausted)throw new Error('RPC_CAPACITY_EXCEEDED');
-      if(Date.now()>=deadline||stats.physical>=budget)throw new Error('QUERY_LIMIT');
+      if(Date.now()>=deadline||stats.physical+admitting>=budget)throw new Error('QUERY_LIMIT');
+      // Reserve the physical slot before async CU admission can yield to another chunk.
+      admitting++;
+      try{await meter.charge(chunk.map(c=>c.method));}finally{admitting--;}
+      if(Date.now()>=deadline)throw new Error('QUERY_LIMIT');
       stats.physical++; stats.logical += chunk.length;
       const traceFilter=chunk.length===1&&chunk[0].method==='trace_filter';
       let response, envelopes;

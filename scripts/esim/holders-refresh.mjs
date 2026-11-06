@@ -12,7 +12,7 @@ try{
  if(process.env.ESIM_PERSISTENT_WORKER!=='true')try{const local=await readState('.goodway/esim-monitor/state.json.gz');if(local.block>state.block)state=local;}catch{}
  let previous;try{previous=await loadHolders();}catch{}
  try{const local=JSON.parse(await readFile('.goodway/esim-holders/holders.json','utf8'));if(!previous||local.block>previous.block)previous=local;}catch{}
- const transport=makeRpc({budget:500,timeoutMs:900000,progress:e=>{if(e.phase!=='rpc'||e.physical%25===0)console.log(JSON.stringify(e));}});
+ const transport=makeRpc({task:'holders',budget:500,timeoutMs:900000,progress:e=>{if(e.phase!=='rpc'||e.physical%25===0)console.log(JSON.stringify(e));}});
  const result=await collectHolders(state,transport,{previous,incremental:process.env.ESIM_HOLDERS_INCREMENTAL==='true',progress:e=>console.log(JSON.stringify(e))});
  await mkdir('.goodway/esim-holders',{recursive:true});await writeFile('.goodway/esim-holders/holders.tmp',JSON.stringify(result));await rename('.goodway/esim-holders/holders.tmp','.goodway/esim-holders/holders.json');
  console.log(JSON.stringify({block:result.block,addresses:result.rows.length,priorBlock:result.priorBlock,coverage:result.coverage.balance,...transport.stats}));

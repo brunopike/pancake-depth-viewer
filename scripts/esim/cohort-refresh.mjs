@@ -15,7 +15,7 @@ try{
  if(p.version!==1||p.token!==TOKEN||p.source!==SOURCE||state.token!==TOKEN||state.source!==SOURCE||p.throughBlock>state.block)throw Error('COHORT_CORE_BEHIND');
  const s=state;
  const holders=JSON.parse(await readFile(process.env.ESIM_HOLDERS_FILE,'utf8'));if(holders.version!==1||holders.token!==TOKEN||!Array.isArray(holders.rows)||holders.rows.length>MAX_TRACKED_ADDRESSES||holders.rows.some(r=>!/^0x[0-9a-f]{40}$/.test(r.address)))throw Error('COHORT_INVALID_HOLDER_UNIVERSE');
- const markets=[PCS,UNI,VAULT,...Object.keys(s.pools).filter(a=>a.length===42)],t=makeRpc({budget:1200,timeoutMs:1200000,cacheDir:'.goodway/claim-flow/rpc-cache',progress:e=>{if(e.phase!=='rpc'||e.physical%20===0)console.log(JSON.stringify(e));}}),hex=n=>'0x'+n.toString(16);
+ const markets=[PCS,UNI,VAULT,...Object.keys(s.pools).filter(a=>a.length===42)],t=makeRpc({task:'cohort',budget:1200,timeoutMs:1200000,cacheDir:'.goodway/claim-flow/rpc-cache',progress:e=>{if(e.phase!=='rpc'||e.physical%20===0)console.log(JSON.stringify(e));}}),hex=n=>'0x'+n.toString(16);
  const [chain,start,end,target]=await t.batch([['eth_chainId',[]],['eth_getBlockByNumber',[hex(p.openingBlock),false]],['eth_getBlockByNumber',[hex(p.throughBlock),false]],['eth_getBlockByNumber',[hex(s.block),false]]],{fresh:true});
  if(chain!=='0x38'||start.hash!==p.openingBlockHash||end.hash!==p.blockHash||target.hash!==s.blockHash)throw Error('COHORT_CHAIN_CHANGED');
  const queries=[];for(let b=p.throughBlock+1;b<=s.block;b+=3000)queries.push(['eth_getLogs',[{address:TOKEN,topics:[TRANSFER],fromBlock:hex(b),toBlock:hex(Math.min(b+2999,s.block))}]]);

@@ -12613,6 +12613,7 @@ function closeElapsedPartialDays(state, now = /* @__PURE__ */ new Date()) {
 var isBoundaryPending = (error) => error?.code === "ESIM_YIELD" || error?.message === "\u7EDF\u8BA1\u7ED3\u675F\u533A\u5757\u5C1A\u672A\u786E\u8BA4\uFF0C\u4E0B\u6B21\u81EA\u52A8\u7EE7\u7EED";
 function isTransientSyncError(error) {
   if (error?.contractRevert) return false;
+  if (["CU_BUDGET_DEFERRED", "CU_METER_UNAVAILABLE"].includes(error?.code || error?.message)) return true;
   return isBoundaryPending(error) || ["TimeoutError", "AbortError"].includes(error?.name) || [429, -32005].includes(error?.code) || /timeout|timed out|operation was aborted|fetch failed|ECONNRESET|ETIMEDOUT|链上接口暂不可用|Internal error/i.test(error?.message || "");
 }
 function canResumeFailed(run, hash, now = /* @__PURE__ */ new Date()) {
@@ -12635,7 +12636,105 @@ function backfillSummary(addresses, periods, run, { now = /* @__PURE__ */ new Da
   };
 }
 
+// ../../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/vendor/cu-budget.mjs
+import { randomUUID } from "node:crypto";
+var CU_COSTS = Object.freeze({
+  eth_chainId: 0,
+  net_version: 0,
+  eth_blockNumber: 10,
+  eth_getBlockByNumber: 20,
+  eth_getBlockByHash: 20,
+  eth_getBalance: 20,
+  eth_getCode: 20,
+  eth_getStorageAt: 20,
+  eth_getTransactionCount: 20,
+  eth_getTransactionByHash: 20,
+  eth_getTransactionReceipt: 20,
+  eth_getBlockReceipts: 20,
+  web3_sha3: 20,
+  eth_call: 26,
+  eth_getLogs: 60,
+  alchemy_getAssetTransfers: 120,
+  trace_filter: 40,
+  trace_transaction: 40,
+  debug_traceTransaction: 40,
+  getNFTsForOwner: 480
+});
+function quoteCu(methods) {
+  const counts = {};
+  let units = 0;
+  for (const method of methods) {
+    if (!Object.hasOwn(CU_COSTS, method)) throw Error("CU_UNKNOWN_METHOD");
+    counts[method] = (counts[method] || 0) + 1;
+    units += CU_COSTS[method];
+  }
+  return { units, counts, calls: methods.length };
+}
+function createCuMeter({
+  mode = "off",
+  task = "unassigned",
+  query,
+  limit = 3e6,
+  reserve = 4e5,
+  timeoutMs = 3e3,
+  warning = () => {
+  }
+} = {}) {
+  if (!["off", "observe", "enforce"].includes(mode) || !Number.isSafeInteger(limit) || limit < 1 || !Number.isSafeInteger(reserve) || reserve < 0 || reserve > limit || !Number.isSafeInteger(timeoutMs) || timeoutMs < 1 || timeoutMs > 1e4 || !/^[-a-z0-9_]{1,40}$/.test(task)) throw Error("CU_INVALID_CONFIG");
+  const stats = { estimatedCu: 0, unpersistedCu: 0, attemptedCalls: 0, attempts: 0, byMethod: {} };
+  let unavailableUntil = 0;
+  async function charge(methods) {
+    const quote = quoteCu(methods);
+    let unpersisted = mode === "observe" && Date.now() < unavailableUntil;
+    if (mode !== "off" && !unpersisted) {
+      let timer;
+      try {
+        if (typeof query !== "function") throw Error("CU_METER_UNAVAILABLE");
+        const result = await Promise.race([
+          query(
+            "SELECT * FROM esim_ledger.reserve_rpc_cu($1,$2,$3,$4,$5,$6,$7,$8)",
+            [randomUUID(), task, quote.units, quote.calls, JSON.stringify(quote.counts), mode, limit, reserve]
+          ),
+          new Promise((_, reject) => {
+            timer = setTimeout(() => reject(Error("CU_METER_UNAVAILABLE")), timeoutMs);
+          })
+        ]);
+        const row = (result.rows || result)[0];
+        if (row?.admitted !== true) {
+          const e = Error("CU_BUDGET_DEFERRED");
+          e.code = e.message;
+          e.retryAt = Number(row?.retry_at_ms);
+          throw e;
+        }
+      } catch (error) {
+        if (error.message === "CU_BUDGET_DEFERRED" || mode === "enforce") throw error.message === "CU_BUDGET_DEFERRED" ? error : Error("CU_METER_UNAVAILABLE");
+        unavailableUntil = Date.now() + 6e4;
+        unpersisted = true;
+        warning({ phase: "cu-meter-unavailable", task });
+      } finally {
+        clearTimeout(timer);
+      }
+    }
+    if (unpersisted) stats.unpersistedCu += quote.units;
+    stats.estimatedCu += quote.units;
+    stats.attemptedCalls += quote.calls;
+    stats.attempts++;
+    for (const [method, count] of Object.entries(quote.counts)) stats.byMethod[method] = (stats.byMethod[method] || 0) + count;
+    return quote;
+  }
+  function wrapFetch(request, { method } = {}) {
+    return async (url, options) => {
+      const body = method ? null : JSON.parse(options?.body);
+      const methods = method ? [method] : (Array.isArray(body) ? body : [body]).map((c) => c.method);
+      await charge(methods);
+      return request(url, options);
+    };
+  }
+  return { stats, charge, wrapFetch };
+}
+
 // ../../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/lib/rpc.js
+var meter = createCuMeter({ mode: process.env.ESIM_CU_MODE || "off", task: process.env.ESIM_CU_TASK || "mm", query: (...args) => db().query(...args), warning: (e) => console.warn(JSON.stringify(e)) });
 var NeedRpc = class extends Error {
   constructor(calls) {
     super("NEED_RPC");
@@ -12674,6 +12773,7 @@ async function fill(calls, cache2, trim = (m, x) => x) {
       const batch = chunks.shift();
       let response;
       for (let attempt = 0; attempt < 3; attempt++) {
+        await meter.charge(batch.map((q) => q[0]));
         try {
           const result = await fetch(process.env.BNB_RPC_URL, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(batch.map((q, i) => ({ jsonrpc: "2.0", id: i, method: q[0], params: q[1] }))), signal: AbortSignal.timeout(25e3) });
           if (!result.ok) throw Error("\u94FE\u4E0A\u63A5\u53E3\u6682\u4E0D\u53EF\u7528\uFF0C\u8BF7\u7A0D\u540E\u7EE7\u7EED");
@@ -13140,7 +13240,7 @@ async function runSync(id, budget = 45e3) {
     s.retryErrorCode = e.code || null;
     s.retryCount = pending ? 0 : Number(s.retryCount || 0) + 1;
     const retry = s.retryable && s.retryCount < 8;
-    if (s.retryable) s.retryAfter = new Date(Date.now() + (retry ? 3e4 : 3e5)).toISOString();
+    if (s.retryable) s.retryAfter = new Date(Number.isFinite(e.retryAt) ? e.retryAt : Date.now() + (retry ? 3e4 : 3e5)).toISOString();
     return (await db().query("UPDATE esim_ledger.sync_runs SET state=$2,status=$3,stage=$4,error=$5,verified_days=$6,lease_until=NULL,updated_at=now() WHERE id=$1 AND lease_version=$7 RETURNING id,status,stage,error,verified_days,state->>'retryAfter' AS retry_after", [id, JSON.stringify(s), retry ? "queued" : "failed", retry ? pending ? "\u7B49\u5F85\u7ED3\u675F\u533A\u5757\u786E\u8BA4\uFF0C\u81EA\u52A8\u7EE7\u7EED" : "\u63A5\u53E3\u6682\u65F6\u5931\u8D25\uFF0C\u81EA\u52A8\u4ECE\u65AD\u70B9\u7EE7\u7EED" : "\u66F4\u65B0\u672A\u5B8C\u6210\uFF0C\u539F\u6570\u636E\u4FDD\u7559", message, s.index, claimed.lease_version])).rows[0] || syncStatus(id);
   }
 }

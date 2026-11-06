@@ -54,6 +54,7 @@ jobs:
           ESIM_CHECKPOINT_FILE: .goodway/checkpoint/state.json.gz
           ESIM_FLOW_CHECKPOINT_FILE: .goodway/checkpoint/claim-flow-state.json.gz
           ALCHEMY_API_KEY: ${{ secrets.ALCHEMY_API_KEY }}
+          ESIM_CU_MODE: ${{ vars.ESIM_CU_MODE || 'off' }}
           ESIM_RPC_BUDGET: ${{ inputs.rpc_budget || '600' }}
           ESIM_FLOW_TIMEOUT_MS: '5400000'
           ESIM_REALTIME_DATABASE_URL: ${{ secrets.ESIM_REALTIME_DATABASE_URL }}

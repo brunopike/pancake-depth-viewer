@@ -1,4 +1,5 @@
 import { OWNERS, CL_POSITION_MANAGER } from '../src/ownership.mjs';
+import {cuErrorCode} from '../server/esim/cu-budget.mjs';
 
 // Server-only recovery when no recent canonical NFT checkpoint is available.
 // The normal path reads bounded Transfer logs and current contract state instead.
@@ -31,5 +32,5 @@ export async function discoverOwnedInfinity(key, fetcher = fetch) {
       throw new Error();
     }));
     return groups.flat();
-  } catch { throw new Error('Alchemy LP discovery unavailable'); }
+  } catch(error) { throw new Error(cuErrorCode(error)||'Alchemy LP discovery unavailable'); }
 }

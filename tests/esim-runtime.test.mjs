@@ -12,8 +12,8 @@ test('paid RPC has a hard request cap and reordered batch responses stay correct
     requests++;
     return { ok: true, json: async () => JSON.parse(options.body).map(c => ({ id: c.id, result: c.params[0] })).reverse() };
   } });
-  assert.deepEqual(await t.batch([['a', [7]], ['b', [8]]]), [7, 8]);
-  await assert.rejects(t.rpc('c', []), /QUERY_LIMIT/);
+  assert.deepEqual(await t.batch([['eth_getBalance', [7]], ['eth_call', [8]]]), [7, 8]);
+  await assert.rejects(t.rpc('eth_chainId', []), /QUERY_LIMIT/);
   assert.equal(requests, 1);
 });
 test('transport failures never return upstream URL or raw errors', async () => {
