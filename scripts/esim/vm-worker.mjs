@@ -18,14 +18,20 @@ export async function runCorePass(command,{remote,bootstrap,block}){
  await command('scripts/esim/vm-task.mjs',['core'],{extra:{ESIM_MIN_BLOCK:String(block+1)}});
  return true;
 }
+export function mmStepPending(output){
+ for(const line of String(output).trim().split('\n').reverse())try{const row=JSON.parse(line);if(row.phase==='mm-server-step')return row.status!=='complete';}catch{}
+ return true;
+}
 export function dueTask({now,last,cutoff,pendingBlock,block,publishedFlowBlock=0,retryAt={},coreAvailable=true}){
  const ready=task=>now>=(retryAt[task]||0)&&(coreAvailable||!['core','holders','archive'].includes(task));
  if(ready('core')&&!last.core)return 'core';
  const due=[
-  ['core',now-(last.core||0)>=60000&&(pendingBlock>block||now-cutoff*1000>=120000||provenanceMergeNeeded({now,last,publishedFlowBlock}))],
-  ['holders',now-(last.holders||0)>=180000],['archive',now-(last.archive||0)>=3600000],
-  ['depth',now-(last.depth||0)>=300000],['mm',now-(last.mm||0)>=60000]
+  ['core',now-cutoff*1000>=120000||now-(last.core||0)>=60000&&(pendingBlock>block||provenanceMergeNeeded({now,last,publishedFlowBlock}))],
+  ['holders',now-(last.holders||0)>=600000],['archive',now-(last.archive||0)>=3600000],
+  ['depth',now-(last.depth||0)>=600000],['mm',now-(last.mm||0)>=(last.mmPending?60000:600000)]
  ].filter(([task,needed])=>needed&&ready(task)).map(([task])=>task);
+ // An overdue core may yield one background pass, never the entire queue.
+ if(due.includes('core')&&(last.backgroundAttemptAt||0)>(last.core||0))return 'core';
  return due.sort((a,b)=>(last[a]||0)-(last[b]||0))[0]||null;
 }
 const local='.goodway/vm';
@@ -69,7 +75,8 @@ export async function main(){
  const command=async(file,args=[],{lease=guard,extra={},timeout=1500000}={})=>{
   await lease?.check();const started=Date.now();activeLease=lease;
   child=spawn('/usr/bin/time',['-f','{"phase":"vm-resource","wallSeconds":%e,"userSeconds":%U,"systemSeconds":%S,"maxRssKiB":%M}',process.execPath,'--max-old-space-size=2048',file,...args],{detached:true,stdio:['ignore','pipe','pipe'],env:{...process.env,...lease?.env,ESIM_PERSISTENT_WORKER:'true',ESIM_RPC_BUDGET:'600',...extra}});
-  let stderr='';child.stderr.on('data',chunk=>{stderr=(stderr+chunk).slice(-8192);});
+  let stderr='',stdout='';child.stderr.on('data',chunk=>{stderr=(stderr+chunk).slice(-8192);});
+  child.stdout.on('data',chunk=>{stdout=(stdout+chunk).slice(-8192);});
   child.stdout.pipe(process.stdout);child.stderr.pipe(process.stderr);
   let timedOut=false;const timer=setTimeout(()=>{timedOut=true;stopChild();},timeout);
   const running=child;
@@ -78,6 +85,7 @@ export async function main(){
   finally{clearTimeout(timer);await stopVmProcess(running);child=null;activeLease=null;}
   await lease?.check();if(code!==0||timedOut)throw Error(timedOut?'VM_TASK_TIMEOUT':workerFailureCode({stderr}));
   console.log(JSON.stringify({phase:'vm-task-finished',task:file,elapsedMs:Date.now()-started}));
+  return stdout;
  };
  try{
   const lost=leaseLost('depth');
@@ -123,10 +131,10 @@ export async function main(){
        await guard.check();await realtimeSQL().query("DELETE FROM esim_webhook_receipts WHERE received_at < now()-interval '7 days'");
       }
      }else if(task==='mm'){
-      if(!dryRun)await command('server/mm-ledger/worker.mjs',[],{lease:null,timeout:210000});
+      if(!dryRun)last.mmPending=mmStepPending(await command('server/mm-ledger/worker.mjs',[],{lease:null,timeout:210000}));
      }else if(task==='depth'){
       if(!depthGuard)depthGuard=await startLease(dryRun?'shadow-depth':'depth',{onLost:lost});
-      if(depthGuard){await command('scripts/snapshot.mjs',[],{lease:depthGuard,extra:{ESIM_SNAPSHOT_INTERVAL_MS:'300000'},timeout:600000});if(!dryRun)await command('scripts/publish-snapshot.mjs',[],{lease:depthGuard,timeout:120000});}
+      if(depthGuard){await command('scripts/snapshot.mjs',[],{lease:depthGuard,extra:{ESIM_SNAPSHOT_INTERVAL_MS:'600000'},timeout:600000});if(!dryRun)await command('scripts/publish-snapshot.mjs',[],{lease:depthGuard,timeout:120000});}
      }
      last[task]=Date.now();await save(`${local}/schedule.json`,last);
      await save(`${local}/health.json`,{at:new Date().toISOString(),dryRun,task,block,cutoff,pendingBlock:Number(status.pending_block)||0,elapsedMs:Date.now()-started,error:null});
@@ -137,15 +145,16 @@ export async function main(){
       first=false;last.merge=Date.now();
      }
      // An MM accounting failure must not pause the live chain feed.
-     if(task==='mm'){last.mm=Date.now();await save(`${local}/schedule.json`,last);}
+     if(task==='mm'){last.mm=Date.now();last.mmPending=true;await save(`${local}/schedule.json`,last);}
      else retryAt[task]=Date.now()+60000;
      const code=/^[A-Z_]{3,80}$/.test(error.message)?error.message:'VM_TASK_FAILED';
      if(task==='core')try{await markRealtimeError(code);}catch{}
      await save(`${local}/health.json`,{at:new Date().toISOString(),dryRun,task,block,cutoff,error:code});
      console.error(JSON.stringify({phase:'vm-task-deferred',task,error:code}));
     }
+    if(task!=='core'){last.backgroundAttemptAt=Date.now();await save(`${local}/schedule.json`,last);}
    }
-   await sleep(20000);
+   if(!task)await sleep(20000);
   }
  }finally{await stopChild();if(depthGuard)await depthGuard.close();if(guard)await guard.close();}
 }

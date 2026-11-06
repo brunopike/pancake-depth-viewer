@@ -25,3 +25,27 @@ test('nested provenance arrays are emitted in bounded chunks without stringifyin
  assert(count>20);assert.equal(chunks.join(''),JSON.stringify(state));
  const cycle={};cycle.self=cycle;assert.throws(()=>[...checkpointChunks(cycle)],/circular/i);
 });
+
+test('flat row acceleration preserves accessors, toJSON, omitted values and oversized strings',()=>{
+ let reads=0;
+ const row={a:1,b:undefined,c:NaN,d:()=>{},[Symbol('hidden')]:2};
+ Object.defineProperty(row,'getter',{enumerable:true,get(){reads++;return reads;}});
+ const converted={toJSON(){return {when:'converted',value:3};}};
+ const longKey='😀'.repeat(40000),state={rows:[row,converted,Object.assign(Object.create(null),{n:4}),{[longKey]:'value'},{text:'😀'.repeat(40000)}]};
+ const expected=JSON.stringify(state);reads=0;
+ const chunks=[...checkpointChunks(state)];
+ assert.equal(chunks.join(''),expected);
+ assert.equal(reads,1);
+ assert(chunks.every(c=>c.length<=65536));
+});
+
+test('custom scalar toJSON remains on the bounded recursive path',()=>{
+ let reads=0;const rows=Array.from({length:20000},(_,i)=>({i,get value(){reads++;return 'amount';}}));
+ const fn=()=>{};fn.toJSON=()=>({rows});
+ const state={converted:fn},expected=JSON.stringify(state);reads=0;
+ const iterator=checkpointChunks(state),first=iterator.next();
+ assert(reads>0&&reads<rows.length,'first chunk must not traverse the whole custom container');
+ const chunks=[first.value,...iterator];
+ assert.equal(chunks.join(''),expected);
+ assert(chunks.every(c=>c.length<=65536));
+});

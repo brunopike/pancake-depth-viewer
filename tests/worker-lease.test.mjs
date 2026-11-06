@@ -64,9 +64,9 @@ test('VM scheduler prioritizes canonical catch-up and retains a notification-fre
  const now=1000000,last={core:now-60001,holders:now-50000,archive:now,depth:now,mm:now};
  assert.equal(dueTask({now,last,cutoff:now/1000,block:10,pendingBlock:11}),'core');
  assert.equal(dueTask({now,last,cutoff:now/1000-301,block:10,pendingBlock:0}),'core');
- assert.equal(dueTask({now,last:{...last,holders:now-180001},cutoff:now/1000,block:10,pendingBlock:10}),'holders');
+ assert.equal(dueTask({now,last:{...last,holders:now-600001},cutoff:now/1000,block:10,pendingBlock:10}),'holders');
  assert.equal(dueTask({now,last,cutoff:now/1000,block:10,pendingBlock:10}),null);
- assert.equal(dueTask({now,last:{...last,mm:now-60001},cutoff:now/1000,block:10,pendingBlock:10}),'mm');
+ assert.equal(dueTask({now,last:{...last,mm:now-600001},cutoff:now/1000,block:10,pendingBlock:10}),'mm');
 });
 test('a new provenance publication wakes a quiet core without bypassing leases or retry limits',()=>{
  const now=1000000,last={core:now-60001,holders:now,archive:now,depth:now,mm:now,merge:now-60001,flowBlock:10};
@@ -84,14 +84,14 @@ test('live cutover never inherits unpublished dry-run archive and snapshot timer
  assert.equal(dry.core,100);
 });
 test('a failing core task yields to overdue independent jobs until its retry is due',()=>{
- const now=1000000,last={core:now-60001,holders:now-180001,archive:now,depth:now-300001,mm:now};
+ const now=1000000,last={core:now-60001,holders:now-600001,archive:now,depth:now-700001,mm:now};
  const input={now,last,cutoff:now/1000-301,block:10,pendingBlock:11,retryAt:{core:now+60000}};
  assert.equal(dueTask(input),'depth');
  assert.equal(dueTask({...input,last:{...last,depth:now}}),'holders');
  assert.equal(dueTask({...input,last:{...last,holders:now,depth:now},now:now+60001}),'core');
 });
 test('successful but busy core cannot starve older overdue depth and holder work',()=>{
- const now=10000000,last={core:now-60001,holders:now-200000,depth:now-600000,archive:now,mm:now};
+ const now=10000000,last={core:now-60001,holders:now-600000,depth:now-700000,archive:now-70000,mm:now-70000};
  assert.equal(dueTask({now,last,cutoff:now/1000-3600,block:10,pendingBlock:100}),'depth');
 });
 test('another core owner does not stop the independent VM depth and MM jobs',()=>{

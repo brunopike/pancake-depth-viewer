@@ -9,6 +9,12 @@ const omitted=value=>['undefined','function','symbol'].includes(typeof value);
 // Provenance now contains large nested arrays too; never stringify a whole container.
 function* pieces(value,parents=new Set()){
  if(value===null||typeof value!=='object'){yield JSON.stringify(value);return;}
+ // Flat ledger rows are small; serialize them together, never a large container.
+ const prototype=Object.getPrototypeOf(value);
+ if((prototype===Object.prototype||prototype===null)&&!('toJSON' in value)){
+  const keys=Object.keys(value);
+  if(keys.length<=32&&keys.every(key=>{const d=Object.getOwnPropertyDescriptor(value,key);return key.length<=2048&&d&&'value' in d&&(d.value===null||['string','number','boolean','undefined'].includes(typeof d.value))&&(typeof d.value!=='string'||d.value.length<=2048);})){yield JSON.stringify(value);return;}
+ }
  if(parents.has(value))throw TypeError('Circular checkpoint');
  parents.add(value);
  try{

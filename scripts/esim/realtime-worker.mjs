@@ -53,10 +53,10 @@ async function main(){
  if(!process.env.ESIM_REALTIME_DATABASE_URL||!process.env.GITHUB_TOKEN||!process.env.ALCHEMY_API_KEY||!Number.isInteger(minutes)||minutes<1||minutes>300)throw Error('INVALID_WORKER_CONFIGURATION');
  const end=Date.now()+minutes*60000,run=promisify(execFile),stateFile='.goodway/esim-monitor/state.json.gz';
  const command=async file=>{
-  try{const pending=run(process.execPath,[`scripts/esim/${file}.mjs`],{timeout:1500000,maxBuffer:1048576,env:{...process.env,ESIM_REMOTE_START:'true',ESIM_RPC_BUDGET:'600'}});pending.child.stdout.on('data',chunk=>process.stdout.write(chunk));await pending;}
+  try{const pending=run(process.execPath,[`scripts/esim/${file}.mjs`],{timeout:1500000,maxBuffer:1048576,env:{...process.env,ESIM_REMOTE_START:'true',ESIM_RPC_BUDGET:'600',...(file==='holders-refresh'?{ESIM_HOLDERS_INCREMENTAL:'true'}:{})}});pending.child.stdout.on('data',chunk=>process.stdout.write(chunk));await pending;}
   catch(error){throw Error(workerFailureCode(error));}
  };
- let lastRun=0,lastCoreArchive=0,lastHolderArchive=0,block=0,cutoff=0,holderCutoff=0,lastCleanup=0,retryAt=0;
+ let lastRun=0,lastCoreArchive=0,lastHolderArchive=0,lastHolderRefresh=0,block=0,cutoff=0,holderCutoff=0,lastCleanup=0,retryAt=0;
  const outstanding=new Set();
  const coreArchive=async()=>{await command('publish');lastCoreArchive=Date.now();};
  const holderArchive=async()=>{await command('holders-publish');lastHolderArchive=Date.now();};
@@ -86,11 +86,11 @@ async function main(){
     }
     // Catch up the canonical ledger first. Rebuilding all holders and provenance
     // for every partial prefix needlessly delays recovery and consumes RPC quota.
-    if(!partial)await attempt('holders-refresh',async()=>{
+    if(!partial&&Date.now()-lastHolderRefresh>=600000)await attempt('holders-refresh',async()=>{
      await command('holders-refresh');
      const holders=JSON.parse(await readFile('.goodway/esim-holders/holders.json','utf8'));
      if(holders.tradeCutoff<cutoff||holders.block<block)throw Error('HOLDER_TRADES_BEHIND');
-     await attempt('holders-publish',async()=>{await publishRealtime([{kind:'holders',data:holders}]);holderCutoff=Math.min(holders.cutoff,holders.tradeCutoff);console.log(JSON.stringify({phase:'realtime-holders-published',block:holders.block,cutoff:holders.cutoff,tradeCutoff:holders.tradeCutoff}));});
+     await attempt('holders-publish',async()=>{await publishRealtime([{kind:'holders',data:holders}]);lastHolderRefresh=Date.now();holderCutoff=Math.min(holders.cutoff,holders.tradeCutoff);console.log(JSON.stringify({phase:'realtime-holders-published',block:holders.block,cutoff:holders.cutoff,tradeCutoff:holders.tradeCutoff}));});
      if(Date.now()-lastHolderArchive>=ARCHIVE_INTERVAL)await attempt('holders-archive',holderArchive);
     });
     // The separately scheduled provenance runner consumes the hourly ledger
