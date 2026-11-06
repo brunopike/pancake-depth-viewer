@@ -33,6 +33,7 @@ fi
 [[ $(git -C "$release" rev-parse HEAD) == "$commit" ]] || exit 4
 export PATH=/opt/esim-worker/node/bin:$PATH
 (cd "$release" && npm ci --omit=dev --no-audit --no-fund)
+(cd "$release" && node --input-type=module -e "await import('./scripts/esim/vm-worker.mjs')")
 [[ ! -e "$release/.goodway" ]] && ln -s /var/lib/esim-worker "$release/.goodway"
 git -C "$release" remote set-url --push origin git@github.com:brunopike/pancake-depth-viewer.git
 chown -R esim-worker:esim-worker "$release/.git" "$release/public/data"
