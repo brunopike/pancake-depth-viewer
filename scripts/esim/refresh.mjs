@@ -1,12 +1,16 @@
-import { readFile, writeFile, mkdir } from 'node:fs/promises';
+import { readFile, writeFile, mkdir, rename } from 'node:fs/promises';
 import { makeRpc } from '../../server/esim/rpc.mjs';
 import { refreshState } from '../../server/esim/collector.mjs';
 import { buildReport } from '../../server/esim/metrics.mjs';
 import { loadState,mergeCheckpointState,saveState,readState } from '../../server/esim/store.mjs';
 import {checkpointPassComplete} from '../../server/esim/worker-health.mjs';
+import {publishCore} from './realtime-worker.mjs';
+import {leaseFromEnvironment,requireLease} from '../../server/esim/worker-lease.mjs';
 const work = '.goodway/esim-monitor';
+const inlinePublish=process.env.ESIM_INLINE_CORE_PUBLISH==='true';
 await mkdir(work, { recursive: true });
 try {
+  if(inlinePublish){const lease=leaseFromEnvironment();if(!lease)throw Error('WORKER_LEASE_REQUIRED');await requireLease(lease);}
   let state;
   try { state = await readState(`${work}/state.json.gz`); }
   catch { state = await readState('server/esim/bootstrap.json.gz'); }
@@ -24,7 +28,7 @@ try {
     const advanced=next.block>state.block;
     state = next;
     await saveState(state,work);
-    await writeFile(`${work}/latest.json`, JSON.stringify(buildReport(state)));
+    if(!inlinePublish)await writeFile(`${work}/latest.json`, JSON.stringify(buildReport(state)));
     console.log(JSON.stringify({ phase: 'checkpoint', block: state.block, cutoff: state.cutoff, calls: state.calls.length, trades: state.trades.length, ...transport.stats }));
     if (!advanced) break;
     if (targetBlock && state.block >= targetBlock) break;
@@ -32,6 +36,14 @@ try {
     if(checkpointPassComplete(passStarted,Date.now(),process.env.ESIM_PERSISTENT_WORKER==='true'))break;
   }
   await writeFile(`${work}/usage.json`, JSON.stringify(transport.stats));
+  if(inlinePublish){
+    if(state.block<Number(process.env.ESIM_MIN_BLOCK||0))throw Error('SNAPSHOT_NOT_ADVANCED');
+    const dryRun=process.env.ESIM_WORKER_DRY_RUN==='true';
+    const result=await publishCore(state,dryRun?async()=>{}:undefined);
+    await mkdir('.goodway/vm',{recursive:true});
+    await writeFile('.goodway/vm/core.tmp',JSON.stringify(result));await rename('.goodway/vm/core.tmp','.goodway/vm/core.json');
+    console.log(JSON.stringify({phase:`vm-core-${dryRun?'verified':'published'}`,dryRun,...result,rss:process.memoryUsage().rss}));
+  }
 } catch (error) {
   // Only internal symbolic errors; never print transport error details or URLs.
   const code = /^[A-Z_]+$/.test(error.message) ? error.message : 'QUERY_FAILED';

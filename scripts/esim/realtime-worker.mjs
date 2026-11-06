@@ -12,16 +12,18 @@ import {realtimeStatus,publishRealtime,markRealtimeError,realtimeSQL} from '../.
 import {dispatchNextWorker} from '../hourly-worker.mjs';
 import {workerFailureCode,assertWorkerHealthy} from './hourly-worker.mjs';
 export const FAST_INTERVAL=180000,FALLBACK_INTERVAL=600000,ARCHIVE_INTERVAL=3600000;
+export const CORE_POLL_INTERVAL=120000;
 export function refreshNeeded({now,lastRun,cutoff,pendingBlock,block}){
  if(!lastRun)return true;
- if(now-lastRun<FAST_INTERVAL)return false;
- return pendingBlock>block||now-cutoff*1000>=FALLBACK_INTERVAL;
+ if(now-lastRun<FAST_INTERVAL&&now-cutoff*1000<CORE_POLL_INTERVAL)return false;
+ return pendingBlock>block||now-cutoff*1000>=CORE_POLL_INTERVAL;
 }
 export async function publishCore(state,publish=publishRealtime){
  await loadSharedRegistry();
  const report=buildReport(state);
  if(!isSourceInflowAligned(report.sourceInflow,report))throw Error('SOURCE_INFLOW_NOT_SYNCHRONIZED');
  await publish([{kind:'report',data:report},{kind:'addresses',data:buildAddressReport(state)}],{processedBlock:state.block});
+  return {block:state.block,cutoff:state.cutoff,flowBlock:state.claimFlow?.throughBlock||0};
 }
 // A failed refresh may not have created a local checkpoint yet. Preserve the
 // provider error instead of replacing it with ENOENT. Only a verified partial
