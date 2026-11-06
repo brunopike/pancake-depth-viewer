@@ -44,6 +44,7 @@ function validateState(state){
   return state;
 }
 export async function readState(file){return validateState(await readCheckpoint(file));}
+export async function readStateMetadata(file){return validateState(await readCheckpoint(file,{metadataOnly:true}));}
 export async function loadState({ fetch: request = fetch, includeRemote = true, includeRemoteCore=true, currentState, checkpointFile=process.env.ESIM_CHECKPOINT_FILE, currentCheckpointFile='.goodway/esim-monitor/state.json.gz' } = {}) {
   let local = currentState||await readState(new URL('./bootstrap.json.gz', import.meta.url));
   if(checkpointFile){

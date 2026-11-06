@@ -1,10 +1,10 @@
 import {loadSharedRegistry} from '../../server/esim/shared-data.mjs';
 import {execFile} from 'node:child_process';
 import {promisify} from 'node:util';
-import {readFile,writeFile,copyFile,access} from 'node:fs/promises';
+import {readFile,copyFile,access} from 'node:fs/promises';
 import {setTimeout as sleep} from 'node:timers/promises';
 import {pathToFileURL} from 'node:url';
-import {parseState} from '../../server/esim/store.mjs';
+import {readState,readStateMetadata} from '../../server/esim/store.mjs';
 import {buildReport} from '../../server/esim/metrics.mjs';
 import {buildAddressReport} from '../../server/esim/addresses.mjs';
 import {isSourceInflowAligned} from '../../server/esim/source-inflows.mjs';
@@ -31,7 +31,7 @@ export async function refreshCheckpoint({refresh,read,block=0}){
  try{await refresh();}catch(error){failure=error;}
  if(failure&&failure.message!=='QUERY_LIMIT')throw failure;
  let state;
- try{state=parseState(await read());}catch(error){throw failure||error;}
+ try{state=await read();}catch(error){throw failure||error;}
  if(state.block<block||failure&&state.block<=block)throw failure||Error('SNAPSHOT_NOT_ADVANCED');
  return {state,partial:!!failure};
 }
@@ -58,15 +58,17 @@ async function main(){
   if(Date.now()>=retryAt&&refreshNeeded({now:Date.now(),lastRun,cutoff,pendingBlock,block})){
    lastRun=Date.now();const failures=[];
    const attempt=async(kind,task)=>{try{await task();outstanding.delete(kind);return true;}catch(error){const code=/^[A-Z_]+$/.test(error.message)?error.message:'UPDATE_FAILED';failures.push(code);outstanding.add(kind);console.warn(`Realtime ${kind} deferred: ${code}`);return false;}};
-   let state,partial=false,previousBytes;
-   try{previousBytes=await readFile(stateFile);}catch{}
+   let state,partial=false,previousBlock;
+   const candidate='.goodway/esim-monitor/candidate.json.gz';
    const coreReady=await attempt('core-refresh',async()=>{
-    ({state,partial}=await refreshCheckpoint({refresh:()=>command('refresh'),read:()=>readFile(stateFile),block}));
-    if(!partial&&previousBytes&&parseState(previousBytes).block<state.block)await writeFile('.goodway/esim-monitor/rollback.json.gz',previousBytes);
+    try{await copyFile(stateFile,candidate);previousBlock=(await readStateMetadata(candidate)).block;}catch(error){if(error.code!=='ENOENT')throw error;}
+    ({state,partial}=await refreshCheckpoint({refresh:()=>command('refresh'),read:()=>readState(stateFile),block}));
+    if(!partial&&previousBlock<state.block)await copyFile(candidate,'.goodway/esim-monitor/rollback.json.gz');
     block=state.block;cutoff=state.cutoff;
    });
    if(coreReady&&state&&state.block===block){
     await attempt('core-publish',async()=>{await publishCore(state);console.log(JSON.stringify({phase:'realtime-core-published',block,cutoff,pendingBlock}));});
+    state=null;
     // Core archive must survive a holder or live database outage.
     if(Date.now()-lastCoreArchive>=ARCHIVE_INTERVAL){
      const archived=await attempt('core-archive',coreArchive);
@@ -77,7 +79,7 @@ async function main(){
     if(!partial)await attempt('holders-refresh',async()=>{
      await command('holders-refresh');
      const holders=JSON.parse(await readFile('.goodway/esim-holders/holders.json','utf8'));
-     if(holders.tradeCutoff<state.cutoff||holders.block<state.block)throw Error('HOLDER_TRADES_BEHIND');
+     if(holders.tradeCutoff<cutoff||holders.block<block)throw Error('HOLDER_TRADES_BEHIND');
      await attempt('holders-publish',async()=>{await publishRealtime([{kind:'holders',data:holders}]);holderCutoff=Math.min(holders.cutoff,holders.tradeCutoff);console.log(JSON.stringify({phase:'realtime-holders-published',block:holders.block,cutoff:holders.cutoff,tradeCutoff:holders.tradeCutoff}));});
      if(Date.now()-lastHolderArchive>=ARCHIVE_INTERVAL)await attempt('holders-archive',holderArchive);
     });

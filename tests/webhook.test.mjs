@@ -67,7 +67,7 @@ test('first-run RPC failure is not hidden by a missing checkpoint',async()=>{
 });
 test('only an advancing verified partial checkpoint can be published after budget exhaustion',async()=>{
  const state={version:1,token:TOKEN,source:SOURCE,block:124,blockHash:'0x'+'a'.repeat(64),cutoff:1000};
- const opts={refresh:async()=>{throw Error('QUERY_LIMIT');},read:async()=>gzipSync(JSON.stringify(state)),block:123};
+ const opts={refresh:async()=>{throw Error('QUERY_LIMIT');},read:async()=>state,block:123};
  assert.deepEqual(await refreshCheckpoint(opts),{state,partial:true});
  await assert.rejects(refreshCheckpoint({...opts,block:124}),/QUERY_LIMIT/);
  await assert.rejects(refreshCheckpoint({...opts,refresh:async()=>{throw Error('SOURCE_INFLOW_CHECKPOINT_CHANGED');}}),/SOURCE_INFLOW_CHECKPOINT_CHANGED/);
