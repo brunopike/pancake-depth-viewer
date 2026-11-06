@@ -73,6 +73,7 @@ async function main(){
     if(Date.now()-lastCoreArchive>=ARCHIVE_INTERVAL){
      const archived=await attempt('core-archive',coreArchive);
      if(archived&&!partial)await attempt('provenance-dispatch',()=>dispatchNextWorker({repo:process.env.GITHUB_REPOSITORY,token:process.env.GITHUB_TOKEN,workflowId:'esim-claim-flow.yml'}));
+     if(archived&&!partial)await attempt('cohort-dispatch',()=>dispatchNextWorker({repo:process.env.GITHUB_REPOSITORY,token:process.env.GITHUB_TOKEN,workflowId:'esim-cohort.yml'}));
     }
     // Catch up the canonical ledger first. Rebuilding all holders and provenance
     // for every partial prefix needlessly delays recovery and consumes RPC quota.

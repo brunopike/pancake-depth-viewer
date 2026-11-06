@@ -92,3 +92,9 @@ test('Provenance uses its independent workflow without passing live-worker sessi
  assert.match(api.requests.at(-1).url,/esim-claim-flow.yml\/dispatches$/);
  assert.deepEqual(api.requests.at(-1).body,{ref:'main'});
 });
+
+test('fallback archives can explicitly dispatch cohort verification without session inputs',async()=>{
+ const api=handoffAPI();
+ assert.equal(await dispatchNextWorker({repo:'owner/viewer',token:'test-only',workflowId:'esim-cohort.yml',fetch:api.fetch}),true);
+ assert.deepEqual(api.requests.at(-1).body,{ref:'main'});
+});
