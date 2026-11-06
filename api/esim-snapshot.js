@@ -4,7 +4,7 @@ export const config={maxDuration:30};
 export default async function handler(req,res){
  if(req.method!=='GET')return res.status(405).end();
  const kind=req.query?.kind;
- res.setHeader('Cache-Control','public, max-age=0, s-maxage=15, stale-while-revalidate=30');
+ res.setHeader('Cache-Control','public, max-age=0, s-maxage=5, stale-while-revalidate=5');
  try{
   if(kind==='status'){
    const [s,auxiliary,auxiliaryJobs]=await Promise.all([realtimeStatus(),readAuxiliaryStatus(),readAuxiliaryJobs().catch(()=>null)]);return res.status(200).json({pendingBlock:Number(s.pending_block),processedBlock:Number(s.processed_block),holderBlock:Number(s.holder_block||0),lastDelivery:s.last_delivery,webhookRequired:process.env.ESIM_UPDATE_MODE!=='poll',lastProcessed:s.last_processed,error:s.last_error||null,snapshots:s.snapshots||{},auxiliary,auxiliaryJobs});

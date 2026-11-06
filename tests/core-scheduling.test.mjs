@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {dueTask,mmStepPending} from '../scripts/esim/vm-worker.mjs';
+import {dueTask,mmStepPending,mmStepCutoff} from '../scripts/esim/vm-worker.mjs';
 
 test('an aged core resumes after one background job, even within the old cooldown',()=>{
  const now=10_000_000,last={core:now-40_000,holders:now-700_000,depth:now-1000,mm:now-650_000,archive:now,backgroundAttemptAt:now-1000};
@@ -40,8 +40,19 @@ test('unfinished or unrecognized MM output retains short checkpoint continuation
 });
 
 test('heavy polling leaves room for core while staying within its ten-minute cadence',()=>{
- const now=10_000_000,last={core:now,holders:now-599_999,depth:now-599_999,mm:now-599_999,archive:now};
+ const now=10_000_000,last={core:now,holders:now-599_999,depth:now-599_999,mm:now-599_999,mmCutoff:now,archive:now};
  const input={now,last,cutoff:now/1000,block:1,pendingBlock:1};
  assert.equal(dueTask(input),null);
  assert.equal(dueTask({...input,now:now+1}),'holders');
+});
+
+test('MM starts from the data deadline, allowing for work already spent before completion',()=>{
+ const now=10_000_000,last={core:now,holders:now,depth:now,archive:now,mm:now-5*60000,mmCutoff:now-10*60000};
+ const input={now,last,cutoff:now/1000,block:1,pendingBlock:1};
+ assert.equal(dueTask(input),'mm');
+ assert.equal(dueTask({...input,last:{...last,mmCutoff:now-9*60000}}),null);
+ const output=JSON.stringify({phase:'mm-server-step',status:'complete',cutoff:new Date(last.mmCutoff).toISOString()});
+ assert.equal(mmStepCutoff(output,now),last.mmCutoff);
+ assert.equal(mmStepCutoff(output.replace(new Date(last.mmCutoff).toISOString(),new Date(now+120000).toISOString()),now),0);
+ assert.equal(mmStepCutoff('{}',now),0);
 });

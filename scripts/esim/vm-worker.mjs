@@ -18,17 +18,24 @@ export async function runCorePass(command,{remote,bootstrap,block}){
  await command('scripts/esim/vm-task.mjs',['core'],{extra:{ESIM_MIN_BLOCK:String(block+1)}});
  return true;
 }
-export function mmStepPending(output){
- for(const line of String(output).trim().split('\n').reverse())try{const row=JSON.parse(line);if(row.phase==='mm-server-step')return row.status!=='complete';}catch{}
- return true;
+function mmStepResult(output){
+ for(const line of String(output).trim().split('\n').reverse())try{const row=JSON.parse(line);if(row.phase==='mm-server-step')return row;}catch{}
+ return null;
+}
+export const mmStepPending=output=>mmStepResult(output)?.status!=='complete';
+export function mmStepCutoff(output,now=Date.now()){
+ const cutoff=Date.parse(mmStepResult(output)?.cutoff);
+ return Number.isFinite(cutoff)&&cutoff>0&&cutoff<=now+60000?cutoff:0;
 }
 export function dueTask({now,last,cutoff,pendingBlock,block,publishedFlowBlock=0,retryAt={},coreAvailable=true}){
  const ready=task=>now>=(retryAt[task]||0)&&(coreAvailable||!['core','holders','archive'].includes(task));
  if(ready('core')&&!last.core)return 'core';
+ const mmCutoff=Number.isFinite(last.mmCutoff)&&last.mmCutoff>0&&last.mmCutoff<=now+60000?last.mmCutoff:0;
+ const mmDue=now-(last.mm||0)>=(last.mmPending||mmCutoff?60000:300000)&&(last.mmPending||!mmCutoff||now-mmCutoff>=600000);
  const due=[
   ['core',now-cutoff*1000>=120000||now-(last.core||0)>=60000&&(pendingBlock>block||provenanceMergeNeeded({now,last,publishedFlowBlock}))],
   ['holders',now-(last.holders||0)>=600000],['archive',now-(last.archive||0)>=3600000],
-  ['depth',now-(last.depth||0)>=600000],['mm',now-(last.mm||0)>=(last.mmPending?60000:600000)]
+  ['depth',now-(last.depth||0)>=600000],['mm',mmDue]
  ].filter(([task,needed])=>needed&&ready(task)).map(([task])=>task);
  // An overdue core may yield one background pass, never the entire queue.
  if(due.includes('core')&&(last.backgroundAttemptAt||0)>(last.core||0))return 'core';
@@ -131,7 +138,7 @@ export async function main(){
        await guard.check();await realtimeSQL().query("DELETE FROM esim_webhook_receipts WHERE received_at < now()-interval '7 days'");
       }
      }else if(task==='mm'){
-      if(!dryRun)last.mmPending=mmStepPending(await command('server/mm-ledger/worker.mjs',[],{lease:null,timeout:210000}));
+      if(!dryRun){const output=await command('server/mm-ledger/worker.mjs',[],{lease:null,timeout:210000});last.mmPending=mmStepPending(output);if(!last.mmPending)last.mmCutoff=mmStepCutoff(output);}
      }else if(task==='depth'){
       if(!depthGuard)depthGuard=await startLease(dryRun?'shadow-depth':'depth',{onLost:lost});
       if(depthGuard){await command('scripts/snapshot.mjs',[],{lease:depthGuard,extra:{ESIM_SNAPSHOT_INTERVAL_MS:'600000'},timeout:600000});if(!dryRun)await command('scripts/publish-snapshot.mjs',[],{lease:depthGuard,timeout:120000});}

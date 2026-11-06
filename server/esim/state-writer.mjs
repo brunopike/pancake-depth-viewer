@@ -6,14 +6,21 @@ import {createGzip} from 'node:zlib';
 
 const jsonValue=(value,key)=>typeof value?.toJSON==='function'?value.toJSON(key):value;
 const omitted=value=>['undefined','function','symbol'].includes(typeof value);
+const smallScalar=value=>value===null||['string','number','boolean','undefined'].includes(typeof value)&&(typeof value!=='string'||value.length<=2048);
+function smallArray(value){
+ if(!Array.isArray(value)||value.length>8||'toJSON' in value)return false;
+ const prototype=Object.getPrototypeOf(value);if(prototype!==Array.prototype&&prototype!==null)return false;
+ for(let i=0;i<value.length;i++){const d=Object.getOwnPropertyDescriptor(value,String(i));if(d?!('value' in d)||!smallScalar(d.value):i in value)return false;}
+ return true;
+}
 // Provenance now contains large nested arrays too; never stringify a whole container.
 function* pieces(value,parents=new Set()){
  if(value===null||typeof value!=='object'){yield JSON.stringify(value);return;}
- // Flat ledger rows are small; serialize them together, never a large container.
+ // Ledger rows may contain a short order tuple; bound every child before native serialization.
  const prototype=Object.getPrototypeOf(value);
  if((prototype===Object.prototype||prototype===null)&&!('toJSON' in value)){
   const keys=Object.keys(value);
-  if(keys.length<=32&&keys.every(key=>{const d=Object.getOwnPropertyDescriptor(value,key);return key.length<=2048&&d&&'value' in d&&(d.value===null||['string','number','boolean','undefined'].includes(typeof d.value))&&(typeof d.value!=='string'||d.value.length<=2048);})){yield JSON.stringify(value);return;}
+  if(keys.length<=32&&keys.every(key=>{const d=Object.getOwnPropertyDescriptor(value,key);return key.length<=2048&&d&&'value' in d&&(smallScalar(d.value)||smallArray(d.value));})){yield JSON.stringify(value);return;}
  }
  if(parents.has(value))throw TypeError('Circular checkpoint');
  parents.add(value);

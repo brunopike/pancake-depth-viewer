@@ -49,3 +49,22 @@ test('custom scalar toJSON remains on the bounded recursive path',()=>{
  assert.equal(chunks.join(''),expected);
  assert(chunks.every(c=>c.length<=65536));
 });
+
+test('short row tuples preserve holes, accessors and custom array serialization',()=>{
+ let reads=0;const accessed=[1,2];Object.defineProperty(accessed,'1',{get(){reads++;return 2;}});
+ const custom=[1];custom.toJSON=()=>({rows:Array.from({length:20000},(_,i)=>({i}))});
+ const state={rows:[{order:[1,,3]},{order:accessed},{order:custom},{order:Array(9).fill('value')}]};
+ const expected=JSON.stringify(state);reads=0;
+ const chunks=[...checkpointChunks(state)];
+ assert.equal(chunks.join(''),expected);assert.equal(reads,1);assert(chunks.every(c=>c.length<=65536));
+});
+
+test('array holes cannot hide inherited large containers from the streaming writer',()=>{
+ let reads=0;const payload={rows:Array.from({length:20000},(_,i)=>({get i(){reads++;return i;}}))};
+ const prototype=Object.create(Array.prototype);prototype[0]=payload;
+ const order=Array(1);Object.setPrototypeOf(order,prototype);
+ const state={order},expected=JSON.stringify(state);reads=0;
+ const iterator=checkpointChunks(state),first=iterator.next();
+ assert(reads>0&&reads<20000);
+ assert.equal([first.value,...iterator].join(''),expected);
+});

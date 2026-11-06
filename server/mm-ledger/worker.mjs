@@ -13233,7 +13233,8 @@ process.env.BNB_RPC_URL ||= process.env.ALCHEMY_API_KEY ? `https://bnb-mainnet.g
 try {
   const job = await startSync("server");
   const result = job.id ? await runSync(job.id, Number(process.env.MM_STEP_MS || 2e4)) : job;
-  console.log(JSON.stringify({ phase: "mm-server-step", ...result }));
+  const cutoff = result?.status === "complete" ? (await db().query("SELECT max(end_at) AS cutoff FROM esim_ledger.periods")).rows[0]?.cutoff : null;
+  console.log(JSON.stringify({ phase: "mm-server-step", ...result, cutoff }));
   if (result?.status === "failed") process.exitCode = 1;
 } catch (e) {
   console.error("MM_SERVER_STEP_FAILED", String(e.code || "").slice(0, 40));
