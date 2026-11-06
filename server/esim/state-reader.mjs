@@ -7,7 +7,7 @@ import {pipeline} from 'node:stream/promises';
 import {createGunzip} from 'node:zlib';
 import parser from 'stream-json';
 import Assembler from 'stream-json/assembler.js';
-import filter from 'stream-json/filters/Filter.js';
+import filter from 'stream-json/filters/filter.js';
 import {checkpointParts} from './checkpoint-chunks.mjs';
 
 // Avoid holding the entire inflated JSON and its UTF-16 copy alongside the ledger.

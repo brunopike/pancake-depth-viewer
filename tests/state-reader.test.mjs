@@ -1,10 +1,11 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {mkdtemp,writeFile,rm} from 'node:fs/promises';
+import {mkdtemp,writeFile,readFile,rm,readdir} from 'node:fs/promises';
 import {createWriteStream} from 'node:fs';
 import {constants} from 'node:buffer';
 import {pipeline} from 'node:stream/promises';
-import {join} from 'node:path';
+import {join,dirname,basename} from 'node:path';
+import {fileURLToPath} from 'node:url';
 import {tmpdir} from 'node:os';
 import {gzipSync,createGzip} from 'node:zlib';
 import {Readable} from 'node:stream';
@@ -12,6 +13,12 @@ import {readCheckpoint} from '../server/esim/state-reader.mjs';
 import {readState,readStateMetadata} from '../server/esim/store.mjs';
 import {refreshCheckpoint} from '../scripts/esim/realtime-worker.mjs';
 import {TOKEN,SOURCE} from '../server/esim/metrics.mjs';
+test('checkpoint parser imports match the installed Linux filenames exactly',async()=>{
+ const source=await readFile(new URL('../server/esim/state-reader.mjs',import.meta.url),'utf8');
+ for(const [,specifier]of source.matchAll(/from ['"](stream-json[^'"]*)/g)){
+  const file=fileURLToPath(import.meta.resolve(specifier));assert((await readdir(dirname(file))).includes(basename(file)),specifier);
+ }
+});
 test('streamed checkpoint reads preserve JSON values and reject incomplete input',async()=>{
  const dir=await mkdtemp(join(tmpdir(),'esim-stream-')),file=join(dir,'state.gz');
  try{
