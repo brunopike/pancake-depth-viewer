@@ -47,9 +47,9 @@ var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__ge
   mod
 ));
 
-// ../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/postgres-array/index.js
+// ../../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/postgres-array/index.js
 var require_postgres_array = __commonJS({
-  "../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/postgres-array/index.js"(exports) {
+  "../../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/postgres-array/index.js"(exports) {
     "use strict";
     exports.parse = function(source, transform) {
       return new ArrayParser(source, transform).parse();
@@ -141,9 +141,9 @@ var require_postgres_array = __commonJS({
   }
 });
 
-// ../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/pg-types/lib/arrayParser.js
+// ../../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/pg-types/lib/arrayParser.js
 var require_arrayParser = __commonJS({
-  "../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/pg-types/lib/arrayParser.js"(exports, module) {
+  "../../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/pg-types/lib/arrayParser.js"(exports, module) {
     var array = require_postgres_array();
     module.exports = {
       create: function(source, transform) {
@@ -157,9 +157,9 @@ var require_arrayParser = __commonJS({
   }
 });
 
-// ../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/postgres-date/index.js
+// ../../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/postgres-date/index.js
 var require_postgres_date = __commonJS({
-  "../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/postgres-date/index.js"(exports, module) {
+  "../../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/postgres-date/index.js"(exports, module) {
     "use strict";
     var DATE_TIME = /(\d{1,})-(\d{2})-(\d{2}) (\d{2}):(\d{2}):(\d{2})(\.\d{1,})?.*?( BC)?$/;
     var DATE = /^(\d{1,})-(\d{2})-(\d{2})( BC)?$/;
@@ -244,9 +244,9 @@ var require_postgres_date = __commonJS({
   }
 });
 
-// ../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/xtend/mutable.js
+// ../../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/xtend/mutable.js
 var require_mutable = __commonJS({
-  "../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/xtend/mutable.js"(exports, module) {
+  "../../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/xtend/mutable.js"(exports, module) {
     module.exports = extend;
     var hasOwnProperty = Object.prototype.hasOwnProperty;
     function extend(target) {
@@ -263,9 +263,9 @@ var require_mutable = __commonJS({
   }
 });
 
-// ../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/postgres-interval/index.js
+// ../../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/postgres-interval/index.js
 var require_postgres_interval = __commonJS({
-  "../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/postgres-interval/index.js"(exports, module) {
+  "../../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/postgres-interval/index.js"(exports, module) {
     "use strict";
     var extend = require_mutable();
     module.exports = PostgresInterval;
@@ -354,9 +354,9 @@ var require_postgres_interval = __commonJS({
   }
 });
 
-// ../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/postgres-bytea/index.js
+// ../../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/postgres-bytea/index.js
 var require_postgres_bytea = __commonJS({
-  "../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/postgres-bytea/index.js"(exports, module) {
+  "../../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/postgres-bytea/index.js"(exports, module) {
     "use strict";
     var bufferFrom = Buffer.from || Buffer;
     module.exports = function parseBytea(input) {
@@ -390,9 +390,9 @@ var require_postgres_bytea = __commonJS({
   }
 });
 
-// ../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/pg-types/lib/textParsers.js
+// ../../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/pg-types/lib/textParsers.js
 var require_textParsers = __commonJS({
-  "../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/pg-types/lib/textParsers.js"(exports, module) {
+  "../../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/pg-types/lib/textParsers.js"(exports, module) {
     var array = require_postgres_array();
     var arrayParser = require_arrayParser();
     var parseDate = require_postgres_date();
@@ -590,9 +590,9 @@ var require_textParsers = __commonJS({
   }
 });
 
-// ../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/pg-int8/index.js
+// ../../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/pg-int8/index.js
 var require_pg_int8 = __commonJS({
-  "../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/pg-int8/index.js"(exports, module) {
+  "../../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/pg-int8/index.js"(exports, module) {
     "use strict";
     var BASE = 1e6;
     function readInt8(buffer) {
@@ -670,9 +670,9 @@ var require_pg_int8 = __commonJS({
   }
 });
 
-// ../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/pg-types/lib/binaryParsers.js
+// ../../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/pg-types/lib/binaryParsers.js
 var require_binaryParsers = __commonJS({
-  "../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/pg-types/lib/binaryParsers.js"(exports, module) {
+  "../../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/pg-types/lib/binaryParsers.js"(exports, module) {
     var parseInt64 = require_pg_int8();
     var parseBits = function(data, bits, offset, invert, callback) {
       offset = offset || 0;
@@ -870,9 +870,9 @@ var require_binaryParsers = __commonJS({
   }
 });
 
-// ../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/pg-types/lib/builtins.js
+// ../../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/pg-types/lib/builtins.js
 var require_builtins = __commonJS({
-  "../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/pg-types/lib/builtins.js"(exports, module) {
+  "../../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/pg-types/lib/builtins.js"(exports, module) {
     module.exports = {
       BOOL: 16,
       BYTEA: 17,
@@ -938,9 +938,9 @@ var require_builtins = __commonJS({
   }
 });
 
-// ../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/pg-types/index.js
+// ../../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/pg-types/index.js
 var require_pg_types = __commonJS({
-  "../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/pg-types/index.js"(exports) {
+  "../../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/pg-types/index.js"(exports) {
     var textParsers = require_textParsers();
     var binaryParsers = require_binaryParsers();
     var arrayParser = require_arrayParser();
@@ -979,9 +979,9 @@ var require_pg_types = __commonJS({
   }
 });
 
-// ../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/pg/lib/defaults.js
+// ../../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/pg/lib/defaults.js
 var require_defaults = __commonJS({
-  "../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/pg/lib/defaults.js"(exports, module) {
+  "../../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/pg/lib/defaults.js"(exports, module) {
     "use strict";
     var user;
     try {
@@ -1048,9 +1048,9 @@ var require_defaults = __commonJS({
   }
 });
 
-// ../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/pg/lib/utils.js
+// ../../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/pg/lib/utils.js
 var require_utils = __commonJS({
-  "../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/pg/lib/utils.js"(exports, module) {
+  "../../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/pg/lib/utils.js"(exports, module) {
     "use strict";
     var defaults2 = require_defaults();
     var nodeUtils = __require("util");
@@ -1212,9 +1212,9 @@ var require_utils = __commonJS({
   }
 });
 
-// ../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/pg/lib/crypto/utils.js
+// ../../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/pg/lib/crypto/utils.js
 var require_utils2 = __commonJS({
-  "../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/pg/lib/crypto/utils.js"(exports, module) {
+  "../../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/pg/lib/crypto/utils.js"(exports, module) {
     var nodeCrypto = __require("crypto");
     module.exports = {
       postgresMd5PasswordHash,
@@ -1263,9 +1263,9 @@ var require_utils2 = __commonJS({
   }
 });
 
-// ../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/pg/lib/crypto/cert-signatures.js
+// ../../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/pg/lib/crypto/cert-signatures.js
 var require_cert_signatures = __commonJS({
-  "../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/pg/lib/crypto/cert-signatures.js"(exports, module) {
+  "../../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/pg/lib/crypto/cert-signatures.js"(exports, module) {
     function x509Error(msg, cert) {
       return new Error("SASL channel binding: " + msg + " when parsing public certificate " + cert.toString("base64"));
     }
@@ -1376,9 +1376,9 @@ var require_cert_signatures = __commonJS({
   }
 });
 
-// ../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/pg/lib/crypto/sasl.js
+// ../../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/pg/lib/crypto/sasl.js
 var require_sasl = __commonJS({
-  "../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/pg/lib/crypto/sasl.js"(exports, module) {
+  "../../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/pg/lib/crypto/sasl.js"(exports, module) {
     "use strict";
     var crypto = require_utils2();
     var { signatureAlgorithmHashFromCertificate } = require_cert_signatures();
@@ -1561,9 +1561,9 @@ var require_sasl = __commonJS({
   }
 });
 
-// ../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/pg/lib/type-overrides.js
+// ../../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/pg/lib/type-overrides.js
 var require_type_overrides = __commonJS({
-  "../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/pg/lib/type-overrides.js"(exports, module) {
+  "../../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/pg/lib/type-overrides.js"(exports, module) {
     "use strict";
     var types2 = require_pg_types();
     function TypeOverrides2(userTypes) {
@@ -1596,9 +1596,9 @@ var require_type_overrides = __commonJS({
   }
 });
 
-// ../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/pg-connection-string/index.js
+// ../../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/pg-connection-string/index.js
 var require_pg_connection_string = __commonJS({
-  "../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/pg-connection-string/index.js"(exports, module) {
+  "../../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/pg-connection-string/index.js"(exports, module) {
     "use strict";
     function parse(str, options = {}) {
       if (str.charAt(0) === "/") {
@@ -1784,9 +1784,9 @@ See https://www.postgresql.org/docs/current/libpq-ssl.html for libpq SSL mode de
   }
 });
 
-// ../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/pg/lib/connection-parameters.js
+// ../../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/pg/lib/connection-parameters.js
 var require_connection_parameters = __commonJS({
-  "../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/pg/lib/connection-parameters.js"(exports, module) {
+  "../../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/pg/lib/connection-parameters.js"(exports, module) {
     "use strict";
     var dns = __require("dns");
     var defaults2 = require_defaults();
@@ -1935,9 +1935,9 @@ var require_connection_parameters = __commonJS({
   }
 });
 
-// ../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/pg/lib/result.js
+// ../../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/pg/lib/result.js
 var require_result = __commonJS({
-  "../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/pg/lib/result.js"(exports, module) {
+  "../../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/pg/lib/result.js"(exports, module) {
     "use strict";
     var types2 = require_pg_types();
     var matchRegexp = /^([A-Za-z]+)(?: (\d+))?(?: (\d+))?/;
@@ -2026,9 +2026,9 @@ var require_result = __commonJS({
   }
 });
 
-// ../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/pg/lib/query.js
+// ../../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/pg/lib/query.js
 var require_query = __commonJS({
-  "../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/pg/lib/query.js"(exports, module) {
+  "../../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/pg/lib/query.js"(exports, module) {
     "use strict";
     var { EventEmitter } = __require("events");
     var Result2 = require_result();
@@ -2228,9 +2228,9 @@ var require_query = __commonJS({
   }
 });
 
-// ../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/pg-protocol/dist/messages.js
+// ../../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/pg-protocol/dist/messages.js
 var require_messages = __commonJS({
-  "../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/pg-protocol/dist/messages.js"(exports) {
+  "../../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/pg-protocol/dist/messages.js"(exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.NoticeMessage = exports.DataRowMessage = exports.CommandCompleteMessage = exports.ReadyForQueryMessage = exports.NotificationResponseMessage = exports.BackendKeyDataMessage = exports.AuthenticationMD5Password = exports.ParameterStatusMessage = exports.ParameterDescriptionMessage = exports.RowDescriptionMessage = exports.Field = exports.CopyResponse = exports.CopyDataMessage = exports.DatabaseError = exports.copyDone = exports.emptyQuery = exports.replicationStart = exports.portalSuspended = exports.noData = exports.closeComplete = exports.bindComplete = exports.parseComplete = void 0;
@@ -2393,9 +2393,9 @@ var require_messages = __commonJS({
   }
 });
 
-// ../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/pg-protocol/dist/buffer-writer.js
+// ../../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/pg-protocol/dist/buffer-writer.js
 var require_buffer_writer = __commonJS({
-  "../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/pg-protocol/dist/buffer-writer.js"(exports) {
+  "../../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/pg-protocol/dist/buffer-writer.js"(exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.Writer = void 0;
@@ -2506,9 +2506,9 @@ var require_buffer_writer = __commonJS({
   }
 });
 
-// ../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/pg-protocol/dist/serializer.js
+// ../../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/pg-protocol/dist/serializer.js
 var require_serializer = __commonJS({
-  "../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/pg-protocol/dist/serializer.js"(exports) {
+  "../../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/pg-protocol/dist/serializer.js"(exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.serialize = void 0;
@@ -2720,9 +2720,9 @@ var require_serializer = __commonJS({
   }
 });
 
-// ../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/pg-protocol/dist/buffer-reader.js
+// ../../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/pg-protocol/dist/buffer-reader.js
 var require_buffer_reader = __commonJS({
-  "../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/pg-protocol/dist/buffer-reader.js"(exports) {
+  "../../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/pg-protocol/dist/buffer-reader.js"(exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.BufferReader = void 0;
@@ -2779,9 +2779,9 @@ var require_buffer_reader = __commonJS({
   }
 });
 
-// ../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/pg-protocol/dist/parser.js
+// ../../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/pg-protocol/dist/parser.js
 var require_parser = __commonJS({
-  "../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/pg-protocol/dist/parser.js"(exports) {
+  "../../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/pg-protocol/dist/parser.js"(exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.Parser = void 0;
@@ -3086,9 +3086,9 @@ var require_parser = __commonJS({
   }
 });
 
-// ../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/pg-protocol/dist/index.js
+// ../../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/pg-protocol/dist/index.js
 var require_dist = __commonJS({
-  "../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/pg-protocol/dist/index.js"(exports) {
+  "../../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/pg-protocol/dist/index.js"(exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.DatabaseError = exports.serialize = void 0;
@@ -3110,18 +3110,18 @@ var require_dist = __commonJS({
   }
 });
 
-// ../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/pg-cloudflare/dist/empty.js
+// ../../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/pg-cloudflare/dist/empty.js
 var require_empty = __commonJS({
-  "../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/pg-cloudflare/dist/empty.js"(exports) {
+  "../../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/pg-cloudflare/dist/empty.js"(exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.default = {};
   }
 });
 
-// ../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/pg/lib/stream.js
+// ../../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/pg/lib/stream.js
 var require_stream = __commonJS({
-  "../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/pg/lib/stream.js"(exports, module) {
+  "../../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/pg/lib/stream.js"(exports, module) {
     var { getStream, getSecureStream } = getStreamFuncs();
     module.exports = {
       /**
@@ -3185,9 +3185,9 @@ var require_stream = __commonJS({
   }
 });
 
-// ../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/pg/lib/connection.js
+// ../../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/pg/lib/connection.js
 var require_connection = __commonJS({
-  "../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/pg/lib/connection.js"(exports, module) {
+  "../../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/pg/lib/connection.js"(exports, module) {
     "use strict";
     var EventEmitter = __require("events").EventEmitter;
     var { parse, serialize } = require_dist();
@@ -3387,9 +3387,9 @@ var require_connection = __commonJS({
   }
 });
 
-// ../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/split2/index.js
+// ../../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/split2/index.js
 var require_split2 = __commonJS({
-  "../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/split2/index.js"(exports, module) {
+  "../../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/split2/index.js"(exports, module) {
     "use strict";
     var { Transform } = __require("stream");
     var { StringDecoder } = __require("string_decoder");
@@ -3488,9 +3488,9 @@ var require_split2 = __commonJS({
   }
 });
 
-// ../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/pgpass/lib/helper.js
+// ../../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/pgpass/lib/helper.js
 var require_helper = __commonJS({
-  "../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/pgpass/lib/helper.js"(exports, module) {
+  "../../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/pgpass/lib/helper.js"(exports, module) {
     "use strict";
     var path = __require("path");
     var Stream = __require("stream").Stream;
@@ -3659,9 +3659,9 @@ var require_helper = __commonJS({
   }
 });
 
-// ../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/pgpass/lib/index.js
+// ../../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/pgpass/lib/index.js
 var require_lib = __commonJS({
-  "../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/pgpass/lib/index.js"(exports, module) {
+  "../../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/pgpass/lib/index.js"(exports, module) {
     "use strict";
     var path = __require("path");
     var fs = __require("fs");
@@ -3680,9 +3680,9 @@ var require_lib = __commonJS({
   }
 });
 
-// ../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/pg/lib/client.js
+// ../../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/pg/lib/client.js
 var require_client = __commonJS({
-  "../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/pg/lib/client.js"(exports, module) {
+  "../../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/pg/lib/client.js"(exports, module) {
     var EventEmitter = __require("events").EventEmitter;
     var utils = require_utils();
     var nodeUtils = __require("util");
@@ -4377,9 +4377,9 @@ var require_client = __commonJS({
   }
 });
 
-// ../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/pg-pool/index.js
+// ../../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/pg-pool/index.js
 var require_pg_pool = __commonJS({
-  "../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/pg-pool/index.js"(exports, module) {
+  "../../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/pg-pool/index.js"(exports, module) {
     "use strict";
     var EventEmitter = __require("events").EventEmitter;
     var NOOP = function() {
@@ -4803,9 +4803,9 @@ var require_pg_pool = __commonJS({
   }
 });
 
-// ../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/pg/lib/native/query.js
+// ../../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/pg/lib/native/query.js
 var require_query2 = __commonJS({
-  "../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/pg/lib/native/query.js"(exports, module) {
+  "../../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/pg/lib/native/query.js"(exports, module) {
     "use strict";
     var EventEmitter = __require("events").EventEmitter;
     var util = __require("util");
@@ -4946,9 +4946,9 @@ var require_query2 = __commonJS({
   }
 });
 
-// ../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/pg/lib/native/client.js
+// ../../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/pg/lib/native/client.js
 var require_client2 = __commonJS({
-  "../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/pg/lib/native/client.js"(exports, module) {
+  "../../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/pg/lib/native/client.js"(exports, module) {
     var nodeUtils = __require("util");
     var Native;
     try {
@@ -5284,17 +5284,17 @@ var require_client2 = __commonJS({
   }
 });
 
-// ../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/pg/lib/native/index.js
+// ../../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/pg/lib/native/index.js
 var require_native = __commonJS({
-  "../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/pg/lib/native/index.js"(exports, module) {
+  "../../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/pg/lib/native/index.js"(exports, module) {
     "use strict";
     module.exports = require_client2();
   }
 });
 
-// ../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/pg/lib/index.js
+// ../../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/pg/lib/index.js
 var require_lib2 = __commonJS({
-  "../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/pg/lib/index.js"(exports, module) {
+  "../../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/pg/lib/index.js"(exports, module) {
     "use strict";
     var Client2 = require_client();
     var defaults2 = require_defaults();
@@ -5358,9 +5358,9 @@ var require_lib2 = __commonJS({
   }
 });
 
-// ../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/@vercel/functions/headers.js
+// ../../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/@vercel/functions/headers.js
 var require_headers = __commonJS({
-  "../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/@vercel/functions/headers.js"(exports, module) {
+  "../../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/@vercel/functions/headers.js"(exports, module) {
     "use strict";
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
@@ -5449,9 +5449,9 @@ var require_headers = __commonJS({
   }
 });
 
-// ../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/@vercel/functions/get-env.js
+// ../../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/@vercel/functions/get-env.js
 var require_get_env = __commonJS({
-  "../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/@vercel/functions/get-env.js"(exports, module) {
+  "../../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/@vercel/functions/get-env.js"(exports, module) {
     "use strict";
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
@@ -5613,9 +5613,9 @@ var require_get_env = __commonJS({
   }
 });
 
-// ../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/@vercel/functions/get-context.js
+// ../../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/@vercel/functions/get-context.js
 var require_get_context = __commonJS({
-  "../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/@vercel/functions/get-context.js"(exports, module) {
+  "../../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/@vercel/functions/get-context.js"(exports, module) {
     "use strict";
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
@@ -5648,9 +5648,9 @@ var require_get_context = __commonJS({
   }
 });
 
-// ../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/@vercel/functions/deadline.js
+// ../../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/@vercel/functions/deadline.js
 var require_deadline = __commonJS({
-  "../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/@vercel/functions/deadline.js"(exports, module) {
+  "../../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/@vercel/functions/deadline.js"(exports, module) {
     "use strict";
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
@@ -5689,9 +5689,9 @@ var require_deadline = __commonJS({
   }
 });
 
-// ../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/@vercel/functions/wait-until.js
+// ../../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/@vercel/functions/wait-until.js
 var require_wait_until = __commonJS({
-  "../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/@vercel/functions/wait-until.js"(exports, module) {
+  "../../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/@vercel/functions/wait-until.js"(exports, module) {
     "use strict";
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
@@ -5727,9 +5727,9 @@ var require_wait_until = __commonJS({
   }
 });
 
-// ../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/@vercel/functions/metric.js
+// ../../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/@vercel/functions/metric.js
 var require_metric = __commonJS({
-  "../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/@vercel/functions/metric.js"(exports, module) {
+  "../../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/@vercel/functions/metric.js"(exports, module) {
     "use strict";
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
@@ -5761,9 +5761,9 @@ var require_metric = __commonJS({
   }
 });
 
-// ../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/@vercel/functions/middleware.js
+// ../../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/@vercel/functions/middleware.js
 var require_middleware = __commonJS({
-  "../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/@vercel/functions/middleware.js"(exports, module) {
+  "../../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/@vercel/functions/middleware.js"(exports, module) {
     "use strict";
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
@@ -5822,9 +5822,9 @@ var require_middleware = __commonJS({
   }
 });
 
-// ../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/@vercel/functions/cache/in-memory-cache.js
+// ../../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/@vercel/functions/cache/in-memory-cache.js
 var require_in_memory_cache = __commonJS({
-  "../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/@vercel/functions/cache/in-memory-cache.js"(exports, module) {
+  "../../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/@vercel/functions/cache/in-memory-cache.js"(exports, module) {
     "use strict";
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
@@ -5890,9 +5890,9 @@ var require_in_memory_cache = __commonJS({
   }
 });
 
-// ../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/@vercel/functions/cache/build-client.js
+// ../../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/@vercel/functions/cache/build-client.js
 var require_build_client = __commonJS({
-  "../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/@vercel/functions/cache/build-client.js"(exports, module) {
+  "../../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/@vercel/functions/cache/build-client.js"(exports, module) {
     "use strict";
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
@@ -6071,9 +6071,9 @@ var require_build_client = __commonJS({
   }
 });
 
-// ../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/@vercel/functions/cache/index.js
+// ../../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/@vercel/functions/cache/index.js
 var require_cache = __commonJS({
-  "../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/@vercel/functions/cache/index.js"(exports, module) {
+  "../../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/@vercel/functions/cache/index.js"(exports, module) {
     "use strict";
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
@@ -6228,9 +6228,9 @@ var require_cache = __commonJS({
   }
 });
 
-// ../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/@vercel/functions/db-connections/index.js
+// ../../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/@vercel/functions/db-connections/index.js
 var require_db_connections = __commonJS({
-  "../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/@vercel/functions/db-connections/index.js"(exports, module) {
+  "../../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/@vercel/functions/db-connections/index.js"(exports, module) {
     "use strict";
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
@@ -6383,9 +6383,9 @@ var require_db_connections = __commonJS({
   }
 });
 
-// ../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/@vercel/functions/purge/index.js
+// ../../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/@vercel/functions/purge/index.js
 var require_purge = __commonJS({
-  "../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/@vercel/functions/purge/index.js"(exports, module) {
+  "../../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/@vercel/functions/purge/index.js"(exports, module) {
     "use strict";
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
@@ -6438,9 +6438,9 @@ var require_purge = __commonJS({
   }
 });
 
-// ../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/@vercel/functions/addcachetag/index.js
+// ../../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/@vercel/functions/addcachetag/index.js
 var require_addcachetag = __commonJS({
-  "../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/@vercel/functions/addcachetag/index.js"(exports, module) {
+  "../../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/@vercel/functions/addcachetag/index.js"(exports, module) {
     "use strict";
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
@@ -6475,9 +6475,9 @@ var require_addcachetag = __commonJS({
   }
 });
 
-// ../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/ws/lib/constants.js
+// ../../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/ws/lib/constants.js
 var require_constants = __commonJS({
-  "../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/ws/lib/constants.js"(exports, module) {
+  "../../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/ws/lib/constants.js"(exports, module) {
     "use strict";
     var BINARY_TYPES = ["nodebuffer", "arraybuffer", "fragments"];
     var hasBlob = typeof Blob !== "undefined";
@@ -6498,9 +6498,9 @@ var require_constants = __commonJS({
   }
 });
 
-// ../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/ws/lib/buffer-util.js
+// ../../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/ws/lib/buffer-util.js
 var require_buffer_util = __commonJS({
-  "../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/ws/lib/buffer-util.js"(exports, module) {
+  "../../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/ws/lib/buffer-util.js"(exports, module) {
     "use strict";
     var { EMPTY_BUFFER } = require_constants();
     var FastBuffer = Buffer[Symbol.species];
@@ -6573,9 +6573,9 @@ var require_buffer_util = __commonJS({
   }
 });
 
-// ../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/ws/lib/limiter.js
+// ../../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/ws/lib/limiter.js
 var require_limiter = __commonJS({
-  "../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/ws/lib/limiter.js"(exports, module) {
+  "../../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/ws/lib/limiter.js"(exports, module) {
     "use strict";
     var kDone = /* @__PURE__ */ Symbol("kDone");
     var kRun = /* @__PURE__ */ Symbol("kRun");
@@ -6623,9 +6623,9 @@ var require_limiter = __commonJS({
   }
 });
 
-// ../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/ws/lib/permessage-deflate.js
+// ../../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/ws/lib/permessage-deflate.js
 var require_permessage_deflate = __commonJS({
-  "../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/ws/lib/permessage-deflate.js"(exports, module) {
+  "../../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/ws/lib/permessage-deflate.js"(exports, module) {
     "use strict";
     var zlib = __require("zlib");
     var bufferUtil = require_buffer_util();
@@ -7006,9 +7006,9 @@ var require_permessage_deflate = __commonJS({
   }
 });
 
-// ../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/ws/lib/validation.js
+// ../../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/ws/lib/validation.js
 var require_validation = __commonJS({
-  "../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/ws/lib/validation.js"(exports, module) {
+  "../../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/ws/lib/validation.js"(exports, module) {
     "use strict";
     var { isUtf8 } = __require("buffer");
     var { hasBlob } = require_constants();
@@ -7207,9 +7207,9 @@ var require_validation = __commonJS({
   }
 });
 
-// ../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/ws/lib/receiver.js
+// ../../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/ws/lib/receiver.js
 var require_receiver = __commonJS({
-  "../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/ws/lib/receiver.js"(exports, module) {
+  "../../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/ws/lib/receiver.js"(exports, module) {
     "use strict";
     var { Writable } = __require("stream");
     var PerMessageDeflate2 = require_permessage_deflate();
@@ -7839,9 +7839,9 @@ var require_receiver = __commonJS({
   }
 });
 
-// ../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/ws/lib/sender.js
+// ../../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/ws/lib/sender.js
 var require_sender = __commonJS({
-  "../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/ws/lib/sender.js"(exports, module) {
+  "../../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/ws/lib/sender.js"(exports, module) {
     "use strict";
     var { Duplex } = __require("stream");
     var { randomFillSync } = __require("crypto");
@@ -8332,9 +8332,9 @@ var require_sender = __commonJS({
   }
 });
 
-// ../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/ws/lib/event-target.js
+// ../../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/ws/lib/event-target.js
 var require_event_target = __commonJS({
-  "../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/ws/lib/event-target.js"(exports, module) {
+  "../../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/ws/lib/event-target.js"(exports, module) {
     "use strict";
     var { kForOnEventAttribute, kListener } = require_constants();
     var kCode = /* @__PURE__ */ Symbol("kCode");
@@ -8561,9 +8561,9 @@ var require_event_target = __commonJS({
   }
 });
 
-// ../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/ws/lib/extension.js
+// ../../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/ws/lib/extension.js
 var require_extension = __commonJS({
-  "../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/ws/lib/extension.js"(exports, module) {
+  "../../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/ws/lib/extension.js"(exports, module) {
     "use strict";
     var { tokenChars } = require_validation();
     function push(dest, name, elem) {
@@ -8714,9 +8714,9 @@ var require_extension = __commonJS({
   }
 });
 
-// ../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/ws/lib/websocket.js
+// ../../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/ws/lib/websocket.js
 var require_websocket = __commonJS({
-  "../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/ws/lib/websocket.js"(exports, module) {
+  "../../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/ws/lib/websocket.js"(exports, module) {
     "use strict";
     var EventEmitter = __require("events");
     var https = __require("https");
@@ -9610,9 +9610,9 @@ var require_websocket = __commonJS({
   }
 });
 
-// ../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/ws/lib/stream.js
+// ../../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/ws/lib/stream.js
 var require_stream2 = __commonJS({
-  "../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/ws/lib/stream.js"(exports, module) {
+  "../../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/ws/lib/stream.js"(exports, module) {
     "use strict";
     var WebSocket2 = require_websocket();
     var { Duplex } = __require("stream");
@@ -9708,9 +9708,9 @@ var require_stream2 = __commonJS({
   }
 });
 
-// ../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/ws/lib/subprotocol.js
+// ../../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/ws/lib/subprotocol.js
 var require_subprotocol = __commonJS({
-  "../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/ws/lib/subprotocol.js"(exports, module) {
+  "../../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/ws/lib/subprotocol.js"(exports, module) {
     "use strict";
     var { tokenChars } = require_validation();
     function parse(header) {
@@ -9753,9 +9753,9 @@ var require_subprotocol = __commonJS({
   }
 });
 
-// ../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/ws/lib/websocket-server.js
+// ../../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/ws/lib/websocket-server.js
 var require_websocket_server = __commonJS({
-  "../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/ws/lib/websocket-server.js"(exports, module) {
+  "../../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/ws/lib/websocket-server.js"(exports, module) {
     "use strict";
     var EventEmitter = __require("events");
     var http = __require("http");
@@ -10154,7 +10154,7 @@ var require_websocket_server = __commonJS({
   }
 });
 
-// ../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/ws/wrapper.mjs
+// ../../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/ws/wrapper.mjs
 var wrapper_exports = {};
 __export(wrapper_exports, {
   PerMessageDeflate: () => import_permessage_deflate.default,
@@ -10169,7 +10169,7 @@ __export(wrapper_exports, {
 });
 var import_stream, import_extension, import_permessage_deflate, import_receiver, import_sender, import_subprotocol, import_websocket, import_websocket_server, wrapper_default;
 var init_wrapper = __esm({
-  "../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/ws/wrapper.mjs"() {
+  "../../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/ws/wrapper.mjs"() {
     import_stream = __toESM(require_stream2(), 1);
     import_extension = __toESM(require_extension(), 1);
     import_permessage_deflate = __toESM(require_permessage_deflate(), 1);
@@ -10182,9 +10182,9 @@ var init_wrapper = __esm({
   }
 });
 
-// ../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/@vercel/functions/websocket/index.js
+// ../../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/@vercel/functions/websocket/index.js
 var require_websocket2 = __commonJS({
-  "../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/@vercel/functions/websocket/index.js"(exports, module) {
+  "../../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/@vercel/functions/websocket/index.js"(exports, module) {
     "use strict";
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
@@ -10277,9 +10277,9 @@ var require_websocket2 = __commonJS({
   }
 });
 
-// ../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/@vercel/functions/index.js
+// ../../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/@vercel/functions/index.js
 var require_functions = __commonJS({
-  "../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/@vercel/functions/index.js"(exports, module) {
+  "../../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/node_modules/@vercel/functions/index.js"(exports, module) {
     "use strict";
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
@@ -10334,9 +10334,9 @@ var require_functions = __commonJS({
   }
 });
 
-// ../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/vendor/engine.cjs
+// ../../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/vendor/engine.cjs
 var require_engine = __commonJS({
-  "../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/vendor/engine.cjs"(exports) {
+  "../../../../../../../../../ESIM\u5E02\u503C\u7EDF\u8BA1/\u5DE5\u7A0B/esim-daily-ledger/web/vendor/engine.cjs"(exports) {
     exports.createEngine = function() {
       var ESIM_CFG = { "chainId": 56, "network": "bnb-mainnet", "token": "0x7765a659c5b0cfbfd9fbc2ef2298b75a598f2d2d", "usdt": "0x55d398326f99059ff775485246999027b3197955", "timezone": "Asia/Shanghai", "start": "2026-09-30T08:00:00+08:00", "dailyStartHour": 8, "addresses": ["0x4b7d906b209f6cee02091d0139f105c08cb861fd", "0x4eb0621554a3e7619595bed6d16dd592179c2ec1", "0xac80c4ad44ae3386205f4972d1d95712d75fb66f", "0x0dadf9848667cd51ac9bddce543c4f70278e7150", "0x3759db8f9245291c5a710fdf807e95245e6c4122", "0xe86eaf59765d580a6daccf9644b9867aeed8a18c", "0x45a186cba397f354a85e50a33f7b7082c2784ac6", "0xc2b8f3c7db355bbe8d174909d921885d0cf45359", "0x5f714f871acf20cf797a362b7583b4cb0f0bdf24", "0x8bfa50a8973c9d859b01ce6c905ea3c0a0abaddf", "0xc5b5c9f4b80f0b345a06ba7970cc3b8995ed24a4", "0xeecd820601367bf3b8aaef68b4e85495b61007cf", "0x3ab32cfcacfedeaa42c0f0eb51158c56871f71b9", "0x2635f3fe2c6ec8720391f39b09001eddc63a1a23", "0x0946f6a9e3b006984bf9f2250e12b577ccb14909", "0x0d151c68690e7a5821bc7abab74db02a703fe582", "0x040d55a50378815bf23ea17ac81f4428af73ce24", "0xea4bd4aad512ca4dccda821e8693b6b38b51fc68", "0x435883e28439f909f68c536a0c9fc8a6f1248417", "0x41e0836726b37c670acf8bac9efa8964bfc737fe", "0x2aa283101c266cbc20a142ad161d59143112bfc1", "0xb8c7fdcf7e2ab23a231df904257ff59be53ed73d", "0xc40409aee5b913f14dfd8f967299ddf9dc5009a1", "0xe858154e5b1d0c295b24103dbc7671b67faccba3", "0xe8e15e97a8652ebdc8333007ea9d3b0275595d96", "0x85e471fd8abe8e0c6b6f6b4c635956020336a12e", "0xa6b9f2f8507c3dcee32f765361f2c5527d7b6ad6", "0xd21261df561825ef324bd4430487eac32a28a66a", "0x76f9b8a66780986688e265d9a0028623052176c1", "0x1db99241d9e230edc33996567ec2707c42475fd8", "0xdcdb497a0b2ab74753f8e40e36071ce7a0ab4930"], "inputAddresses": ["0x4B7d906b209f6cee02091d0139f105c08Cb861fd", "0x4EB0621554A3e7619595bED6D16dd592179c2ec1", "0xaC80C4Ad44aE3386205f4972d1d95712D75fb66f", "0x0DAdf9848667Cd51Ac9bdDCe543c4F70278e7150", "0x3759Db8f9245291C5A710fdF807e95245E6C4122", "0xe86eAF59765D580A6Daccf9644b9867AEED8a18c", "0x45a186cBA397f354a85e50A33f7B7082C2784AC6", "0xc2B8f3C7dB355BbE8d174909d921885d0Cf45359", "0x5f714F871acF20cf797a362B7583b4Cb0F0bdf24", "0x8bfa50A8973C9D859B01ce6c905ea3C0a0abadDf", "0xc5B5c9f4B80F0b345a06bA7970Cc3b8995ED24a4", "0xeecD820601367Bf3b8Aaef68b4E85495b61007CF", "0x3aB32CFCAcFeDEaa42c0f0eb51158C56871F71b9", "0x2635F3Fe2c6EC8720391f39b09001edDc63a1a23", "0x0946f6A9E3b006984bF9f2250e12b577ccB14909", "0x0D151c68690e7A5821Bc7abaB74Db02A703FE582", "0x040d55A50378815bF23EA17ac81F4428af73Ce24", "0xea4bD4AaD512CA4DCcDa821E8693B6b38B51fc68", "0x435883e28439F909F68C536a0C9Fc8A6F1248417", "0x41E0836726b37C670AcF8BAC9EfA8964Bfc737FE", "0x2Aa283101C266Cbc20A142Ad161D59143112bFc1", "0xb8C7FDCf7E2Ab23a231dF904257FF59Be53Ed73D", "0xc40409Aee5B913f14dfD8f967299ddf9dc5009a1", "0xE858154E5B1D0C295b24103DBc7671b67fACCba3", "0xE8e15e97A8652EbdC8333007eA9D3B0275595D96", "0x85E471Fd8AbE8e0c6B6F6b4C635956020336a12e", "0xA6b9f2f8507C3dcEe32f765361F2C5527D7B6Ad6", "0xD21261dF561825Ef324BD4430487eac32a28A66a", "0x76f9B8a66780986688e265D9a0028623052176C1", "0x1DB99241D9E230eDc33996567EC2707c42475fd8", "0x1DB99241D9E230eDc33996567EC2707c42475fd8", "0xdcDB497A0b2Ab74753f8E40e36071cE7a0aB4930"], "startDay": "2026-09-30", "startBoundary": { "time": "2026-09-30T08:00:00+08:00", "block": 124808836, "actualTime": "2026-09-30T07:59:59+08:00" }, "nftSeed": [], "referencePools": [{ "id": "0x082a0a013f0d9152e53e435b274276e798f75cd5", "token0": "0x4ef9d3062c7f6eba4aae4990c5036598c6eff4ec", "token1": "0xbb4cdb9cbd36b01bd1cbaebf2de08d9173bc095c", "manager": "0x082a0a013f0d9152e53e435b274276e798f75cd5", "type": "classic", "swapCount": 1 }, { "id": "0x172fcd41e0913e95784454622d1c3724f546f849", "token0": "0x55d398326f99059ff775485246999027b3197955", "token1": "0xbb4cdb9cbd36b01bd1cbaebf2de08d9173bc095c", "manager": "0x172fcd41e0913e95784454622d1c3724f546f849", "type": "classic", "swapCount": 29 }, { "id": "0x1e213600fa9317feac4ef4087acdf5d0e25d7187", "token0": "0x0e09fabb73bd3ade0a17ecc321fd13a19e81ce82", "token1": "0xbb4cdb9cbd36b01bd1cbaebf2de08d9173bc095c", "manager": "0x1e213600fa9317feac4ef4087acdf5d0e25d7187", "type": "classic", "swapCount": 1 }, { "id": "0x247f51881d1e3ae0f759afb801413a6c948ef442", "token0": "0x55d398326f99059ff775485246999027b3197955", "token1": "0x7130d2a12b9bcbfae4f2634d864a1ee1ce3ead9c", "manager": "0x247f51881d1e3ae0f759afb801413a6c948ef442", "type": "classic", "swapCount": 2 }, { "id": "0x3b2b70dd9684deee3f942653a418be34fc0d525b", "token0": "0x0e09fabb73bd3ade0a17ecc321fd13a19e81ce82", "token1": "0x7130d2a12b9bcbfae4f2634d864a1ee1ce3ead9c", "manager": "0x3b2b70dd9684deee3f942653a418be34fc0d525b", "type": "classic", "swapCount": 1 }, { "id": "0x3c519f6bb91158a4148b276baa2d4fe3e8a26614", "token0": "0x4ef9d3062c7f6eba4aae4990c5036598c6eff4ec", "token1": "0x55d398326f99059ff775485246999027b3197955", "manager": "0x3c519f6bb91158a4148b276baa2d4fe3e8a26614", "type": "classic", "swapCount": 1 }, { "id": "0x4141325bac36affe9db165e854982230a14e6d48", "token0": "0x8ac76a51cc950d9822d68b83fe1ad97b32cd580d", "token1": "0xbb4cdb9cbd36b01bd1cbaebf2de08d9173bc095c", "manager": "0x4141325bac36affe9db165e854982230a14e6d48", "type": "classic", "swapCount": 1 }, { "id": "0x51472df7d3c9a02a912f2473960ef835ff1e9a42", "token0": "0x2170ed0880ac9a755fd29b2688956bd959f933f8", "token1": "0xbe9d156892e55e7154bcd3cb0fea677f9d3103e1", "manager": "0x51472df7d3c9a02a912f2473960ef835ff1e9a42", "type": "classic", "swapCount": 2 }, { "id": "0x62edaf2a56c9fb55be5f9b1399ac067f6a37013b", "token0": "0x7130d2a12b9bcbfae4f2634d864a1ee1ce3ead9c", "token1": "0xbb4cdb9cbd36b01bd1cbaebf2de08d9173bc095c", "manager": "0x62edaf2a56c9fb55be5f9b1399ac067f6a37013b", "type": "classic", "swapCount": 1 }, { "id": "0x62fcb3c1794fb95bd8b1a97f6ad5d8a7e4943a1e", "token0": "0x2170ed0880ac9a755fd29b2688956bd959f933f8", "token1": "0xbb4cdb9cbd36b01bd1cbaebf2de08d9173bc095c", "manager": "0x62fcb3c1794fb95bd8b1a97f6ad5d8a7e4943a1e", "type": "classic", "swapCount": 3 }, { "id": "0x7213a321f1855cf1779f42c0cd85d3d95291d34c", "token0": "0x2170ed0880ac9a755fd29b2688956bd959f933f8", "token1": "0xe9e7cea3dedca5984780bafc599bd69add087d56", "manager": "0x7213a321f1855cf1779f42c0cd85d3d95291d34c", "type": "classic", "swapCount": 1 }, { "id": "0x783a3d7c3236cf05f103adc890377f5984d694e5", "token0": "0x4902c5ebc598265ed2212b559b042de8a5eeec3f", "token1": "0x7c8d5502b544ddaf8852fc46d1174e34876d545c", "manager": "0x783a3d7c3236cf05f103adc890377f5984d694e5", "type": "classic", "swapCount": 1 }, { "id": "0x9f599f3d64a9d99ea21e68127bb6ce99f893da61", "token0": "0x2170ed0880ac9a755fd29b2688956bd959f933f8", "token1": "0x55d398326f99059ff775485246999027b3197955", "manager": "0x9f599f3d64a9d99ea21e68127bb6ce99f893da61", "type": "classic", "swapCount": 2 }, { "id": "0xafb2da14056725e3ba3a30dd846b6bbbd7886c56", "token0": "0x0e09fabb73bd3ade0a17ecc321fd13a19e81ce82", "token1": "0xbb4cdb9cbd36b01bd1cbaebf2de08d9173bc095c", "manager": "0xafb2da14056725e3ba3a30dd846b6bbbd7886c56", "type": "classic", "swapCount": 1 }, { "id": "0xbf4dc3116ba2490ba860849b2cd3399932e843bc", "token0": "0x55d398326f99059ff775485246999027b3197955", "token1": "0x7765a659c5b0cfbfd9fbc2ef2298b75a598f2d2d", "manager": "0xbf4dc3116ba2490ba860849b2cd3399932e843bc", "type": "classic", "swapCount": 108 }, { "id": "0xc53e634836e95cda2857e2fbd3eaf2f7f63cf832", "token0": "0x4902c5ebc598265ed2212b559b042de8a5eeec3f", "token1": "0xbb4cdb9cbd36b01bd1cbaebf2de08d9173bc095c", "manager": "0xc53e634836e95cda2857e2fbd3eaf2f7f63cf832", "type": "classic", "swapCount": 1 }, { "id": "0xcaaf3c41a40103a23eeaa4bba468af3cf5b0e0d8", "token0": "0x55d398326f99059ff775485246999027b3197955", "token1": "0xcae117ca6bc8a341d2e7207f30e180f0e5618b9d", "manager": "0xcaaf3c41a40103a23eeaa4bba468af3cf5b0e0d8", "type": "classic", "swapCount": 2 }, { "id": "0xcd06956a47164ea866c3e9601085777e89cffad5", "token0": "0x55d398326f99059ff775485246999027b3197955", "token1": "0x7765a659c5b0cfbfd9fbc2ef2298b75a598f2d2d", "manager": "0xcd06956a47164ea866c3e9601085777e89cffad5", "type": "classic", "swapCount": 585 }, { "id": "0xe2b7b3e9171e5f9693f4d9304177fa4b129d0bca", "token0": "0x2170ed0880ac9a755fd29b2688956bd959f933f8", "token1": "0xe9e7cea3dedca5984780bafc599bd69add087d56", "manager": "0xe2b7b3e9171e5f9693f4d9304177fa4b129d0bca", "type": "classic", "swapCount": 1 }, { "id": "0xeb7528398b2725e1e0374734a87320132223a5c6", "token0": "0x0e09fabb73bd3ade0a17ecc321fd13a19e81ce82", "token1": "0x2170ed0880ac9a755fd29b2688956bd959f933f8", "manager": "0xeb7528398b2725e1e0374734a87320132223a5c6", "type": "classic", "swapCount": 1 }, { "id": "0xf2688fb5b81049dfb7703ada5e770543770612c4", "token0": "0x8ac76a51cc950d9822d68b83fe1ad97b32cd580d", "token1": "0xbb4cdb9cbd36b01bd1cbaebf2de08d9173bc095c", "manager": "0xf2688fb5b81049dfb7703ada5e770543770612c4", "type": "classic", "swapCount": 3 }, { "id": "0x118c0dbba8ece2c060b050e14a94e7e5e97dcdc023325f0dcfcfeb7c0f7130d3", "token0": "0x55d398326f99059ff775485246999027b3197955", "token1": "0x7765a659c5b0cfbfd9fbc2ef2298b75a598f2d2d", "manager": "0xa0ffb9c1ce1fe56963b0321b32e7a0302114058b", "type": "infinity", "swapCount": 1 }, { "id": "0x24d01c45d3fc828e99c6c34cf6ddb9a39260b7fb2bc849833195caac3c987176", "token0": "0x55d398326f99059ff775485246999027b3197955", "token1": "0x7765a659c5b0cfbfd9fbc2ef2298b75a598f2d2d", "manager": "0xa0ffb9c1ce1fe56963b0321b32e7a0302114058b", "type": "infinity", "swapCount": 2864 }, { "id": "0x258907d03806aad208f23147bf05d4e5f69eaba5c6ded94f02d98445add62c31", "token0": "0x55d398326f99059ff775485246999027b3197955", "token1": "0x8ac76a51cc950d9822d68b83fe1ad97b32cd580d", "manager": "0xa0ffb9c1ce1fe56963b0321b32e7a0302114058b", "type": "infinity", "swapCount": 1 }, { "id": "0x32a805e65a3219a79707ab3e75443d75160d798de46613fc960d39cd4a96bb22", "token0": "0x55d398326f99059ff775485246999027b3197955", "token1": "0x8ac76a51cc950d9822d68b83fe1ad97b32cd580d", "manager": "0xa0ffb9c1ce1fe56963b0321b32e7a0302114058b", "type": "infinity", "swapCount": 2 }, { "id": "0x5826c5bd582f96f018219f91559c50ad17067bb421ed305d69763d7065b8432b", "token0": "0x55d398326f99059ff775485246999027b3197955", "token1": "0x7765a659c5b0cfbfd9fbc2ef2298b75a598f2d2d", "manager": "0xa0ffb9c1ce1fe56963b0321b32e7a0302114058b", "type": "infinity", "swapCount": 5 }, { "id": "0x767e8e440c8ec7ac01fddee3cea2e40931538a1375493aa2d510dd39c6d9b998", "token0": "0x55d398326f99059ff775485246999027b3197955", "token1": "0x7765a659c5b0cfbfd9fbc2ef2298b75a598f2d2d", "manager": "0xa0ffb9c1ce1fe56963b0321b32e7a0302114058b", "type": "infinity", "swapCount": 39 }, { "id": "0x81c144e9e30c6ca0f1501d04b107137a6862698d1f54abc16bf5d015cff35c4f", "token0": "0x0000000000000000000000000000000000000000", "token1": "0x2170ed0880ac9a755fd29b2688956bd959f933f8", "manager": "0xa0ffb9c1ce1fe56963b0321b32e7a0302114058b", "type": "infinity", "swapCount": 2 }, { "id": "0x8cbeeb68dd5de3355a7be1249d44b4fba14521da76ee649b2a291de1afd684ed", "token0": "0x0000000000000000000000000000000000000000", "token1": "0x8d0d000ee44948fc98c9b98a4fa4921476f08b0d", "manager": "0xa0ffb9c1ce1fe56963b0321b32e7a0302114058b", "type": "infinity", "swapCount": 1 }, { "id": "0xd37aa0f0d66ad670279f6b89325c88bdff17d0265144762fb01f54fca9779944", "token0": "0x0000000000000000000000000000000000000000", "token1": "0x55d398326f99059ff775485246999027b3197955", "manager": "0xa0ffb9c1ce1fe56963b0321b32e7a0302114058b", "type": "infinity", "swapCount": 1 }, { "id": "0xdc85783e828973a0a9f0013fb2fc5ed841765c4e9ef7deaf719a4745d37f422e", "token0": "0x55d398326f99059ff775485246999027b3197955", "token1": "0x7c8d5502b544ddaf8852fc46d1174e34876d545c", "manager": "0xa0ffb9c1ce1fe56963b0321b32e7a0302114058b", "type": "infinity", "swapCount": 1 }, { "id": "0xf126c8e4f74ace95628ec14a496e3a8bbb5f16ef9ee908359e0c4b9018d0356f", "token0": "0x8ac76a51cc950d9822d68b83fe1ad97b32cd580d", "token1": "0x8d0d000ee44948fc98c9b98a4fa4921476f08b0d", "manager": "0xa0ffb9c1ce1fe56963b0321b32e7a0302114058b", "type": "infinity", "swapCount": 1 }, { "id": "0x8321c1f53959b14ece4b5400e60aeac59e7b6b8bac446f2f0a89b9e84e68a08a", "poolId": "0x8321c1f53959b14ece4b5400e60aeac59e7b6b8bac446f2f0a89b9e84e68a08a", "manager": "0x28e2ea090877bf75740558f6bfb36a5ffee9e9df", "type": "uniswap-v4", "token0": "0x55d398326f99059ff775485246999027b3197955", "token1": "0x8ac76a51cc950d9822d68b83fe1ad97b32cd580d", "fee": 1, "tickSpacing": 1, "hooks": "0x0000000000000000000000000000000000000000", "poolKey": "0x00000000000000000000000055d398326f99059ff775485246999027b31979550000000000000000000000008ac76a51cc950d9822d68b83fe1ad97b32cd580d000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000000", "verification": { "transactionHash": "0x9160bf6c1f1279b073967f3dfe23bf7baacbf29559a13fc6150470d3b50d2e95", "block": 126564647, "logIndex": 11, "method": "Successful callTracer swap PoolKey ABI keccak equals receipt Swap poolId", "poolKeyHash": "0x8321c1f53959b14ece4b5400e60aeac59e7b6b8bac446f2f0a89b9e84e68a08a" }, "swapCount": 2 }, { "id": "0x1bb9710a71ec152e7b57de9df46e33b76690b992f283b360782721f18e0869b2", "poolId": "0x1bb9710a71ec152e7b57de9df46e33b76690b992f283b360782721f18e0869b2", "manager": "0x28e2ea090877bf75740558f6bfb36a5ffee9e9df", "type": "uniswap-v4", "token0": "0x55d398326f99059ff775485246999027b3197955", "token1": "0x7765a659c5b0cfbfd9fbc2ef2298b75a598f2d2d", "fee": 1, "tickSpacing": 1, "hooks": "0x0000000000000000000000000000000000000000", "poolKey": "0x00000000000000000000000055d398326f99059ff775485246999027b31979550000000000000000000000007765a659c5b0cfbfd9fbc2ef2298b75a598f2d2d000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000000", "verification": { "transactionHash": "0x1754638837503ebbd8473580a51c60a7af952ec58ca81a1512f8c8d71e97cdec", "block": 128281528, "logIndex": 241, "method": "Successful callTracer swap PoolKey ABI keccak equals receipt Swap poolId", "poolKeyHash": "0x1bb9710a71ec152e7b57de9df46e33b76690b992f283b360782721f18e0869b2" }, "swapCount": 1 }, { "id": "0xf8c7b3c122f31aec155c6beb0c1c78a5e74208358a840cadfbc6129b59391850", "poolId": "0xf8c7b3c122f31aec155c6beb0c1c78a5e74208358a840cadfbc6129b59391850", "manager": "0x28e2ea090877bf75740558f6bfb36a5ffee9e9df", "type": "uniswap-v4", "token0": "0x55d398326f99059ff775485246999027b3197955", "token1": "0x8ac76a51cc950d9822d68b83fe1ad97b32cd580d", "fee": 6, "tickSpacing": 1, "hooks": "0x0000000000000000000000000000000000000000", "poolKey": "0x00000000000000000000000055d398326f99059ff775485246999027b31979550000000000000000000000008ac76a51cc950d9822d68b83fe1ad97b32cd580d000000000000000000000000000000000000000000000000000000000000000600000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000000", "verification": { "transactionHash": "0x54bec96ea1ba94b3405e32bbe21e02a51a245c01062c181b8dbf62c604bf069f", "block": 126630871, "logIndex": 58, "tracePath": [2, 0, 1, 2, 1, 0, 3], "method": "Successful cached callTracer swap PoolKey ABI keccak equals receipt Swap poolId", "poolKeyHash": "0xf8c7b3c122f31aec155c6beb0c1c78a5e74208358a840cadfbc6129b59391850" } }, { "id": "0x93efe26bb57852dcba5ab7b389be998f9a823b0024c0de1d8613e6e3244036c4", "poolId": "0x93efe26bb57852dcba5ab7b389be998f9a823b0024c0de1d8613e6e3244036c4", "manager": "0x28e2ea090877bf75740558f6bfb36a5ffee9e9df", "type": "uniswap-v4", "token0": "0x7130d2a12b9bcbfae4f2634d864a1ee1ce3ead9c", "token1": "0x8ac76a51cc950d9822d68b83fe1ad97b32cd580d", "fee": 3e3, "tickSpacing": 60, "hooks": "0x0000000000000000000000000000000000000000", "poolKey": "0x0000000000000000000000007130d2a12b9bcbfae4f2634d864a1ee1ce3ead9c0000000000000000000000008ac76a51cc950d9822d68b83fe1ad97b32cd580d0000000000000000000000000000000000000000000000000000000000000bb8000000000000000000000000000000000000000000000000000000000000003c0000000000000000000000000000000000000000000000000000000000000000", "verification": { "transactionHash": "0x4e18d8712884c16ff4dc8df1aed4c8c36e2611504f664c8143c3226378d4331d", "block": 128956678, "logIndex": 373, "tracePath": [2, 3, 0, 3], "method": "Successful cached callTracer swap PoolKey ABI keccak equals receipt Swap poolId", "poolKeyHash": "0x93efe26bb57852dcba5ab7b389be998f9a823b0024c0de1d8613e6e3244036c4" } }, { "id": "0x628ea54a6450645d2bb7b2911c8c6f3d7f3944c2f4703c259a1b85bf5569870b", "poolId": "0x628ea54a6450645d2bb7b2911c8c6f3d7f3944c2f4703c259a1b85bf5569870b", "manager": "0x28e2ea090877bf75740558f6bfb36a5ffee9e9df", "type": "uniswap-v4", "token0": "0x55d398326f99059ff775485246999027b3197955", "token1": "0x8ac76a51cc950d9822d68b83fe1ad97b32cd580d", "fee": 2, "tickSpacing": 1, "hooks": "0x0000000000000000000000000000000000000000", "poolKey": "0x00000000000000000000000055d398326f99059ff775485246999027b31979550000000000000000000000008ac76a51cc950d9822d68b83fe1ad97b32cd580d000000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000000", "verification": { "transactionHash": "0x4e18d8712884c16ff4dc8df1aed4c8c36e2611504f664c8143c3226378d4331d", "block": 128956678, "logIndex": 370, "tracePath": [2, 1, 0, 3], "method": "Successful cached callTracer swap PoolKey ABI keccak equals receipt Swap poolId", "poolKeyHash": "0x628ea54a6450645d2bb7b2911c8c6f3d7f3944c2f4703c259a1b85bf5569870b" } }, { "id": "0x47a90a2d92a8367a91efa1906bfc8c1e05bf10c4", "token0": "0x55d398326f99059ff775485246999027b3197955", "token1": "0xbb4cdb9cbd36b01bd1cbaebf2de08d9173bc095c", "manager": "0x47a90a2d92a8367a91efa1906bfc8c1e05bf10c4", "type": "classic", "swapCount": 1 }, { "id": "0xac7011a0d0cfde1b06363f2141df9ae5da139759", "token0": "0x55d398326f99059ff775485246999027b3197955", "token1": "0x7765a659c5b0cfbfd9fbc2ef2298b75a598f2d2d", "manager": "0xac7011a0d0cfde1b06363f2141df9ae5da139759", "type": "classic", "swapCount": 0 }, { "id": "0xe1cc96f3ef3bc6a82140bfdf19124223e4a5d906", "token0": "0x544028231562a43b106fbceca722b65cb5c861b0", "token1": "0xf7c736310a1a89b82257443960b372af74632dfe", "manager": "0xe1cc96f3ef3bc6a82140bfdf19124223e4a5d906", "type": "classic", "swapCount": 1 }], "verifiedNonEsimResolutions": [{ "hash": "0x9de80551077e65d2bb1f135f4713e20f8ce7fc62ed00f02094349bb2f9100a4a", "wallet": "0x3ab32cfcacfedeaa42c0f0eb51158c56871f71b9", "chainId": 56, "blockHash": "0x484e20e1a90ca147f2f38a66c49f51c65c3d0ddbcfa71b3ef0e9d53f0aa7c20a", "blockNumber": 128852827, "expectedUSDTraw": "-2075420520015869105", "expectedBNBraw": "2685372145470412", "type": "\u975EESIM\u5151\u6362\u53CA\u8D39\u7528", "reason": "\u5DF2\u9010\u7B14\u6838\u5B9E\u4EA4\u6613\u56DE\u6267\u3001\u6210\u529F\u8C03\u7528\u8DEF\u5F84\u53CA\u539F\u59CB\u6574\u6570\uFF1A\u4ED8\u51FA 2 USDT\uFF0C\u6536\u5230 0.002685372145470412 BNB\uFF1B\u4E0D\u6D89\u53CA ESIM \u4E70\u5356\u6216 LP\u3002\u8DEF\u7531\u7559\u5B58 0.006 USDT \u5DF2\u5305\u542B\u5728\u4E0A\u8FF0\u4ED8\u51FA\u5185\uFF0C\u4E0D\u80FD\u91CD\u590D\u6263\u51CF\u3002\u53E6\u6709 0.075420520015869105 USDT \u6263\u81F3 UserOperation \u4E8B\u4EF6\u4E2D\u7684\u4EE3\u4ED8\u5730\u5740 0x7a956fd329d0c616f2d1dde98bb35694f397df46\uFF1B\u5DF2\u8BA1\u5165\u5B9E\u9645 U \u6536\u652F\uFF0C\u4F46\u4E0D\u6DF7\u5165\u5151\u6362\u672C\u91D1\u3002\u5177\u4F53\u6536\u8D39\u89C4\u5219\u672A\u786E\u8BA4\u3002\u94B1\u5305\u4F59\u989D\u3001Gas \u4E0E\u539F\u6709 ESIM \u4E70\u5356\u91D1\u989D\u4FDD\u6301\u4E0D\u53D8\u3002", "evidence": [{ "sourceFile": "resolutions-five.json", "sourceSHA256": "1561879e5e1c8b152265b5a55979a772a2cd122139048f1e7c2f592893a606c8", "receiptAndTrace": { "status": "fresh-receipt-and-callTracer-match", "checkedAt": "2026-10-26T06:35:26.513233+00:00", "chainId": 56, "receiptSHA256": "72f3c865494d5befcbbc9763f11a2f80cbfe1e87993a3c0df5f7579020aa61aa", "traceSHA256": "fcc141fd465c939849ac9279f48d1575666e10e874497b4a7538fed0f16d8340", "matchesPriorCache": true, "rpcMethods": ["eth_getTransactionReceipt", "debug_traceTransaction"], "sourceCount": 1, "independentEvidenceTypes": 2, "limitation": "One configured RPC provider; receipt logs and successful callTracer are two evidence types, not two independent providers." }, "transactionURL": "https://bscscan.com/tx/0x9de80551077e65d2bb1f135f4713e20f8ce7fc62ed00f02094349bb2f9100a4a", "grossInput": { "asset": "USDT", "amountRaw": "2000000000000000000" }, "output": { "asset": "BNB", "amountRaw": "2685372145470412" }, "routerRetainedIncludedInInput": { "asset": "USDT", "amountRaw": "6000000000000000" }, "extraPaymasterDebit": { "asset": "USDT", "amountRaw": "75420520015869105", "recipient": "0x7a956fd329d0c616f2d1dde98bb35694f397df46" }, "evidenceBoundary": "One RPC provider; successful receipt logs and call trace. Exact transaction only; no ownership or fee-policy inference." }], "day": "2026-10-21", "time": "2026-10-21T09:48:55+08:00" }, { "hash": "0x4e18d8712884c16ff4dc8df1aed4c8c36e2611504f664c8143c3226378d4331d", "wallet": "0xc2b8f3c7db355bbe8d174909d921885d0cf45359", "chainId": 56, "blockHash": "0xbb765d9e0eb829ea4c09e809be910ac89413b506312a418889dc3372bbe0a430", "blockNumber": 128956678, "expectedUSDTraw": "-2000000000000000000", "expectedBNBraw": "2665142864832233", "type": "\u975EESIM\u5151\u6362", "reason": "\u5DF2\u9010\u7B14\u6838\u5B9E\u4EA4\u6613\u56DE\u6267\u3001\u6210\u529F\u8C03\u7528\u8DEF\u5F84\u53CA\u539F\u59CB\u6574\u6570\uFF1A\u4ED8\u51FA 2 USDT\uFF0C\u6536\u5230 0.002665142864832233 BNB\uFF1B\u4E0D\u6D89\u53CA ESIM \u4E70\u5356\u6216 LP\u3002\u8DEF\u7531\u7559\u5B58 0.006 USDT \u5DF2\u5305\u542B\u5728\u4E0A\u8FF0\u4ED8\u51FA\u5185\uFF0C\u4E0D\u80FD\u91CD\u590D\u6263\u51CF\u3002\u94B1\u5305\u4F59\u989D\u3001Gas \u4E0E\u539F\u6709 ESIM \u4E70\u5356\u91D1\u989D\u4FDD\u6301\u4E0D\u53D8\u3002", "evidence": [{ "sourceFile": "resolutions-five.json", "sourceSHA256": "1561879e5e1c8b152265b5a55979a772a2cd122139048f1e7c2f592893a606c8", "receiptAndTrace": { "status": "fresh-receipt-and-callTracer-match", "checkedAt": "2026-10-26T06:35:26.513233+00:00", "chainId": 56, "receiptSHA256": "b11090142ddded5b7fbd808c6eac48f275969b64b77fee71fbff9b5887ea3fc1", "traceSHA256": "a95b0c4989582586d086d310ddab6ce2c99da9dea6d5778c3e413d07e24b89a7", "matchesPriorCache": true, "rpcMethods": ["eth_getTransactionReceipt", "debug_traceTransaction"], "sourceCount": 1, "independentEvidenceTypes": 2, "limitation": "One configured RPC provider; receipt logs and successful callTracer are two evidence types, not two independent providers." }, "transactionURL": "https://bscscan.com/tx/0x4e18d8712884c16ff4dc8df1aed4c8c36e2611504f664c8143c3226378d4331d", "grossInput": { "asset": "USDT", "amountRaw": "2000000000000000000" }, "output": { "asset": "BNB", "amountRaw": "2665142864832233" }, "routerRetainedIncludedInInput": { "asset": "USDT", "amountRaw": "6000000000000000" }, "extraPaymasterDebit": { "asset": "USDT", "amountRaw": "0", "recipient": null }, "evidenceBoundary": "One RPC provider; successful receipt logs and call trace. Exact transaction only; no ownership or fee-policy inference." }], "day": "2026-10-21", "time": "2026-10-21T22:48:06+08:00" }, { "hash": "0xde3c8ccab95c727c36f79ee15f8b2c6786fa17ed4866fba3a3adfa30d8c826f4", "wallet": "0x45a186cba397f354a85e50a33f7b7082c2784ac6", "chainId": 56, "blockHash": "0x08f87f83f86a612839a8ef32a12282809447e11d26aa91f350f89bcdcd615243", "blockNumber": 129070736, "expectedUSDTraw": "-1000000000000000000", "expectedBNBraw": "1345401606380498", "type": "\u975EESIM\u5151\u6362", "reason": "\u5DF2\u9010\u7B14\u6838\u5B9E\u4EA4\u6613\u56DE\u6267\u3001\u6210\u529F\u8C03\u7528\u8DEF\u5F84\u53CA\u539F\u59CB\u6574\u6570\uFF1A\u4ED8\u51FA 1 USDT\uFF0C\u6536\u5230 0.001345401606380498 BNB\uFF1B\u4E0D\u6D89\u53CA ESIM \u4E70\u5356\u6216 LP\u3002\u8DEF\u7531\u7559\u5B58 0.003 USDT \u5DF2\u5305\u542B\u5728\u4E0A\u8FF0\u4ED8\u51FA\u5185\uFF0C\u4E0D\u80FD\u91CD\u590D\u6263\u51CF\u3002\u94B1\u5305\u4F59\u989D\u3001Gas \u4E0E\u539F\u6709 ESIM \u4E70\u5356\u91D1\u989D\u4FDD\u6301\u4E0D\u53D8\u3002", "evidence": [{ "sourceFile": "resolutions-five.json", "sourceSHA256": "1561879e5e1c8b152265b5a55979a772a2cd122139048f1e7c2f592893a606c8", "receiptAndTrace": { "status": "fresh-receipt-and-callTracer-match", "checkedAt": "2026-10-26T06:35:26.513233+00:00", "chainId": 56, "receiptSHA256": "23a7e5cee672d357080fc9e59f0724e49af6cbaabf9e181cd80970f74a7544a7", "traceSHA256": "afc6be8ac113f9b8dd434119610089f15be53eac0c26ad9a0d94ddf0681783f1", "matchesPriorCache": true, "rpcMethods": ["eth_getTransactionReceipt", "debug_traceTransaction"], "sourceCount": 1, "independentEvidenceTypes": 2, "limitation": "One configured RPC provider; receipt logs and successful callTracer are two evidence types, not two independent providers." }, "transactionURL": "https://bscscan.com/tx/0xde3c8ccab95c727c36f79ee15f8b2c6786fa17ed4866fba3a3adfa30d8c826f4", "grossInput": { "asset": "USDT", "amountRaw": "1000000000000000000" }, "output": { "asset": "BNB", "amountRaw": "1345401606380498" }, "routerRetainedIncludedInInput": { "asset": "USDT", "amountRaw": "3000000000000000" }, "extraPaymasterDebit": { "asset": "USDT", "amountRaw": "0", "recipient": null }, "evidenceBoundary": "One RPC provider; successful receipt logs and call trace. Exact transaction only; no ownership or fee-policy inference." }], "day": "2026-10-22", "time": "2026-10-22T13:03:55+08:00" }, { "hash": "0x2d8dcc318e018a448a07a18c5dd4a23ca6ca9d0f176e83991489ae51d7127559", "wallet": "0xe86eaf59765d580a6daccf9644b9867aeed8a18c", "chainId": 56, "blockHash": "0x94f81415d35ce7a7f67c5128b513ff65e37d83aaa928a5592099dba23455de0c", "blockNumber": 129087217, "expectedUSDTraw": "728277494357338733998", "expectedBNBraw": "-990000000000000000", "type": "\u975EESIM\u5151\u6362", "reason": "\u5DF2\u9010\u7B14\u6838\u5B9E\u4EA4\u6613\u56DE\u6267\u3001\u6210\u529F\u8C03\u7528\u8DEF\u5F84\u53CA\u539F\u59CB\u6574\u6570\uFF1A\u4ED8\u51FA 0.99 BNB\uFF0C\u6536\u5230 728.277494357338733998 USDT\uFF1B\u4E0D\u6D89\u53CA ESIM \u4E70\u5356\u6216 LP\u3002\u8DEF\u7531\u7559\u5B58 0.00297 BNB \u5DF2\u5305\u542B\u5728\u4E0A\u8FF0\u4ED8\u51FA\u5185\uFF0C\u4E0D\u80FD\u91CD\u590D\u6263\u51CF\u3002\u94B1\u5305\u4F59\u989D\u3001Gas \u4E0E\u539F\u6709 ESIM \u4E70\u5356\u91D1\u989D\u4FDD\u6301\u4E0D\u53D8\u3002", "evidence": [{ "sourceFile": "resolutions-two.json", "sourceSHA256": "d38403415b84c12960c033c21942453539c42c29f778dd25db7c177f591b26b0", "receiptAndTrace": { "freshNetworkRead": true, "retrievedAt": "2026-10-26T06:35:54.301403+00:00", "chainId": 56, "methods": ["eth_getTransactionByHash", "eth_getTransactionReceipt", "debug_traceTransaction"], "sha256": { "eth_getTransactionByHash": "83feb1a97e2946a5c7c35309294f8362db058e0506592163b069805864ef7977", "eth_getTransactionReceipt": "584b5736549358f75ebeee7a08c5b00e904b14abb7407d540eafd81d728e5274", "debug_traceTransaction": "56e1ccd89184fe807c7e4ad44820c2319ad087a854a7a19bd24997c111927673" }, "cacheIdentical": { "eth_getTransactionByHash": false, "eth_getTransactionReceipt": true, "debug_traceTransaction": true }, "coreFieldsIdentical": true, "optionalMetadataDifference": { "field": "eth_getTransactionByHash.blockTimestamp", "cached": null, "fresh": "0x6ad9b637", "crossCheck": "matches every receipt log blockTimestamp" } }, "transactionURL": "https://bscscan.com/tx/0x2d8dcc318e018a448a07a18c5dd4a23ca6ca9d0f176e83991489ae51d7127559", "grossInput": { "asset": "BNB", "amountRaw": "990000000000000000" }, "output": { "asset": "USDT", "amountRaw": "728277494357338733998" }, "routerRetainedIncludedInInput": { "asset": "BNB", "amountRaw": "2970000000000000" }, "extraPaymasterDebit": { "asset": "USDT", "amountRaw": "0", "recipient": null }, "evidenceBoundary": "One RPC provider; successful receipt logs and call trace. Exact transaction only; no ownership or fee-policy inference." }], "day": "2026-10-22", "time": "2026-10-22T15:07:35+08:00" }, { "hash": "0x13f7e126d881bb246093f93537d7fcad33bd1c6ceca2977dea2fabd5c749b604", "wallet": "0x0dadf9848667cd51ac9bddce543c4f70278e7150", "chainId": 56, "blockHash": "0x8038b93a1b784b7b15f9c24e6d33911ba3d3da80cbcd83206bf3ef9333940e12", "blockNumber": 129468810, "expectedUSDTraw": "-1083466904634631375", "expectedBNBraw": "1351289416337449", "type": "\u975EESIM\u5151\u6362\u53CA\u8D39\u7528", "reason": "\u5DF2\u9010\u7B14\u6838\u5B9E\u4EA4\u6613\u56DE\u6267\u3001\u6210\u529F\u8C03\u7528\u8DEF\u5F84\u53CA\u539F\u59CB\u6574\u6570\uFF1A\u4ED8\u51FA 1 USDT\uFF0C\u6536\u5230 0.001351289416337449 BNB\uFF1B\u4E0D\u6D89\u53CA ESIM \u4E70\u5356\u6216 LP\u3002\u8DEF\u7531\u7559\u5B58 0.003 USDT \u5DF2\u5305\u542B\u5728\u4E0A\u8FF0\u4ED8\u51FA\u5185\uFF0C\u4E0D\u80FD\u91CD\u590D\u6263\u51CF\u3002\u53E6\u6709 0.083466904634631375 USDT \u6263\u81F3 UserOperation \u4E8B\u4EF6\u4E2D\u7684\u4EE3\u4ED8\u5730\u5740 0x7a956fd329d0c616f2d1dde98bb35694f397df46\uFF1B\u5DF2\u8BA1\u5165\u5B9E\u9645 U \u6536\u652F\uFF0C\u4F46\u4E0D\u6DF7\u5165\u5151\u6362\u672C\u91D1\u3002\u5177\u4F53\u6536\u8D39\u89C4\u5219\u672A\u786E\u8BA4\u3002\u94B1\u5305\u4F59\u989D\u3001Gas \u4E0E\u539F\u6709 ESIM \u4E70\u5356\u91D1\u989D\u4FDD\u6301\u4E0D\u53D8\u3002", "evidence": [{ "sourceFile": "resolutions-two.json", "sourceSHA256": "d38403415b84c12960c033c21942453539c42c29f778dd25db7c177f591b26b0", "receiptAndTrace": { "freshNetworkRead": true, "retrievedAt": "2026-10-26T06:35:56.557926+00:00", "chainId": 56, "methods": ["eth_getTransactionByHash", "eth_getTransactionReceipt", "debug_traceTransaction"], "sha256": { "eth_getTransactionByHash": "dedf49b1133412cd9f16e22d0161eed066674811f3ab8238496cde5e89f9c695", "eth_getTransactionReceipt": "a0e478ff09b37764a27db13c83dfae2f300b78b831b1683d55645b79063178a1", "debug_traceTransaction": "7a36b98862871f4a3f1ffda52ce2e0cafe6d41712110e54018ff424afec1f677" }, "cacheIdentical": { "eth_getTransactionByHash": true, "eth_getTransactionReceipt": true, "debug_traceTransaction": true }, "coreFieldsIdentical": true, "optionalMetadataDifference": null }, "transactionURL": "https://bscscan.com/tx/0x13f7e126d881bb246093f93537d7fcad33bd1c6ceca2977dea2fabd5c749b604", "grossInput": { "asset": "USDT", "amountRaw": "1000000000000000000" }, "output": { "asset": "BNB", "amountRaw": "1351289416337449" }, "routerRetainedIncludedInInput": { "asset": "USDT", "amountRaw": "3000000000000000" }, "extraPaymasterDebit": { "asset": "USDT", "amountRaw": "83466904634631375", "recipient": "0x7a956fd329d0c616f2d1dde98bb35694f397df46" }, "evidenceBoundary": "One RPC provider; successful receipt logs and call trace. Exact transaction only; no ownership or fee-policy inference." }], "day": "2026-10-24", "time": "2026-10-24T14:50:22+08:00" }, { "hash": "0xfcd4996c0efb475f3fe6d66f16f20ea1983fc41ef5b45143d7270a38c40f5bb7", "wallet": "0x3759db8f9245291c5a710fdf807e95245e6c4122", "chainId": 56, "blockHash": "0x7a9cdcff27ebed6d8119a864739b69113e7a6ccc39f009bfabfb0165ab021ef5", "blockNumber": 129574278, "expectedUSDTraw": "-1000000000000000000", "expectedBNBraw": "1365396044718319", "type": "\u975EESIM\u5151\u6362", "reason": "\u5DF2\u9010\u7B14\u6838\u5B9E\u4EA4\u6613\u56DE\u6267\u3001\u6210\u529F\u8C03\u7528\u8DEF\u5F84\u53CA\u539F\u59CB\u6574\u6570\uFF1A\u4ED8\u51FA 1 USDT\uFF0C\u6536\u5230 0.001365396044718319 BNB\uFF1B\u4E0D\u6D89\u53CA ESIM \u4E70\u5356\u6216 LP\u3002\u8DEF\u7531\u7559\u5B58 0.003 USDT \u5DF2\u5305\u542B\u5728\u4E0A\u8FF0\u4ED8\u51FA\u5185\uFF0C\u4E0D\u80FD\u91CD\u590D\u6263\u51CF\u3002\u94B1\u5305\u4F59\u989D\u3001Gas \u4E0E\u539F\u6709 ESIM \u4E70\u5356\u91D1\u989D\u4FDD\u6301\u4E0D\u53D8\u3002", "evidence": [{ "sourceFile": "resolutions-five.json", "sourceSHA256": "1561879e5e1c8b152265b5a55979a772a2cd122139048f1e7c2f592893a606c8", "receiptAndTrace": { "status": "fresh-receipt-and-callTracer-match", "checkedAt": "2026-10-26T06:35:26.513233+00:00", "chainId": 56, "receiptSHA256": "f3ba181a56a75e1d65df9fc1b11311f338da09a7873e5154f47ab0ba2a6869f7", "traceSHA256": "67def36e127ca1f9f67b47c8e7a8f7a92a300f4b1a05626ff40a80c5d40c6dc3", "matchesPriorCache": true, "rpcMethods": ["eth_getTransactionReceipt", "debug_traceTransaction"], "sourceCount": 1, "independentEvidenceTypes": 2, "limitation": "One configured RPC provider; receipt logs and successful callTracer are two evidence types, not two independent providers." }, "transactionURL": "https://bscscan.com/tx/0xfcd4996c0efb475f3fe6d66f16f20ea1983fc41ef5b45143d7270a38c40f5bb7", "grossInput": { "asset": "USDT", "amountRaw": "1000000000000000000" }, "output": { "asset": "BNB", "amountRaw": "1365396044718319" }, "routerRetainedIncludedInInput": { "asset": "USDT", "amountRaw": "3000000000000000" }, "extraPaymasterDebit": { "asset": "USDT", "amountRaw": "0", "recipient": null }, "evidenceBoundary": "One RPC provider; successful receipt logs and call trace. Exact transaction only; no ownership or fee-policy inference." }], "day": "2026-10-24", "time": "2026-10-25T04:01:37+08:00" }, { "hash": "0x8a9492f95f67e924118935d2a1f6aa5af9f909f0cb98ed61217b52e6978e98f6", "wallet": "0x45a186cba397f354a85e50a33f7b7082c2784ac6", "chainId": 56, "blockHash": "0xb9c489f92106ec6af60ff7dbb4290aecf97bf2ad19c900dde8db24b073d6e7ca", "blockNumber": 129830365, "expectedUSDTraw": "-1000000000000000000", "expectedBNBraw": "1350437605501286", "type": "\u975EESIM\u5151\u6362", "reason": "\u5DF2\u9010\u7B14\u6838\u5B9E\u4EA4\u6613\u56DE\u6267\u3001\u6210\u529F\u8C03\u7528\u8DEF\u5F84\u53CA\u539F\u59CB\u6574\u6570\uFF1A\u4ED8\u51FA 1 USDT\uFF0C\u6536\u5230 0.001350437605501286 BNB\uFF1B\u4E0D\u6D89\u53CA ESIM \u4E70\u5356\u6216 LP\u3002\u8DEF\u7531\u7559\u5B58 0.003 USDT \u5DF2\u5305\u542B\u5728\u4E0A\u8FF0\u4ED8\u51FA\u5185\uFF0C\u4E0D\u80FD\u91CD\u590D\u6263\u51CF\u3002\u94B1\u5305\u4F59\u989D\u3001Gas \u4E0E\u539F\u6709 ESIM \u4E70\u5356\u91D1\u989D\u4FDD\u6301\u4E0D\u53D8\u3002", "evidence": [{ "sourceFile": "resolutions-five.json", "sourceSHA256": "1561879e5e1c8b152265b5a55979a772a2cd122139048f1e7c2f592893a606c8", "receiptAndTrace": { "status": "fresh-receipt-and-callTracer-match", "checkedAt": "2026-10-26T06:35:26.513233+00:00", "chainId": 56, "receiptSHA256": "e1e1f4021c494d3c90da199880af4552908229be1fb600f1f5607502cb79e7f5", "traceSHA256": "8579b7ac8e3acf6d53f1e0b7eeb18987068d342b8969ac4d94e86c49ffce07fc", "matchesPriorCache": true, "rpcMethods": ["eth_getTransactionReceipt", "debug_traceTransaction"], "sourceCount": 1, "independentEvidenceTypes": 2, "limitation": "One configured RPC provider; receipt logs and successful callTracer are two evidence types, not two independent providers." }, "transactionURL": "https://bscscan.com/tx/0x8a9492f95f67e924118935d2a1f6aa5af9f909f0cb98ed61217b52e6978e98f6", "grossInput": { "asset": "USDT", "amountRaw": "1000000000000000000" }, "output": { "asset": "BNB", "amountRaw": "1350437605501286" }, "routerRetainedIncludedInInput": { "asset": "USDT", "amountRaw": "3000000000000000" }, "extraPaymasterDebit": { "asset": "USDT", "amountRaw": "0", "recipient": null }, "evidenceBoundary": "One RPC provider; successful receipt logs and call trace. Exact transaction only; no ownership or fee-policy inference." }], "day": "2026-10-26", "time": "2026-10-26T12:04:01+08:00" }], "nftSeedAddresses": ["0x4b7d906b209f6cee02091d0139f105c08cb861fd", "0x4eb0621554a3e7619595bed6d16dd592179c2ec1", "0xac80c4ad44ae3386205f4972d1d95712d75fb66f", "0x0dadf9848667cd51ac9bddce543c4f70278e7150", "0x3759db8f9245291c5a710fdf807e95245e6c4122", "0xe86eaf59765d580a6daccf9644b9867aeed8a18c", "0x45a186cba397f354a85e50a33f7b7082c2784ac6", "0xc2b8f3c7db355bbe8d174909d921885d0cf45359", "0x5f714f871acf20cf797a362b7583b4cb0f0bdf24", "0x8bfa50a8973c9d859b01ce6c905ea3c0a0abaddf", "0xc5b5c9f4b80f0b345a06ba7970cc3b8995ed24a4", "0xeecd820601367bf3b8aaef68b4e85495b61007cf", "0x3ab32cfcacfedeaa42c0f0eb51158c56871f71b9", "0x2635f3fe2c6ec8720391f39b09001eddc63a1a23", "0x0946f6a9e3b006984bf9f2250e12b577ccb14909", "0x0d151c68690e7a5821bc7abab74db02a703fe582", "0x040d55a50378815bf23ea17ac81f4428af73ce24", "0xea4bd4aad512ca4dccda821e8693b6b38b51fc68", "0x435883e28439f909f68c536a0c9fc8a6f1248417", "0x41e0836726b37c670acf8bac9efa8964bfc737fe", "0x2aa283101c266cbc20a142ad161d59143112bfc1", "0xb8c7fdcf7e2ab23a231df904257ff59be53ed73d", "0xc40409aee5b913f14dfd8f967299ddf9dc5009a1", "0xe858154e5b1d0c295b24103dbc7671b67faccba3", "0xe8e15e97a8652ebdc8333007ea9d3b0275595d96", "0x85e471fd8abe8e0c6b6f6b4c635956020336a12e", "0xa6b9f2f8507c3dcee32f765361f2c5527d7b6ad6", "0xd21261df561825ef324bd4430487eac32a28a66a", "0x76f9b8a66780986688e265d9a0028623052176c1", "0x1db99241d9e230edc33996567ec2707c42475fd8", "0xdcdb497a0b2ab74753f8e40e36071ce7a0ab4930"], "addressRegistrySheetId": 2601005, "schemaVersion": 2, "spreadsheetId": "1gv68oBO-tO-EPjT51Z-z_hxde2jS7soU0kJNKIZLXWM", "folderId": "1taeQpyRMylhDPhR9g995CbuW1JC_F-lg", "dailySheetId": 2601003, "detailSheetId": 2601004 };
       var ESIM_SIGNATURES = { "v2swap": "0xd78ad95fa46c994b6551d0da85fc275fe613ce37657fb8d5e3d130840159d822", "v3swap": "0xc42079f94a6350d7e6235f29174924f928cc2ac818eb64fed8004e115fbcca67", "pcsv3swap": "0x19b47279256b2a23a1665c810c8d55a1758940ee09377d4f8d26497a3577dc83", "infswap": "0x04206ad2b7c0f463bff3dd4f33c5735b0f2957a351e4f79763a4fa9e775dd237", "uniswap": "0x40e9cecb9f5f1f1c5b9c97dec2917b7ee92e57ba5563708daca94dd84ad7112f", "inflp": "0xf208f4912782fd25c7f114ca3723a2d5dd6f3bcc3ac8db5af63baa85f711d5ec", "v3mint": "0x7a53080ba414158be7ec69b987b5fb7d07dee101fe85488f0853ae16239d0bde", "v3burn": "0x0c396cd989a39f4459b5fa1aed6a9a8dcdbc45908acfd67e028cd568da98982c", "v3collect": "0x70935338e69775456a85ddef226c395fb668b63fa0115f5f20610b388e6ca9c0", "v2mint": "0x4c209b5fc8ad50758f13e2e1088ba56a560dff690a1c6fef26394f4c03821c4f", "v2burn": "0xdccd412f0b1252819cb1fd330b93224ca42612892bb3f4f789976e6d81936496", "modifyLiquidity": "0x9371d11530af2cff27a016eed6923462a8179d9d7a7ad119d532185c103aa148" };
@@ -12485,14 +12485,14 @@ var require_engine = __commonJS({
   }
 });
 
-// ../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/scripts/server-recover.js
+// ../../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/scripts/server-recover.js
 import { setTimeout as sleep } from "node:timers/promises";
 
-// ../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/lib/collector.js
+// ../../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/lib/collector.js
 import { createHash as createHash4 } from "node:crypto";
 import { isDeepStrictEqual } from "node:util";
 
-// ../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/pg/esm/index.mjs
+// ../../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/node_modules/pg/esm/index.mjs
 var import_lib = __toESM(require_lib2(), 1);
 var Client = import_lib.default.Client;
 var Pool = import_lib.default.Pool;
@@ -12507,7 +12507,7 @@ var TypeOverrides = import_lib.default.TypeOverrides;
 var defaults = import_lib.default.defaults;
 var esm_default = import_lib.default;
 
-// ../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/lib/db.js
+// ../../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/lib/db.js
 var import_functions = __toESM(require_functions(), 1);
 esm_default.types.setTypeParser(1082, (v) => v);
 var cache = globalThis;
@@ -12545,10 +12545,10 @@ async function transaction(fn) {
   }
 }
 
-// ../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/lib/rpc.js
+// ../../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/lib/rpc.js
 import { createHash as createHash2 } from "node:crypto";
 
-// ../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/lib/sync-plan.js
+// ../../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/lib/sync-plan.js
 import { createHash } from "node:crypto";
 var DEFAULT_START = "2026-09-30";
 function validStartDay(day) {
@@ -12593,6 +12593,23 @@ function extendSyncPlan(plan, addresses, periods, options = {}) {
   if (!last) return plan;
   return plan.concat(buildSyncPlan(addresses, periods, options).plan.filter((p) => p.day > last));
 }
+function closeElapsedPartialDays(state, now = /* @__PURE__ */ new Date()) {
+  const today = now.toISOString().slice(0, 10);
+  let changed = false;
+  for (let i = 0; i < state.plan.length; i++) {
+    const day = state.plan[i];
+    if (!day.partial || day.day >= today) continue;
+    day.partial = false;
+    delete day.end;
+    changed = true;
+    if (i <= state.index) {
+      state.index = i;
+      state.wallet = null;
+      state.cache = {};
+    }
+  }
+  return changed;
+}
 var isBoundaryPending = (error) => error?.code === "ESIM_YIELD" || error?.message === "\u7EDF\u8BA1\u7ED3\u675F\u533A\u5757\u5C1A\u672A\u786E\u8BA4\uFF0C\u4E0B\u6B21\u81EA\u52A8\u7EE7\u7EED";
 function isTransientSyncError(error) {
   if (error?.contractRevert) return false;
@@ -12618,7 +12635,7 @@ function backfillSummary(addresses, periods, run, { now = /* @__PURE__ */ new Da
   };
 }
 
-// ../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/lib/rpc.js
+// ../../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/lib/rpc.js
 var NeedRpc = class extends Error {
   constructor(calls) {
     super("NEED_RPC");
@@ -12706,7 +12723,7 @@ async function rpc(method, params, cache2 = {}, trim = (m, x) => x) {
   return cache2[key(q)];
 }
 
-// ../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/lib/write-snapshot.js
+// ../../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/lib/write-snapshot.js
 async function insertRows(c, table, columns, rows) {
   for (let i = 0; i < rows.length; i += 150) {
     const chunk = rows.slice(i, i + 150), values = chunk.flat(), sql = chunk.map((r, j) => "(" + r.map((_, k) => "$" + (j * r.length + k + 1)).join(",") + ")").join(",");
@@ -12736,7 +12753,7 @@ async function publish(snapshot2, lease) {
   });
 }
 
-// ../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/lib/verified-exchange.js
+// ../../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/lib/verified-exchange.js
 import { createHash as createHash3 } from "node:crypto";
 var ENTRY = "0x07964f135f276412b3182a3b2407b8dd45000000";
 var U = "0x55d398326f99059ff775485246999027b3197955";
@@ -12793,7 +12810,7 @@ function verifyGasExchange({ wallet, esim, tx, receipt, trace }) {
   }
 }
 
-// ../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/lib/transfer-fees.js
+// ../../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/lib/transfer-fees.js
 var TRANSFER2 = "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef";
 var USEROP = "0x49628fd1471006c1482da88028e9ce4dbb080b815c9b0344d39e5a8e6ec1419f";
 var ENTRY2 = "0x4337084d9e255ff0702461cf8895ce9e3b5ff108";
@@ -12816,13 +12833,12 @@ function verifiedTransferFees(result, receipts, usdt) {
   return fees;
 }
 
-// ../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/lib/collector.js
+// ../../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/lib/collector.js
 var import_engine = __toESM(require_engine(), 1);
 var BOT = "0xe1de6ac2ee058df5d3be8edeb62a8815fd13ff5a";
 var EVENT = "0x7530424e0c452360e492059aa00e241fcb95eef959a0d17221f75f464f49eb3e";
 var TRANSFER3 = "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef";
 var HASH = (x) => createHash4("sha256").update(JSON.stringify(x)).digest("hex");
-var dayOf = (now) => new Date(now.getTime()).toISOString().slice(0, 10);
 var hex = (n) => "0x" + BigInt(n).toString(16);
 var adr = (t) => "0x" + t.slice(-40).toLowerCase();
 var labels = { init: "\u786E\u8BA4\u7EDF\u8BA1\u65F6\u95F4", transfers: "\u8BFB\u53D6\u666E\u901A\u94B1\u5305\u6D41\u6C34", nfts: "\u6838\u5BF9LP\u5F52\u5C5E", transactions: "\u8BFB\u53D6\u666E\u901A\u94B1\u5305\u51ED\u8BC1", balances: "\u6838\u5BF9\u671F\u521D\u671F\u672B\u4F59\u989D", nonces: "\u8865\u67E5\u9057\u6F0F\u6D41\u6C34", traces: "\u533A\u5206\u8F6C\u8D26\u4E0E\u624B\u7EED\u8D39", lp: "\u6838\u5BF9LP\u672C\u91D1", times: "\u6838\u5BF9\u6D41\u6C34\u65F6\u95F4", analyze: "\u6838\u5BF9\u4F59\u989D", residual: "\u8865\u67E5\u4F59\u989D\u5DEE\u989D", extra: "\u8865\u5145\u94FE\u4E0A\u51ED\u8BC1", ready: "\u4FDD\u5B58\u5DF2\u6838\u9A8C\u7ED3\u679C" };
@@ -13018,15 +13034,7 @@ async function runSync(id, budget = 45e3) {
     if (s.retryable && s.retryCount >= 8) s.retryCount = 0;
     delete s.retryAfter;
     delete s.cache[key(["eth_getBlockByNumber", ["latest", false]])];
-    const today = dayOf(/* @__PURE__ */ new Date());
-    for (const planned of s.plan) if (planned.partial && planned.day < today) {
-      planned.partial = false;
-      delete planned.end;
-      if (s.wallet?.day === planned.day) {
-        s.wallet = null;
-        s.cache = {};
-      }
-    }
+    closeElapsedPartialDays(s);
     if ((await db().query("SELECT 1 FROM esim_ledger.addresses WHERE backfill_pending LIMIT 1")).rowCount) {
       const { plan } = buildSyncPlan(current.map((a) => ({ ...a, backfill_pending: true })), [], { source: "backfill" });
       const partial = plan.find((p) => p.partial);
@@ -13106,17 +13114,22 @@ async function runSync(id, budget = 45e3) {
         } else throw e;
       }
     }
-    const done = s.index >= s.plan.length;
     return await transaction(async (c) => {
       await c.query("SELECT pg_advisory_xact_lock(7693201)");
       const owned = (await c.query("SELECT 1 FROM esim_ledger.sync_runs WHERE id=$1 AND lease_version=$2 AND lease_until>now() FOR UPDATE", [id, claimed.lease_version])).rowCount;
       if (!owned) throw Error("SYNC_LEASE_LOST");
+      let done = s.index >= s.plan.length;
       if (done) {
-        const current2 = (await c.query("SELECT address,mode,active_from FROM esim_ledger.addresses ORDER BY ordinal")).rows;
+        const finishNow = /* @__PURE__ */ new Date(), current2 = (await c.query("SELECT address,mode,active_from FROM esim_ledger.addresses ORDER BY ordinal")).rows;
         if (cohortHash(current2) !== s.cohortHash) throw Error("\u5730\u5740\u5E93\u5DF2\u53D8\u5316\uFF0C\u672C\u8F6E\u7ED3\u679C\u4E0D\u53D1\u5E03\uFF0C\u8BF7\u91CD\u65B0\u66F4\u65B0");
         const periods = (await c.query("SELECT day,status,cohort_hash FROM esim_ledger.periods ORDER BY day")).rows;
-        if (buildSyncPlan(current2, periods).plan.length) throw Error("\u5386\u53F2\u56DE\u6EAF\u8986\u76D6\u4E0D\u5B8C\u6574\uFF0C\u5F85\u56DE\u6EAF\u6807\u8BB0\u4FDD\u7559");
-        await c.query("UPDATE esim_ledger.addresses SET backfill_pending=false WHERE address=ANY($1::text[])", [s.addresses]);
+        if (closeElapsedPartialDays(s, finishNow)) s.stage = "\u7EDF\u8BA1\u65E5\u5DF2\u7ED3\u675F\uFF0C\u7EE7\u7EED\u6838\u5BF9\u5B8C\u6574\u65E5";
+        s.plan = extendSyncPlan(s.plan, current2, periods, { now: finishNow, source: claimed.source });
+        done = s.index >= s.plan.length;
+        if (done) {
+          if (buildSyncPlan(current2, periods, { now: finishNow }).plan.length) throw Error("\u5386\u53F2\u56DE\u6EAF\u8986\u76D6\u4E0D\u5B8C\u6574\uFF0C\u5F85\u56DE\u6EAF\u6807\u8BB0\u4FDD\u7559");
+          await c.query("UPDATE esim_ledger.addresses SET backfill_pending=false WHERE address=ANY($1::text[])", [s.addresses]);
+        }
       }
       return (await c.query("UPDATE esim_ledger.sync_runs SET state=$2,status=$3,stage=$4,verified_days=$5,error=NULL,updated_at=now(),lease_until=NULL,finished_at=CASE WHEN $3='complete' THEN now() ELSE NULL END WHERE id=$1 AND lease_version=$6 RETURNING id,status,stage,error,verified_days", [id, JSON.stringify(s), done ? "complete" : "running", done ? "\u66F4\u65B0\u5B8C\u6210" : s.stage, s.index, claimed.lease_version])).rows[0];
     });
@@ -13132,7 +13145,7 @@ async function runSync(id, budget = 45e3) {
   }
 }
 
-// ../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/lib/ledger-health.js
+// ../../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/lib/ledger-health.js
 function syncFailureReason(error = "") {
   if (/统计结束区块尚未确认/.test(error)) return "\u7B49\u5F85\u94FE\u4E0A\u533A\u5757\u786E\u8BA4";
   if (/余额|差额|核对上/.test(error)) return "\u8D26\u76EE\u4F59\u989D\u6838\u9A8C\u672A\u901A\u8FC7";
@@ -13178,7 +13191,7 @@ async function readLedgerHealth(c, now = /* @__PURE__ */ new Date()) {
   return ledgerHealth({ addresses, periods, job, checks, proof }, now);
 }
 
-// ../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/lib/worker-loop.js
+// ../../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/lib/worker-loop.js
 async function continueJob({ id, read, step, sleep: sleep2, now = Date.now, onProgress = () => {
 }, budget = 6e4, maxMs = 144e5 }) {
   if (!/^[0-9a-f-]{36}$/.test(id || "") || !Number.isInteger(budget) || budget < 1 || budget > 9e4) throw Error("INVALID_BACKFILL_JOB");
@@ -13206,7 +13219,7 @@ async function continueJob({ id, read, step, sleep: sleep2, now = Date.now, onPr
   throw Error("BACKFILL_WINDOW_ENDED");
 }
 
-// ../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/scripts/server-recover.js
+// ../../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/scripts/server-recover.js
 process.env.DATABASE_URL ||= process.env.ESIM_REALTIME_DATABASE_URL;
 process.env.BNB_RPC_URL ||= process.env.ALCHEMY_API_KEY ? `https://bnb-mainnet.g.alchemy.com/v2/${process.env.ALCHEMY_API_KEY}` : "";
 try {

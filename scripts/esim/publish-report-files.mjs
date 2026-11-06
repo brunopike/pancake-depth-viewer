@@ -11,7 +11,7 @@ import {packCheckpointFiles} from '../../server/esim/checkpoint-chunks.mjs';
 const gitLimits=['-c','gc.auto=0','-c','maintenance.auto=false','-c','pack.threads=1','-c','pack.windowMemory=64m','-c','pack.deltaCacheSize=32m'];
 
 // Git's binary transport avoids the REST blob endpoint's JSON input-size limit.
-// A private temporary index keeps the active branch and user's staging untouched.
+// A disposable partial repository avoids retaining every historical checkpoint.
 export async function publishReportFiles(files,{cwd=process.cwd(),skip=()=>false,message,branch='esim-cache'}={}){
  if(!['esim-cache','holder-cache','depth-cache'].includes(branch))throw Error('INVALID_PUBLICATION_BRANCH');
  const cohortOnly=branch==='esim-cache'&&files.some(([p])=>p==='cohort.json.gz')&&files.every(([p])=>['cohort.json.gz','cohort-health.json'].includes(p));
@@ -21,22 +21,32 @@ export async function publishReportFiles(files,{cwd=process.cwd(),skip=()=>false
  if(!allowed.length||files.length!==allowed.length||new Set(files.map(([path])=>path)).size!==allowed.length||files.some(([path])=>!allowed.includes(path)))throw Error('INVALID_PUBLICATION_FILES');
  const physical=files.flatMap(([path,content])=>['state.json.gz','claim-flow-state.json.gz'].includes(path)?packCheckpointFiles(path,content):[[path,content]]);
  if(physical.some(([,content])=>Buffer.byteLength(content)>100*1024*1024))throw Error('CHECKPOINT_FILE_TOO_LARGE');
- const run=promisify(execFile),dir=await mkdtemp(join(tmpdir(),'esim-publish-'));
- let stage='FETCH';
- const git=async(args,isolated=false)=>(await run('git',[...gitLimits,...args],{cwd,maxBuffer:134217728,timeout:120000,env:isolated?{...process.env,GIT_INDEX_FILE:join(dir,'index')}:process.env})).stdout.trim();
+ const run=promisify(execFile),dir=await mkdtemp(join(tmpdir(),'esim-publish-')),repository=join(dir,'repository.git');
+ let stage='FETCH',transportEnv=process.env;
+ const sourceGit=async args=>(await run('git',[...gitLimits,...args],{cwd,maxBuffer:1048576,timeout:120000})).stdout.trim();
+ const git=async(args,isolated=false)=>(await run('git',[...gitLimits,...args],{cwd:repository,maxBuffer:134217728,timeout:120000,env:isolated?{...transportEnv,GIT_INDEX_FILE:join(dir,'index')}:transportEnv})).stdout.trim();
  try{
-  await git(['fetch','--no-tags','--depth=1','origin',branch]);
+  const [fetchURL,pushURL]=await Promise.all([sourceGit(['remote','get-url','origin']),sourceGit(['remote','get-url','--push','origin'])]);
+  const auth=(await sourceGit(['config','--local','--null','--list'])).split('\0').filter(Boolean).map(entry=>[entry.slice(0,entry.indexOf('\n')),entry.slice(entry.indexOf('\n')+1)]).filter(([key])=>/^(?:http(?:\..+)?\.extraheader|credential(?:\..+)?\.helper|core\.sshcommand)$/i.test(key));
+  // Preserve checkout authentication in child environment, never command arguments or release files.
+  transportEnv={...process.env};const count=Number(process.env.GIT_CONFIG_COUNT||0);
+  for(let i=0;i<count;i++){transportEnv[`GIT_CONFIG_KEY_${i+auth.length}`]=process.env[`GIT_CONFIG_KEY_${i}`];transportEnv[`GIT_CONFIG_VALUE_${i+auth.length}`]=process.env[`GIT_CONFIG_VALUE_${i}`];}
+  auth.forEach(([key,value],i)=>{transportEnv[`GIT_CONFIG_KEY_${i}`]=key;transportEnv[`GIT_CONFIG_VALUE_${i}`]=value;});transportEnv.GIT_CONFIG_COUNT=String(count+auth.length);
+  await run('git',[...gitLimits,'init',repository],{cwd:dir,timeout:120000});
+  await git(['remote','add','origin',fetchURL]);await git(['remote','set-url','--push','origin',pushURL]);
+  await git(['config','remote.origin.promisor','true']);await git(['config','remote.origin.partialclonefilter','blob:none']);
+  await git(['fetch','--filter=blob:none','--no-tags','--depth=1','origin',branch]);
   stage='BUILD';
   const parent=await git(['rev-parse','FETCH_HEAD']);
   let prior;
-  if(cohortOnly){const names=await git(['ls-tree','--name-only',parent,'cohort.json.gz']);if(names){const {stdout}=await run('git',[...gitLimits,'show',`${parent}:cohort.json.gz`],{cwd,encoding:'buffer',maxBuffer:134217728,timeout:120000});prior=JSON.parse(gunzipSync(stdout));}}
+  if(cohortOnly){const names=await git(['ls-tree','--name-only',parent,'cohort.json.gz']);if(names){const {stdout}=await run('git',[...gitLimits,'show',`${parent}:cohort.json.gz`],{cwd:repository,env:transportEnv,encoding:'buffer',maxBuffer:134217728,timeout:120000});prior=JSON.parse(gunzipSync(stdout));}}
   else if(single){
    const names=await git(['ls-tree','--name-only',parent,files[0][0]]);
    if(names)prior=JSON.parse(await git(['show',`${parent}:${files[0][0]}`]));
   }else if(core)prior=JSON.parse(await git(['show',`${parent}:report.json`]));
   else{
    const names=await git(['ls-tree','--name-only',parent,'claim-flow.json.gz']);
-   if(names){const {stdout}=await run('git',[...gitLimits,'show',`${parent}:claim-flow.json.gz`],{cwd,encoding:'buffer',maxBuffer:134217728,timeout:120000});prior=JSON.parse(gunzipSync(stdout));}
+   if(names){const {stdout}=await run('git',[...gitLimits,'show',`${parent}:claim-flow.json.gz`],{cwd:repository,env:transportEnv,encoding:'buffer',maxBuffer:134217728,timeout:120000});prior=JSON.parse(gunzipSync(stdout));}
    else prior=JSON.parse(await git(['show',`${parent}:claim-flow.json`]));
   }
   if(skip(prior))return false;

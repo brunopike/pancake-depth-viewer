@@ -22,9 +22,13 @@ if [[ ! -x /opt/esim-worker/node/bin/node ]]; then
  tar -xJf "$work/$archive" --strip-components=1 -C /opt/esim-worker/node
 fi
 release="/opt/esim-worker/releases/$commit"
+previous=$(basename "$(readlink -f /opt/esim-worker/current || true)")
+[[ "$previous" =~ ^[0-9a-f]{40}$ ]] || previous=''
 if [[ ! -d "$release/.git" ]]; then
- git clone --no-checkout --filter=blob:none https://github.com/brunopike/pancake-depth-viewer.git "$release"
- git -C "$release" checkout --detach "$commit"
+ git init "$release"
+ git -C "$release" remote add origin https://github.com/brunopike/pancake-depth-viewer.git
+ git -C "$release" -c gc.auto=0 fetch --no-tags --depth=1 origin "$commit"
+ git -C "$release" checkout --detach FETCH_HEAD
 fi
 [[ $(git -C "$release" rev-parse HEAD) == "$commit" ]] || exit 4
 export PATH=/opt/esim-worker/node/bin:$PATH
@@ -60,6 +64,7 @@ for unit in esim-freshness-guard.service esim-freshness-guard.timer esim-mm-reco
  chmod 0644 "/etc/systemd/system/$unit"
 done
 systemctl daemon-reload
+node "$release/scripts/esim/deploy/prune-releases.mjs" "$commit" "$previous"
 echo 'Installed reviewed collector. Configure /etc/esim-worker/worker.env and verify database migration before starting.'
 echo 'No service was started; the current production writers are unchanged.'
 echo 'After verifying the release, explicitly enable the reviewed freshness and MM recovery timers.'
