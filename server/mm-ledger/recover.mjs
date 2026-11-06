@@ -9365,15 +9365,15 @@ var require_websocket = __commonJS({
             return;
           }
           req.abort();
-          let addr2;
+          let addr3;
           try {
-            addr2 = new URL2(location, address2);
+            addr3 = new URL2(location, address2);
           } catch (e) {
             const err = new SyntaxError(`Invalid URL: ${location}`);
             emitErrorAndClose(websocket, err);
             return;
           }
-          initAsClient(websocket, addr2, protocols, options);
+          initAsClient(websocket, addr3, protocols, options);
         } else if (!websocket.emit("unexpected-response", req, res)) {
           abortHandshake(
             websocket,
@@ -11474,14 +11474,14 @@ function pad(hexOrBytes, { dir, size: size2 = 32 } = {}) {
 function padHex(hex_, { dir, size: size2 = 32 } = {}) {
   if (size2 === null)
     return hex_;
-  const hex2 = hex_.replace("0x", "");
-  if (hex2.length > size2 * 2)
+  const hex4 = hex_.replace("0x", "");
+  if (hex4.length > size2 * 2)
     throw new SizeExceedsPaddingSizeError({
-      size: Math.ceil(hex2.length / 2),
+      size: Math.ceil(hex4.length / 2),
       targetSize: size2,
       type: "hex"
     });
-  return `0x${hex2[dir === "right" ? "padEnd" : "padStart"](size2 * 2, "0")}`;
+  return `0x${hex4[dir === "right" ? "padEnd" : "padStart"](size2 * 2, "0")}`;
 }
 function padBytes(bytes, { dir, size: size2 = 32 } = {}) {
   if (size2 === null)
@@ -11561,21 +11561,21 @@ function assertSize(hexOrBytes, { size: size2 }) {
       maxSize: size2
     });
 }
-function hexToBigInt(hex2, opts = {}) {
+function hexToBigInt(hex4, opts = {}) {
   const { signed } = opts;
   if (opts.size)
-    assertSize(hex2, { size: opts.size });
-  const value = BigInt(hex2);
+    assertSize(hex4, { size: opts.size });
+  const value = BigInt(hex4);
   if (!signed)
     return value;
-  const size2 = Math.ceil((hex2.length - 2) / 2);
+  const size2 = Math.ceil((hex4.length - 2) / 2);
   const max = (1n << BigInt(size2) * 8n - 1n) - 1n;
   if (value <= max)
     return value;
   return value - BigInt(`0x${"f".padStart(size2 * 2, "f")}`) - 1n;
 }
-function hexToNumber(hex2, opts = {}) {
-  const value = hexToBigInt(hex2, opts);
+function hexToNumber(hex4, opts = {}) {
+  const value = hexToBigInt(hex4, opts);
   const number = Number(value);
   if (!Number.isSafeInteger(number))
     throw new IntegerOutOfRangeError({
@@ -11606,24 +11606,24 @@ function toHex(value, opts = {}) {
   return bytesToHex(value, opts);
 }
 function boolToHex(value, opts = {}) {
-  const hex2 = `0x${Number(value)}`;
+  const hex4 = `0x${Number(value)}`;
   if (typeof opts.size === "number") {
-    assertSize(hex2, { size: opts.size });
-    return pad(hex2, { size: opts.size });
+    assertSize(hex4, { size: opts.size });
+    return pad(hex4, { size: opts.size });
   }
-  return hex2;
+  return hex4;
 }
 function bytesToHex(value, opts = {}) {
   let string = "";
   for (let i = 0; i < value.length; i++) {
     string += hexes[value[i]];
   }
-  const hex2 = `0x${string}`;
+  const hex4 = `0x${string}`;
   if (typeof opts.size === "number") {
-    assertSize(hex2, { size: opts.size });
-    return pad(hex2, { dir: "right", size: opts.size });
+    assertSize(hex4, { size: opts.size });
+    return pad(hex4, { dir: "right", size: opts.size });
   }
-  return hex2;
+  return hex4;
 }
 function numberToHex(value_, opts = {}) {
   const { signed, size: size2 } = opts;
@@ -11648,10 +11648,10 @@ function numberToHex(value_, opts = {}) {
       value: `${value_}${suffix}`
     });
   }
-  const hex2 = `0x${(signed && value < 0 ? (1n << BigInt(size2 * 8)) + BigInt(value) : value).toString(16)}`;
+  const hex4 = `0x${(signed && value < 0 ? (1n << BigInt(size2 * 8)) + BigInt(value) : value).toString(16)}`;
   if (size2)
-    return pad(hex2, { size: size2 });
-  return hex2;
+    return pad(hex4, { size: size2 });
+  return hex4;
 }
 function stringToHex(value_, opts = {}) {
   const value = encoder.encode(value_);
@@ -11697,12 +11697,12 @@ function charCodeToBase16(char) {
   return void 0;
 }
 function hexToBytes(hex_, opts = {}) {
-  let hex2 = hex_;
+  let hex4 = hex_;
   if (opts.size) {
-    assertSize(hex2, { size: opts.size });
-    hex2 = pad(hex2, { dir: "right", size: opts.size });
+    assertSize(hex4, { size: opts.size });
+    hex4 = pad(hex4, { dir: "right", size: opts.size });
   }
-  let hexString = hex2.slice(2);
+  let hexString = hex4.slice(2);
   if (hexString.length % 2)
     hexString = `0${hexString}`;
   const length = hexString.length / 2;
@@ -11718,8 +11718,8 @@ function hexToBytes(hex_, opts = {}) {
   return bytes;
 }
 function numberToBytes(value, opts) {
-  const hex2 = numberToHex(value, opts);
-  return hexToBytes(hex2);
+  const hex4 = numberToHex(value, opts);
+  return hexToBytes(hex4);
 }
 function stringToBytes(value, opts = {}) {
   const bytes = encoder2.encode(value);
@@ -12984,8 +12984,8 @@ var init_cursor2 = __esm({
 function bytesToBigInt(bytes, opts = {}) {
   if (typeof opts.size !== "undefined")
     assertSize(bytes, { size: opts.size });
-  const hex2 = bytesToHex(bytes);
-  return hexToBigInt(hex2, opts);
+  const hex4 = bytesToHex(bytes);
+  return hexToBigInt(hex4, opts);
 }
 function bytesToBool(bytes_, opts = {}) {
   let bytes = bytes_;
@@ -13000,8 +13000,8 @@ function bytesToBool(bytes_, opts = {}) {
 function bytesToNumber(bytes, opts = {}) {
   if (typeof opts.size !== "undefined")
     assertSize(bytes, { size: opts.size });
-  const hex2 = bytesToHex(bytes);
-  return hexToNumber(hex2, opts);
+  const hex4 = bytesToHex(bytes);
+  return hexToNumber(hex4, opts);
 }
 function bytesToString(bytes_, opts = {}) {
   let bytes = bytes_;
@@ -13928,12 +13928,12 @@ var require_engine = __commonJS({
         return [BigInt.asIntN(256, w[0]) * sign, BigInt.asIntN(256, w[1]) * sign];
       }
       function esimLedgerNativeSale_(receipt, native, wallet, token, sold, received) {
-        var entry = "0x07964f135f276412b3182a3b2407b8dd45000000", wrapped = "0xbb4cdb9cbd36b01bd1cbaebf2de08d9173bc095c", zero = "0x0000000000000000000000000000000000000000";
+        var entry = "0x07964f135f276412b3182a3b2407b8dd45000000", wrapped = "0xbb4cdb9cbd36b01bd1cbaebf2de08d9173bc095c", zero2 = "0x0000000000000000000000000000000000000000";
         var settlements = [], withdrawals = [];
         receipt.logs.forEach(function(log) {
           if (log.removed) return;
           var topics = log.topics || [];
-          if (log.address.toLowerCase() === entry && topics[0] === "0x2251435bd151cd72851a82be055bf6d1c3d7f34d08d56493dddf874229b8e897" && topics.length === 4 && esimLedgerAddress_("0x" + topics[1].slice(-40)) === token.toLowerCase() && "0x" + topics[2].slice(-40) === zero && "0x" + topics[3].slice(-40) === wallet) {
+          if (log.address.toLowerCase() === entry && topics[0] === "0x2251435bd151cd72851a82be055bf6d1c3d7f34d08d56493dddf874229b8e897" && topics.length === 4 && esimLedgerAddress_("0x" + topics[1].slice(-40)) === token.toLowerCase() && "0x" + topics[2].slice(-40) === zero2 && "0x" + topics[3].slice(-40) === wallet) {
             var words = esimLedgerWords_(log.data);
             if (words.length >= 2 && words[0] === sold && words[1] === received) settlements.push(log);
           }
@@ -13949,9 +13949,9 @@ var require_engine = __commonJS({
         }, 0n) === received;
       }
       function esimLedgerSwapRoute_(edges, from, to) {
-        var zero = "0x0000000000000000000000000000000000000000", wrapped = "0xbb4cdb9cbd36b01bd1cbaebf2de08d9173bc095c";
+        var zero2 = "0x0000000000000000000000000000000000000000", wrapped = "0xbb4cdb9cbd36b01bd1cbaebf2de08d9173bc095c";
         function canonical(a) {
-          return a.toLowerCase() === wrapped ? zero : a.toLowerCase();
+          return a.toLowerCase() === wrapped ? zero2 : a.toLowerCase();
         }
         var target = canonical(to), queue = [{ asset: canonical(from), pools: [] }], seen = /* @__PURE__ */ new Set();
         while (queue.length) {
@@ -14438,8 +14438,8 @@ var require_engine = __commonJS({
       }
       function esimVerifyNftOwnerCounts(owners, boundary) {
         var managers = ["0x55f4c8aba71a1e923edc303eb4feff14608cc226", "0x46a15b0b27311cedf172ab29e4f4766fbe7f4364"];
-        var pairs = ESIM_CFG.addresses.flatMap((a) => managers.map((m) => ({ wallet: a, manager: m }))), hex2 = esimHex(boundary.block);
-        var values = esimRpcMany(pairs.map((p) => ["eth_call", [{ to: p.manager, data: "0x70a08231" + p.wallet.slice(2).padStart(64, "0") }, hex2]]));
+        var pairs = ESIM_CFG.addresses.flatMap((a) => managers.map((m) => ({ wallet: a, manager: m }))), hex4 = esimHex(boundary.block);
+        var values = esimRpcMany(pairs.map((p) => ["eth_call", [{ to: p.manager, data: "0x70a08231" + p.wallet.slice(2).padStart(64, "0") }, hex4]]));
         if (values.length !== pairs.length) throw new Error("LP NFT\u5F52\u5C5E\u6570\u91CF\u672A\u5B8C\u6574\u6838\u5BF9");
         pairs.forEach((p, i) => {
           var count = owners.filter((o) => o.owner === p.wallet && o.manager === p.manager).length;
@@ -14616,8 +14616,8 @@ var require_engine = __commonJS({
             j.index = 0;
             return;
           }
-          var boundary = j.state.boundaries[Math.floor(j.index / cfg.addresses.length)], a = cfg.addresses[j.index % cfg.addresses.length], hex2 = esimHex(boundary.block);
-          var values = esimRpcMany([cfg.token, cfg.usdt].map((t) => ["eth_call", [{ to: t, data: "0x70a08231" + a.slice(2).padStart(64, "0") }, hex2]]).concat([["eth_getBalance", [a, hex2]], ["eth_getTransactionCount", [a, hex2]]]));
+          var boundary = j.state.boundaries[Math.floor(j.index / cfg.addresses.length)], a = cfg.addresses[j.index % cfg.addresses.length], hex4 = esimHex(boundary.block);
+          var values = esimRpcMany([cfg.token, cfg.usdt].map((t) => ["eth_call", [{ to: t, data: "0x70a08231" + a.slice(2).padStart(64, "0") }, hex4]]).concat([["eth_getBalance", [a, hex4]], ["eth_getTransactionCount", [a, hex4]]]));
           j.balances.push({ address: a, time: boundary.time, block: boundary.block, ESIM: BigInt(values[0]).toString(), USDT: BigInt(values[1]).toString(), BNB: BigInt(values[2]).toString(), nonce: Number(BigInt(values[3])) });
           j.index++;
           return;
@@ -15515,6 +15515,12 @@ function buildSyncPlan(addresses, periods, { now = /* @__PURE__ */ new Date(), s
     plan.push({ day: today, partial: true, end: new Date(now.getTime() - 65e3).toISOString() });
   return { plan, hash: hash2 };
 }
+function requestedRangeCovered(plan, catalog, periods) {
+  return plan.every((p) => {
+    const v = periods.find((v2) => v2.day === p.day), end = Date.parse(p.partial ? p.end : p.day + "T00:00:00Z") + (p.partial ? 0 : 864e5);
+    return v && ["complete", "in_progress"].includes(v.status) && v.cohort_hash === collectionScope(catalog, p.day).cohortHash && (p.partial || v.status === "complete") && Number.isFinite(end) && Number.isFinite(new Date(v.end_at).getTime()) && new Date(v.end_at).getTime() >= end;
+  });
+}
 function extendSyncPlan(plan, addresses, periods, options = {}) {
   const last = plan.at(-1)?.day;
   if (!last) return plan;
@@ -15546,21 +15552,6 @@ function isTransientSyncError(error) {
 function canResumeFailed(run, hash2, now = /* @__PURE__ */ new Date()) {
   const state = run?.state, count = Number(state?.retryCount ?? 0), after = state?.retryAfter === void 0 ? 0 : Date.parse(state.retryAfter);
   return state?.cohortHash === hash2 && Number.isInteger(count) && count >= 0 && (count < 8 || isBoundaryPending({ message: run.error }) || state?.retryable === true && state?.retryAfter !== void 0 && isTransientSyncError({ message: run.error, code: state.retryErrorCode })) && Number.isFinite(after) && after <= now.getTime() && (run.state.retryable === true || isTransientSyncError({ message: run.error }));
-}
-function backfillSummary(addresses, periods, run, { now = /* @__PURE__ */ new Date(), start = "2026-09-30" } = {}) {
-  const { hash: hash2, plan } = buildSyncPlan(addresses.map((a) => ({ ...a, backfill_pending: false })), periods, { now, start });
-  const pending = addresses.filter((a) => a.backfill_pending).length;
-  return {
-    cohort_hash: hash2,
-    address_count: addresses.length,
-    pending_addresses: pending,
-    start,
-    checked_at: now.toISOString(),
-    missing_closed_days: plan.map((p) => p.day),
-    closed_history_complete: plan.length === 0,
-    ready: addresses.length > 0 && plan.length === 0 && pending === 0,
-    job: run ? { id: run.id, status: run.status, stage: run.stage, verified_days: run.verified_days, cohort_matches: run.state?.cohortHash === hash2 } : null
-  };
 }
 
 // ../../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/vendor/cu-budget.mjs
@@ -15961,13 +15952,245 @@ function verifiedTransferFees(result, receipts, usdt) {
   return fees;
 }
 
+// ../../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/lib/production-store.js
+import { randomUUID as randomUUID2 } from "node:crypto";
+
+// ../../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/lib/contract-production.js
+var PRODUCTION_SOURCE = "0x67b97c3845438f264965ca154ba13051c6c73416";
+var PRODUCTION_TOKEN = "0x7765a659c5b0cfbfd9fbc2ef2298b75a598f2d2d";
+var PRODUCTION_FEE = "0x4252f9e683c7d38b6fd053346358f6460d982745";
+var PRODUCTION_FIELDS = ["bnb_in", "esim_in", "bnb_output", "esim_output", "unallocated_output", "total_output"];
+var zero = () => Object.fromEntries(PRODUCTION_FIELDS.map((k) => [k, "0"]));
+var dayOf = (s) => new Date(s * 1e3).toISOString().slice(0, 10);
+function advanceProduction(prior, events, { block, blockHash, cutoff }) {
+  if (!prior || prior.version !== 1 || !Number.isSafeInteger(block) || block <= prior.throughBlock || !/^0x[0-9a-f]{64}$/.test(blockHash) || !Number.isFinite(cutoff) || cutoff <= prior.cutoff) throw Error("PRODUCTION_BOUNDARY");
+  const state = structuredClone(prior), seen = /* @__PURE__ */ new Set();
+  for (const d of Object.values(state.days)) delete d.fee_output;
+  for (const e of [...events].sort((a, b) => a.order[0] - b.order[0] || a.order[1] - b.order[1] || a.order[2] - b.order[2])) {
+    if (!Number.isSafeInteger(e.block) || e.block <= prior.throughBlock || e.block > block) throw Error("PRODUCTION_REPLAY_OR_RANGE");
+    if (!e.id || seen.has(e.id) || !Number.isFinite(e.timestamp) || e.timestamp >= cutoff || !/^\d+$/.test(e.amount) || !["bnb", "esim", "stake", "admin", "compound", "claim"].includes(e.kind)) throw Error("PRODUCTION_EVENT");
+    seen.add(e.id);
+    const day = dayOf(e.timestamp), d = state.days[day] ??= zero(), add = (k, n) => {
+      d[k] = String(BigInt(d[k]) + BigInt(n));
+    };
+    const a = state.accounts[e.address] ??= {};
+    if (e.kind === "bnb") {
+      add("bnb_in", e.amount);
+      if (BigInt(e.amount) > 0n) a.bnb ??= e.block;
+    } else if (e.kind === "esim") add("esim_in", e.amount);
+    else if (e.kind === "stake") a.esim ??= e.block;
+    else if (e.kind === "admin" || e.kind === "compound") a.unknown ??= e.block;
+    else {
+      if (!/^\d+$/.test(e.fee)) throw Error("PRODUCTION_FEE");
+      const key2 = !a.unknown && a.bnb && a.bnb < e.block && !a.esim ? "bnb_output" : !a.unknown && a.esim && a.esim < e.block && !a.bnb ? "esim_output" : "unallocated_output";
+      add(key2, e.amount);
+      add("total_output", e.amount);
+    }
+  }
+  state.throughBlock = block;
+  state.blockHash = blockHash;
+  state.cutoff = cutoff;
+  for (const d of Object.values(state.days)) if (BigInt(d.bnb_output) + BigInt(d.esim_output) + BigInt(d.unallocated_output) !== BigInt(d.total_output)) throw Error("PRODUCTION_TOTAL_MISMATCH");
+  return state;
+}
+
+// ../../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/lib/production-store.js
+var PRODUCTION_TOPICS = { bnb: "0x2c10952a9e3d223e0bf2d6a58a6387f1207d66c90a6dfc929e16a0e039fc07f3", stake: "0x492cc47ab15a29b394edf8b1cacdcb45d64a334b396c29be19a945a5bafd9392", admin: "0x21112582bb44cf5f35ac85b6f9dac0b4675677ae9fd41ea1af3e9c365cbb27c4", compound: "0x7079b67c5053ead6799bac0cb7a0a9453a38e507f1b9e3828e20a13fc5d0d129", claim: "0x812be816db82c66cd18ca8457005cd84689642d8ac4d38599cc6af444a2dc72a" };
+var TRANSFER3 = "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef";
+var hex = (n) => "0x" + n.toString(16);
+async function updateProduction(target = Number.MAX_SAFE_INTEGER) {
+  if (!Number.isSafeInteger(target) || target <= 0) throw Error("INVALID_PRODUCTION_TARGET");
+  const c = await db().connect(), token = randomUUID2();
+  let locked = false;
+  try {
+    const claimed = await c.query("UPDATE esim_ledger.contract_production_state SET lease_token=$1,lease_until=now()+interval '10 minutes' WHERE id=1 AND (lease_until IS NULL OR lease_until<now()) RETURNING state", [token]);
+    locked = claimed.rowCount === 1;
+    if (!locked) return { status: "busy" };
+    const prior = claimed.rows[0].state;
+    const cache2 = {}, get = async (calls2) => {
+      await fill(calls2, cache2);
+      return reader(cache2)(calls2);
+    };
+    const [chain, head, previous] = await get([["eth_chainId", []], ["eth_getBlockByNumber", ["latest", false]], ["eth_getBlockByNumber", [hex(prior.throughBlock), false]]]);
+    if (chain !== "0x38" || previous.hash !== prior.blockHash) throw Error("PRODUCTION_CHAIN_CHANGED");
+    const end = Math.min(Number(BigInt(head.number)) - 64, prior.throughBlock + 5e4, target);
+    if (end <= prior.throughBlock) return { status: "current", block: prior.throughBlock };
+    const calls = [];
+    for (let start = prior.throughBlock + 1; start <= end; start += 5e3) {
+      const range = { fromBlock: hex(start), toBlock: hex(Math.min(start + 4999, end)) };
+      calls.push(["eth_getLogs", [{ ...range, address: PRODUCTION_SOURCE, topics: [Object.values(PRODUCTION_TOPICS)] }]], ["eth_getLogs", [{ ...range, address: PRODUCTION_TOKEN, topics: [TRANSFER3, null, "0x" + PRODUCTION_SOURCE.slice(2).padStart(64, "0")] }]]);
+    }
+    const pages = await get(calls), events = [], missingTimes = /* @__PURE__ */ new Set();
+    for (const logs of pages) for (const r of logs) if (!r.blockTimestamp) missingTimes.add(Number(BigInt(r.blockNumber)));
+    const blocks = [...missingTimes], headers = await get(blocks.map((b) => ["eth_getBlockByNumber", [hex(b), false]])), times = new Map(headers.map((r, i) => [blocks[i], Number(BigInt(r.timestamp))]));
+    for (const [i, logs] of pages.entries()) {
+      if (!Array.isArray(logs) || logs.length >= 1e4) throw Error("PRODUCTION_LOG_PAGE_LIMIT");
+      for (const r of logs) {
+        const block = Number(BigInt(r.blockNumber)), kind = i % 2 ? "esim" : Object.keys(PRODUCTION_TOPICS).find((k) => PRODUCTION_TOPICS[k] === r.topics[0]);
+        if (r.removed || !kind || r.address.toLowerCase() !== (kind === "esim" ? PRODUCTION_TOKEN : PRODUCTION_SOURCE) || !/^0x[0-9a-f]{64}$/i.test(r.transactionHash) || !/^0x(?:[0-9a-f]{64})+$/i.test(r.data)) throw Error("PRODUCTION_INVALID_LOG");
+        const words = r.data.slice(2).match(/.{64}/g).map((x) => String(BigInt("0x" + x)));
+        const address2 = "0x" + r.topics[kind === "admin" ? 2 : 1].slice(-40);
+        events.push({ kind, id: r.transactionHash + ":" + r.logIndex, block, order: [block, Number(BigInt(r.transactionIndex)), Number(BigInt(r.logIndex))], timestamp: r.blockTimestamp ? Number(BigInt(r.blockTimestamp)) : times.get(block), address: address2, amount: kind === "claim" ? words[2] : kind === "bnb" || kind === "esim" ? words[0] : "0", fee: kind === "claim" ? words[1] : "0" });
+      }
+    }
+    const [last, next2, check] = await get([["eth_getBlockByNumber", [hex(end), false]], ["eth_getBlockByNumber", [hex(end + 1), false]], ["eth_getBlockByNumber", [hex(prior.throughBlock), false]]]);
+    if (check.hash !== prior.blockHash || next2.parentHash !== last.hash) throw Error("PRODUCTION_BOUNDARY_CHANGED");
+    const cutoff = next2.milliTimestamp ? Number(BigInt(next2.milliTimestamp)) / 1e3 : Number(BigInt(next2.timestamp));
+    const state = advanceProduction(prior, events, { block: end, blockHash: last.hash, cutoff });
+    const changed = await c.query("UPDATE esim_ledger.contract_production_state SET state=$1::jsonb,through_block=$2,updated_at=now()WHERE id=1 AND through_block=$3 AND lease_token=$4 AND lease_until>now()", [JSON.stringify(state), end, prior.throughBlock, token]);
+    if (changed.rowCount !== 1) throw Error("PRODUCTION_CONCURRENT_UPDATE");
+    return { status: end < Math.min(Number(BigInt(head.number)) - 64, target) ? "catching_up" : "current", block: end, cutoff: new Date(cutoff * 1e3).toISOString(), events: events.length };
+  } finally {
+    if (locked) await c.query("UPDATE esim_ledger.contract_production_state SET lease_token=NULL,lease_until=NULL WHERE id=1 AND lease_token=$1", [token]).catch(() => {
+    });
+    c.release();
+  }
+}
+
+// ../../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/lib/reinvest-store.js
+import { randomUUID as randomUUID3 } from "node:crypto";
+
+// ../../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/lib/production-reinvest.js
+var order = (a, b) => a.order[0] - b.order[0] || a.order[1] - b.order[1] || a.order[2] - b.order[2];
+var requireValue = (ok, code) => {
+  if (!ok) throw Error("REINVEST_" + code);
+};
+function matchProductionTransfers(transfers, events, source) {
+  const indexed = /* @__PURE__ */ new Map(), evidence = /* @__PURE__ */ new Map(), claimIds = /* @__PURE__ */ new Set(), stakeIds = /* @__PURE__ */ new Set(), used = /* @__PURE__ */ new Set();
+  for (const t of transfers) {
+    if (t.from !== source && t.to !== source) continue;
+    const k = [t.tx, t.from === source ? "claim" : "stake", t.from === source ? t.to : t.from, t.value].join(":");
+    if (!indexed.has(k)) indexed.set(k, []);
+    indexed.get(k).push(t);
+  }
+  for (const e of events) if (["claim", "stake"].includes(e.kind)) {
+    const k = [e.tx, e.kind, e.address, e.amount].join(":");
+    if (!evidence.has(k)) evidence.set(k, []);
+    evidence.get(k).push(e);
+  }
+  for (const [k, es] of evidence) {
+    const rows = (indexed.get(k) || []).sort(order);
+    requireValue(rows.length >= es.length, "EVIDENCE_MATCH");
+    if (rows.length !== es.length) continue;
+    for (const e of es.sort(order)) {
+      const t = rows.find((t2) => !used.has(t2.id) && order(t2, e) < 0);
+      requireValue(t, "EVIDENCE_MATCH");
+      used.add(t.id);
+      (e.kind === "claim" ? claimIds : stakeIds).add(t.id);
+    }
+  }
+  return { claimIds, stakeIds };
+}
+function advanceReinvest(prior, { transfers, claimIds, stakeIds, block, blockHash, cutoff }) {
+  requireValue(prior?.version === 1 && Number.isSafeInteger(block) && block > prior.throughBlock && /^0x[0-9a-f]{64}$/.test(blockHash) && cutoff > prior.cutoff, "BOUNDARY");
+  const state = structuredClone(prior), seen = /* @__PURE__ */ new Set();
+  for (const t of [...transfers].sort(order)) {
+    requireValue(t.id && !seen.has(t.id), "DUPLICATE");
+    seen.add(t.id);
+    requireValue(t.order[0] > prior.throughBlock && t.order[0] <= block && /^\d+$/.test(t.value) && Number.isFinite(t.timestamp) && t.timestamp < cutoff, "TRANSFER");
+    const value = BigInt(t.value);
+    if (!value || t.from === t.to) continue;
+    if (stakeIds.has(t.id)) requireValue(Object.hasOwn(state.wallets, t.from), "OPENING");
+    if (claimIds.has(t.id)) requireValue(Object.hasOwn(state.wallets, t.to), "OPENING");
+    const from = state.wallets[t.from];
+    if (from) {
+      const balance = BigInt(from.balance), reward = BigInt(from.reward);
+      requireValue(balance >= value && reward >= 0n && reward <= balance, "BALANCE");
+      const confirmed = value > balance - reward ? value - (balance - reward) : 0n;
+      if (stakeIds.has(t.id) && confirmed) {
+        const day = new Date(t.timestamp * 1e3).toISOString().slice(0, 10);
+        state.days[day] = String(BigInt(state.days[day] || "0") + confirmed);
+      }
+      from.balance = String(balance - value);
+      from.reward = String(reward > value ? reward - value : 0n);
+    }
+    const to = state.wallets[t.to];
+    if (to) {
+      to.balance = String(BigInt(to.balance) + value);
+      if (claimIds.has(t.id)) to.reward = String(BigInt(to.reward) + value);
+    }
+  }
+  state.throughBlock = block;
+  state.blockHash = blockHash;
+  state.cutoff = cutoff;
+  return state;
+}
+
+// ../../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/lib/reinvest-store.js
+var TRANSFER4 = "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef";
+var hex2 = (n) => "0x" + n.toString(16);
+var addr2 = (t) => "0x" + t.slice(-40);
+var ordered = (r) => [r.blockNumber, r.transactionIndex, r.logIndex].map((v) => Number(BigInt(v)));
+async function updateReinvest(target) {
+  const c = await db().connect(), token = randomUUID3();
+  let locked = false;
+  try {
+    const claimed = await c.query("UPDATE esim_ledger.production_reinvest_state SET lease_token=$1,lease_until=now()+interval '10 minutes' WHERE id=1 AND (lease_until IS NULL OR lease_until<now()) RETURNING state", [token]);
+    if (!claimed.rowCount) return { status: "busy_or_unseeded" };
+    locked = true;
+    const prior = claimed.rows[0].state, end = Math.min(target, prior.throughBlock + 5e4);
+    if (end <= prior.throughBlock) return { status: "current", block: prior.throughBlock };
+    const cache2 = {}, get = async (calls) => {
+      await fill(calls, cache2);
+      return reader(cache2)(calls);
+    };
+    const [chain, old, last, next2] = await get([["eth_chainId", []], ["eth_getBlockByNumber", [hex2(prior.throughBlock), false]], ["eth_getBlockByNumber", [hex2(end), false]], ["eth_getBlockByNumber", [hex2(end + 1), false]]]);
+    if (chain !== "0x38" || old.hash !== prior.blockHash || next2.parentHash !== last.hash) throw Error("REINVEST_CHAIN_CHANGED");
+    const queries = [];
+    for (let start = prior.throughBlock + 1; start <= end; start += 5e3) {
+      const range = { fromBlock: hex2(start), toBlock: hex2(Math.min(start + 4999, end)) };
+      queries.push(["eth_getLogs", [{ ...range, address: PRODUCTION_TOKEN, topics: [TRANSFER4] }]], ["eth_getLogs", [{ ...range, address: PRODUCTION_SOURCE, topics: [[PRODUCTION_TOPICS.claim, PRODUCTION_TOPICS.stake]] }]]);
+    }
+    const pages = await get(queries), transfers = [], events = [];
+    const missing = /* @__PURE__ */ new Set();
+    for (const logs of pages) {
+      if (!Array.isArray(logs) || logs.length >= 1e4) throw Error("REINVEST_LOG_LIMIT");
+      for (const r of logs) if (!r.blockTimestamp) missing.add(ordered(r)[0]);
+    }
+    const blocks = [...missing], headers = await get(blocks.map((b) => ["eth_getBlockByNumber", [hex2(b), false]])), times = new Map(headers.map((r, i) => [blocks[i], Number(BigInt(r.timestamp))]));
+    for (const [i, logs] of pages.entries()) for (const r of logs) {
+      if (r.removed || r.address.toLowerCase() !== (i % 2 ? PRODUCTION_SOURCE : PRODUCTION_TOKEN)) throw Error("REINVEST_INVALID_LOG");
+      const order2 = ordered(r), base = { id: r.transactionHash + ":" + r.logIndex, tx: r.transactionHash, order: order2, timestamp: r.blockTimestamp ? Number(BigInt(r.blockTimestamp)) : times.get(order2[0]) };
+      if (i % 2) {
+        const kind = r.topics[0] === PRODUCTION_TOPICS.claim ? "claim" : r.topics[0] === PRODUCTION_TOPICS.stake ? "stake" : null;
+        if (!kind) throw Error("REINVEST_EVENT");
+        const words = r.data.slice(2).match(/.{64}/g);
+        events.push({ ...base, kind, address: addr2(r.topics[1]), amount: String(BigInt("0x" + words[kind === "claim" ? 2 : 0])) });
+      } else {
+        if (r.topics[0] !== TRANSFER4 || r.topics.length !== 3) throw Error("REINVEST_TRANSFER");
+        transfers.push({ ...base, from: addr2(r.topics[1]), to: addr2(r.topics[2]), value: String(BigInt(r.data)) });
+      }
+    }
+    const wallets = [...new Set(events.map((e) => e.address))].filter((a) => a !== PRODUCTION_FEE && !Object.hasOwn(prior.wallets, a));
+    const openings = await get(wallets.map((a) => ["eth_call", [{ to: PRODUCTION_TOKEN, data: "0x70a08231" + a.slice(2).padStart(64, "0") }, hex2(prior.throughBlock)]]));
+    wallets.forEach((a, i) => {
+      prior.wallets[a] = { balance: String(BigInt(openings[i])), reward: "0" };
+    });
+    const proof = matchProductionTransfers(transfers, events.filter((e) => e.address !== PRODUCTION_FEE), PRODUCTION_SOURCE);
+    const cutoff = next2.milliTimestamp ? Number(BigInt(next2.milliTimestamp)) / 1e3 : Number(BigInt(next2.timestamp));
+    const state = advanceReinvest(prior, { transfers, ...proof, block: end, blockHash: last.hash, cutoff });
+    const touched = [...new Set(events.map((e) => e.address))].filter((a) => a !== PRODUCTION_FEE);
+    const closing = await get(touched.map((a) => ["eth_call", [{ to: PRODUCTION_TOKEN, data: "0x70a08231" + a.slice(2).padStart(64, "0") }, hex2(end)]]));
+    if (touched.some((a, i) => state.wallets[a].balance !== String(BigInt(closing[i])))) throw Error("REINVEST_CLOSING_MISMATCH");
+    const check = (await get([["eth_getBlockByNumber", [hex2(prior.throughBlock), false]]]))[0];
+    if (check.hash !== prior.blockHash) throw Error("REINVEST_CHAIN_CHANGED");
+    const saved = await c.query("UPDATE esim_ledger.production_reinvest_state SET state=$1::jsonb,through_block=$2,updated_at=now()WHERE id=1 AND through_block=$3 AND lease_token=$4 AND lease_until>now()", [JSON.stringify(state), end, prior.throughBlock, token]);
+    if (saved.rowCount !== 1) throw Error("REINVEST_CONCURRENT_UPDATE");
+    return { status: end < target ? "catching_up" : "current", block: end, transfers: transfers.length, stakes: proof.stakeIds.size };
+  } finally {
+    if (locked) await c.query("UPDATE esim_ledger.production_reinvest_state SET lease_token=NULL,lease_until=NULL WHERE id=1 AND lease_token=$1", [token]).catch(() => {
+    });
+    c.release();
+  }
+}
+
 // ../../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/lib/collector.js
 var import_engine = __toESM(require_engine(), 1);
 var BOT = "0xe1de6ac2ee058df5d3be8edeb62a8815fd13ff5a";
 var EVENT = "0x7530424e0c452360e492059aa00e241fcb95eef959a0d17221f75f464f49eb3e";
-var TRANSFER3 = "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef";
+var TRANSFER5 = "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef";
 var HASH = (x) => createHash4("sha256").update(JSON.stringify(x)).digest("hex");
-var hex = (n) => "0x" + BigInt(n).toString(16);
+var hex3 = (n) => "0x" + BigInt(n).toString(16);
 var adr = (t) => "0x" + t.slice(-40).toLowerCase();
 var labels = { init: "\u786E\u8BA4\u7EDF\u8BA1\u65F6\u95F4", transfers: "\u8BFB\u53D6\u666E\u901A\u94B1\u5305\u6D41\u6C34", nfts: "\u6838\u5BF9LP\u5F52\u5C5E", transactions: "\u8BFB\u53D6\u666E\u901A\u94B1\u5305\u51ED\u8BC1", balances: "\u6838\u5BF9\u671F\u521D\u671F\u672B\u4F59\u989D", nonces: "\u8865\u67E5\u9057\u6F0F\u6D41\u6C34", traces: "\u533A\u5206\u8F6C\u8D26\u4E0E\u624B\u7EED\u8D39", lp: "\u6838\u5BF9LP\u672C\u91D1", times: "\u6838\u5BF9\u6D41\u6C34\u65F6\u95F4", analyze: "\u6838\u5BF9\u4F59\u989D", residual: "\u8865\u67E5\u4F59\u989D\u5DEE\u989D", extra: "\u8865\u5145\u94FE\u4E0A\u51ED\u8BC1", ready: "\u4FDD\u5B58\u5DF2\u6838\u9A8C\u7ED3\u679C" };
 function transactionHashes(transfers) {
@@ -16022,25 +16245,34 @@ function exactPositions(view, day, result, balanceOnly, receipts = {}, usdt = ""
     return p;
   });
 }
+var manualReportsComplete = (production, reinvest, target) => Number.isSafeInteger(target) && target > 0 && [production, reinvest].every((r) => r?.status === "current" && Number.isSafeInteger(r.block) && r.block >= target);
 async function startSync(source = "manual") {
   return transaction((c) => enqueueSync(c, source));
 }
 async function enqueueSync(c, source = "automatic") {
   await c.query("SELECT pg_advisory_xact_lock(7693201)");
+  if (source !== "manual") {
+    const job = (await c.query("SELECT id,status,stage,source,state,error FROM esim_ledger.sync_runs WHERE source='manual' ORDER BY started_at DESC LIMIT 1 FOR UPDATE")).rows[0];
+    if (job && ["queued", "running"].includes(job.status)) return { id: job.id, status: job.status, stage: job.stage, source: "manual" };
+    if (job?.status === "failed" && canResumeFailed(job, job.state?.cohortHash)) return (await c.query("UPDATE esim_ledger.sync_runs SET status='queued',stage='\u4ECE\u65AD\u70B9\u7EE7\u7EED\u624B\u52A8\u7EDF\u8BA1',lease_until=NULL,finished_at=NULL,updated_at=now() WHERE id=$1 RETURNING id,status,stage,source", [job.id])).rows[0];
+    return { id: null, status: "idle", stage: "\u7B49\u5F85\u624B\u52A8\u7EDF\u8BA1", mode: "manual" };
+  }
+  const requestedAt = (/* @__PURE__ */ new Date()).toISOString();
   const all = (await c.query("SELECT address,mode,active_from,backfill_pending FROM esim_ledger.addresses ORDER BY ordinal")).rows, dates = (await c.query("SELECT day,status,cohort_hash FROM esim_ledger.periods ORDER BY day")).rows;
-  const { plan, hash: hash2 } = buildSyncPlan(all, dates, { source });
-  const active = (await c.query("SELECT id,status,stage,state->>'cohortHash' AS cohort_hash FROM esim_ledger.sync_runs WHERE status IN ('queued','running') LIMIT 1 FOR UPDATE")).rows[0];
-  if (active?.cohort_hash === hash2) return active;
-  if (active) await c.query("UPDATE esim_ledger.sync_runs SET status='failed',stage='\u5730\u5740\u5E93\u53D8\u5316\uFF0C\u5DF2\u7531\u65B0\u56DE\u6EAF\u66FF\u4EE3',error='\u5730\u5740\u5E93\u53D8\u5316\uFF0C\u65E7\u4EFB\u52A1\u5DF2\u5931\u6548',lease_version=lease_version+1,lease_until=NULL,finished_at=now(),updated_at=now() WHERE id=$1", [active.id]);
-  const latest = (await c.query("SELECT id,status,state,error FROM esim_ledger.sync_runs ORDER BY updated_at DESC LIMIT 1")).rows[0], failed = latest?.status === "failed" ? latest : null;
-  if (canResumeFailed(failed, hash2)) return (await c.query("UPDATE esim_ledger.sync_runs SET status='queued',stage='\u4ECE\u65AD\u70B9\u7EE7\u7EED\u56DE\u6EAF',lease_until=NULL,finished_at=NULL,updated_at=now() WHERE id=$1 RETURNING id,status,stage", [failed.id])).rows[0];
+  const { plan, hash: hash2 } = buildSyncPlan(all, dates, { source, now: new Date(requestedAt) });
+  const active = (await c.query("SELECT id,status,stage,source,state->>'cohortHash' AS cohort_hash FROM esim_ledger.sync_runs WHERE status IN ('queued','running') LIMIT 1 FOR UPDATE")).rows[0];
+  if (active?.cohort_hash === hash2 && active.source === "manual") return active;
+  if (active) await c.query("UPDATE esim_ledger.sync_runs SET status='failed',stage='\u5DF2\u7531\u672C\u6B21\u624B\u52A8\u7EDF\u8BA1\u66FF\u4EE3',error='\u65E7\u4EFB\u52A1\u5DF2\u6682\u505C\uFF0C\u65AD\u70B9\u4FDD\u7559',lease_version=lease_version+1,lease_until=NULL,finished_at=now(),updated_at=now() WHERE id=$1", [active.id]);
+  const latest = (await c.query("SELECT id,status,source,state,error FROM esim_ledger.sync_runs ORDER BY updated_at DESC LIMIT 1")).rows[0], failed = latest?.status === "failed" ? latest : null;
+  if (failed?.source === "manual" && canResumeFailed(failed, hash2)) return (await c.query("UPDATE esim_ledger.sync_runs SET status='queued',stage='\u4ECE\u65AD\u70B9\u7EE7\u7EED\u56DE\u6EAF',lease_until=NULL,finished_at=NULL,updated_at=now() WHERE id=$1 RETURNING id,status,stage,source", [failed.id])).rows[0];
   if (failed?.state?.cohortHash === hash2 && source !== "manual") return { id: failed.id, status: "failed", stage: "\u56DE\u6EAF\u4E2D\u65AD\uFF0C\u9700\u8981\u6838\u5BF9", error: failed.error };
   if (!plan.length) return { id: null, status: "complete", stage: "\u4ECA\u65E5\u5DF2\u66F4\u65B0" };
-  const state = { catalog: all.map(({ address: address2, mode, active_from }) => ({ address: address2, mode, active_from })), addresses: all.map((x) => x.address), wallets: all.filter((a) => a.mode === "wallet").map((a) => a.address), balanceOnly: all.filter((a) => a.mode !== "wallet").map((a) => a.address), plan, index: 0, cache: {}, nfts: null, wallet: null, stage: "\u51C6\u5907", cohortHash: hash2 };
-  return (await c.query("INSERT INTO esim_ledger.sync_runs(status,source,state)VALUES('queued',$1,$2)RETURNING id,status,stage", [source, JSON.stringify(state)])).rows[0];
+  const state = { requestedAt, catalog: all.map(({ address: address2, mode, active_from }) => ({ address: address2, mode, active_from })), addresses: all.map((x) => x.address), wallets: all.filter((a) => a.mode === "wallet").map((a) => a.address), balanceOnly: all.filter((a) => a.mode !== "wallet").map((a) => a.address), plan, index: 0, cache: {}, nfts: null, wallet: null, stage: "\u51C6\u5907", cohortHash: hash2 };
+  return (await c.query("INSERT INTO esim_ledger.sync_runs(status,source,state)VALUES('queued',$1,$2)RETURNING id,status,stage,source", [source, JSON.stringify(state)])).rows[0];
 }
 async function syncStatus(id) {
-  return (await db().query("SELECT id,status,stage,error,verified_days,lease_until,state->>'retryAfter' AS retry_after FROM esim_ledger.sync_runs WHERE id=$1", [id])).rows[0];
+  const row = (await db().query("SELECT id,status,source,stage,error,verified_days,lease_until,state->>'retryAfter' AS retry_after FROM esim_ledger.sync_runs WHERE id=$1", [id])).rows[0];
+  return row && row.source !== "manual" ? { ...row, status: "paused", stage: "\u81EA\u52A8\u7EDF\u8BA1\u5DF2\u6682\u505C\uFF0C\u7B49\u5F85\u624B\u52A8\u542F\u52A8" } : row;
 }
 async function getNftHistory(state) {
   if (state.nfts) return;
@@ -16049,7 +16281,7 @@ async function getNftHistory(state) {
     state.nfts = seed.events;
     return;
   }
-  const head = await rpc("eth_getBlockByNumber", ["latest", false], state.cache, (m, b) => ({ number: b.number, hash: b.hash })), end = hex(BigInt(head.number) - 64n), queries = state.wallets.flatMap((a) => ["fromAddress", "toAddress"].map((dir) => ["alchemy_getAssetTransfers", [{ fromBlock: "0x0", toBlock: end, category: ["erc721"], excludeZeroValue: false, withMetadata: true, maxCount: "0x3e8", order: "asc", [dir]: a, contractAddresses: ["0x55f4c8aba71a1e923edc303eb4feff14608cc226", "0x46a15b0b27311cedf172ab29e4f4766fbe7f4364"] }]]));
+  const head = await rpc("eth_getBlockByNumber", ["latest", false], state.cache, (m, b) => ({ number: b.number, hash: b.hash })), end = hex3(BigInt(head.number) - 64n), queries = state.wallets.flatMap((a) => ["fromAddress", "toAddress"].map((dir) => ["alchemy_getAssetTransfers", [{ fromBlock: "0x0", toBlock: end, category: ["erc721"], excludeZeroValue: false, withMetadata: true, maxCount: "0x3e8", order: "asc", [dir]: a, contractAddresses: ["0x55f4c8aba71a1e923edc303eb4feff14608cc226", "0x46a15b0b27311cedf172ab29e4f4766fbe7f4364"] }]]));
   for (let i = 0; i < queries.length; i += 20) await fill(queries.slice(i, i + 20), state.cache);
   const events = /* @__PURE__ */ new Map();
   for (const q of queries) {
@@ -16070,7 +16302,7 @@ async function getNftHistory(state) {
   state.nfts = [...events.values()];
 }
 function walletTransferQueries(wallets, j) {
-  return wallets.flatMap((a) => ["fromAddress", "toAddress"].map((dir) => ["alchemy_getAssetTransfers", [{ fromBlock: hex(j.state.startBlock), toBlock: hex(j.state.endBlock), category: ["external", "erc20", "erc721", "erc1155"], excludeZeroValue: false, withMetadata: true, maxCount: "0x3e8", order: "asc", [dir]: a }]]));
+  return wallets.flatMap((a) => ["fromAddress", "toAddress"].map((dir) => ["alchemy_getAssetTransfers", [{ fromBlock: hex3(j.state.startBlock), toBlock: hex3(j.state.endBlock), category: ["external", "erc20", "erc721", "erc1155"], excludeZeroValue: false, withMetadata: true, maxCount: "0x3e8", order: "asc", [dir]: a }]]));
 }
 async function robotModel(state, wallet, engine) {
   const start = wallet.state.boundaries[0], end = wallet.state.boundaries[1], cache2 = state.cache, group = new Set(state.balanceOnly), cohort = new Set(state.addresses), tokens = [engine.config.token, engine.config.usdt];
@@ -16079,14 +16311,14 @@ async function robotModel(state, wallet, engine) {
     const hi = Math.min(end.block, lo + 24999);
     for (let i = 0; i < state.balanceOnly.length; i += 80) {
       const topics = state.balanceOnly.slice(i, i + 80).map((a) => "0x" + a.slice(2).padStart(64, "0"));
-      for (const dir of [1, 2]) logs.push(...await rpc("eth_getLogs", [{ fromBlock: hex(lo), toBlock: hex(hi), address: tokens, topics: dir === 1 ? [TRANSFER3, topics] : [TRANSFER3, null, topics] }], cache2));
+      for (const dir of [1, 2]) logs.push(...await rpc("eth_getLogs", [{ fromBlock: hex3(lo), toBlock: hex3(hi), address: tokens, topics: dir === 1 ? [TRANSFER5, topics] : [TRANSFER5, null, topics] }], cache2));
     }
   }
   const unique = [...new Map(logs.map((l) => [l.transactionHash + ":" + l.logIndex, l])).values()], exec = /* @__PURE__ */ new Set();
-  for (let lo = start.block + 1; lo <= end.block; lo += 25e3) for (const l of await rpc("eth_getLogs", [{ fromBlock: hex(lo), toBlock: hex(Math.min(end.block, lo + 24999)), address: BOT, topics: [EVENT] }], cache2)) exec.add(l.transactionHash);
-  const calls = [start, end].flatMap((b) => state.balanceOnly.flatMap((a) => tokens.map((t) => ["eth_call", [{ to: t, data: "0x70a08231" + a.slice(2).padStart(64, "0") }, hex(b.block)]])));
+  for (let lo = start.block + 1; lo <= end.block; lo += 25e3) for (const l of await rpc("eth_getLogs", [{ fromBlock: hex3(lo), toBlock: hex3(Math.min(end.block, lo + 24999)), address: BOT, topics: [EVENT] }], cache2)) exec.add(l.transactionHash);
+  const calls = [start, end].flatMap((b) => state.balanceOnly.flatMap((a) => tokens.map((t) => ["eth_call", [{ to: t, data: "0x70a08231" + a.slice(2).padStart(64, "0") }, hex3(b.block)]])));
   await fill(calls, cache2);
-  const nftCalls = state.balanceOnly.flatMap((a) => ["0x55f4c8aba71a1e923edc303eb4feff14608cc226", "0x46a15b0b27311cedf172ab29e4f4766fbe7f4364"].map((t) => ["eth_call", [{ to: t, data: "0x70a08231" + a.slice(2).padStart(64, "0") }, hex(end.block)]]));
+  const nftCalls = state.balanceOnly.flatMap((a) => ["0x55f4c8aba71a1e923edc303eb4feff14608cc226", "0x46a15b0b27311cedf172ab29e4f4766fbe7f4364"].map((t) => ["eth_call", [{ to: t, data: "0x70a08231" + a.slice(2).padStart(64, "0") }, hex3(end.block)]]));
   await fill(nftCalls, cache2);
   if (nftCalls.some((q) => BigInt(cache2[key(q)]) !== 0n)) throw Error("\u673A\u5668\u4EBA\u51FA\u73B0LP\u6301\u4ED3\uFF0C\u9700\u8981\u8865\u5145\u672C\u91D1\u6838\u5BF9\uFF0C\u539F\u6570\u636E\u4FDD\u7559");
   const changes = /* @__PURE__ */ new Map(), externals = [];
@@ -16114,7 +16346,7 @@ async function robotModel(state, wallet, engine) {
   }
   const positions = [];
   for (const a of state.balanceOnly) for (const [i, t] of tokens.entries()) {
-    const opening = BigInt(cache2[key(["eth_call", [{ to: t, data: "0x70a08231" + a.slice(2).padStart(64, "0") }, hex(start.block)]])]), closing = BigInt(cache2[key(["eth_call", [{ to: t, data: "0x70a08231" + a.slice(2).padStart(64, "0") }, hex(end.block)]])]), b = bucket(a, t), net = closing - opening - b.internal - b.externalIn + b.externalOut;
+    const opening = BigInt(cache2[key(["eth_call", [{ to: t, data: "0x70a08231" + a.slice(2).padStart(64, "0") }, hex3(start.block)]])]), closing = BigInt(cache2[key(["eth_call", [{ to: t, data: "0x70a08231" + a.slice(2).padStart(64, "0") }, hex3(end.block)]])]), b = bucket(a, t), net = closing - opening - b.internal - b.externalIn + b.externalOut;
     if (net !== b.trade) throw Error("\u673A\u5668\u4EBA\u4F59\u989D\u672A\u5BF9\u5E73\uFF0C\u539F\u6570\u636E\u4FDD\u7559");
     if (opening || closing || net || b.internal || b.externalIn || b.externalOut) positions.push([state.plan[state.index].day, a, i ? "USDT" : "ESIM", tokenUnits(opening), null, null, "0", "0", "0", tokenUnits(b.externalIn), tokenUnits(b.externalOut), tokenUnits(b.internal), "0", "0", tokenUnits(closing), "0", "0", tokenUnits(net), "\u673A\u5668\u4EBA\u4F59\u989D\u6CD5"]);
   }
@@ -16149,12 +16381,14 @@ async function snapshot(state, j, engine) {
   const robots = await robotModel(state, j, engine), view = engine.view([], [], j).replace, rows = view.rows, cohort = new Set(state.addresses);
   const day = state.plan[state.index].day, positions = exactPositions(view, day, j.result, state.balanceOnly, j.receipts, engine.config.usdt).concat(robots.positions), external = engine.external(j, state.addresses).rows.map((r) => [r[9], r[10], day, new Date((r[1] - 25569) * 864e5 - 288e5).toISOString(), r[4], r[5], r[2] ? "USDT" : "ESIM", tokenUnits(r[8]), r[8]]).concat(robots.externals);
   for (const r of external) if (cohort.has(r[5])) throw Error("\u7EC4\u5185\u8F6C\u8D26\u4E0D\u80FD\u8BA1\u4E3A\u5BF9\u5916\u652F\u51FA");
-  return { day, positions, external, addresses: state.addresses, cohortHash: state.cohortHash, start: j.state.boundaries[0].time, end: j.state.boundaries[1].time, startBlock: j.state.boundaries[0].block, endBlock: j.state.boundaries[1].block, price: String(j.price.price), partial: !!j.partial, hash: HASH({ positions, external }), proof: { walletChecks: state.wallets.length * 3, robotChecks: state.balanceOnly.length * 2, rawErrors: 0, robotBalanceOnly: true, blocks: j.boundaryHashes, verifiedExchanges: (j.state.config.verifiedNonEsimResolutions || []).filter((r) => j.result.transactions.some((t) => t.hash === r.hash && t.wallet === r.wallet)) } };
+  return { day, positions, external, addresses: state.addresses, cohortHash: state.cohortHash, start: j.state.boundaries[0].time, end: j.state.boundaries[1].time, startBlock: j.state.boundaries[0].block, endBlock: j.state.boundaries[1].block, price: String(j.price.price), partial: !!j.partial, hash: HASH({ positions, external }), proof: { catalog: (state.catalog || []).filter((a) => state.addresses.includes(a.address)).map(({ address: address2, mode, active_from }) => ({ address: address2, mode, active_from })), walletChecks: state.wallets.length * 3, robotChecks: state.balanceOnly.length * 2, rawErrors: 0, robotBalanceOnly: true, blocks: j.boundaryHashes, verifiedExchanges: (j.state.config.verifiedNonEsimResolutions || []).filter((r) => j.result.transactions.some((t) => t.hash === r.hash && t.wallet === r.wallet)) } };
 }
 async function runSync(id, budget = 45e3) {
-  const claimed = (await db().query("UPDATE esim_ledger.sync_runs SET status='running',lease_version=lease_version+1,lease_until=now()+interval '6 minutes',updated_at=now() WHERE id=$1 AND status IN ('queued','running') AND (lease_until IS NULL OR lease_until<now()) AND (state->>'retryAfter' IS NULL OR (state->>'retryAfter')::timestamptz<=now()) RETURNING *", [id])).rows[0];
+  const claimed = (await db().query("UPDATE esim_ledger.sync_runs SET status='running',lease_version=lease_version+1,lease_until=now()+interval '6 minutes',updated_at=now() WHERE id=$1 AND source='manual' AND status IN ('queued','running') AND (lease_until IS NULL OR lease_until<now()) AND (state->>'retryAfter' IS NULL OR (state->>'retryAfter')::timestamptz<=now()) RETURNING *", [id])).rows[0];
   if (!claimed) return syncStatus(id);
   const s = claimed.state, endAt = Date.now() + budget, engine = (0, import_engine.createEngine)();
+  s.requestedAt ||= new Date(claimed.started_at || Date.now()).toISOString();
+  const requestedNow = new Date(s.requestedAt);
   engine.config = { ...engine.config, addresses: s.wallets, inputAddresses: s.wallets };
   try {
     const current = (await db().query("SELECT address,mode,active_from FROM esim_ledger.addresses ORDER BY ordinal")).rows;
@@ -16162,14 +16396,14 @@ async function runSync(id, budget = 45e3) {
     if (s.retryable && s.retryCount >= 8) s.retryCount = 0;
     delete s.retryAfter;
     delete s.cache[key(["eth_getBlockByNumber", ["latest", false]])];
-    closeElapsedPartialDays(s);
+    closeElapsedPartialDays(s, requestedNow);
     if ((await db().query("SELECT 1 FROM esim_ledger.addresses WHERE backfill_pending LIMIT 1")).rowCount) {
-      const { plan } = buildSyncPlan(current.map((a) => ({ ...a, backfill_pending: true })), [], { source: "backfill" });
+      const { plan } = buildSyncPlan(current.map((a) => ({ ...a, backfill_pending: true })), [], { source: "backfill", now: requestedNow });
       const partial = plan.find((p) => p.partial);
       if (partial && !s.plan.some((p) => p.day === partial.day)) s.plan.push(partial);
     }
     const published = (await db().query("SELECT day,status,end_at,cohort_hash FROM esim_ledger.periods")).rows;
-    s.plan = extendSyncPlan(s.plan, current, published, { source: claimed.source });
+    s.plan = extendSyncPlan(s.plan, current, published, { source: claimed.source, now: requestedNow });
     const saved = new Map(published.filter((p) => p.cohort_hash === collectionScope(current, p.day).cohortHash).map((p) => [p.day, p]));
     while (s.index < s.plan.length) {
       const p = s.plan[s.index], v = saved.get(p.day);
@@ -16204,11 +16438,11 @@ async function runSync(id, budget = 45e3) {
         }
         if (j.stage === "transactions" && j.index === 0) j.hashes = transactionHashes(j.transfers);
         if (j.stage === "balances" && j.index === 0) {
-          const qs = j.state.boundaries.flatMap((b) => scope.wallets.flatMap((a) => [engine.config.token, engine.config.usdt].map((t) => ["eth_call", [{ to: t, data: "0x70a08231" + a.slice(2).padStart(64, "0") }, hex(b.block)]]).concat([["eth_getBalance", [a, hex(b.block)]], ["eth_getTransactionCount", [a, hex(b.block)]]])));
+          const qs = j.state.boundaries.flatMap((b) => scope.wallets.flatMap((a) => [engine.config.token, engine.config.usdt].map((t) => ["eth_call", [{ to: t, data: "0x70a08231" + a.slice(2).padStart(64, "0") }, hex3(b.block)]]).concat([["eth_getBalance", [a, hex3(b.block)]], ["eth_getTransactionCount", [a, hex3(b.block)]]])));
           await fill(qs, s.cache, (m, x) => engine.trim(m, x));
         }
         if (j.stage === "lp") {
-          const qs = j.state.boundaries.flatMap((b) => engine.owners(engine.config.nftSeed, j.nftTransfers, b.block).flatMap((o) => ["0x99fbab88", "0x6352211e"].map((sig) => ["eth_call", [{ to: o.manager, data: sig + BigInt(o.tokenId).toString(16).padStart(64, "0") }, hex(b.block)]])));
+          const qs = j.state.boundaries.flatMap((b) => engine.owners(engine.config.nftSeed, j.nftTransfers, b.block).flatMap((o) => ["0x99fbab88", "0x6352211e"].map((sig) => ["eth_call", [{ to: o.manager, data: sig + BigInt(o.tokenId).toString(16).padStart(64, "0") }, hex3(b.block)]])));
           await fill(qs, s.cache, (m, x) => engine.trim(m, x));
         }
         if (j.stage === "ready") {
@@ -16242,23 +16476,33 @@ async function runSync(id, budget = 45e3) {
         } else throw e;
       }
     }
+    if (s.index >= s.plan.length && !s.productionComplete && Date.now() < endAt) {
+      s.stage = "\u6838\u5BF9\u5408\u7EA6\u4EA7\u51FA\u4E0E\u590D\u6295";
+      s.productionTarget ||= Number((await db().query("SELECT end_block FROM esim_ledger.periods WHERE day=$1", [s.plan.at(-1).day])).rows[0]?.end_block);
+      if (!Number.isSafeInteger(s.productionTarget) || s.productionTarget <= 0) throw Error("MANUAL_TARGET_MISSING");
+      const production = await updateProduction(s.productionTarget);
+      const reinvest = production.block ? await updateReinvest(Math.min(production.block, s.productionTarget)) : null;
+      s.productionComplete = manualReportsComplete(production, reinvest, s.productionTarget);
+    }
     return await transaction(async (c) => {
       await c.query("SELECT pg_advisory_xact_lock(7693201)");
       const owned = (await c.query("SELECT 1 FROM esim_ledger.sync_runs WHERE id=$1 AND lease_version=$2 AND lease_until>now() FOR UPDATE", [id, claimed.lease_version])).rowCount;
       if (!owned) throw Error("SYNC_LEASE_LOST");
       let done = s.index >= s.plan.length;
       if (done) {
-        const finishNow = /* @__PURE__ */ new Date(), current2 = (await c.query("SELECT address,mode,active_from FROM esim_ledger.addresses ORDER BY ordinal")).rows;
+        const finishNow = requestedNow, current2 = (await c.query("SELECT address,mode,active_from FROM esim_ledger.addresses ORDER BY ordinal")).rows;
         if (cohortHash(current2) !== s.cohortHash) throw Error("\u5730\u5740\u5E93\u5DF2\u53D8\u5316\uFF0C\u672C\u8F6E\u7ED3\u679C\u4E0D\u53D1\u5E03\uFF0C\u8BF7\u91CD\u65B0\u66F4\u65B0");
-        const periods = (await c.query("SELECT day,status,cohort_hash FROM esim_ledger.periods ORDER BY day")).rows;
+        const periods = (await c.query("SELECT day,status,end_at,cohort_hash FROM esim_ledger.periods ORDER BY day")).rows;
         if (closeElapsedPartialDays(s, finishNow)) s.stage = "\u7EDF\u8BA1\u65E5\u5DF2\u7ED3\u675F\uFF0C\u7EE7\u7EED\u6838\u5BF9\u5B8C\u6574\u65E5";
         s.plan = extendSyncPlan(s.plan, current2, periods, { now: finishNow, source: claimed.source });
         done = s.index >= s.plan.length;
         if (done) {
+          if (!requestedRangeCovered(s.plan, current2, periods)) throw Error("MANUAL_REQUEST_INCOMPLETE");
           if (buildSyncPlan(current2, periods, { now: finishNow }).plan.length) throw Error("\u5386\u53F2\u56DE\u6EAF\u8986\u76D6\u4E0D\u5B8C\u6574\uFF0C\u5F85\u56DE\u6EAF\u6807\u8BB0\u4FDD\u7559");
           await c.query("UPDATE esim_ledger.addresses SET backfill_pending=false WHERE address=ANY($1::text[])", [s.addresses]);
         }
       }
+      done = done && s.productionComplete === true;
       return (await c.query("UPDATE esim_ledger.sync_runs SET state=$2,status=$3,stage=$4,verified_days=$5,error=NULL,updated_at=now(),lease_until=NULL,finished_at=CASE WHEN $3='complete' THEN now() ELSE NULL END WHERE id=$1 AND lease_version=$6 RETURNING id,status,stage,error,verified_days", [id, JSON.stringify(s), done ? "complete" : "running", done ? "\u66F4\u65B0\u5B8C\u6210" : s.stage, s.index, claimed.lease_version])).rows[0];
     });
   } catch (e) {
@@ -16271,52 +16515,6 @@ async function runSync(id, budget = 45e3) {
     if (s.retryable) s.retryAfter = new Date(Number.isFinite(e.retryAt) ? e.retryAt : Date.now() + (retry ? 3e4 : 3e5)).toISOString();
     return (await db().query("UPDATE esim_ledger.sync_runs SET state=$2,status=$3,stage=$4,error=$5,verified_days=$6,lease_until=NULL,updated_at=now() WHERE id=$1 AND lease_version=$7 RETURNING id,status,stage,error,verified_days,state->>'retryAfter' AS retry_after", [id, JSON.stringify(s), retry ? "queued" : "failed", retry ? pending ? "\u7B49\u5F85\u7ED3\u675F\u533A\u5757\u786E\u8BA4\uFF0C\u81EA\u52A8\u7EE7\u7EED" : "\u63A5\u53E3\u6682\u65F6\u5931\u8D25\uFF0C\u81EA\u52A8\u4ECE\u65AD\u70B9\u7EE7\u7EED" : "\u66F4\u65B0\u672A\u5B8C\u6210\uFF0C\u539F\u6570\u636E\u4FDD\u7559", message, s.index, claimed.lease_version])).rows[0] || syncStatus(id);
   }
-}
-
-// ../../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/lib/ledger-health.js
-function syncFailureReason(error = "") {
-  if (/统计结束区块尚未确认/.test(error)) return "\u7B49\u5F85\u94FE\u4E0A\u533A\u5757\u786E\u8BA4";
-  if (/余额|差额|核对上/.test(error)) return "\u8D26\u76EE\u4F59\u989D\u6838\u9A8C\u672A\u901A\u8FC7";
-  if (/分类.*LP/.test(error)) return "\u4EA4\u6613\u5206\u7C7B\u6216 LP \u8D39\u7528\u5F85\u6838\u9A8C";
-  if (/LP|NFT/.test(error)) return "LP \u5F52\u5C5E\u6216\u672C\u91D1\u6838\u9A8C\u672A\u901A\u8FC7";
-  if (/兑换|分类/.test(error)) return "\u5B58\u5728\u5C1A\u672A\u6838\u5B9E\u7684\u4EA4\u6613\u5206\u7C7B";
-  if (/历史回溯覆盖不完整/.test(error)) return "\u5386\u53F2\u65E5\u671F\u5C1A\u672A\u8865\u9F50";
-  if (/429|capacity|limit exceeded/i.test(error)) return "\u94FE\u4E0A\u6570\u636E\u6E90\u989D\u5EA6\u6216\u8BF7\u6C42\u9891\u7387\u53D7\u9650";
-  if (/timeout|fetch|接口暂不可用|aborted/i.test(error)) return "\u94FE\u4E0A\u6570\u636E\u63A5\u53E3\u6682\u65F6\u4E0D\u53EF\u7528";
-  return "\u540E\u53F0\u66F4\u65B0\u4EFB\u52A1\u4E2D\u65AD\uFF0C\u5177\u4F53\u539F\u56E0\u5F85\u6838\u67E5";
-}
-function ledgerHealth({ addresses, periods, job, checks, proof }, now = /* @__PURE__ */ new Date()) {
-  const coverage = backfillSummary(addresses, periods, job, { now }), latest = periods.at(-1) || null, issues = [];
-  const cutoff = Date.parse(latest?.end_at), ageSeconds = Number.isFinite(cutoff) ? Math.floor((now.getTime() - cutoff) / 1e3) : null;
-  if (ageSeconds === null) issues.push("MISSING_SNAPSHOT");
-  else if (ageSeconds < -60) issues.push("FUTURE_CUTOFF");
-  else if (ageSeconds > 900) issues.push("STALE_SNAPSHOT");
-  if (coverage.missing_closed_days.length) issues.push("HISTORY_GAP");
-  if (coverage.pending_addresses) issues.push("PENDING_ADDRESSES");
-  if (latest?.cohort_hash !== coverage.cohort_hash) issues.push("COHORT_MISMATCH");
-  if (!checks || Number(checks.rows) < 2 || Number(checks.errors) !== 0) issues.push("BALANCE_CHECK_FAILED");
-  if (!proof || Number(proof.rawErrors) !== 0 || Number(proof.walletChecks) !== addresses.filter((a) => a.mode === "wallet").length * 3 || Number(proof.robotChecks) !== addresses.filter((a) => a.mode !== "wallet").length * 2) issues.push("INCOMPLETE_EVIDENCE");
-  if (job?.status === "failed") issues.push("WORKER_FAILED");
-  return {
-    ok: issues.length === 0,
-    checkedAt: now.toISOString(),
-    ageSeconds,
-    latest: latest ? { day: latest.day, status: latest.status, end_at: latest.end_at, block: latest.end_block, verifiedAt: latest.verified_at } : null,
-    registry: { addresses: addresses.length, pending: coverage.pending_addresses },
-    history: { missingClosedDays: coverage.missing_closed_days },
-    checks: { balanceRows: Number(checks?.rows || 0), errors: Number(checks?.errors || 0), evidenceComplete: !issues.includes("INCOMPLETE_EVIDENCE") },
-    job: job ? { status: job.status, stage: job.stage, updatedAt: job.updated_at, reason: job.error ? syncFailureReason(job.error) : null, retryable: job.retryable === true || job.retryable === "true" } : null,
-    issues
-  };
-}
-async function readLedgerHealth(c, now = /* @__PURE__ */ new Date()) {
-  const addresses = (await c.query("SELECT address,mode,active_from,backfill_pending FROM esim_ledger.addresses ORDER BY ordinal")).rows;
-  const periods = (await c.query("SELECT day,status,end_at,end_block,verified_at,cohort_hash FROM esim_ledger.periods ORDER BY day")).rows;
-  const job = (await c.query("SELECT status,stage,error,updated_at,state->>'retryable' AS retryable FROM esim_ledger.sync_runs ORDER BY started_at DESC LIMIT 1")).rows[0];
-  const latest = periods.at(-1)?.day;
-  const checks = (await c.query("SELECT count(*)::int rows,count(*) FILTER(WHERE abs(difference)>0.0000001)::int errors FROM esim_ledger.balance_checks WHERE day=$1", [latest])).rows[0];
-  const proof = (await c.query("SELECT source FROM esim_ledger.evidence WHERE day=$1", [latest])).rows[0]?.source;
-  return ledgerHealth({ addresses, periods, job, checks, proof }, now);
 }
 
 // ../../../../../../../../../ESIM市值统计/工程/esim-daily-ledger/web/lib/worker-loop.js
@@ -16351,21 +16549,17 @@ async function continueJob({ id, read, step, sleep: sleep2, now = Date.now, onPr
 process.env.DATABASE_URL ||= process.env.ESIM_REALTIME_DATABASE_URL;
 process.env.BNB_RPC_URL ||= process.env.ALCHEMY_API_KEY ? `https://bnb-mainnet.g.alchemy.com/v2/${process.env.ALCHEMY_API_KEY}` : "";
 try {
-  const health = await readLedgerHealth(db());
-  if (health.ok) console.log(JSON.stringify({ phase: "mm-standby", status: "healthy", cutoff: health.latest.end_at }));
-  else {
-    const job = await startSync("server");
-    if (job.status === "failed") throw Error("MM_ACCOUNTING_REQUIRES_REVIEW");
-    if (job.id) await continueJob({
-      id: job.id,
-      sleep,
-      maxMs: 24e4,
-      budget: 45e3,
-      read: async (id) => (await db().query("SELECT id,status,stage,lease_until FROM esim_ledger.sync_runs WHERE id=$1", [id])).rows[0],
-      step: runSync,
-      onProgress: (r) => console.log(JSON.stringify({ phase: "mm-recovery", status: r.status, stage: r.stage }))
-    });
-  }
+  const job = await startSync("server");
+  if (job.status === "idle") console.log(JSON.stringify({ phase: "mm-standby", status: "idle", mode: "manual" }));
+  else if (job.id) await continueJob({
+    id: job.id,
+    sleep,
+    maxMs: 24e4,
+    budget: 45e3,
+    read: async (id) => (await db().query("SELECT id,status,stage,lease_until FROM esim_ledger.sync_runs WHERE id=$1 AND source='manual'", [id])).rows[0],
+    step: runSync,
+    onProgress: (r) => console.log(JSON.stringify({ phase: "mm-recovery", status: r.status, stage: r.stage }))
+  });
 } catch (e) {
   if (e.message === "BACKFILL_WINDOW_ENDED") console.log("MM_RECOVERY_CHECKPOINT_SAVED");
   else {

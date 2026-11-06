@@ -47,3 +47,17 @@ test('MM health rejects static health responses and independently checks the dat
  health.latest.end_at=new Date(now-901000).toISOString();assert(ledgerIssues(health,now).includes('STALE_SNAPSHOT'));
  health.issues=['BALANCE_CHECK_FAILED'];assert(ledgerIssues(health,now).includes('BALANCE_CHECK_FAILED'));
 });
+
+test('manual MM idle retains true old cutoff without a freshness failure; accounting errors remain',async()=>{
+ const {ledgerIssues}=await import('../server/esim/worker-health.mjs');
+ const h={mode:'manual',ok:true,issues:[],latest:{end_at:new Date(now-3*86400000).toISOString()}};
+ assert.deepEqual(ledgerIssues(h,now),[]);
+ h.issues=['BALANCE_CHECK_FAILED'];assert.deepEqual(ledgerIssues(h,now),['BALANCE_CHECK_FAILED']);
+ h.latest.end_at=new Date(now+61000).toISOString();assert(ledgerIssues(h,now).includes('FUTURE_CUTOFF'));
+});
+
+test('core freshness is five minutes while holders and depth retain fifteen',()=>{
+ const h=healthy();h.snapshots.report.cutoff=now/1000-300;h.snapshots.addresses.cutoff=h.snapshots.report.cutoff;h.snapshots.holders.cutoff=now/1000-899;
+ assert.deepEqual(snapshotIssues(h,now),[]);h.snapshots.report.cutoff-=1;assert(snapshotIssues(h,now).includes('report:STALE'));
+ assert(!snapshotIssues(h,now).includes('holders:STALE'));
+});

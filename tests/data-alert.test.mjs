@@ -5,7 +5,7 @@ const now=Date.parse('2026-11-01T06:00:00Z');
 test('snapshot warnings include the original data time, cause and a truthful recovery state',()=>{
  const entries=[['交易',{cutoff:now/1000-901}]];
  const pending=snapshotStatus(entries,{now,realtime:true,health:{error:'BACKFILL_IN_PROGRESS'}});
- assert.match(pending.alert.reason,/15 分钟.*补齐停更/);assert.match(pending.alert.recovery,/正在恢复/);assert.equal(pending.alert.lastUpdated,new Date(now-901000).toISOString());
+ assert.match(pending.alert.reason,/5 分钟.*补齐停更/);assert.match(pending.alert.recovery,/正在恢复/);assert.equal(pending.alert.lastUpdated,new Date(now-901000).toISOString());
  const paused=snapshotStatus(entries,{now,realtime:true,health:{error:'RPC_CAPACITY_EXCEEDED'}});assert.match(paused.alert.recovery,/更新已暂停/);assert.doesNotMatch(paused.alert.recovery,/正在恢复/);
  assert.equal(snapshotStatus([['交易',{cutoff:now/1000-60}]],{now,realtime:true,health:{error:null}}).alert,null);
 });
@@ -102,4 +102,11 @@ test('the ordinary status strip stays hidden; unresolved problems use only the t
  showSnapshotStatus(status,button,entries,{realtime:true,loading:true});assert.equal(status.hidden,true);
  showSnapshotStatus(status,button,entries,{realtime:true,failed:true});assert.equal(status.hidden,true);assert.equal(button.dataset.snapshotWarning,'true');
  showSnapshotStatus(status,button,entries,{realtime:true});assert.equal(status.hidden,true);
+});
+
+test('core and holder deadlines stay separate in the visible status',()=>{
+ const entries=[['交易',{cutoff:now/1000-300}],['持仓',{cutoff:now/1000-899}]];
+ assert.equal(snapshotStatus(entries,{now,realtime:true}).warning,false);
+ entries[0][1].cutoff-=1;assert.match(snapshotStatus(entries,{now,realtime:true}).alert.reason,/交易数据超过 5 分钟/);
+ entries[0][1].cutoff=now/1000-10;entries[1][1].cutoff=now/1000-901;assert.match(snapshotStatus(entries,{now,realtime:true}).alert.reason,/持仓数据超过 15 分钟/);
 });

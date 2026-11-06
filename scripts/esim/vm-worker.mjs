@@ -23,11 +23,18 @@ export async function runDepthPass(command,{lease,dryRun}){
  await command('scripts/snapshot.mjs',[],{lease,extra:{ESIM_SNAPSHOT_INTERVAL_MS:'600000'},timeout:600000});
  if(!dryRun)await command('scripts/publish-snapshot.mjs',[],{lease,timeout:120000});
 }
+export async function manualSyncPending(sql){
+ return (await sql.query("SELECT id FROM (SELECT id,status,state FROM esim_ledger.sync_runs WHERE source='manual' ORDER BY started_at DESC LIMIT 1) latest WHERE status IN ('queued','running') OR status='failed' AND state->>'retryable'='true'")).rows.length>0;
+}
+export async function runMmPass(command,sql){
+ if(!await manualSyncPending(sql))return JSON.stringify({phase:'mm-server-step',status:'idle',mode:'manual'});
+ return command('server/mm-ledger/worker.mjs',[],{lease:null,timeout:210000,extra:{MM_STEP_MS:'40000'}});
+}
 function mmStepResult(output){
  for(const line of String(output).trim().split('\n').reverse())try{const row=JSON.parse(line);if(row.phase==='mm-server-step')return row;}catch{}
  return null;
 }
-export const mmStepPending=output=>mmStepResult(output)?.status!=='complete';
+export const mmStepPending=output=>!['complete','idle','paused'].includes(mmStepResult(output)?.status);
 export function mmStepCutoff(output,now=Date.now()){
  const cutoff=Date.parse(mmStepResult(output)?.cutoff);
  return Number.isFinite(cutoff)&&cutoff>0&&cutoff<=now+60000?cutoff:0;
@@ -35,8 +42,7 @@ export function mmStepCutoff(output,now=Date.now()){
 export function dueTask({now,last,cutoff,pendingBlock,block,publishedFlowBlock=0,retryAt={},coreAvailable=true}){
  const ready=task=>now>=(retryAt[task]||0)&&(coreAvailable||!['core','holders','archive'].includes(task));
  if(ready('core')&&!last.core)return 'core';
- const mmCutoff=Number.isFinite(last.mmCutoff)&&last.mmCutoff>0&&last.mmCutoff<=now+60000?last.mmCutoff:0;
- const mmDue=now-(last.mm||0)>=(last.mmPending||mmCutoff?60000:300000)&&(last.mmPending||!mmCutoff||now-mmCutoff>=300000);
+ const mmDue=last.mmPending===true&&now-(last.mm||0)>=60000;
  const due=[
   ['core',now-cutoff*1000>=120000||now-(last.core||0)>=60000&&(pendingBlock>block||provenanceMergeNeeded({now,last,publishedFlowBlock}))],
   ['holders',now-(last.holders||0)>=600000],['archive',now-(last.archive||0)>=3600000],
@@ -107,7 +113,7 @@ export async function main(){
   depthGuard=await startLease(dryRun?'shadow-depth':'depth',{onLost:lost});
   const last=restoredSchedule(await json(`${local}/schedule.json`),dryRun),core=await json(`${local}/core.json`);
   const hasCheckpoint=await access('.goodway/esim-monitor/state.json.gz').then(()=>true,()=>false);
-  let block=core.block||0,cutoff=core.cutoff||0,first=true;
+  let block=core.block||0,cutoff=core.cutoff||0,first=true,mmProbeAt=0;
   const retryAt={};
   // A new owner always verifies the canonical chain, even if local timing is recent.
   last.core=0;
@@ -118,6 +124,7 @@ export async function main(){
    if(!guard){guard=await startLease(dryRun?'shadow-core':'core',{onLost:leaseLost('core')});if(guard){last.core=0;first=true;}}
    const now=Date.now(),[live,auxiliary]=await Promise.allSettled([realtimeStatus(),readAuxiliaryStatus()]);
    const status=live.status==='fulfilled'?live.value:{},publishedFlowBlock=auxiliary.status==='fulfilled'?auxiliary.value.provenance?.block||0:0;
+   if(!dryRun&&now-mmProbeAt>=60000){mmProbeAt=now;try{last.mmPending=await manualSyncPending(realtimeSQL());}catch{console.error('MM_QUEUE_READ_DEFERRED');}}
    const task=dueTask({now,last,block,cutoff,pendingBlock:Number(status.pending_block)||0,publishedFlowBlock,retryAt,coreAvailable:!!guard});
    if(task){
     const started=Date.now();
@@ -146,7 +153,7 @@ export async function main(){
        await guard.check();await realtimeSQL().query("DELETE FROM esim_webhook_receipts WHERE received_at < now()-interval '7 days'");
       }
      }else if(task==='mm'){
-      if(!dryRun){const output=await command('server/mm-ledger/worker.mjs',[],{lease:null,timeout:210000,extra:{MM_STEP_MS:'40000'}});last.mmPending=mmStepPending(output);if(!last.mmPending)last.mmCutoff=mmStepCutoff(output);}
+      if(!dryRun){const output=await runMmPass(command,realtimeSQL());last.mmPending=mmStepPending(output);if(!last.mmPending)last.mmCutoff=mmStepCutoff(output);}
      }else if(task==='depth'){
       if(!depthGuard)depthGuard=await startLease(dryRun?'shadow-depth':'depth',{onLost:lost});
       await runDepthPass(command,{lease:depthGuard,dryRun});

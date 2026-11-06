@@ -9,7 +9,7 @@ test('an aged core resumes after one background job, even within the old cooldow
 
 test('continuous aged core alternates with every overdue background job without starving either',()=>{
  let now=10_000_000;
- const last={core:0,holders:1,depth:2,mm:3,archive:4},jobs=[];
+ const last={core:0,holders:1,depth:2,mm:3,mmPending:true,archive:4},jobs=[];
  for(let i=0;i<9;i++){
   const task=dueTask({now,last,cutoff:(now-140_000)/1000,block:1,pendingBlock:0});
   jobs.push(task);now+=task==='core'?100_000:40_000;last[task]=now;if(task!=='core')last.backgroundAttemptAt=now;
@@ -37,6 +37,7 @@ test('unfinished or unrecognized MM output retains short checkpoint continuation
  const input={now,last:{...last,mmPending:true},cutoff:now/1000,block:1,pendingBlock:1};
  assert.equal(dueTask(input),'mm');
  assert.equal(dueTask({...input,last:{...last,mmPending:false}}),null);
+ assert.equal(mmStepPending(JSON.stringify({phase:'mm-server-step',status:'idle'})),false);
 });
 
 test('heavy polling leaves room for core while staying within its ten-minute cadence',()=>{
@@ -46,11 +47,11 @@ test('heavy polling leaves room for core while staying within its ten-minute cad
  assert.equal(dueTask({...input,now:now+1}),'holders');
 });
 
-test('MM starts from the data deadline, allowing for work already spent before completion',()=>{
+test('only explicitly pending manual work starts; stale cutoff cannot start a job',()=>{
  const now=10_000_000,last={core:now,holders:now,depth:now,archive:now,mm:now-5*60000,mmCutoff:now-5*60000};
  const input={now,last,cutoff:now/1000,block:1,pendingBlock:1};
- assert.equal(dueTask(input),'mm');
- assert.equal(dueTask({...input,last:{...last,mmCutoff:now-4*60000}}),null);
+ assert.equal(dueTask(input),null);
+ assert.equal(dueTask({...input,last:{...last,mmPending:true}}),'mm');
  const output=JSON.stringify({phase:'mm-server-step',status:'complete',cutoff:new Date(last.mmCutoff).toISOString()});
  assert.equal(mmStepCutoff(output,now),last.mmCutoff);
  assert.equal(mmStepCutoff(output.replace(new Date(last.mmCutoff).toISOString(),new Date(now+120000).toISOString()),now),0);

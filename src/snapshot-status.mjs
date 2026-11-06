@@ -1,5 +1,5 @@
 import {renderDataAlert} from './data-alert.mjs';
-import {auxiliaryIssues} from '../server/esim/worker-health.mjs';
+import {auxiliaryIssues,CORE_STALE_SECONDS,STALE_PROGRESS_SECONDS} from '../server/esim/worker-health.mjs';
 export const SNAPSHOT_INTERVAL_MS=60*60000;
 let liveHealth=null,lastDisplay=null,readFailed=false;
 const failures={RPC_RATE_LIMITED:'链上数据源请求频率受限',RPC_UNAVAILABLE:'链上数据接口暂时不可用',RPC_MEMBER_FAILED:'部分链上查询暂时失败',QUERY_LIMIT:'本轮链上查询达到上限，记录尚未补齐',SNAPSHOT_NOT_ADVANCED:'数据尚未推进到新的区块',INVALID_SNAPSHOT:'数据快照核验未通过',CHECKPOINT_UNAVAILABLE:'历史核验断点暂时无法读取',NEW_ESIM_POOL_REQUIRES_SYNC:'发现新的交易池，相关历史数据尚未补齐',VM_TASK_TIMEOUT:'后台更新任务超时'};
@@ -18,7 +18,7 @@ export function snapshotStatus(entries,{retained=false,failed=false,loading=fals
  const missing=entries.some(([,value])=>!Number.isFinite(value?.cutoff));
  const times=entries.filter(([,value])=>Number.isFinite(value?.cutoff));
  const ageMinutes=times.length?Math.max(0,Math.floor((now-Math.min(...times.map(([,value])=>value.cutoff*1000)))/60000)):null;
- const stale=ageMinutes!==null&&ageMinutes>=(realtime?15:120);
+ const staleEntries=times.filter(([label,value])=>realtime?now-value.cutoff*1000>(label==='交易'?CORE_STALE_SECONDS:STALE_PROGRESS_SECONDS)*1000:now-value.cutoff*1000>=7200000),stale=staleEntries.length>0;
  const auxiliary=auxiliaryIssues(health?.auxiliary,now),labels={provenance:'分发币跨地址追踪',cohort:'外部地址关系及余额核验',archive:'历史断点存档'};
  const running=kind=>health?.auxiliaryJobs?.[kind]?.running===true;
  const auxiliaryReason=auxiliary.map(issue=>{const kind=issue.split(':')[0];return labels[kind]+(issue.endsWith(':FUTURE_TIME')?'数据时间异常':running(kind)?'正在补算，已发布结果尚未更新':issue.endsWith(':PENDING')?'尚未完成':'已发布数据超过两小时未更新');}).join('；');
@@ -33,7 +33,7 @@ export function snapshotStatus(entries,{retained=false,failed=false,loading=fals
  const details=entries.map(([label,value])=>Number.isFinite(value?.cutoff)?`${label}截至 ${date(value.cutoff)}`:`${label}数据暂缺`);
  if(loading&&!failed&&(!health?.error||backfill)&&!health?.unavailable)return {warning:false,alert:null,text:['正在读取最新快照，当前显示缓存',...details].join(' · ')};
  const warning=!!(retained||failed||missing||stale||future||reason);
- const causes=[future?'数据截止时间超前，需核验时钟或数据':null,failed?'当前页面读取失败':null,stale?`数据超过 ${realtime?15:120} 分钟未更新（最早距今 ${ageMinutes} 分钟）`:null,missing?entries.filter(([,v])=>!Number.isFinite(v?.cutoff)).map(([label])=>label+'数据暂缺').join('、'):null,reason,retained&&!failed?'本次未取得完整更新，保留上次已核验数据':null].filter(Boolean);
+ const causes=[future?'数据截止时间超前，需核验时钟或数据':null,failed?'当前页面读取失败':null,stale?staleEntries.map(([label])=>`${label}数据超过 ${realtime?(label==='交易'?5:15):120} 分钟未更新`).join('；')+`（最早距今 ${ageMinutes} 分钟）`:null,missing?entries.filter(([,v])=>!Number.isFinite(v?.cutoff)).map(([label])=>label+'数据暂缺').join('、'):null,reason,retained&&!failed?'本次未取得完整更新，保留上次已核验数据':null].filter(Boolean);
  let recovery='暂未确认正在恢复，等待后台定时补查';
  if(!realtime)recovery='等待下一轮定时快照；页面可刷新重试';
  else if(health?.unavailable)recovery='恢复进度暂无法确认；页面每分钟重试连接';

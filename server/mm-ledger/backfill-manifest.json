@@ -2,16 +2,21 @@
   "source": "esim-daily-ledger/web",
   "inputs": {
     "scripts/server-backfill.js": "1f191d4a826b37fa0dd49bdcc19fff82ba0a17074d5544e599aa4e3efceed06d",
-    "lib/worker-loop.js": "b593885adb93fb223b967f450590d93cc0b5a0ba4fa5f8a642012f3a522699b1",
-    "lib/collector.js": "3ec0eeabf465fb04f7a9d32e8fbb72ebef22db4c3ab623c5fc6ffd164d8582bb",
     "lib/db.js": "deb52d9734e3baf1959177a5b18b233d020e3bdb9bc853a015188a36e18606cc",
+    "lib/collector.js": "b2f03e397f34772251b3f466ef69ebc83f0b795f58b98f47c17fbb55ece891ec",
+    "lib/worker-loop.js": "b593885adb93fb223b967f450590d93cc0b5a0ba4fa5f8a642012f3a522699b1",
     "lib/write-snapshot.js": "65c1f065a8fcd2006f6f837bb2e885f1ea1ab3312c04e1e27c3c222f9c941ed6",
+    "lib/production-store.js": "e6c306438b30e5c072dcd618a212f7211df5b2286fdc2b1105ac0ba131e1738b",
     "lib/rpc.js": "0992fc02569fa6d69afa7ce2415aa0076a8d8aa887947edeb01204ee6b424c25",
+    "lib/sync-plan.js": "fabff12d509e0644ea2b898124e5f28d785a394725b875b8e2643924a0af7a00",
     "lib/transfer-fees.js": "74ed740a9ba8099516907eb0e037f8116bdaf23e61c266f8918defb7d88b0b0a",
     "lib/verified-exchange.js": "70cbb1aeb8a93b2493c5c18d4646d0538453c2debd871c7afb5832300c6d7a13",
+    "lib/reinvest-store.js": "8f9b2a8449ed17255158f07537e6db2e5d3d28aa4f87625f833e8bea92ddd965",
     "vendor/engine.cjs": "4082a6e858421369592d2f9bcfc6a025fdcdce79e4e868ba9eed249ca7f01544",
-    "lib/sync-plan.js": "c685c638ea62b5510543a41a60502ab4babde60ce985c7873b4fd97095f7dfb5",
+    "lib/balance-multicall.js": "54166e86d696095de992825f9b302dbe55c18bc42b9af55227a5b05f0518941e",
     "vendor/cu-budget.mjs": "e424705e10475615b372b99658215b89ed865a0da00e589aab5261bbc5e0870c",
-    "lib/balance-multicall.js": "54166e86d696095de992825f9b302dbe55c18bc42b9af55227a5b05f0518941e"
+    "lib/contract-production.js": "3f3f6f9e4ab4b4cf952f8cc312520d76a219fc45ca8e20c59cfb88b55b3a52d6",
+    "lib/production-reinvest.js": "3e28dcdc4c79b72e2839a09c12a2690d105d7c8cbc8910a102c59811f8f66cea",
+    "lib/domain.js": "f27dd764176c4c234137dece5be1d2c89b236027351d62e0e43a4df314310bbb"
   }
 }
