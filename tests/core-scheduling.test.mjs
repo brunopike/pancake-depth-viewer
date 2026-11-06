@@ -47,10 +47,10 @@ test('heavy polling leaves room for core while staying within its ten-minute cad
 });
 
 test('MM starts from the data deadline, allowing for work already spent before completion',()=>{
- const now=10_000_000,last={core:now,holders:now,depth:now,archive:now,mm:now-5*60000,mmCutoff:now-10*60000};
+ const now=10_000_000,last={core:now,holders:now,depth:now,archive:now,mm:now-5*60000,mmCutoff:now-5*60000};
  const input={now,last,cutoff:now/1000,block:1,pendingBlock:1};
  assert.equal(dueTask(input),'mm');
- assert.equal(dueTask({...input,last:{...last,mmCutoff:now-9*60000}}),null);
+ assert.equal(dueTask({...input,last:{...last,mmCutoff:now-4*60000}}),null);
  const output=JSON.stringify({phase:'mm-server-step',status:'complete',cutoff:new Date(last.mmCutoff).toISOString()});
  assert.equal(mmStepCutoff(output,now),last.mmCutoff);
  assert.equal(mmStepCutoff(output.replace(new Date(last.mmCutoff).toISOString(),new Date(now+120000).toISOString()),now),0);

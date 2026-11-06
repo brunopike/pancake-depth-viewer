@@ -36,7 +36,7 @@ export function dueTask({now,last,cutoff,pendingBlock,block,publishedFlowBlock=0
  const ready=task=>now>=(retryAt[task]||0)&&(coreAvailable||!['core','holders','archive'].includes(task));
  if(ready('core')&&!last.core)return 'core';
  const mmCutoff=Number.isFinite(last.mmCutoff)&&last.mmCutoff>0&&last.mmCutoff<=now+60000?last.mmCutoff:0;
- const mmDue=now-(last.mm||0)>=(last.mmPending||mmCutoff?60000:300000)&&(last.mmPending||!mmCutoff||now-mmCutoff>=600000);
+ const mmDue=now-(last.mm||0)>=(last.mmPending||mmCutoff?60000:300000)&&(last.mmPending||!mmCutoff||now-mmCutoff>=300000);
  const due=[
   ['core',now-cutoff*1000>=120000||now-(last.core||0)>=60000&&(pendingBlock>block||provenanceMergeNeeded({now,last,publishedFlowBlock}))],
   ['holders',now-(last.holders||0)>=600000],['archive',now-(last.archive||0)>=3600000],
@@ -146,7 +146,7 @@ export async function main(){
        await guard.check();await realtimeSQL().query("DELETE FROM esim_webhook_receipts WHERE received_at < now()-interval '7 days'");
       }
      }else if(task==='mm'){
-      if(!dryRun){const output=await command('server/mm-ledger/worker.mjs',[],{lease:null,timeout:210000});last.mmPending=mmStepPending(output);if(!last.mmPending)last.mmCutoff=mmStepCutoff(output);}
+      if(!dryRun){const output=await command('server/mm-ledger/worker.mjs',[],{lease:null,timeout:210000,extra:{MM_STEP_MS:'40000'}});last.mmPending=mmStepPending(output);if(!last.mmPending)last.mmCutoff=mmStepCutoff(output);}
      }else if(task==='depth'){
       if(!depthGuard)depthGuard=await startLease(dryRun?'shadow-depth':'depth',{onLost:lost});
       await runDepthPass(command,{lease:depthGuard,dryRun});
