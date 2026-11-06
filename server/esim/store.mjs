@@ -64,8 +64,8 @@ export async function loadState({ fetch: request = fetch, includeRemote = true, 
     }
   } catch { /* The bundled verified checkpoint remains usable. */ }
   if(includeRemote)try{
-    const options={cache:'no-store',signal:AbortSignal.timeout(15000)},stamp='?t='+Date.now(),r=await request(CLAIM_FLOW_URL+stamp,options);
-    if(r.ok)local=attachClaimFlow(local,JSON.parse(gunzipSync(Buffer.from(await r.arrayBuffer()))));
+    const options={cache:'no-store',signal:AbortSignal.timeout(120000)},stamp='?t='+Date.now(),r=await request(CLAIM_FLOW_URL+stamp,options);
+    if(r.ok)local=attachClaimFlow(local,await readCheckpoint(Readable.fromWeb(r.body)));
     else if(r.status===404){const legacy=await request(CLAIM_FLOW_URL.slice(0,-3)+stamp,options);if(legacy.ok)local=attachClaimFlow(local,await legacy.json());}
   }catch{}
   return local;
