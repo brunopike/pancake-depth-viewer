@@ -12,9 +12,26 @@ import {checkpointParts} from './checkpoint-chunks.mjs';
 
 // Avoid holding the entire inflated JSON and its UTF-16 copy alongside the ledger.
 async function parse(source,metadataOnly=false){
- const assembler=new Assembler();
+ const assembler=new Assembler(),addresses=new Map();
+ const scalar=value=>value===null||typeof value==='boolean'||typeof value==='string'&&value.length<=2048||typeof value==='number'&&Number.isFinite(value)&&!Object.is(value,-0);
+ const compact=value=>{
+  const keys=Object.keys(value);
+  if(keys.length>32||!keys.every(key=>key.length<=2048&&(scalar(value[key])||Array.isArray(value[key])&&value[key].length<=8&&value[key].every(scalar))))return value;
+  // Native JSON records avoid dictionary-mode objects; never copy a large container.
+  const row=JSON.parse(JSON.stringify(value));
+  for(const key of keys){
+   const address=row[key];
+   if(typeof address!=='string'||!/^0x[0-9a-f]{40}$/i.test(address))continue;
+   if(!addresses.has(address)){
+    if(addresses.size>=100000)addresses.clear();
+    addresses.set(address,address);
+   }
+   row[key]=addresses.get(address);
+  }
+  return row;
+ };
  await pipeline(source,createGunzip(),parser({streamKeys:false,streamStrings:false,streamNumbers:false}),...(metadataOnly?[filter.asStream({filter:/^(?:version|token|source|block|blockHash|cutoff|format|bytes|sha256|parts)$/,acceptObjects:true})]:[]),new Writable({objectMode:true,write(token,encoding,done){
-  try{if(assembler[token.name])assembler[token.name](token.value);done();}catch(error){done(error);}
+  try{if(!metadataOnly&&token.name==='endObject')assembler.current=compact(assembler.current);if(assembler[token.name])assembler[token.name](token.value);done();}catch(error){done(error);}
  }}));
  if(!assembler.done||!assembler.current||Array.isArray(assembler.current))throw Error('INVALID_CHECKPOINT');
  return assembler.current;
