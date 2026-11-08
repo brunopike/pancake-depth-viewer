@@ -2,9 +2,11 @@ import {cohortPathSummary} from './cohort-paths.mjs';
 import {validExternalCohort} from '../server/esim/external-cohort-validation.mjs';
 
 export const EXTERNAL_HOLDER_GROUPS=[
- {id:'participants',role:'direct',label:'直接交互 / 领币地址',tone:'received'},
- {id:'downstream',role:'downstream',label:'下游地址',tone:'downstream'},
- {id:'other',role:'other',label:'其他外部地址',tone:'external'},
+ {id:'participants',role:'direct',label:'网体参与地址',tone:'received'},
+ {id:'downstream',role:'downstream',label:'网体下游地址',tone:'downstream'},
+ {id:'exchange',role:'exchange',label:'交易所热钱包',tone:'exchange'},
+ {id:'blacklist',role:'blacklist',label:'黑名单',tone:'blacklist'},
+ {id:'other',role:'other',label:'剩余外部',tone:'external'},
 ];
 const enriched=new WeakMap();
 // Use the same verified relationship snapshot as the contract report, while

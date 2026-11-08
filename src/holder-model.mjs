@@ -2,7 +2,7 @@ import {applyHolderLabels,splitHolderBalance,HOLDER_BALANCE_SPLITS} from './hold
 import {rankHolderRows} from './holder-ranking.mjs';
 export const TAG_KEY='esim:holders:manual-tags:v1';
 export const TAG_KINDS={own:'我方',lp:'我方 LP',exchange:'交易所',contract:'合约',frequency:'高频机器人（人工标记）',arbitrage:'套利机器人（人工标记）',external:'外部',custom:'自定义'};
-export const GROUPS=[['lp','我方 LP','#9fc5e9'],['own','我方其他','#d9c593'],['external','已确认外部份额','#d6a77b'],['mixed','混合归属地址','#baa98b'],['exchange','交易所托管','#b49ada'],['dex','DEX / 资金池','#69c7a7'],['received','领币地址','#de92a2'],['frequency','高频 / 疑似套利','#d6a77b'],['contract','其他合约','#8297b2'],['other','其他地址','#4c6278']];
+export const GROUPS=[['lp','我方 LP','#9fc5e9'],['own','我方其他','#d9c593'],['external','已确认外部份额','#d6a77b'],['mixed','混合归属地址','#baa98b'],['exchange','交易所热钱包','#b49ada'],['blacklist','黑名单','#e6ab7d'],['reserve','币安活动预留','#baa3dd'],['dex','DEX / 资金池','#69c7a7'],['received','领币地址','#de92a2'],['frequency','高频 / 疑似套利','#d6a77b'],['contract','其他合约','#8297b2'],['other','其他地址','#4c6278']];
 export const isAddress=a=>/^0x[0-9a-f]{40}$/.test(a||'');
 export function validateManual(value){
  if(!value||!isAddress(value.address)||!Object.hasOwn(TAG_KINDS,value.kind)||typeof value.text!=='string'||!value.text.trim()||value.text.trim().length>32||/[\u0000-\u001f\u007f]/.test(value.text))throw new Error('标签需为 1～32 个字。');
@@ -27,7 +27,7 @@ export function rowTags(row,manual){
  const custom=manual[row.address];if(custom){const partial=HOLDER_BALANCE_SPLITS[row.address]&&['own','lp','external','frequency','arbitrage'].includes(custom.kind);tags.unshift({id:'manual',text:custom.text,kind:partial?'custom':custom.kind,evidence:'当前浏览器添加的标签'+(partial?'；此地址已确认混合归属，备注不覆盖已确认的持仓份额或推断整地址交易归属。':''),manual:true});}return tags.some(t=>['own','lp','mixed'].includes(t.kind))?tags.filter(t=>!['frequency','arbitrage'].includes(t.kind)):tags;
 }
 export function category(row,manual){const tags=rowTags(row,manual);if(tags.some(t=>t.kind==='mixed'))return 'mixed';if(row.ownershipScope==='external')return 'external';const m=tags.find(t=>t.manual);if(m&&['lp','own','exchange','contract','frequency','arbitrage'].includes(m.kind))return m.kind==='arbitrage'?'frequency':m.kind;
- for(const key of ['lp','own','external','exchange','dex','received','frequency','arbitrage','contract'])if(tags.some(t=>t.kind===key))return key==='arbitrage'?'frequency':key;return 'other';}
+ for(const key of ['lp','own','blacklist','reserve','exchange','external','dex','received','frequency','arbitrage','contract'])if(tags.some(t=>t.kind===key))return key==='arbitrage'?'frequency':key;return 'other';}
 export function ownershipAmounts(row,manual={}){
  if(row.ownershipScope==='external')return {own:'0',external:row.balance,mixed:false};
  const split=splitHolderBalance(row.address,row.balance);if(split)return {...split,mixed:true};

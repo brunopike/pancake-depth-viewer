@@ -86,3 +86,10 @@ test('holder API enriches relationships before filtering and changes ETag with c
  const first=response();await handler(req,first);assert.equal(first.code,200);const view=JSON.parse(gunzipSync(first.body));assert.equal(view.selected.total,1);assert.equal(view.selected.rows[0].address,rows[1].address);assert.equal(view.report.externalClassification.block,90);
  relationBlock=91;const next=response();await handler({...req,headers:{'if-none-match':first.headers.ETag}},next);assert.equal(next.code,200);assert.notEqual(next.headers.ETag,first.headers.ETag);
 });
+
+test('compact API accepts exchange and blacklist drilldowns and keeps their totals equal to summary buckets',()=>{
+ const extra=[{...rows[0],address:address(700),balance:'31',tags:[{id:'exchange',kind:'exchange',text:'热钱包'}]},
+  {...rows[0],address:address(701),balance:'47',tags:[{id:'blacklist',kind:'blacklist',text:'黑名单'},{id:'exchange',kind:'exchange',text:'交易所'}]}];
+ const report={...holders,rows:extra};
+ for(const role of ['exchange','blacklist']){const options=holderViewOptions({scope:'external-stat',externalRole:role}),view=buildHolderView(report,options);assert.equal(options.externalRole,role);assert.equal(view.selected.total,1);assert.equal(view.selected.balance,view.ledger.externalBreakdown[role].balance);}
+});

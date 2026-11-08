@@ -18,7 +18,7 @@ const date=s=>new Date(s*1000).toLocaleString('zh-CN',{timeZone:'Asia/Shanghai',
 let report,manual={},page=0,pageSize=100,chartMode='groups',busy=false,pending=null,returnFocus=null,cohort=null,excludeOwn=false;
 let scope='all',externalRole='all';
 let compactAvailable=true,lastCompact=null,lastCompactKey='',pageGeneration=0,searchTimer,reloadForTags=false;
-const compactOptions=()=>({scope,externalRole,minimum:(BigInt($('minimum').value)*10n**18n).toString(),search:$('search').value,tags:selectedFilters(),cohort,excludeOwn:excludeOwn?'1':'0',includeZero:$('include-zero').checked?'1':'0',page,pageSize,sort:$('sort').value,direction:$('sort-direction').value});
+const compactOptions=()=>({classification:'external-v3',scope,externalRole,minimum:(BigInt($('minimum').value)*10n**18n).toString(),search:$('search').value,tags:selectedFilters(),cohort,excludeOwn:excludeOwn?'1':'0',includeZero:$('include-zero').checked?'1':'0',page,pageSize,sort:$('sort').value,direction:$('sort-direction').value});
 function applyCompact(view,key){
  if(report&&view.report.block<report.block)return false;
  lastCompact=view;lastCompactKey=key;report={...view.report,rows:view.selected.rows,_compact:true};renderView(view);return true;
@@ -87,11 +87,11 @@ function renderView(prepared){
  $('cutoff').textContent=`余额截至 ${date(report.cutoff)} · 北京时间 · 区块 ${number(report.block,0)}`;
  const ledger=prepared?.ledger||holderLedger(report,manual),totalSupply=Number(BigInt(report.totalSupply));
  const metrics=[{label:'非外部流通数量',balance:ledger.nonExternal,tone:'own',note:'我方持仓 + 币安活动预留 + 已核验底池'},
-  {label:'外部流通数量',balance:ledger.external,tone:'external',note:'已索引持仓 − 非外部流通数量；含混合钱包的外部份额'}];
+  {label:'外部流通数量',balance:ledger.external,tone:'external',note:'外部持仓总量；含交易所热钱包及受限黑名单余额，混合钱包仅计外部份额'}];
  const externalDetails=report.externalClassification?`<div class="external-breakdown" role="group" aria-label="外部流通构成">${EXTERNAL_HOLDER_GROUPS.map(group=>{
   const part=ledger.externalBreakdown[group.id],share=BigInt(ledger.external)>0n?number(Number(BigInt(part.balance)*1000000n/BigInt(ledger.external))/10000):'0.00';
   return `<button type="button" class="external-breakdown-item" data-external-role="${group.role}" data-tone="${group.tone}" aria-pressed="${scope==='external-stat'&&externalRole===group.role}"><span>${group.label}</span><strong>${quantity(part.balance)} <em>ESIM</em></strong><small>${number(part.addresses,0)} 个有余额地址 · ${share}%</small><small>查看地址 →</small></button>`;
- }).join('')}</div><p class="external-breakdown-note">三项互不重复，合计等于外部总量（两位小数显示可能有 0.01 ESIM 尾差）。余额截至 ${date(report.cutoff)}；关联范围与合约报告共用，核验至 ${date(report.externalClassification.cutoff)}。新增关联会随核验更新；“其他外部”不等同于全部为个人散户。</p><p class="external-breakdown-note">${escape(cohortTrackingNote(report.externalClassification.tracking))}</p>`:'<p class="external-breakdown-note">外部余额已显示；关联分类读取后再展示明细。</p>';
+ }).join('')}</div><p class="external-breakdown-note">五类互不重复，按原始精度加总等于外部总量。黑名单优先单列，其余交易所热钱包单列后，再区分网体参与、网体下游与剩余外部；“剩余外部”不等同于全部为个人散户。余额截至 ${date(report.cutoff)}；网体关系核验至 ${date(report.externalClassification.cutoff)}。</p><p class="external-breakdown-note">${escape(cohortTrackingNote(report.externalClassification.tracking))}</p>`:'<p class="external-breakdown-note">外部余额已显示；关联分类读取后再展示明细。</p>';
  const roleControls=$('external-role-controls');roleControls.hidden=scope!=='external-stat'||!report.externalClassification;
  for(const button of roleControls.querySelectorAll('[data-external-role]'))button.setAttribute('aria-pressed',String(button.dataset.externalRole===externalRole));
  $('summary').innerHTML=metrics.map(m=>`<div data-tone="${m.tone}"><span>${escape(m.label)}</span><strong title="${quantity(m.balance)} ESIM">${quantity(m.balance)} <em>ESIM</em></strong><small>${number(Number(BigInt(m.balance))/totalSupply*100)}% 总供应量 · 已索引口径</small><p>${m.note}</p>${m.tone==='external'?externalDetails:''}</div>`).join('');
@@ -178,7 +178,7 @@ if(['asc','desc'].includes(query.get('direction')))$('sort-direction').value=que
 cohort=Object.hasOwn(cohortNames,query.get('cohort'))?query.get('cohort'):null;
 excludeOwn=query.get('scope')==='external';
 if(Object.hasOwn(HOLDER_SCOPES,query.get('scope')))scope=query.get('scope');
-if(['direct','downstream','other'].includes(query.get('externalRole'))){externalRole=query.get('externalRole');scope='external-stat';}
+if(EXTERNAL_HOLDER_GROUPS.some(g=>g.role===query.get('externalRole'))){externalRole=query.get('externalRole');scope='external-stat';}
 if(['0','10000','100000','1000000'].includes(query.get('minimum')))$('minimum').value=query.get('minimum');
 if(query.get('chart')==='top'){$('holder-chart').open=true;chartMode='top';for(const b of document.querySelectorAll('[data-chart]'))b.setAttribute('aria-pressed',String(b.dataset.chart==='top'));}
 $('include-zero').checked=query.get('zero')==='1'||!!cohort?.endsWith('zero');

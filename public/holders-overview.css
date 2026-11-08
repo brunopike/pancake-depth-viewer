@@ -5,6 +5,8 @@
 .holder-page [data-tone=institution]{--tone:#9fc5e9;--row-bg:#14202d;--row-hover:#1c2b3b}
 .holder-page [data-tone=excluded]{--tone:#baa3dd;--row-bg:#201c2e;--row-hover:#2b263c}
 .holder-page [data-tone=external]{--tone:#91a4b8;--row-bg:#111923;--row-hover:#1b2634}
+.holder-page [data-tone=exchange]{--tone:#b49ada;--row-bg:#201c2e;--row-hover:#2b263c}
+.holder-page [data-tone=blacklist]{--tone:#e6ab7d;--row-bg:#282019;--row-hover:#34291f}
 .holder-page .holder-summary{margin:20px 0 0}
 .holder-page .holder-main .holder-summary{grid-template-columns:repeat(2,minmax(0,1fr))}
 .holder-page .holder-summary>div{position:relative;padding:20px 22px 18px;background:var(--row-bg);border-top:3px solid var(--tone)}
@@ -89,7 +91,8 @@
 
 /* External relationship groups match the contract report. */
 .holder-page [data-tone=downstream]{--tone:#82bada;--row-bg:#14232b;--row-hover:#1b303a}
-.holder-page .external-breakdown{grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.holder-page .external-breakdown{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.holder-page .external-breakdown-item:last-child{grid-column:1/-1}
 .holder-page .external-breakdown-item{display:block;text-align:left;padding:10px 12px;background:transparent;border:0;border-left:2px solid var(--tone);border-radius:0;cursor:pointer;color:var(--text)}
 .holder-page .external-breakdown-item:hover{background:#ffffff08}
 .holder-page .holder-summary .external-breakdown-item>strong{font-size:18px}
@@ -102,3 +105,5 @@
 .holder-page .holder-main #summary button.external-breakdown-item{padding:12px 14px;border:1px solid var(--line);border-left:3px solid var(--tone);border-radius:6px;background:#ffffff03;color:var(--text);box-shadow:none}
 .holder-page .holder-main #summary button.external-breakdown-item:hover{background:#ffffff08}
 .holder-page .holder-main #summary button.external-breakdown-item[aria-pressed=true]{border-color:var(--tone);background:#ffffff0b;color:var(--text)}
+.holder-page .holder-table .tag[data-kind=blacklist]{background:#e6ab7d1a;color:#e6ab7d}
+.holder-page .holder-table .tag[data-kind=reserve]{background:#baa3dd1a;color:#baa3dd}

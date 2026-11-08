@@ -1,4 +1,5 @@
 import {holderLedger,selectHolderView,holderOverviewCharts,HOLDER_SCOPES} from '../../src/holder-overview.mjs';
+import {EXTERNAL_HOLDER_GROUPS} from '../../src/holder-cohort.mjs';
 import {holderInsights,sellerProfile,displayEsimBalance} from '../../src/holder-insights.mjs';
 import {HOLDER_SORT_KEYS} from '../../src/holder-ranking.mjs';
 import {SELLER_GROUPS,sellerSummaries} from '../../src/seller-summary.mjs';
@@ -15,7 +16,7 @@ const value=(input,key,fallback='')=>typeof input[key]==='string'?input[key]:fal
 const oneOf=(v,allowed,fallback)=>allowed.includes(v)?v:fallback;
 const pageNumber=v=>Math.min(10000,Math.max(0,Number.isSafeInteger(Number(v))?Number(v):0));
 export function holderViewOptions(input={}){
- return {scope:oneOf(value(input,'scope'),Object.keys(HOLDER_SCOPES),'all'),externalRole:oneOf(value(input,'externalRole'),['all','direct','downstream','other'],'all'),minimum:oneOf(value(input,'minimum'),['0','10000000000000000000000','100000000000000000000000','1000000000000000000000000'],'0'),search:value(input,'search').slice(0,64),filter:value(input,'tags').split(',').filter(Boolean).slice(0,30),cohort:oneOf(value(input,'cohort'),['held','sold-held','sold-zero','zero'],null),excludeOwn:value(input,'excludeOwn')==='1',includeZero:value(input,'includeZero')==='1',page:pageNumber(input.page),pageSize:oneOf(Number(input.pageSize),[50,100,200],100),sort:oneOf(value(input,'sort'),HOLDER_SORT_KEYS,'balance'),direction:oneOf(value(input,'direction'),['asc','desc'],'desc')};
+ return {scope:oneOf(value(input,'scope'),Object.keys(HOLDER_SCOPES),'all'),externalRole:oneOf(value(input,'externalRole'),['all',...EXTERNAL_HOLDER_GROUPS.map(g=>g.role)],'all'),minimum:oneOf(value(input,'minimum'),['0','10000000000000000000000','100000000000000000000000','1000000000000000000000000'],'0'),search:value(input,'search').slice(0,64),filter:value(input,'tags').split(',').filter(Boolean).slice(0,30),cohort:oneOf(value(input,'cohort'),['held','sold-held','sold-zero','zero'],null),excludeOwn:value(input,'excludeOwn')==='1',includeZero:value(input,'includeZero')==='1',page:pageNumber(input.page),pageSize:oneOf(Number(input.pageSize),[50,100,200],100),sort:oneOf(value(input,'sort'),HOLDER_SORT_KEYS,'balance'),direction:oneOf(value(input,'direction'),['asc','desc'],'desc')};
 }
 export function sellerViewOptions(input={}){
  return {period:oneOf(value(input,'period'),['today','yesterday','history'],'today'),mode:oneOf(value(input,'mode'),['initiator','funding'],'initiator'),filter:oneOf(value(input,'filter'),SELLER_GROUPS.map(g=>g.id),'all'),search:value(input,'search').slice(0,42),tags:value(input,'tags').split(',').filter(Boolean).slice(0,30),page:pageNumber(input.page),sort:oneOf(value(input,'sort'),SELLER_SORT_KEYS,'sold'),direction:oneOf(value(input,'direction'),['asc','desc'],'desc')};
