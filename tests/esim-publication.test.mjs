@@ -48,13 +48,13 @@ test('binary publication preserves the working branch, staged user edits and unr
   const trace=join(dir,'git-trace.jsonl'),savedTrace=process.env.GIT_TRACE2_EVENT,savedParams=process.env.GIT_TRACE2_CONFIG_PARAMS;
   let commit;
   try{
-   process.env.GIT_TRACE2_EVENT=trace;process.env.GIT_TRACE2_CONFIG_PARAMS='gc.auto,maintenance.auto,pack.threads,pack.windowMemory,pack.deltaCacheSize';
+   process.env.GIT_TRACE2_EVENT=trace;process.env.GIT_TRACE2_CONFIG_PARAMS='gc.auto,maintenance.auto,pack.threads,pack.windowMemory,pack.deltaCacheSize,core.compression,pack.compression,pack.window';
    commit=await publishReportFiles([['state.json.gz',bytes],['report.json','{"block":2}'],['addresses.json','{"rows":[]}']],{cwd,message:'verified checkpoint',skip:prior=>prior.block>=2});
   }finally{
    for(const[k,v]of Object.entries({GIT_TRACE2_EVENT:savedTrace,GIT_TRACE2_CONFIG_PARAMS:savedParams}))if(v===undefined)delete process.env[k];else process.env[k]=v;
   }
   const config=Object.fromEntries((await readFile(trace,'utf8')).trim().split('\n').map(JSON.parse).filter(e=>e.event==='def_param').map(e=>[e.param,e.value]));
-  for(const[k,v]of Object.entries({'gc.auto':'0','maintenance.auto':'false','pack.threads':'1','pack.windowmemory':'64m','pack.deltacachesize':'32m'}))assert.equal(config[k],v,k);
+  for(const[k,v]of Object.entries({'gc.auto':'0','maintenance.auto':'false','pack.threads':'1','pack.windowmemory':'64m','pack.deltacachesize':'32m','core.compression':'0','pack.compression':'0','pack.window':'0'}))assert.equal(config[k],v,k);
   assert.match(commit,/^[0-9a-f]{40}$/);assert.equal(git(['rev-parse','HEAD']),head);assert.equal(git(['diff','--cached']),staged);assert.equal(await readFile(join(cwd,'user.txt'),'utf8'),'staged draft');
   assert.equal(published(['show',`${commit}:keep.txt`]),'preserve');
   assert.deepEqual(execFileSync('git',['show',`${commit}:state.json.gz`],{cwd:bare}),bytes);
@@ -76,7 +76,16 @@ test('binary publication preserves the working branch, staged user edits and unr
   assert.equal(git(['rev-parse','HEAD']),head);assert.equal(git(['diff','--cached']),staged);
   for(const [branch,file] of [['holder-cache','holders.json'],['depth-cache','esim-usdt.json']]){
    git(['push','origin',`HEAD:refs/heads/${branch}`]);
-   const first=await publishReportFiles([[file,'{"block":2,"blockNumber":"2"}']],{cwd,branch,message:'repository-key snapshot',skip:prior=>prior?.block>=2});
+   let first;
+   const plainTrace=join(dir,branch+'-trace.jsonl');
+   try{
+    process.env.GIT_TRACE2_EVENT=plainTrace;process.env.GIT_TRACE2_CONFIG_PARAMS='core.compression,pack.compression,pack.window';
+    first=await publishReportFiles([[file,'{"block":2,"blockNumber":"2"}']],{cwd,branch,message:'repository-key snapshot',skip:prior=>prior?.block>=2});
+   }finally{
+    for(const[k,v]of Object.entries({GIT_TRACE2_EVENT:savedTrace,GIT_TRACE2_CONFIG_PARAMS:savedParams}))if(v===undefined)delete process.env[k];else process.env[k]=v;
+   }
+   const overrides=(await readFile(plainTrace,'utf8')).trim().split('\n').map(JSON.parse).filter(e=>e.event==='def_param'&&e.scope==='command'&&['core.compression','pack.compression','pack.window'].includes(e.param));
+   assert.deepEqual(overrides,[],'plain JSON snapshots retain Git compression and delta defaults');
    assert.equal(published(['show',`${first}:keep.txt`]),'preserve');
    assert.equal(published(['show',`${first}:${file}`]),'{"block":2,"blockNumber":"2"}');
    const old=await publishReportFiles([[file,'{"block":1,"blockNumber":"1"}']],{cwd,branch,message:'older snapshot',skip:prior=>prior?.block>=1});

@@ -8,7 +8,7 @@ import {leaseFromEnvironment,requireLease} from '../../server/esim/worker-lease.
 import {packCheckpointFiles} from '../../server/esim/checkpoint-chunks.mjs';
 
 // Git must not detach an unbounded GC while the next ledger task is running.
-const gitLimits=['-c','gc.auto=0','-c','maintenance.auto=false','-c','pack.threads=1','-c','pack.windowMemory=64m','-c','pack.deltaCacheSize=32m'];
+const gitResourceLimits=['-c','gc.auto=0','-c','maintenance.auto=false','-c','pack.threads=1','-c','pack.windowMemory=64m','-c','pack.deltaCacheSize=32m'];
 
 // Git's binary transport avoids the REST blob endpoint's JSON input-size limit.
 // A disposable partial repository avoids retaining every historical checkpoint.
@@ -21,6 +21,8 @@ export async function publishReportFiles(files,{cwd=process.cwd(),skip=()=>false
  if(!allowed.length||files.length!==allowed.length||new Set(files.map(([path])=>path)).size!==allowed.length||files.some(([path])=>!allowed.includes(path)))throw Error('INVALID_PUBLICATION_FILES');
  const physical=files.flatMap(([path,content])=>['state.json.gz','claim-flow-state.json.gz'].includes(path)?packCheckpointFiles(path,content):[[path,content]]);
  if(physical.some(([,content])=>Buffer.byteLength(content)>100*1024*1024))throw Error('CHECKPOINT_FILE_TOO_LARGE');
+ // The large gzip checkpoints should not block live updates on speculative Git packing.
+ const gitLimits=single?gitResourceLimits:[...gitResourceLimits,'-c','core.compression=0','-c','pack.compression=0','-c','pack.window=0'];
  const run=promisify(execFile),dir=await mkdtemp(join(tmpdir(),'esim-publish-')),repository=join(dir,'repository.git');
  let stage='FETCH',transportEnv=process.env;
  const sourceGit=async args=>(await run('git',[...gitLimits,...args],{cwd,maxBuffer:1048576,timeout:120000})).stdout.trim();
