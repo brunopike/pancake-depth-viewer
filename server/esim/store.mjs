@@ -43,7 +43,7 @@ function validateState(state){
   if (state.version !== 1 || state.token !== TOKEN || state.source !== SOURCE || !Number.isSafeInteger(state.block) || !/^0x[0-9a-f]{64}$/.test(state.blockHash)) throw new Error('INVALID_CHECKPOINT');
   return state;
 }
-export async function readState(file){return validateState(await readCheckpoint(file));}
+export async function readState(file,options){return validateState(await readCheckpoint(file,options));}
 export async function readStateMetadata(file){return validateState(await readCheckpoint(file,{metadataOnly:true}));}
 export async function loadState({ fetch: request = fetch, includeRemote = true, includeRemoteCore=true, currentState, checkpointFile=process.env.ESIM_CHECKPOINT_FILE, currentCheckpointFile='.goodway/esim-monitor/state.json.gz' } = {}) {
   let local = currentState||await readState(new URL('./bootstrap.json.gz', import.meta.url));
@@ -71,5 +71,5 @@ export async function loadState({ fetch: request = fetch, includeRemote = true, 
   return local;
 }
 export async function saveState(state, dir) {
-  await writeCheckpoint(state,dir);
+  return writeCheckpoint(state,dir);
 }

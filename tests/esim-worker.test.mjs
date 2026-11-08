@@ -38,6 +38,7 @@ test('worker preserves a safe quota failure reason and reports recovery independ
  assert.equal(workerFailureCode({stderr:'private URL\nESIM refresh stopped: RPC_CAPACITY_EXCEEDED. Last verified checkpoint preserved.\n'}),'RPC_CAPACITY_EXCEEDED');
  assert.equal(workerFailureCode(Error('https://private.example/secret')),'UPDATE_FAILED');
  assert.equal(workerFailureCode({stderr:'HOLDER_ADDRESS_LIMIT\nCommand exited with non-zero status 1'}),'HOLDER_ADDRESS_LIMIT');
+ assert.equal(workerFailureCode({stderr:'Error: VM_ARCHIVE_VIEWS_UNAVAILABLE\n    at file:///worker/publish.mjs:1:1'}),'VM_ARCHIVE_VIEWS_UNAVAILABLE');
  assert.equal(workerFailureCode({stderr:'ESIM refresh stopped: DIRECT_CALL_INDEX_MISMATCH. Last verified checkpoint preserved.\n'}),'DIRECT_CALL_INDEX_MISMATCH');
  assert.equal(workerFailureCode({stderr:'FATAL ERROR: Ineffective mark-compacts near heap limit Allocation failed - JavaScript heap out of memory\n'}),'WORKER_HEAP_EXHAUSTED');
  assert.throws(()=>assertWorkerHealthy(new Set(['report'])),/SNAPSHOT_UPDATE_FAILED/);

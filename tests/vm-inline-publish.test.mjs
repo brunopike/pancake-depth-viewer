@@ -44,16 +44,24 @@ test('only QUERY_LIMIT falls back to publishing a verified saved prefix with an 
  assert.equal(failures.length,1);
 });
 
-test('publisher returns the same pinned metadata only after both views have been accepted',async()=>{
+test('publisher returns pinned metadata after acceptance and optional archive preparation',async t=>{
  const old=process.env.ESIM_REALTIME_DATABASE_URL;delete process.env.ESIM_REALTIME_DATABASE_URL;
  try{
   const state={version:1,token:seed.token,source:seed.source,origin:ORIGIN,block:seed.throughBlock,blockHash:seed.blockHash,cutoff:seed.cutoff,sourceInflow:{...seed,seedBlock:seed.throughBlock,reconciled:true},trades:[],calls:[],native:[],distributions:[],firstRecipient:{},coverage:{}};
-  let accepted=false;
+  let accepted=false,prepared=0;
   const result=await publishCore(state,async(views,options)=>{
    assert.deepEqual(views.map(v=>v.kind),['report','addresses']);
    assert(views.every(v=>v.data.block===state.block&&v.data.cutoff===state.cutoff));
+   assert.equal(views[0].data.generatedAt,views[1].data.generatedAt);
    assert.equal(options.processedBlock,state.block);accepted=true;
+  },async(cachedState,report,addresses)=>{
+   assert(accepted,'archive preparation follows accepted live views');assert.equal(cachedState,state);
+   assert.equal(report.blockHash,state.blockHash);assert.equal(addresses.blockHash,state.blockHash);prepared++;
   });
-  assert.equal(accepted,true);assert.deepEqual(result,{block:state.block,cutoff:state.cutoff,flowBlock:0});
+  assert.equal(accepted,true);assert.equal(prepared,1);assert.deepEqual(result,{block:state.block,cutoff:state.cutoff,flowBlock:0});
+  const warnings=[];t.mock.method(console,'warn',line=>warnings.push(line));
+  assert.deepEqual(await publishCore(state,async()=>{},async()=>{throw Error('DISK_FULL');}),result);
+  assert.deepEqual(warnings,['ARCHIVE_VIEW_CACHE_UNAVAILABLE'],'cache failure cannot invalidate accepted live data');
+  await assert.rejects(publishCore({...state,sourceInflow:null},async()=>assert.fail('unverified publication'),async()=>assert.fail('unverified cache')),/SOURCE_INFLOW_NOT_SYNCHRONIZED/);
  }finally{if(old!==undefined)process.env.ESIM_REALTIME_DATABASE_URL=old;}
 });

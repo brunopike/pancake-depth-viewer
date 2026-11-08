@@ -5,6 +5,7 @@ import { buildReport } from '../../server/esim/metrics.mjs';
 import { loadState,mergeCheckpointState,saveState,readState } from '../../server/esim/store.mjs';
 import {checkpointPassComplete} from '../../server/esim/worker-health.mjs';
 import {publishCore} from './realtime-worker.mjs';
+import {prepareArchiveViews} from '../../server/esim/archive-views.mjs';
 import {leaseFromEnvironment,requireLease} from '../../server/esim/worker-lease.mjs';
 const work = '.goodway/esim-monitor';
 const inlinePublish=process.env.ESIM_INLINE_CORE_PUBLISH==='true';
@@ -13,7 +14,7 @@ try {
   let stageStarted=Date.now();
   const stage=name=>{console.log(JSON.stringify({phase:'core-stage',stage:name,elapsedMs:Date.now()-stageStarted,rss:process.memoryUsage().rss}));stageStarted=Date.now();};
   if(inlinePublish){const lease=leaseFromEnvironment();if(!lease)throw Error('WORKER_LEASE_REQUIRED');await requireLease(lease);}
-  let state;
+  let state,checkpointIdentity;
   try { state = await readState(`${work}/state.json.gz`); }
   catch { state = await readState('server/esim/bootstrap.json.gz'); }
   if (process.env.ESIM_REMOTE_START === 'true') {
@@ -31,7 +32,7 @@ try {
     stage('refresh-state');
     const advanced=next.block>state.block;
     state = next;
-    await saveState(state,work);
+    checkpointIdentity=await saveState(state,work);
     stage('save-state');
     if(!inlinePublish)await writeFile(`${work}/latest.json`, JSON.stringify(buildReport(state)));
     console.log(JSON.stringify({ phase: 'checkpoint', block: state.block, cutoff: state.cutoff, calls: state.calls.length, trades: state.trades.length, ...transport.stats }));
@@ -44,7 +45,8 @@ try {
   if(inlinePublish){
     if(state.block<Number(process.env.ESIM_MIN_BLOCK||0))throw Error('SNAPSHOT_NOT_ADVANCED');
     const dryRun=process.env.ESIM_WORKER_DRY_RUN==='true';
-    const result=await publishCore(state,dryRun?async()=>{}:undefined);
+    const prepare=!dryRun&&process.env.ESIM_PERSISTENT_WORKER==='true'?(state,report,addresses)=>prepareArchiveViews(state,report,addresses,{checkpointIdentity}):null;
+    const result=await publishCore(state,dryRun?async()=>{}:undefined,prepare);
     await mkdir('.goodway/vm',{recursive:true});
     await writeFile('.goodway/vm/core.tmp',JSON.stringify(result));await rename('.goodway/vm/core.tmp','.goodway/vm/core.json');
     console.log(JSON.stringify({phase:`vm-core-${dryRun?'verified':'published'}`,dryRun,...result,rss:process.memoryUsage().rss}));

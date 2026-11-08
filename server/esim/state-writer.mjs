@@ -1,6 +1,7 @@
 import {createWriteStream} from 'node:fs';
 import {mkdir,rename,rm} from 'node:fs/promises';
-import {Readable} from 'node:stream';
+import {Readable,Transform} from 'node:stream';
+import {createHash} from 'node:crypto';
 import {pipeline} from 'node:stream/promises';
 import {createGzip} from 'node:zlib';
 
@@ -46,8 +47,11 @@ export function* checkpointChunks(state){
 }
 export async function writeCheckpoint(state,dir){
  await mkdir(dir,{recursive:true});const temp=`${dir}/state.tmp`;
+ const hash=createHash('sha256');let bytes=0;
+ const fingerprint=new Transform({transform(chunk,encoding,done){hash.update(chunk);bytes+=chunk.length;done(null,chunk);}});
  try{
-  await pipeline(Readable.from(checkpointChunks(state),{objectMode:false}),createGzip({level:3}),createWriteStream(temp,{mode:0o600}));
+  await pipeline(Readable.from(checkpointChunks(state),{objectMode:false}),createGzip({level:3}),fingerprint,createWriteStream(temp,{mode:0o600}));
   await rename(temp,`${dir}/state.json.gz`);
+  return {bytes,sha256:hash.digest('hex')};
  }catch(error){await rm(temp,{force:true});throw error;}
 }

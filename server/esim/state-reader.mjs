@@ -36,8 +36,10 @@ async function parse(source,metadataOnly=false){
  if(!assembler.done||!assembler.current||Array.isArray(assembler.current))throw Error('INVALID_CHECKPOINT');
  return assembler.current;
 }
-export async function readCheckpoint(file,{loadPart,metadataOnly=false}={}){
- const local=typeof file==='string'||file instanceof URL,value=await parse(local?createReadStream(file):file,metadataOnly);
+export async function readCheckpoint(file,{loadPart,metadataOnly=false,onCompressedChunk}={}){
+ const local=typeof file==='string'||file instanceof URL,input=local?createReadStream(file):file;
+ const source=onCompressedChunk?Readable.from((async function*(){for await(const bytes of input){onCompressedChunk(bytes);yield bytes;}})(),{objectMode:false}):input;
+ const value=await parse(source,metadataOnly);
  if(value.format!=='esim-gzip-chunks-v1')return value;
  if(!loadPart&&local){const root=dirname(file instanceof URL?fileURLToPath(file):file);loadPart=path=>readFile(resolve(root,path));}
  if(!loadPart)throw Error('CHECKPOINT_PARTS_UNAVAILABLE');
