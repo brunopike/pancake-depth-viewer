@@ -1,4 +1,4 @@
-import {HOLDER_CIRCULATION_EXCLUSIONS} from './holder-labels.mjs';
+import {HOLDER_CIRCULATION_EXCLUSIONS,HOLDER_PLATFORM_LABELS} from './holder-labels.mjs';
 import {ownershipAmounts,rowTags,selectHolders} from './holder-model.mjs';
 import {holderCharts} from './holder-charts.mjs';
 import {EXTERNAL_HOLDER_GROUPS} from './holder-cohort.mjs';
@@ -7,7 +7,7 @@ export const HOLDER_SCOPES={all:'全部地址',own:'我方地址','external-stat
 export const HOLDER_TONES={
  own:{label:'我方',color:'#80c5ad'},mixed:{label:'混合归属',color:'#d9c593'},
  received:{label:'网体参与地址',color:'#de92a2'},downstream:{label:'网体下游地址',color:'#82bada'},
- exchange:{label:'交易所热钱包',color:'#b49ada'},blacklist:{label:'黑名单',color:'#e6ab7d'},institution:{label:'DEX / 路由',color:'#9fc5e9'},
+ exchange:{label:'交易所相关地址',color:'#b49ada'},blacklist:{label:'黑名单',color:'#e6ab7d'},institution:{label:'DEX / 路由',color:'#9fc5e9'},
  excluded:{label:'统计排除',color:'#baa3dd'},external:{label:'剩余外部',color:'#91a4b8'},
 };
 const excluded=row=>Object.hasOwn(HOLDER_CIRCULATION_EXCLUSIONS,row.address)||row.tags.some(t=>t.id==='pool');
@@ -30,7 +30,7 @@ export function holderAppearance(row,manual={}){
 export function externalHolderRole(row,manual={}){
  const tags=rowTags(row,manual);
  if(tags.some(t=>t.kind==='blacklist'))return 'blacklist';
- if(tags.some(t=>t.kind==='exchange'))return 'exchange';
+ if(tags.some(t=>t.kind==='exchange')||Object.hasOwn(HOLDER_PLATFORM_LABELS,row.address))return 'exchange';
  return participant(row,manual)||row.externalRole==='direct'?'direct':row.externalRole==='downstream'?'downstream':'other';
 }
 

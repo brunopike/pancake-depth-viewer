@@ -18,7 +18,7 @@ const date=s=>new Date(s*1000).toLocaleString('zh-CN',{timeZone:'Asia/Shanghai',
 let report,manual={},page=0,pageSize=100,chartMode='groups',busy=false,pending=null,returnFocus=null,cohort=null,excludeOwn=false;
 let scope='all',externalRole='all';
 let compactAvailable=true,lastCompact=null,lastCompactKey='',pageGeneration=0,searchTimer,reloadForTags=false;
-const compactOptions=()=>({classification:'external-v3',scope,externalRole,minimum:(BigInt($('minimum').value)*10n**18n).toString(),search:$('search').value,tags:selectedFilters(),cohort,excludeOwn:excludeOwn?'1':'0',includeZero:$('include-zero').checked?'1':'0',page,pageSize,sort:$('sort').value,direction:$('sort-direction').value});
+const compactOptions=()=>({classification:'external-v4',scope,externalRole,minimum:(BigInt($('minimum').value)*10n**18n).toString(),search:$('search').value,tags:selectedFilters(),cohort,excludeOwn:excludeOwn?'1':'0',includeZero:$('include-zero').checked?'1':'0',page,pageSize,sort:$('sort').value,direction:$('sort-direction').value});
 function applyCompact(view,key){
  if(report&&view.report.block<report.block)return false;
  lastCompact=view;lastCompactKey=key;report={...view.report,rows:view.selected.rows,_compact:true};renderView(view);return true;
@@ -87,11 +87,11 @@ function renderView(prepared){
  $('cutoff').textContent=`余额截至 ${date(report.cutoff)} · 北京时间 · 区块 ${number(report.block,0)}`;
  const ledger=prepared?.ledger||holderLedger(report,manual),totalSupply=Number(BigInt(report.totalSupply));
  const metrics=[{label:'非外部流通数量',balance:ledger.nonExternal,tone:'own',note:'我方持仓 + 币安活动预留 + 已核验底池'},
-  {label:'外部流通数量',balance:ledger.external,tone:'external',note:'外部持仓总量；含交易所热钱包及受限黑名单余额，混合钱包仅计外部份额'}];
+  {label:'外部流通数量',balance:ledger.external,tone:'external',note:'外部持仓总量；含交易所相关地址及受限黑名单余额，混合钱包仅计外部份额'}];
  const externalDetails=report.externalClassification?`<div class="external-breakdown" role="group" aria-label="外部流通构成">${EXTERNAL_HOLDER_GROUPS.map(group=>{
   const part=ledger.externalBreakdown[group.id],share=BigInt(ledger.external)>0n?number(Number(BigInt(part.balance)*1000000n/BigInt(ledger.external))/10000):'0.00';
   return `<button type="button" class="external-breakdown-item" data-external-role="${group.role}" data-tone="${group.tone}" aria-pressed="${scope==='external-stat'&&externalRole===group.role}"><span>${group.label}</span><strong>${quantity(part.balance)} <em>ESIM</em></strong><small>${number(part.addresses,0)} 个有余额地址 · ${share}%</small><small>查看地址 →</small></button>`;
- }).join('')}</div><p class="external-breakdown-note">五类互不重复，按原始精度加总等于外部总量。黑名单优先单列，其余交易所热钱包单列后，再区分网体参与、网体下游与剩余外部；“剩余外部”不等同于全部为个人散户。余额截至 ${date(report.cutoff)}；网体关系核验至 ${date(report.externalClassification.cutoff)}。</p><p class="external-breakdown-note">${escape(cohortTrackingNote(report.externalClassification.tracking))}</p>`:'<p class="external-breakdown-note">外部余额已显示；关联分类读取后再展示明细。</p>';
+ }).join('')}</div><p class="external-breakdown-note">五类互不重复，按原始精度加总等于外部总量。黑名单优先单列；交易所相关包含热钱包、币安 Alpha 代理及已标注的平台路由，用户地址不自动归为热钱包。其余再分网体参与、网体下游和剩余外部；“剩余外部”不等同于个人散户。余额截至 ${date(report.cutoff)}；网体关系核验至 ${date(report.externalClassification.cutoff)}。</p><p class="external-breakdown-note">${escape(cohortTrackingNote(report.externalClassification.tracking))}</p>`:'<p class="external-breakdown-note">外部余额已显示；关联分类读取后再展示明细。</p>';
  const roleControls=$('external-role-controls');roleControls.hidden=scope!=='external-stat'||!report.externalClassification;
  for(const button of roleControls.querySelectorAll('[data-external-role]'))button.setAttribute('aria-pressed',String(button.dataset.externalRole===externalRole));
  $('summary').innerHTML=metrics.map(m=>`<div data-tone="${m.tone}"><span>${escape(m.label)}</span><strong title="${quantity(m.balance)} ESIM">${quantity(m.balance)} <em>ESIM</em></strong><small>${number(Number(BigInt(m.balance))/totalSupply*100)}% 总供应量 · 已索引口径</small><p>${m.note}</p>${m.tone==='external'?externalDetails:''}</div>`).join('');
@@ -164,7 +164,10 @@ window.addEventListener('storage',e=>{if(e.key===TAG_KEY){manual=readManual(e.ne
 async function refresh(){
  if(busy)return false;busy=true;$('refresh').disabled=true;$('refresh').textContent='正在刷新…';$('status').textContent='正在读取最新持仓…';
  try{
-  if(compactViewsEnabled(manual))try{compactAvailable=true;await loadCompact(true);return;}catch{compactAvailable=false;}
+  if(compactViewsEnabled(manual))try{compactAvailable=true;await loadCompact(true);return;}catch{
+   compactAvailable=false;
+   if(report?._compact){$('status').textContent='本次刷新未完成，已保留当前数据，可点击重试。';$('status').className='notice';showSnapshotFailure();return false;}
+  }
   const result=await readSnapshot('holders',{current:report?._compact?null:report});const data=validate(result.data),related=await readContractCohort(data);report=withHolderCohort(data,related.cohort);renderView();
   showSnapshotStatus($('status'),$('refresh'),[['持仓',report],['持仓内交易',{cutoff:report.tradeCutoff}]],{retained:result.source==='retained'});
  }catch(e){$('status').textContent=e.message;$('status').className='notice';if(!report)$('rows').innerHTML='<tr><td colspan="10" class="empty">暂时无法读取持仓，请点击刷新重试。</td></tr>';showSnapshotFailure();return false;}

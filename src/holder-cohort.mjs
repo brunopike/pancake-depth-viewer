@@ -4,7 +4,7 @@ import {validExternalCohort} from '../server/esim/external-cohort-validation.mjs
 export const EXTERNAL_HOLDER_GROUPS=[
  {id:'participants',role:'direct',label:'网体参与地址',tone:'received'},
  {id:'downstream',role:'downstream',label:'网体下游地址',tone:'downstream'},
- {id:'exchange',role:'exchange',label:'交易所热钱包',tone:'exchange'},
+ {id:'exchange',role:'exchange',label:'交易所相关地址',tone:'exchange'},
  {id:'blacklist',role:'blacklist',label:'黑名单',tone:'blacklist'},
  {id:'other',role:'other',label:'剩余外部',tone:'external'},
 ];

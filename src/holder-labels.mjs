@@ -10,6 +10,8 @@ export const HOLDER_CIRCULATION_EXCLUSIONS = {
   '0xa7d81e889f2df910389c95fa0f9d6092220edf87': {label:'币安活动预留',source:'用户确认（2026-10-15）：活动预留不计入外部流通统计。'},
   '0x543714f349970cd3b02d6dc6a85ac8641f2bb3a3': {label:'币安活动预留（新地址）',source:'用户确认（2026-11-08）：币安更新的活动预留地址；单列，不计入外部流通统计。'},
   '0x238a358808379702088667322f80ac48bad5e6c4': {label:'共享 Vault',source:'用户确认（2026-10-15）：基本为我方，按统计约定从外部流通排除；不据此认定共享 Vault 的全部底层资产均属我方。'},
+  '0xbf4dc3116ba2490ba860849b2cd3399932e843bc': {label:'Uniswap V3 底池（ESIM / USDT，1%）',source:'2026-11-08 链上区块132410034核验：token0=USDT、token1=ESIM；官方工厂0xdb1d10011ad0ff90774d0c6bb92e5c5c8b4461f7的getPool(token0,token1,10000)返回本地址。按底池余额计入非外部流通，不推断LP所有权。'},
+  '0xcd06956a47164ea866c3e9601085777e89cffad5': {label:'PancakeSwap V3 底池（ESIM / USDT，0.01%）',source:'2026-11-08 链上区块132410034核验：token0=USDT、token1=ESIM；官方工厂0x0bfbcf9fa4f9c56b0f40a671ad40e0805a091865的getPool(token0,token1,100)返回本地址。按底池余额计入非外部流通，不推断LP所有权。'},
 };
 export const HOLDER_BALANCE_SPLITS = {
   '0x588177775e6fba9e752d0c9dfd5bbb562e8f016a': {
@@ -33,6 +35,15 @@ const importedLabels = Object.fromEntries(workbook.records.flatMap(row => {
   return [[row.address,{kind,label,source:source(row)}]];
 }));
 
+// Platform routing is distinct from a hot wallet, but both belong in the
+// exchange-related holding bucket. Public routing alone never proves ownership.
+export const HOLDER_PLATFORM_LABELS={
+  '0x73d8bd54f7cf5fab43fe4ef40a62d390644946db':{...importedLabels['0x73d8bd54f7cf5fab43fe4ef40a62d390644946db'],source:importedLabels['0x73d8bd54f7cf5fab43fe4ef40a62d390644946db'].source+'；2026-11-08区块132410034核对为ERC-1967代理，实现0x1bb4a42d2d64f2452fd729e8429b3d440051b0d7；计入交易所相关持仓，保留平台代理类型，不改为普通热钱包。'},
+  '0x6aba0315493b7e6989041c91181337b662fb1b90':{kind:'dex',label:'Binance Alpha 2.0 路由',source:'BscScan公开标签；https://bscscan.com/address/0x6aba0315493b7e6989041c91181337b662fb1b90；平台路由不等于普通热钱包。'},
+  '0xb300000b72deaeb607a12d5f54773d1c19c7028d':{kind:'dex',label:'Binance DEX 路由',source:'BscScan公开标签；https://bscscan.com/address/0xb300000b72deaeb607a12d5f54773d1c19c7028d；平台路由不等于普通热钱包。'},
+  '0x3156020dff8d99af1ddc523ebdfb1ad2018554a0':{kind:'dex',label:'OKX DEX 路由',source:'既有已核验执行地址库；https://bscscan.com/address/0x3156020dff8d99af1ddc523ebdfb1ad2018554a0；平台路由不等于普通热钱包。'},
+};
+
 export const HOLDER_TOKEN_BLACKLIST = Object.fromEntries([
   ['0x54403ec2c1035295e81172e1bf381d01df135f67','0x689f89132802233c17d7dd2d62a482848144d1b7c0385b2b0beef99f8ca84388'],
   ['0x1ab4973a48dc892cd9971ece8e01dcc7688f8f23','0xdf855c24b51a889e89bbac0293af6e42bdc52ca9656a892ce7a8ca800c2ecaf5'],
@@ -54,7 +65,9 @@ export const CONFIRMED_HOLDER_LABELS = {
     source:`用户指定做市账本地址库（${marketMaking.confirmedAt}）；${row.number?`地址编号 ${row.number}`:'执行钱包组'}。归属来自确认名单，不以路由或资金往来推断。`,
   }])),
   ...importedLabels,
+  ...HOLDER_PLATFORM_LABELS,
   ...HOLDER_TOKEN_BLACKLIST,
+  ...Object.fromEntries(['0xbf4dc3116ba2490ba860849b2cd3399932e843bc','0xcd06956a47164ea866c3e9601085777e89cffad5'].map(address=>[address,{kind:'dex',label:HOLDER_CIRCULATION_EXCLUSIONS[address].label,source:HOLDER_CIRCULATION_EXCLUSIONS[address].source}])),
   '0x543714f349970cd3b02d6dc6a85ac8641f2bb3a3': {
     kind:'reserve',label:'币安活动预留（新地址）',
     source:HOLDER_CIRCULATION_EXCLUSIONS['0x543714f349970cd3b02d6dc6a85ac8641f2bb3a3'].source,

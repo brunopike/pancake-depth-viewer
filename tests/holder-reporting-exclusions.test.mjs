@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {CONFIRMED_HOLDER_LABELS,HOLDER_TOKEN_BLACKLIST} from '../src/holder-labels.mjs';
+import {CONFIRMED_HOLDER_LABELS,HOLDER_TOKEN_BLACKLIST,HOLDER_PLATFORM_LABELS} from '../src/holder-labels.mjs';
 import {holderLedger,holderAppearance,selectHolderView} from '../src/holder-overview.mjs';
 import {ownershipAmounts,rowTags} from '../src/holder-model.mjs';
 import {externalScope} from '../server/esim/external-cohort.mjs';
@@ -47,4 +47,21 @@ test('five external groups, drilldowns and chart reconcile with own, reserve, mi
 test('KuCoin stays an exchange label, separate from own ownership and wallet activity',()=>{
  const address='0x53f78a071d04224b8e254e243fffc6d9f2f3fa23',r={address,balance:'42',tags:[],history:{sellAmount:'7'}};
  assert.equal(CONFIRMED_HOLDER_LABELS[address].kind,'exchange');assert(rowTags(r,{}).some(t=>t.kind==='exchange'&&t.text==='KuCoin: Hot Wallet 2'));assert.equal(ownershipAmounts(r).own,'0');assert.equal(r.history.sellAmount,'7');
+});
+
+test('Binance platform proxy is counted with exchange-related holdings while retaining its contract type',()=>{
+ const address='0x73d8bd54f7cf5fab43fe4ef40a62d390644946db',r={address,balance:'5459300375753108007474501',tags:[],externalRole:'other'};
+ assert.equal(Object.keys(HOLDER_PLATFORM_LABELS).length,4);assert.equal(CONFIRMED_HOLDER_LABELS[address].kind,'dex');
+ const report={rows:[r],totalSupply:'1000000000000000000000000000'},ledger=holderLedger(report);
+ assert.equal(ledger.externalBreakdown.exchange.balance,r.balance);assert.equal(ledger.externalBreakdown.other.balance,'0');
+ assert.equal(selectHolderView(report,{scope:'external-stat',externalRole:'exchange'}).rows[0].address,address);assert.equal(holderAppearance(r),'exchange');
+ assert(rowTags(r,{}).some(t=>t.kind==='dex'&&t.text.includes('Router Proxy')));
+});
+
+test('both newly verified USDT ESIM pools move from external holdings to non-external without becoming own',()=>{
+ const rows=['0xbf4dc3116ba2490ba860849b2cd3399932e843bc','0xcd06956a47164ea866c3e9601085777e89cffad5'].map(address=>({address,balance:'1000000000000000001',tags:[]}));
+ const report={rows,totalSupply:'3000000000000000000'},ledger=holderLedger(report);
+ assert.equal(ledger.external,'0');assert.equal(ledger.nonExternal,'2000000000000000002');assert.equal(ledger.own,'0');
+ assert.equal(selectHolderView(report,{scope:'external-stat'}).total,0);assert.equal(selectHolderView(report,{scope:'excluded'}).total,2);
+ for(const r of rows){assert(externalScope().excluded.has(r.address));assert(rowTags(r,{}).some(t=>t.evidence.includes('getPool')));}
 });
