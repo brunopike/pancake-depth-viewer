@@ -68,12 +68,19 @@ export function makeRpc({ key = process.env.ALCHEMY_API_KEY, endpoint, budget = 
       }
       if(traceFilter&&errors.some(e=>/timeout|timed out|deadline exceeded|execution aborted/i.test(String(e.message))))throw new Error('RPC_QUERY_TIMEOUT');
       const limited=response.status===429||errors.some(e=>Number(e.code)===429);
-      if(limited||response.status>=500){
+      // Transfers indexing can return a server error inside HTTP 200. Retry this
+      // read locally instead of reloading the full collector after its cooldown.
+      const indexUnavailable=response.ok&&chunk.length===1&&chunk[0].method==='alchemy_getAssetTransfers'&&errors.some(e=>Number(e.code)===-32000);
+      if(indexUnavailable&&attempt>=2){
+        progress({phase:'rpc-member-failed',method:'alchemy_getAssetTransfers',code:-32000});
+        throw new Error('RPC_MEMBER_FAILED');
+      }
+      if(limited||response.status>=500||indexUnavailable){
         if(attempt>=2)throw new Error(limited?'RPC_RATE_LIMITED':'RPC_UNAVAILABLE');
         const retryAfter=Number(response.headers?.get('retry-after'));
         const delay=Math.min(5000,Math.max(1000*2**attempt,Number.isFinite(retryAfter)?retryAfter*1000:0));
         if(Date.now()+delay>=deadline)throw new Error('QUERY_LIMIT');
-        progress({phase:'rpc-retry',status:response.status,attempt:attempt+1});
+        progress({phase:'rpc-retry',status:response.status,attempt:attempt+1,...(indexUnavailable?{method:'alchemy_getAssetTransfers',code:-32000}:{})});
         await wait(delay);return send(chunk,attempt+1);
       }
       if(!response.ok)throw new Error('RPC_UNAVAILABLE');

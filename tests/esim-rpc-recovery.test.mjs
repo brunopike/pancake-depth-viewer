@@ -66,3 +66,34 @@ test('trace timeouts allow range recovery but preserve quota and keep provider t
   assert(!JSON.stringify(progress).includes('private'));
  }
 });
+
+test('a transient Transfers API server error recovers without restarting the collector',async()=>{
+ let calls=0;const delays=[],progress=[],result={transfers:[{hash:'verified-transfer'}],pageKey:'next-page'};
+ const rpc=makeRpc({endpoint:'https://example.invalid/private',shared:null,budget:3,minIntervalMs:0,
+  sleep:async n=>delays.push(n),progress:e=>progress.push(e),fetch:async(_,options)=>{
+   const [request]=JSON.parse(options.body);assert.equal(request.method,'alchemy_getAssetTransfers');
+   assert.deepEqual(request.params,[{fromBlock:'0x10',toBlock:'0x20',pageKey:'existing-page'}]);calls++;
+   return {ok:true,status:200,json:async()=>[{jsonrpc:'2.0',id:0,...(calls<3?{error:{code:-32000,message:'Unable to complete request at https://example.invalid/private'}}:{result})}]};
+  }});
+ assert.deepEqual(await rpc.rpc('alchemy_getAssetTransfers',[{fromBlock:'0x10',toBlock:'0x20',pageKey:'existing-page'}]),result);
+ assert.deepEqual(delays,[1000,2000]);assert.equal(calls,3);
+ assert.equal(rpc.stats.physical,3);assert.equal(rpc.stats.estimatedCu,360);
+ assert(!JSON.stringify(progress).includes('private'));
+});
+
+test('Transfers API server errors retain the retry, physical budget and deadline limits',async()=>{
+ for(const [budget,timeoutMs,expected,callsExpected] of [[3,10000,'RPC_MEMBER_FAILED',3],[2,10000,'QUERY_LIMIT',2],[3,500,'QUERY_LIMIT',1]]){
+  let calls=0;const rpc=makeRpc({endpoint:'https://example.invalid',shared:null,budget,timeoutMs,minIntervalMs:0,sleep:async()=>{},
+   fetch:async()=>{calls++;return {ok:true,status:200,json:async()=>[{jsonrpc:'2.0',id:0,error:{code:-32000,message:'Server unavailable'}}]};}});
+  await assert.rejects(rpc.rpc('alchemy_getAssetTransfers',[{fromBlock:'0x10',toBlock:'0x20'}]),e=>e.message===expected);
+  assert.equal(calls,callsExpected);assert.equal(rpc.stats.estimatedCu,120*callsExpected);
+ }
+});
+
+test('Transfers API recovery does not retry permanent errors or monthly exhaustion',async()=>{
+ for(const [method,code,message,expected] of [['alchemy_getAssetTransfers',-32602,'Invalid params','RPC_MEMBER_FAILED'],['eth_call',-32000,'execution reverted','RPC_MEMBER_FAILED'],['alchemy_getAssetTransfers',-32000,'Monthly capacity limit exceeded','RPC_CAPACITY_EXCEEDED']]){
+  let calls=0;const rpc=makeRpc({endpoint:'https://example.invalid',shared:null,minIntervalMs:0,sleep:()=>assert.fail('permanent errors must not retry'),
+   fetch:async()=>{calls++;return {ok:true,status:200,json:async()=>[{jsonrpc:'2.0',id:0,error:{code,message}}]};}});
+  await assert.rejects(rpc.rpc(method,[]),e=>e.message===expected);assert.equal(calls,1);
+ }
+});
