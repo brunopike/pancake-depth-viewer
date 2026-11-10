@@ -267,6 +267,12 @@
           "balance_start_wei": "65",
           "balance_end_wei": "100",
           "internal_coverage": "complete"
+        },
+        "restaking": {
+          "total_wei": null,
+          "events": null,
+          "complete": false,
+          "availableThrough": null
         }
       },
       "yesterday": {
@@ -368,6 +374,12 @@
           "balance_start_wei": "50",
           "balance_end_wei": "65",
           "internal_coverage": "complete"
+        },
+        "restaking": {
+          "total_wei": null,
+          "events": null,
+          "complete": false,
+          "availableThrough": null
         }
       },
       "history": {
@@ -469,6 +481,12 @@
           "balance_start_wei": "40",
           "balance_end_wei": "100",
           "internal_coverage": "complete"
+        },
+        "restaking": {
+          "total_wei": null,
+          "events": null,
+          "complete": false,
+          "availableThrough": null
         }
       }
     },
@@ -1187,6 +1205,12 @@
           "balance_start_wei": "65",
           "balance_end_wei": "100",
           "internal_coverage": "complete"
+        },
+        "restaking": {
+          "total_wei": null,
+          "events": null,
+          "complete": false,
+          "availableThrough": null
         }
       },
       {
@@ -1290,6 +1314,12 @@
           "balance_start_wei": "50",
           "balance_end_wei": "65",
           "internal_coverage": "complete"
+        },
+        "restaking": {
+          "total_wei": null,
+          "events": null,
+          "complete": false,
+          "availableThrough": null
         }
       },
       {
@@ -1384,6 +1414,12 @@
           "balance_start_wei": "50",
           "balance_end_wei": "50",
           "internal_coverage": "complete"
+        },
+        "restaking": {
+          "total_wei": null,
+          "events": null,
+          "complete": false,
+          "availableThrough": null
         }
       },
       {
@@ -1478,6 +1514,12 @@
           "balance_start_wei": "50",
           "balance_end_wei": "50",
           "internal_coverage": "complete"
+        },
+        "restaking": {
+          "total_wei": null,
+          "events": null,
+          "complete": false,
+          "availableThrough": null
         }
       },
       {
@@ -1572,6 +1614,12 @@
           "balance_start_wei": "50",
           "balance_end_wei": "50",
           "internal_coverage": "complete"
+        },
+        "restaking": {
+          "total_wei": null,
+          "events": null,
+          "complete": false,
+          "availableThrough": null
         }
       },
       {
@@ -1666,6 +1714,12 @@
           "balance_start_wei": "50",
           "balance_end_wei": "50",
           "internal_coverage": "complete"
+        },
+        "restaking": {
+          "total_wei": null,
+          "events": null,
+          "complete": false,
+          "availableThrough": null
         }
       },
       {
@@ -1760,6 +1814,12 @@
           "balance_start_wei": "50",
           "balance_end_wei": "50",
           "internal_coverage": "complete"
+        },
+        "restaking": {
+          "total_wei": null,
+          "events": null,
+          "complete": false,
+          "availableThrough": null
         }
       },
       {
@@ -1854,6 +1914,12 @@
           "balance_start_wei": "50",
           "balance_end_wei": "50",
           "internal_coverage": "complete"
+        },
+        "restaking": {
+          "total_wei": null,
+          "events": null,
+          "complete": false,
+          "availableThrough": null
         }
       },
       {
@@ -1948,6 +2014,12 @@
           "balance_start_wei": "50",
           "balance_end_wei": "50",
           "internal_coverage": "complete"
+        },
+        "restaking": {
+          "total_wei": null,
+          "events": null,
+          "complete": false,
+          "availableThrough": null
         }
       },
       {
@@ -2042,6 +2114,12 @@
           "balance_start_wei": "50",
           "balance_end_wei": "50",
           "internal_coverage": "complete"
+        },
+        "restaking": {
+          "total_wei": null,
+          "events": null,
+          "complete": false,
+          "availableThrough": null
         }
       },
       {
@@ -2136,6 +2214,12 @@
           "balance_start_wei": "50",
           "balance_end_wei": "50",
           "internal_coverage": "complete"
+        },
+        "restaking": {
+          "total_wei": null,
+          "events": null,
+          "complete": false,
+          "availableThrough": null
         }
       },
       {
@@ -2230,6 +2314,12 @@
           "balance_start_wei": "50",
           "balance_end_wei": "50",
           "internal_coverage": "complete"
+        },
+        "restaking": {
+          "total_wei": null,
+          "events": null,
+          "complete": false,
+          "availableThrough": null
         }
       },
       {
@@ -2324,6 +2414,12 @@
           "balance_start_wei": "50",
           "balance_end_wei": "50",
           "internal_coverage": "complete"
+        },
+        "restaking": {
+          "total_wei": null,
+          "events": null,
+          "complete": false,
+          "availableThrough": null
         }
       },
       {
@@ -2418,6 +2514,12 @@
           "balance_start_wei": "50",
           "balance_end_wei": "50",
           "internal_coverage": "complete"
+        },
+        "restaking": {
+          "total_wei": null,
+          "events": null,
+          "complete": false,
+          "availableThrough": null
         }
       },
       {
@@ -2512,6 +2614,12 @@
           "balance_start_wei": "50",
           "balance_end_wei": "50",
           "internal_coverage": "complete"
+        },
+        "restaking": {
+          "total_wei": null,
+          "events": null,
+          "complete": false,
+          "availableThrough": null
         }
       },
       {
@@ -2606,6 +2714,12 @@
           "balance_start_wei": "50",
           "balance_end_wei": "50",
           "internal_coverage": "complete"
+        },
+        "restaking": {
+          "total_wei": null,
+          "events": null,
+          "complete": false,
+          "availableThrough": null
         }
       },
       {
@@ -2700,6 +2814,12 @@
           "balance_start_wei": "50",
           "balance_end_wei": "50",
           "internal_coverage": "complete"
+        },
+        "restaking": {
+          "total_wei": null,
+          "events": null,
+          "complete": false,
+          "availableThrough": null
         }
       },
       {
@@ -2794,6 +2914,12 @@
           "balance_start_wei": "50",
           "balance_end_wei": "50",
           "internal_coverage": "complete"
+        },
+        "restaking": {
+          "total_wei": null,
+          "events": null,
+          "complete": false,
+          "availableThrough": null
         }
       },
       {
@@ -2888,6 +3014,12 @@
           "balance_start_wei": "50",
           "balance_end_wei": "50",
           "internal_coverage": "complete"
+        },
+        "restaking": {
+          "total_wei": null,
+          "events": null,
+          "complete": false,
+          "availableThrough": null
         }
       },
       {
@@ -2982,6 +3114,12 @@
           "balance_start_wei": "50",
           "balance_end_wei": "50",
           "internal_coverage": "complete"
+        },
+        "restaking": {
+          "total_wei": null,
+          "events": null,
+          "complete": false,
+          "availableThrough": null
         }
       },
       {
@@ -3076,6 +3214,12 @@
           "balance_start_wei": "50",
           "balance_end_wei": "50",
           "internal_coverage": "complete"
+        },
+        "restaking": {
+          "total_wei": null,
+          "events": null,
+          "complete": false,
+          "availableThrough": null
         }
       },
       {
@@ -3170,6 +3314,12 @@
           "balance_start_wei": "50",
           "balance_end_wei": "50",
           "internal_coverage": "complete"
+        },
+        "restaking": {
+          "total_wei": null,
+          "events": null,
+          "complete": false,
+          "availableThrough": null
         }
       },
       {
@@ -3264,6 +3414,12 @@
           "balance_start_wei": "50",
           "balance_end_wei": "50",
           "internal_coverage": "complete"
+        },
+        "restaking": {
+          "total_wei": null,
+          "events": null,
+          "complete": false,
+          "availableThrough": null
         }
       },
       {
@@ -3358,6 +3514,12 @@
           "balance_start_wei": "50",
           "balance_end_wei": "50",
           "internal_coverage": "complete"
+        },
+        "restaking": {
+          "total_wei": null,
+          "events": null,
+          "complete": false,
+          "availableThrough": null
         }
       },
       {
@@ -3452,6 +3614,12 @@
           "balance_start_wei": "50",
           "balance_end_wei": "50",
           "internal_coverage": "complete"
+        },
+        "restaking": {
+          "total_wei": null,
+          "events": null,
+          "complete": false,
+          "availableThrough": null
         }
       },
       {
@@ -3546,6 +3714,12 @@
           "balance_start_wei": "50",
           "balance_end_wei": "50",
           "internal_coverage": "complete"
+        },
+        "restaking": {
+          "total_wei": null,
+          "events": null,
+          "complete": false,
+          "availableThrough": null
         }
       },
       {
@@ -3640,6 +3814,12 @@
           "balance_start_wei": "50",
           "balance_end_wei": "50",
           "internal_coverage": "complete"
+        },
+        "restaking": {
+          "total_wei": null,
+          "events": null,
+          "complete": false,
+          "availableThrough": null
         }
       },
       {
@@ -3734,6 +3914,12 @@
           "balance_start_wei": "50",
           "balance_end_wei": "50",
           "internal_coverage": "complete"
+        },
+        "restaking": {
+          "total_wei": null,
+          "events": null,
+          "complete": false,
+          "availableThrough": null
         }
       },
       {
@@ -3828,6 +4014,12 @@
           "balance_start_wei": "50",
           "balance_end_wei": "50",
           "internal_coverage": "complete"
+        },
+        "restaking": {
+          "total_wei": null,
+          "events": null,
+          "complete": false,
+          "availableThrough": null
         }
       },
       {
@@ -3922,6 +4114,12 @@
           "balance_start_wei": "50",
           "balance_end_wei": "50",
           "internal_coverage": "complete"
+        },
+        "restaking": {
+          "total_wei": null,
+          "events": null,
+          "complete": false,
+          "availableThrough": null
         }
       },
       {
@@ -4016,6 +4214,12 @@
           "balance_start_wei": "50",
           "balance_end_wei": "50",
           "internal_coverage": "complete"
+        },
+        "restaking": {
+          "total_wei": null,
+          "events": null,
+          "complete": false,
+          "availableThrough": null
         }
       },
       {
@@ -4110,6 +4314,12 @@
           "balance_start_wei": "50",
           "balance_end_wei": "50",
           "internal_coverage": "complete"
+        },
+        "restaking": {
+          "total_wei": null,
+          "events": null,
+          "complete": false,
+          "availableThrough": null
         }
       },
       {
@@ -4204,6 +4414,12 @@
           "balance_start_wei": "50",
           "balance_end_wei": "50",
           "internal_coverage": "complete"
+        },
+        "restaking": {
+          "total_wei": null,
+          "events": null,
+          "complete": false,
+          "availableThrough": null
         }
       },
       {
@@ -4298,6 +4514,12 @@
           "balance_start_wei": "50",
           "balance_end_wei": "50",
           "internal_coverage": "complete"
+        },
+        "restaking": {
+          "total_wei": null,
+          "events": null,
+          "complete": false,
+          "availableThrough": null
         }
       },
       {
@@ -4392,6 +4614,12 @@
           "balance_start_wei": "40",
           "balance_end_wei": "50",
           "internal_coverage": "complete"
+        },
+        "restaking": {
+          "total_wei": null,
+          "events": null,
+          "complete": false,
+          "availableThrough": null
         }
       }
     ],
@@ -4438,7 +4666,7 @@
               "peakDailyTrades": 1,
               "highFrequency": false,
               "own": true,
-              "ownType": "刷量",
+              "ownType": "\u5237\u91cf",
               "received": false,
               "firstReceived": null,
               "firstReceivedSale": null,
@@ -4466,7 +4694,7 @@
               "peakDailyTrades": 1,
               "highFrequency": false,
               "own": true,
-              "ownType": "刷量",
+              "ownType": "\u5237\u91cf",
               "received": false,
               "firstReceived": null,
               "firstReceivedSale": null,
@@ -4581,7 +4809,7 @@
               "peakDailyTrades": 1,
               "highFrequency": false,
               "own": true,
-              "ownType": "刷量",
+              "ownType": "\u5237\u91cf",
               "received": false,
               "firstReceived": null,
               "firstReceivedSale": null,
@@ -4630,7 +4858,7 @@
               "peakDailyTrades": 1,
               "highFrequency": false,
               "own": true,
-              "ownType": "刷量",
+              "ownType": "\u5237\u91cf",
               "received": false,
               "firstReceived": null,
               "firstReceivedSale": null,
