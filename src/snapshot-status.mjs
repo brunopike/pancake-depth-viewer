@@ -1,5 +1,5 @@
 import {renderDataAlert} from './data-alert.mjs';
-import {auxiliaryIssues,CORE_STALE_SECONDS,STALE_PROGRESS_SECONDS} from '../server/esim/worker-health.mjs';
+import {auxiliaryIssues,snapshotIssues,CORE_STALE_SECONDS,STALE_PROGRESS_SECONDS} from '../server/esim/worker-health.mjs';
 export const SNAPSHOT_INTERVAL_MS=60*60000;
 let liveHealth=null,lastDisplay=null,readFailed=false;
 const failures={RPC_RATE_LIMITED:'链上数据源请求频率受限',RPC_UNAVAILABLE:'链上数据接口暂时不可用',RPC_MEMBER_FAILED:'部分链上查询暂时失败',QUERY_LIMIT:'本轮链上查询达到上限，记录尚未补齐',SNAPSHOT_NOT_ADVANCED:'数据尚未推进到新的区块',INVALID_SNAPSHOT:'数据快照核验未通过',CHECKPOINT_UNAVAILABLE:'历史核验断点暂时无法读取',NEW_ESIM_POOL_REQUIRES_SYNC:'发现新的交易池，相关历史数据尚未补齐',VM_TASK_TIMEOUT:'后台更新任务超时'};
@@ -11,14 +11,17 @@ export function chainFailureReason(code){
 }
 export function setSnapshotHealth(health){
  liveHealth=health;
- if(lastDisplay)showSnapshotStatus(...lastDisplay.slice(0,3),{...lastDisplay[3],failed:readFailed});
+ if(lastDisplay){
+  const options={...lastDisplay[3],failed:readFailed,loading:lastDisplay[1]?.disabled===true&&!readFailed&&snapshotIssues(health).length===0};
+  showSnapshotStatus(...lastDisplay.slice(0,3),options);
+ }
  else if(readFailed)showSnapshotFailure();
 }
 export function snapshotStatus(entries,{retained=false,failed=false,loading=false,now=Date.now(),realtime=globalThis.location?.hostname==='esimonchain.imstark.site',health=liveHealth}={}){
  const missing=entries.some(([,value])=>!Number.isFinite(value?.cutoff));
  const times=entries.filter(([,value])=>Number.isFinite(value?.cutoff));
- const ageMinutes=times.length?Math.max(0,Math.floor((now-Math.min(...times.map(([,value])=>value.cutoff*1000)))/60000)):null;
  const staleEntries=times.filter(([label,value])=>realtime?now-value.cutoff*1000>(label==='交易'?CORE_STALE_SECONDS:STALE_PROGRESS_SECONDS)*1000:now-value.cutoff*1000>=7200000),stale=staleEntries.length>0;
+ const ageEntries=stale?staleEntries:times,ageMinutes=ageEntries.length?Math.max(0,Math.floor((now-Math.min(...ageEntries.map(([,value])=>value.cutoff*1000)))/60000)):null;
  const auxiliary=auxiliaryIssues(health?.auxiliary,now),labels={provenance:'分发币跨地址追踪',cohort:'外部地址关系及余额核验',archive:'历史断点存档'};
  const running=kind=>health?.auxiliaryJobs?.[kind]?.running===true;
  const auxiliaryReason=auxiliary.map(issue=>{const kind=issue.split(':')[0];return labels[kind]+(issue.endsWith(':FUTURE_TIME')?'数据时间异常':running(kind)?'正在补算，已发布结果尚未更新':issue.endsWith(':PENDING')?'尚未完成':'已发布数据超过两小时未更新');}).join('；');
@@ -42,7 +45,7 @@ export function snapshotStatus(entries,{retained=false,failed=false,loading=fals
  else if(health?.error)recovery='等待后台自动重试；原有已核验数据保留';
  else if(auxiliary.length)recovery=historyRunning?'对应后台历史核验任务正在运行；结果完成后自动更新，主交易和持仓独立更新':'等待对应后台核验任务完成；主交易和持仓更新独立运行';
  else if(Number(health?.pendingBlock)>Number(health?.processedBlock)&&now-Date.parse(health?.lastProcessed)<300000)recovery='正在恢复：后台正在补齐后续区块';
- const updates=[...times.map(([,v])=>v.cutoff),...auxiliary.map(issue=>health.auxiliary[issue.split(':')[0]]?.cutoff).filter(Number.isFinite)];
+ const updates=[...ageEntries.map(([,v])=>v.cutoff),...auxiliary.map(issue=>health.auxiliary[issue.split(':')[0]]?.cutoff).filter(Number.isFinite)];
  const lastUpdated=updates.length&&!auxiliary.some(issue=>issue.endsWith(':PENDING'))?new Date(Math.min(...updates)*1000).toISOString():null;
  return {warning,alert:warning?{severity:historyProgress?'progress':historyOnly?'warning':'error',scope:historyOnly?'history':'core',title:historyProgress?'历史数据补充进行中':historyOnly?'ESIM 链上 · 历史统计待更新':'ESIM 链上 · 数据更新异常',reason:causes.join('；')||'数据更新状态异常',lastUpdated,recovery}:null,text:[prefix,reason,...details,warning?recovery:null,realtime?(health?.webhookRequired===false?'北京时间 · 定时核验与主动补查；每小时存档':'北京时间 · Webhook 触发核验与主动补查；每小时存档'):'北京时间 · 后台目标每 60 分钟更新；页面刷新读取可用快照'].filter(Boolean).join(' · ')};
 }

@@ -110,3 +110,28 @@ test('core and holder deadlines stay separate in the visible status',()=>{
  entries[0][1].cutoff-=1;assert.match(snapshotStatus(entries,{now,realtime:true}).alert.reason,/交易数据超过 5 分钟/);
  entries[0][1].cutoff=now/1000-10;entries[1][1].cutoff=now/1000-901;assert.match(snapshotStatus(entries,{now,realtime:true}).alert.reason,/持仓数据超过 15 分钟/);
 });
+
+test('a core-only delay reports the core time rather than an older in-date holding snapshot',()=>{
+ const entries=[['交易',{cutoff:now/1000-361}],['持仓',{cutoff:now/1000-899}]];
+ const result=snapshotStatus(entries,{now,realtime:true});
+ assert.match(result.alert.reason,/最早距今 6 分钟/);
+ assert.equal(result.alert.lastUpdated,new Date(now-361000).toISOString());
+ assert.doesNotMatch(result.alert.reason,/持仓数据超过|14 分钟/);
+});
+
+test('health polling treats an active refresh as reading cached data while real failures remain visible',()=>{
+ const nodes=new Map(),root={hidden:true,querySelector:s=>{if(!nodes.has(s))nodes.set(s,{textContent:''});return nodes.get(s);}};
+ const old=Object.getOwnPropertyDescriptor(globalThis,'document');Object.defineProperty(globalThis,'document',{value:{getElementById:()=>root},configurable:true});
+ try{
+  const button={dataset:{},disabled:false},status={},entries=[['交易',{cutoff:Date.now()/1000-361}],['持仓',{cutoff:Date.now()/1000-899}]];
+  const fresh={error:null,webhookRequired:false,snapshots:Object.fromEntries(['report','addresses','holders','depth'].map(k=>[k,{cutoff:Date.now()/1000-10}]))};
+  setSnapshotHealth(fresh);showSnapshotStatus(status,button,entries,{realtime:true});assert.equal(root.hidden,false);
+  button.disabled=true;setSnapshotHealth(fresh);assert.equal(root.hidden,true);assert.match(button.title,/正在读取最新快照/);
+  setSnapshotHealth({...fresh,error:'WORKER_HEAP_EXHAUSTED'});assert.equal(root.hidden,false);
+  setSnapshotHealth({...fresh,snapshots:{...fresh.snapshots,report:{cutoff:Date.now()/1000-901}}});assert.equal(root.hidden,false);
+  setSnapshotHealth(fresh);assert.equal(root.hidden,true);
+  showSnapshotStatus(status,button,entries,{realtime:true,retained:true});assert.equal(root.hidden,false);
+  showSnapshotFailure();setSnapshotHealth(fresh);assert.equal(root.hidden,false);
+  button.disabled=false;showSnapshotStatus(status,button,[['交易',{cutoff:Date.now()/1000-10}],['持仓',{cutoff:Date.now()/1000-20}]],{realtime:true});assert.equal(root.hidden,true);
+ }finally{if(old)Object.defineProperty(globalThis,'document',old);else delete globalThis.document;setSnapshotHealth(null);}
+});
