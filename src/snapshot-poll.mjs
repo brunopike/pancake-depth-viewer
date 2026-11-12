@@ -22,4 +22,5 @@ export function startSnapshotPolling(refresh){
  const timer=setInterval(poll,60000);
  document.addEventListener('visibilitychange',poll);
  window.addEventListener('pagehide',()=>{clearInterval(timer);document.removeEventListener('visibilitychange',poll);},{once:true});
+ void poll();
 }

@@ -2,11 +2,11 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {startSnapshotPolling} from '../src/snapshot-poll.mjs';
 
-function harness(t,{refresh=async()=>{},status=async()=>({ok:true,json:async()=>({processedBlock:123,holderBlock:124})})}={}){
+function harness(t,{refresh=async()=>{},status=async()=>({ok:true,json:async()=>({processedBlock:123,holderBlock:124})}),hidden=false}={}){
  let now=1000000,poll,requests=0,refreshes=0;
  const descriptors=new Map();
  const replace=(name,value)=>{descriptors.set(name,Object.getOwnPropertyDescriptor(globalThis,name));Object.defineProperty(globalThis,name,{value,writable:true,configurable:true});};
- const document={hidden:false,addEventListener(){},removeEventListener(){}};
+ const document={hidden,addEventListener(){},removeEventListener(){}};
  replace('location',{hostname:'esimonchain.imstark.site'});
  replace('document',document);
  replace('window',{addEventListener(){}});
@@ -19,22 +19,26 @@ function harness(t,{refresh=async()=>{},status=async()=>({ok:true,json:async()=>
  return {poll,document,advance:ms=>{now+=ms;},get requests(){return requests;},get refreshes(){return refreshes;}};
 }
 
+test('a visible page reads health immediately without waiting for the first interval',async t=>{
+ const h=harness(t);assert.equal(h.requests,1);await new Promise(resolve=>setImmediate(resolve));assert.equal(h.refreshes,1);
+});
+
 test('unchanged successful status still refreshes snapshots every five minutes',async t=>{
  const h=harness(t);
- await h.poll();assert.equal(h.refreshes,1);
+ await new Promise(resolve=>setImmediate(resolve));await h.poll();assert.equal(h.refreshes,1);
  h.advance(299999);await h.poll();assert.equal(h.refreshes,1);
  h.advance(1);await h.poll();assert.equal(h.refreshes,2);
  h.advance(300000);await h.poll();assert.equal(h.refreshes,3);
- assert.equal(h.requests,4);
+ assert.equal(h.requests,5);
 });
 
 test('hidden pages do not request status or refresh snapshots',async t=>{
- const h=harness(t);h.document.hidden=true;h.advance(600000);
+ const h=harness(t,{hidden:true});h.advance(600000);
  await h.poll();assert.equal(h.requests,0);assert.equal(h.refreshes,0);
  h.document.hidden=false;await h.poll();assert.equal(h.requests,1);assert.equal(h.refreshes,1);
 });
 test('new historical publication refreshes an unchanged live revision',async t=>{
- let publishedAt='first';const h=harness(t,{status:async()=>({ok:true,json:async()=>({processedBlock:123,holderBlock:124,auxiliary:{provenance:{publishedAt}}})})});
+ let publishedAt='first';const h=harness(t,{status:async()=>({ok:true,json:async()=>({processedBlock:123,holderBlock:124,auxiliary:{provenance:{publishedAt}}})})});await new Promise(resolve=>setImmediate(resolve));
  await h.poll();assert.equal(h.refreshes,1);
  h.advance(60000);await h.poll();assert.equal(h.refreshes,1);
  publishedAt='second';h.advance(60000);await h.poll();assert.equal(h.refreshes,2);
@@ -42,7 +46,7 @@ test('new historical publication refreshes an unchanged live revision',async t=>
 
 test('failed status requests retain the independent five-minute fallback',async t=>{
  let failure='network';
- const h=harness(t,{status:async()=>{if(failure==='network')throw Error('STATUS_OFFLINE');return {ok:false};}});
+ const h=harness(t,{status:async()=>{if(failure==='network')throw Error('STATUS_OFFLINE');return {ok:false};}});await new Promise(resolve=>setImmediate(resolve));
  await h.poll();assert.equal(h.refreshes,0);
  h.advance(300000);await h.poll();assert.equal(h.refreshes,1);
  h.advance(299999);await h.poll();assert.equal(h.refreshes,1);
@@ -51,15 +55,15 @@ test('failed status requests retain the independent five-minute fallback',async 
 
 test('a busy refresh returning false does not acknowledge the revision',async t=>{
  let busy=true;
- const h=harness(t,{refresh:async()=>busy?false:undefined});
- await h.poll();assert.equal(h.refreshes,1);
+ const h=harness(t,{refresh:async()=>busy?false:undefined});await new Promise(resolve=>setImmediate(resolve));
+ assert.equal(h.refreshes,1);
  busy=false;h.advance(60000);await h.poll();assert.equal(h.refreshes,2);
  h.advance(60000);await h.poll();assert.equal(h.refreshes,2);
 });
 
 test('failed status retries a busy fallback at the next poll',async t=>{
  let busy=true;
- const h=harness(t,{status:async()=>({ok:false}),refresh:async()=>busy?false:undefined});
+ const h=harness(t,{status:async()=>({ok:false}),refresh:async()=>busy?false:undefined});await new Promise(resolve=>setImmediate(resolve));
  h.advance(300000);await h.poll();assert.equal(h.refreshes,1);
  busy=false;h.advance(60000);await h.poll();assert.equal(h.refreshes,2);
  h.advance(60000);await h.poll();assert.equal(h.refreshes,2);
