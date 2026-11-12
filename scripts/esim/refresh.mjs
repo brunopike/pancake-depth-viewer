@@ -14,11 +14,12 @@ try {
   let stageStarted=Date.now();
   const stage=name=>{console.log(JSON.stringify({phase:'core-stage',stage:name,elapsedMs:Date.now()-stageStarted,rss:process.memoryUsage().rss}));stageStarted=Date.now();};
   if(inlinePublish){const lease=leaseFromEnvironment();if(!lease)throw Error('WORKER_LEASE_REQUIRED');await requireLease(lease);}
-  let state,checkpointIdentity;
-  try { state = await readState(`${work}/state.json.gz`); }
-  catch { state = await readState('server/esim/bootstrap.json.gz'); }
+  let state,checkpointIdentity,stateFile=`${work}/state.json.gz`;
+  const remote=process.env.ESIM_REMOTE_START==='true';
+  try { state = await readState(stateFile,{deferClaimFlow:remote}); }
+  catch { stateFile='server/esim/bootstrap.json.gz';state = await readState(stateFile,{deferClaimFlow:remote}); }
   if (process.env.ESIM_REMOTE_START === 'true') {
-    state = mergeCheckpointState(state,await loadState({currentState:state,includeRemoteCore:process.env.ESIM_PERSISTENT_WORKER!=='true'||process.env.ESIM_REMOTE_BOOTSTRAP==='true'}));
+    state = mergeCheckpointState(state,await loadState({currentState:state,claimFlowCheckpointFile:stateFile,includeRemoteCore:process.env.ESIM_PERSISTENT_WORKER!=='true'||process.env.ESIM_REMOTE_BOOTSTRAP==='true'}));
   }
   stage('read-and-merge-state');
   const budget = Number(process.env.ESIM_RPC_BUDGET || 600), targetBlock = process.env.ESIM_TARGET_BLOCK ? Number(process.env.ESIM_TARGET_BLOCK) : undefined;

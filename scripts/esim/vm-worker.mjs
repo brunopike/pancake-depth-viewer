@@ -10,12 +10,12 @@ import {readAuxiliaryStatus} from '../../server/esim/auxiliary-health.mjs';
 // One heavy child at a time on the 4 GB VM. Provenance retains its independent
 // GitHub job; a multi-minute attribution rebuild cannot block live processing.
 export const provenanceMergeNeeded=({now,last,publishedFlowBlock=0})=>publishedFlowBlock>(last.flowBlock||0)&&now-(last.merge||0)>=60000;
-export async function runCorePass(command,{remote,bootstrap,block}){
+export async function runCorePass(command,{remote,bootstrap,block,minimumBlock=block}){
  try{
-  await command('scripts/esim/refresh.mjs',[],{extra:{ESIM_REMOTE_START:String(remote),ESIM_REMOTE_BOOTSTRAP:String(bootstrap),ESIM_INLINE_CORE_PUBLISH:'true',ESIM_MIN_BLOCK:String(block)}});
+  await command('scripts/esim/refresh.mjs',[],{extra:{ESIM_REMOTE_START:String(remote),ESIM_REMOTE_BOOTSTRAP:String(bootstrap),ESIM_INLINE_CORE_PUBLISH:'true',ESIM_MIN_BLOCK:String(Math.max(block,minimumBlock))}});
   return false;
  }catch(error){if(error.message!=='QUERY_LIMIT')throw error;}
- await command('scripts/esim/vm-task.mjs',['core'],{extra:{ESIM_MIN_BLOCK:String(block+1)}});
+ await command('scripts/esim/vm-task.mjs',['core'],{extra:{ESIM_MIN_BLOCK:String(Math.max(block+1,minimumBlock))}});
  return true;
 }
 export async function runDepthPass(command,{lease,dryRun}){
@@ -61,11 +61,10 @@ export function restoredSchedule(saved,dryRun){
  // into live mode, where an immediate complete archive is required.
  return saved?.dryRun===dryRun?{...saved,core:0}:{dryRun,core:0};
 }
-export function remoteBootstrapNeeded({first,hasCheckpoint,block,cutoff,now,remoteBlock}){
+export function remoteBootstrapNeeded({first,hasCheckpoint,block}){
  if(!first)return false;
  if(!hasCheckpoint||!block)return true;
- // Check lightweight published metadata before loading a second full ledger.
- if(Number.isSafeInteger(remoteBlock)&&remoteBlock>=0)return remoteBlock>block;
+ // Catch up a verified local prefix incrementally instead of retaining two full ledgers.
  return false;
 }
 async function json(file,fallback={}){try{return JSON.parse(await readFile(file,'utf8'));}catch{return fallback;}}
@@ -138,7 +137,7 @@ export async function main(){
       // A recent local prefix is revalidated against the chain. Do not keep
       // two full ledgers in RAM merely to restart this persistent worker.
       const bootstrap=remoteBootstrapNeeded({first,hasCheckpoint,block,cutoff,now,remoteBlock:Number(status.processed_block)});
-      await runCorePass(command,{remote,bootstrap,block});
+      await runCorePass(command,{remote,bootstrap,block,minimumBlock:Number(status.processed_block)||block});
       if(remote)last.merge=now;first=false;
       const next=await json(`${local}/core.json`);
       last.flowBlock=next.flowBlock||0;

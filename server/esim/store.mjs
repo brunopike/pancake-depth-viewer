@@ -45,7 +45,7 @@ function validateState(state){
 }
 export async function readState(file,options){return validateState(await readCheckpoint(file,options));}
 export async function readStateMetadata(file){return validateState(await readCheckpoint(file,{metadataOnly:true}));}
-export async function loadState({ fetch: request = fetch, includeRemote = true, includeRemoteCore=true, currentState, checkpointFile=process.env.ESIM_CHECKPOINT_FILE, currentCheckpointFile='.goodway/esim-monitor/state.json.gz' } = {}) {
+export async function loadState({ fetch: request = fetch, includeRemote = true, includeRemoteCore=true, currentState, checkpointFile=process.env.ESIM_CHECKPOINT_FILE, currentCheckpointFile='.goodway/esim-monitor/state.json.gz',claimFlowCheckpointFile } = {}) {
   let local = currentState||await readState(new URL('./bootstrap.json.gz', import.meta.url));
   if(checkpointFile){
     let checked;try{checked=await readState(checkpointFile);}catch{throw Error('WORKER_CHECKPOINT_UNAVAILABLE');}
@@ -68,6 +68,12 @@ export async function loadState({ fetch: request = fetch, includeRemote = true, 
     if(r.ok)local=attachClaimFlow(local,await readCheckpoint(Readable.fromWeb(r.body)));
     else if(r.status===404){const legacy=await request(CLAIM_FLOW_URL.slice(0,-3)+stamp,options);if(legacy.ok)local=attachClaimFlow(local,await legacy.json());}
   }catch{}
+  // A refresh streams past old provenance before loading its replacement; restore
+  // only that disk field if the remote report is unavailable, invalid or ahead.
+  if(claimFlowCheckpointFile&&!validClaimFlow(local,local.claimFlow)){
+    try{local=attachClaimFlow(local,(await readState(claimFlowCheckpointFile,{claimFlowOnly:true})).claimFlow);}
+    catch{throw Error('WORKER_FLOW_CHECKPOINT_UNAVAILABLE');}
+  }
   return local;
 }
 export async function saveState(state, dir) {
