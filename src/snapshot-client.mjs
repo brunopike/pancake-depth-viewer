@@ -20,7 +20,8 @@ export const realtimeHost=()=>['esimonchain.imstark.site','localhost','127.0.0.1
 export async function readSnapshot(kind,{current,fetch:request=globalThis.fetch,realtime=realtimeHost()}={}) {
   let fast;
   if(realtime)try{
-    const response=await request(`./api/esim-snapshot?kind=${kind}`,{cache:'no-store',signal:AbortSignal.timeout(8000)});
+    // Full holder/address bodies now take over eight seconds with local labels enabled.
+    const response=await request(`./api/esim-snapshot?kind=${kind}`,{cache:'no-store',signal:AbortSignal.timeout(kind==='report'?8000:25000)});
     if(response.ok){const data=await response.json();if(validSnapshot(kind,data))fast={data,source:'realtime'};}
     // The canonical worker already builds claim-flow windows and address tags.
     // Fetching the entire provenance ledger again delays every realtime page.

@@ -34,3 +34,18 @@ test('a successful older response preserves the newer current snapshot without r
   assert.equal(failed.data.block,200);assert.equal(failed.source,'retained');
  }
 });
+
+test('large current snapshots can finish after eight seconds without falling back to an old archive',async()=>{
+ await Promise.all(['holders','addresses'].map(async kind=>{
+  const calls=[];
+  const result=await readSnapshot(kind,{realtime:true,fetch:(url,{signal})=>{
+   calls.push(url);if(!url.startsWith('./api/esim-snapshot?'))return Promise.reject(Error('No archive should be needed'));
+   return new Promise((resolve,reject)=>{
+    const stop=()=>{clearTimeout(timer);reject(signal.reason);};
+    const timer=setTimeout(()=>{signal.removeEventListener('abort',stop);resolve({ok:true,json:async()=>({...snapshot(kind,777),cutoff:Date.now()/1000-1})});},9000);
+    signal.addEventListener('abort',stop,{once:true});
+   });
+  }});
+  assert.equal(result.source,'realtime');assert.equal(result.data.block,777);assert.equal(calls.length,1);
+ }));
+});
