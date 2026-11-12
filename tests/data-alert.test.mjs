@@ -135,3 +135,10 @@ test('health polling treats an active refresh as reading cached data while real 
   button.disabled=false;showSnapshotStatus(status,button,[['交易',{cutoff:Date.now()/1000-10}],['持仓',{cutoff:Date.now()/1000-20}]],{realtime:true});assert.equal(root.hidden,true);
  }finally{if(old)Object.defineProperty(globalThis,'document',old);else delete globalThis.document;setSnapshotHealth(null);}
 });
+
+test('a brief core lag stays visible as progress only after a recent successful publication',()=>{
+ const entries=[['交易',{cutoff:now/1000-361}],['持仓',{cutoff:now/1000-60}]],health={lastProcessed:new Date(now-120000).toISOString()},options={now,realtime:true,health};
+ const progress=snapshotStatus(entries,options);assert.equal(progress.warning,true);assert.equal(progress.alert.severity,'progress');assert.match(progress.alert.title,/进行中/);assert.match(progress.alert.reason,/交易数据超过 5 分钟.*6 分钟/);assert.match(progress.alert.recovery,/近 5 分钟.*发布/);
+ for(const extra of [{health:{lastProcessed:new Date(now-301000).toISOString()}},{health:{...health,error:'WORKER_HEAP_EXHAUSTED'}},{health:{...health,unavailable:true}},{retained:true},{failed:true}])assert.equal(snapshotStatus(entries,{...options,...extra}).alert.severity,'error');
+ for(const delayed of [[['交易',{cutoff:now/1000-901}],entries[1]],[entries[0],['持仓',{cutoff:now/1000-901}]]])assert.equal(snapshotStatus(delayed,options).alert.severity,'error');
+});
