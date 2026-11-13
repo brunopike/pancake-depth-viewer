@@ -1,6 +1,7 @@
 import {readClaimFlowSnapshot} from './claim-flow-client.mjs';
 import {newerSourceInflow} from '../server/esim/source-inflows.mjs';
 import {cacheData} from './data-cache.mjs';
+import {readTransportSnapshot} from './snapshot-transfer.mjs';
 const remember=(kind,result)=>{if(kind==='report')void cacheData('report-v1',result.data);return result;};
 function retainSourceInflow(next,prior){
   const value=newerSourceInflow(prior?.sourceInflow,next.sourceInflow,next);
@@ -22,7 +23,7 @@ export async function readSnapshot(kind,{current,fetch:request=globalThis.fetch,
   if(realtime)try{
     // Full holder/address bodies now take over eight seconds with local labels enabled.
     const response=await request(`./api/esim-snapshot?kind=${kind}`,{cache:'no-store',signal:AbortSignal.timeout(kind==='report'?8000:25000)});
-    if(response.ok){const data=await response.json();if(validSnapshot(kind,data))fast={data,source:'realtime'};}
+    if(response.ok){const data=await readTransportSnapshot(response,kind,request);if(validSnapshot(kind,data))fast={data,source:'realtime'};}
     // The canonical worker already builds claim-flow windows and address tags.
     // Fetching the entire provenance ledger again delays every realtime page.
     if(fast&&Date.now()/1000-fast.data.cutoff<600&&(!current||fast.data.block>=current.block))return remember(kind,{...fast,data:kind==='report'?retainSourceInflow(fast.data,current):fast.data});

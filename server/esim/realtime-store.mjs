@@ -33,24 +33,42 @@ export function encodeSnapshot(kind,data){
  if(!['report','addresses','holders','depth'].includes(kind)||!Number.isSafeInteger(block)||block<1||!Number.isFinite(cutoff))throw Error('INVALID_REALTIME_SNAPSHOT');
  if(depth&&(data.version!==1||data.chainId!==56||data.base!=='0x7765a659c5b0cfbfd9fbc2ef2298b75a598f2d2d'||data.quote!=='0x55d398326f99059ff775485246999027b3197955'||!/^0x[0-9a-f]{64}$/i.test(data.blockHash)||!data.pools?.length||!Array.isArray(data.failed)))throw Error('INVALID_REALTIME_DEPTH');
  const bytes=gzipSync(JSON.stringify(data));
- if(bytes.length>4*1024*1024)throw Error('REALTIME_SNAPSHOT_TOO_LARGE');
- return {kind,block,cutoff,hash:createHash('sha256').update(bytes).digest('hex'),body:bytes.toString('base64')};
+ if(bytes.length>64*1024*1024)throw Error('REALTIME_SNAPSHOT_TOO_LARGE');
+ const snapshot={kind,block,cutoff,hash:createHash('sha256').update(bytes).digest('hex'),body:bytes.toString('base64')};
+ // Each public response stays below the function limit as address history grows.
+ if(bytes.length>4*1024*1024){snapshot.parts=[];for(let i=0;i<bytes.length;i+=2*1024*1024)snapshot.parts.push(bytes.subarray(i,i+2*1024*1024).toString('base64'));snapshot.body='chunks-v1:'+snapshot.parts.length;}
+ return snapshot;
 }
 export async function publishRealtime(snapshots,{processedBlock,sql=realtimeSQL(),lease=leaseFromEnvironment()}={}){
- const queries=snapshots.map(({kind,data})=>{
+ const queries=snapshots.flatMap(({kind,data})=>{
   const s=encodeSnapshot(kind,data);
-  return sql.query(`INSERT INTO esim_realtime_snapshots (kind,block,cutoff,body,etag)
+  return [...(s.parts||[]).map((body,index)=>sql.query('INSERT INTO esim_realtime_snapshot_parts(kind,etag,part,body) VALUES($1,$2,$3,$4) ON CONFLICT DO NOTHING',[s.kind,s.hash,index,body])),sql.query(`WITH published AS (INSERT INTO esim_realtime_snapshots (kind,block,cutoff,body,etag)
    VALUES ($1,$2,$3,$4,$5) ON CONFLICT (kind) DO UPDATE SET block=excluded.block,cutoff=excluded.cutoff,body=excluded.body,etag=excluded.etag,updated_at=now()
-   WHERE excluded.block>=esim_realtime_snapshots.block`,[s.kind,s.block,s.cutoff,s.body,s.hash]);
+   WHERE excluded.block>=esim_realtime_snapshots.block RETURNING kind,etag)
+   DELETE FROM esim_realtime_snapshot_parts p USING published s WHERE p.kind=s.kind AND p.etag<>s.etag`,[s.kind,s.block,s.cutoff,s.body,s.hash])];
  });
  if(processedBlock!==undefined)queries.push(sql.query(`UPDATE esim_realtime_control SET processed_block=greatest(processed_block,$1),last_processed=now(),last_error=NULL WHERE id=1`,[processedBlock]));
  // The check and all writes share one transaction and lock. Checking only
  // before an HTTP write would let a paused former owner overwrite its successor.
  await sql.transaction(lease?[leaseStatement(lease,sql),...queries]:queries);
 }
-export async function readRealtime(kind,sql=realtimeSQL()){
+export async function readRealtimeHead(kind,sql=realtimeSQL()){
  if(!['report','addresses','holders','depth'].includes(kind))throw Error('INVALID_SNAPSHOT_KIND');
  const [row]=await sql.query('SELECT block,cutoff,body,etag FROM esim_realtime_snapshots WHERE kind=$1',[kind]);return row;
+}
+export function snapshotPartCount(row){
+ if(!row?.body?.startsWith('chunks-v1:'))return 0;
+ const count=Number(row.body.slice(10));if(!Number.isInteger(count)||count<1||count>32||row.body!=='chunks-v1:'+count||!/^[0-9a-f]{64}$/.test(row.etag))throw Error('INVALID_SNAPSHOT_PARTS');return count;
+}
+export async function readRealtimePart(kind,etag,index,sql=realtimeSQL()){
+ if(!['report','addresses','holders','depth'].includes(kind)||!/^[0-9a-f]{64}$/.test(etag)||!Number.isInteger(index)||index<0||index>=32)throw Error('INVALID_SNAPSHOT_PART');
+ const [row]=await sql.query('SELECT p.body FROM esim_realtime_snapshot_parts p JOIN esim_realtime_snapshots s ON s.kind=p.kind AND s.etag=p.etag WHERE p.kind=$1 AND p.etag=$2 AND p.part=$3',[kind,etag,index]);
+ if(!row||!row.body||row.body.length>3*1024*1024)throw Error('SNAPSHOT_PART_UNAVAILABLE');return row.body;
+}
+export async function readRealtime(kind,sql=realtimeSQL()){
+ const row=await readRealtimeHead(kind,sql),count=snapshotPartCount(row);if(!count)return row;
+ const parts=[];for(let i=0;i<count;i++)parts.push(Buffer.from(await readRealtimePart(kind,row.etag,i,sql),'base64'));
+ const bytes=Buffer.concat(parts);if(createHash('sha256').update(bytes).digest('hex')!==row.etag)throw Error('SNAPSHOT_PART_HASH_MISMATCH');return {...row,body:bytes.toString('base64')};
 }
 export async function readRealtimeMetadata(kind,sql=realtimeSQL()){
  if(!['report','addresses','holders','depth'].includes(kind))throw Error('INVALID_SNAPSHOT_KIND');

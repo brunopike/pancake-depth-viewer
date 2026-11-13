@@ -16,3 +16,10 @@ CREATE TABLE IF NOT EXISTS esim_realtime_snapshots (
 ALTER TABLE esim_realtime_snapshots
  DROP CONSTRAINT IF EXISTS esim_realtime_snapshots_kind_check,
  ADD CONSTRAINT esim_realtime_snapshots_kind_check CHECK(kind IN ('report','addresses','holders','depth'));
+CREATE TABLE IF NOT EXISTS esim_realtime_snapshot_parts (
+ kind text NOT NULL CHECK(kind IN ('report','addresses','holders','depth')),
+ etag text NOT NULL CHECK(etag ~ '^[0-9a-f]{64}$'),
+ part integer NOT NULL CHECK(part>=0 AND part<32),
+ body text NOT NULL CHECK(length(body)<=3145728),
+ PRIMARY KEY(kind,etag,part)
+);
