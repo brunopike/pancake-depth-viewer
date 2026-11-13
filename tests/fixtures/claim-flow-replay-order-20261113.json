@@ -1,0 +1,22 @@
+{
+  "ok": true,
+  "reason": "OLD_RAW_HASH_ANCHORED_AND_TX_GROUPS_EQUAL",
+  "oldBlock": 133204117,
+  "oldBlockHash": "0x7fda766f3a1f86c60013c4e5b1b17062e53712c3e5339f816e1346450d835b94",
+  "oldRawHash": "a773a7a0a9d57bd6e3e5d5485c4da670f947990e9067c2fba7955bd09bbaf403",
+  "currentRawHash": "5158b93d3751b1546038ca91a0edf6bceb53e031f287a2dbe1f70c593b93f0d1",
+  "canonicalHash": "61115b7dd938ccf037b1fa03d66cc6f0691ac87fd86fc459c8020c985ee922d2",
+  "transferCount": 2019638,
+  "oldTradeRows": 586706,
+  "currentPrefixTradeRows": 586706,
+  "txGroups": 544545,
+  "currentLaterTradeRows": 11480,
+  "groupOrderChanged": true,
+  "peakNodeRssBytes": 355516416,
+  "sourceCommits": {
+    "oldCore": "bfaa3bc41fe532d60903464dade77ef043c5fb69",
+    "oldFlow": "af751b2952d30255e20bda7ddd28ea728c850b21",
+    "currentCore": "da0cac64fb90dcf2cc9fe31fbbebd0f837ef539c"
+  },
+  "scope": "Independent transaction groups only; original raw input hash anchored; all 586706 rows including duplicates matched in original per-tx order."
+}

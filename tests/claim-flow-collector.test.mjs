@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {collectClaimFlow} from '../server/esim/claim-flow-collector.mjs';
+import {collectClaimFlow,replayInputHash,replayOrderWitnessMatches} from '../server/esim/claim-flow-collector.mjs';
 import {TOKEN,SOURCE} from '../server/esim/metrics.mjs';
 import {TRANSFER,topic,signature} from '../server/esim/attribution.mjs';
 import {SOURCE_INFLOW_SEED} from '../server/esim/source-inflows.mjs';
@@ -74,4 +74,55 @@ test('source gross inflow enrichment pins the seed hash and independently reconc
  assert(requests.some(([method,p])=>method==='eth_getBlockByNumber'&&p[0]==='0x63'));
  await assert.rejects(()=>collectClaimFlow(state(100),transport,{readBalances:async(addresses,block)=>addresses.map(addr=>addr===SOURCE?'199':block==='0x63'?'0':'100'),sourceInflowSeed:checkpoint}),/SOURCE_INFLOW_BALANCE_MISMATCH/);
  await assert.rejects(()=>collectClaimFlow(state(100),transport,{readBalances:balances,sourceInflowSeed:{...checkpoint,blockHash:h(1)}}),/SOURCE_INFLOW_CHECKPOINT_CHANGED/);
+});
+test('independent historical transaction groups retain their verified replay checkpoint after reordering',async()=>{
+ const logs=[log(100,SOURCE,a(1),100),log(101,a(1),a(2),20),log(103,a(2),a(1),10)],trades=[101,100].map(block=>({tx:h(block),block,timestamp:block,side:'buy',address:a(1),amount_wei:'0'}));
+ const transport={batch:async calls=>calls.map(([method,p])=>method==='eth_chainId'?'0x38':method==='eth_getBlockByNumber'?{hash:h(Number(BigInt(p[0])))}:logs.filter(e=>BigInt(e.blockNumber)>=BigInt(p[0].fromBlock)&&BigInt(e.blockNumber)<=BigInt(p[0].toBlock))),rpc:async(_,[block])=>({hash:h(Number(BigInt(block)))})};
+ const readBalances=async(addresses,block)=>addresses.map(addr=>BigInt(block)===99n?'0':addr===a(1)?BigInt(block)===102n?'80':'90':BigInt(block)===102n?'20':'10');
+ const first=await collectClaimFlow({...state(102),trades},transport,{readBalances}),progress=[];
+ const current={...state(104),trades:[...trades].reverse()},next=await collectClaimFlow(current,transport,{previous:JSON.parse(JSON.stringify(first)),readBalances,progress:e=>progress.push(e)}),full=await collectClaimFlow(current,transport,{readBalances});
+ assert.equal(progress.find(e=>e.phase==='claim-origin-replay').total,1);
+ assert.deepEqual(next.report,full.report);assert.deepEqual(next.replayWallets,full.replayWallets);
+});
+test('replay input format preserves transaction internals and recognizes only independent group permutations',()=>{
+ const trades=[{tx:h(2),address:a(1),side:'buy',amount_wei:'2',block:2,timestamp:2},{tx:h(2),address:a(2),side:'buy',amount_wei:'3',block:2,timestamp:2},{tx:h(1),address:a(1),side:'buy',amount_wei:'1',block:1,timestamp:1}],s={...state(3),trades},changed={...s,trades:[trades[2],trades[0],trades[1]]};
+ const digest=x=>replayInputHash(x,[],3,{});
+ assert.equal(digest(s),digest(changed));assert.notEqual(replayInputHash(s,[],3,{},1),replayInputHash(changed,[],3,{},1));
+ for(const rows of [[trades[1],trades[0],trades[2]],trades.slice(1),trades.map((t,i)=>i?t:{...t,amount_wei:'4'}),trades.map((t,i)=>i?t:{...t,timestamp:2.5}),trades.map((t,i)=>i?t:{...t,address:a(3)})])assert.notEqual(digest(s),digest({...s,trades:rows}));
+ assert.notEqual(digest(s),replayInputHash(s,[],3,{[a(1)]:'1'}));assert.notEqual(digest(s),digest({...s,pools:{[a(9)]:{}}}));
+ const transfer={id:'one',tx:h(1),order:[1,0,0],from:SOURCE,to:a(1),value:'1'},baseline=replayInputHash(s,[transfer],3,{});assert.notEqual(baseline,replayInputHash(s,[{...transfer,value:'2'}],3,{}));assert.notEqual(baseline,replayInputHash(s,[Object.fromEntries(Object.entries(transfer).reverse())],3,{}));
+});
+test('legacy checkpoints migrate after exact raw input matching and retain full fallback for unknown reorderings',async()=>{
+ const logs=[log(100,SOURCE,a(1),100),log(101,a(1),a(2),20),log(103,a(2),a(1),10)],trades=[101,100].map(block=>({tx:h(block),block,timestamp:block,side:'buy',address:a(1),amount_wei:'0'}));
+ const transport={batch:async calls=>calls.map(([method,p])=>method==='eth_chainId'?'0x38':method==='eth_getBlockByNumber'?{hash:h(Number(BigInt(p[0])))}:logs.filter(e=>BigInt(e.blockNumber)>=BigInt(p[0].fromBlock)&&BigInt(e.blockNumber)<=BigInt(p[0].toBlock))),rpc:async(_,[block])=>({hash:h(Number(BigInt(block)))})};
+ const readBalances=async(addresses,block)=>addresses.map(addr=>BigInt(block)===99n?'0':addr===a(1)?BigInt(block)===102n?'80':'90':BigInt(block)===102n?'20':'10'),oldState={...state(102),trades},first=await collectClaimFlow(oldState,transport,{readBalances});
+ const legacy=JSON.parse(JSON.stringify(first));delete legacy.replayState.inputHashVersion;legacy.replayState.inputHash=replayInputHash(oldState,legacy.transfers,legacy.throughBlock,legacy.openingBalances,1);legacy.report.replayCheckpointVersion=1;legacy.report.replayInputHash=legacy.replayState.inputHash;
+ const progress=[],next=await collectClaimFlow({...state(104),trades},transport,{previous:legacy,readBalances,progress:e=>progress.push(e)});
+ assert.equal(progress.find(e=>e.phase==='claim-origin-replay').total,1);assert.equal(next.replayState.inputHashVersion,2);assert.equal(next.report.replayCheckpointVersion,2);
+ const rebuilt=[];await collectClaimFlow({...state(104),trades:[...trades].reverse()},transport,{previous:legacy,readBalances,progress:e=>rebuilt.push(e)});assert.equal(rebuilt.find(e=>e.phase==='claim-origin-replay').total,3);
+ const full=await collectClaimFlow({...state(104),trades},transport,{readBalances});assert.deepEqual(next.report,full.report);assert.deepEqual(next.replayWallets,full.replayWallets);
+ const unknown=[];await collectClaimFlow({...state(104),trades},transport,{previous:{...first,replayState:{...first.replayState,inputHashVersion:999}},readBalances,progress:e=>unknown.push(e)});assert.equal(unknown.find(e=>e.phase==='claim-origin-replay').total,3);
+});
+test('a reviewed legacy order witness is pinned to every boundary and input digest',()=>{
+ const witness={block:100,blockHash:h(100),legacyInputHash:'a'.repeat(64),canonicalInputHash:'b'.repeat(64)},previous={throughBlock:100,blockHash:h(100),replayState:{version:1,inputHash:witness.legacyInputHash}};
+ assert.equal(replayOrderWitnessMatches(previous,witness.canonicalInputHash,witness),true);
+ for(const changed of [{...previous,throughBlock:101},{...previous,blockHash:h(101)},{...previous,replayState:{...previous.replayState,inputHash:'c'.repeat(64)}},{...previous,replayState:{...previous.replayState,inputHashVersion:2}},{...previous,replayState:{...previous.replayState,version:2}}])assert.equal(replayOrderWitnessMatches(changed,witness.canonicalInputHash,witness),false);
+ assert.equal(replayOrderWitnessMatches(previous,'c'.repeat(64),witness),false);assert.equal(replayOrderWitnessMatches(previous,witness.canonicalInputHash,null),false);
+});
+test('v2 checkpoints survive writer, fragmented transport and reader through two real increments',async()=>{
+ const {mkdtemp,mkdir,readFile,writeFile,rm}=await import('node:fs/promises'),{tmpdir}=await import('node:os'),{join,dirname}=await import('node:path'),{writeCheckpoint}=await import('../server/esim/state-writer.mjs'),{readCheckpoint}=await import('../server/esim/state-reader.mjs'),{packCheckpointFiles}=await import('../server/esim/checkpoint-chunks.mjs');
+ const dir=await mkdtemp(join(tmpdir(),'claim-v2-roundtrip-'));
+ try{
+  const logs=[log(100,SOURCE,a(1),100),log(101,a(1),a(2),20),log(103,a(2),a(1),10),log(105,a(1),a(2),5)],trades=[101,100].map(block=>({tx:h(block),block,timestamp:block,side:'buy',address:a(1),amount_wei:'0'}));
+  const transport={batch:async calls=>calls.map(([method,p])=>method==='eth_chainId'?'0x38':method==='eth_getBlockByNumber'?{hash:h(Number(BigInt(p[0])))}:logs.filter(e=>BigInt(e.blockNumber)>=BigInt(p[0].fromBlock)&&BigInt(e.blockNumber)<=BigInt(p[0].toBlock))),rpc:async(_,[block])=>({hash:h(Number(BigInt(block)))})};
+  const readBalances=async(addresses,block)=>addresses.map(addr=>BigInt(block)===99n?'0':String(addr===a(1)?BigInt(block)<=102n?80:BigInt(block)<=104n?90:85:BigInt(block)<=102n?20:BigInt(block)<=104n?10:15));
+  let previous=await collectClaimFlow({...state(102),trades},transport,{readBalances});
+  for(const end of [104,106]){
+   const root=join(dir,String(end));await writeCheckpoint(previous,root);const packed=packCheckpointFiles('claim-flow-state.json.gz',await readFile(join(root,'state.json.gz')),64);assert(packed.length>2);
+   for(const [path,bytes]of packed){const file=join(root,path);await mkdir(dirname(file),{recursive:true});await writeFile(file,bytes);}
+   const saved=await readCheckpoint(join(root,'claim-flow-state.json.gz'));assert.deepEqual(saved,JSON.parse(JSON.stringify(previous)));assert.equal(saved.replayState.inputHashVersion,2);assert.equal(saved.report.replayCheckpointVersion,2);
+   const current={...state(end),trades:end===104?[...trades].reverse():trades},progress=[],next=await collectClaimFlow(current,transport,{previous:saved,readBalances,progress:e=>progress.push(e)}),full=await collectClaimFlow(current,transport,{readBalances});
+   assert.equal(progress.find(e=>e.phase==='claim-origin-replay').total,1);assert.deepEqual(next.report,full.report);assert.deepEqual(next.replayWallets,full.replayWallets);previous=next;
+  }
+ }finally{await rm(dir,{recursive:true,force:true});}
 });

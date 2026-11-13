@@ -8,12 +8,20 @@ import {createHash} from 'node:crypto';
 const ZERO='0x0000000000000000000000000000000000000000',hex=n=>'0x'+n.toString(16);
 const ensure=(ok,code)=>{if(!ok)throw Error(code);};
 const lpEvents=new Set(['Mint(address,address,int24,int24,uint128,uint256,uint256)','Burn(address,int24,int24,uint128,uint256,uint256)','Collect(address,address,int24,int24,uint128,uint128)','Mint(address,uint256,uint256)','Burn(address,uint256,uint256,address)','ModifyLiquidity(bytes32,address,int24,int24,int256,bytes32)'].map(signature));
-function replayInputHash(state,transfers,throughBlock,openingBalances){
+// The bfaa3bc and da0cac6 archives have the same 544545 tx groups; only group order changed.
+// This exact legacy witness permits the verified migration; every other mismatch replays fully.
+const legacyOrderWitness={"block":133204117,"blockHash":"0x7fda766f3a1f86c60013c4e5b1b17062e53712c3e5339f816e1346450d835b94","legacyInputHash":"a773a7a0a9d57bd6e3e5d5485c4da670f947990e9067c2fba7955bd09bbaf403","canonicalInputHash":"61115b7dd938ccf037b1fa03d66cc6f0691ac87fd86fc459c8020c985ee922d2"};
+export function replayOrderWitnessMatches(previous,canonicalHash,witness){
+ return !!witness&&previous?.replayState?.version===1&&(previous.replayState.inputHashVersion??1)===1&&previous.throughBlock===witness.block&&previous.blockHash===witness.blockHash&&previous.replayState.inputHash===witness.legacyInputHash&&canonicalHash===witness.canonicalInputHash;
+}
+export function replayInputHash(state,transfers,throughBlock,openingBalances,version=2){
  const hash=createHash('sha256');
  hash.update(JSON.stringify([state.token,state.source,Object.keys(state.pools).filter(a=>a.length===42).sort()]));
  hash.update(JSON.stringify(Object.entries(openingBalances).sort(([a],[b])=>a.localeCompare(b))));
  for(const e of transfers)if(e.order[0]<=throughBlock)hash.update(JSON.stringify(e));
- for(const t of state.trades)if(t.block<=throughBlock)hash.update(JSON.stringify([t.tx,t.address,t.side,t.amount_wei,t.block,t.timestamp]));
+ // Only independent tx groups may move; stable sorting retains every row within a tx.
+ const trades=version===1?state.trades:state.trades.filter(t=>t.block<=throughBlock).sort((a,b)=>a.tx<b.tx?-1:a.tx>b.tx?1:0);
+ for(const t of trades)if(t.block<=throughBlock)hash.update(JSON.stringify([t.tx,t.address,t.side,t.amount_wei,t.block,t.timestamp]));
  return hash.digest('hex');
 }
 export async function collectClaimFlow(state,transport,{previous,progress=()=>{},readBalances=readHolderBalances,sourceInflowSeed=SOURCE_INFLOW_SEED}={}){
@@ -67,8 +75,13 @@ export async function collectClaimFlow(state,transport,{previous,progress=()=>{}
   proof[tx]={block:events[0].order[0],blockHash:r.blockHash,unsafe:r.logs.some(e=>markets.has(e.address.toLowerCase())&&lpEvents.has(e.topics[0]))};
  }
  }
- const resume=previous?.replayState?.version===1&&Array.isArray(previous.replayWallets)&&previous.replayState.inputHash===replayInputHash(state,transfers,previous.throughBlock,previous.openingBalances);
- progress({phase:'claim-replay-mode',mode:resume?'incremental':'full',reason:resume?'checkpoint-match':!previous?'first-run':!previous.replayState?'legacy-checkpoint':!Array.isArray(previous.replayWallets)?'missing-wallet-lots':!sameMarkets?'market-change':'history-input-change',previousBlock:previous?.throughBlock??null,transfers:resume?added.length:transfers.length});
+ const replayVersion=previous?.replayState?.inputHashVersion??1;
+ const compatible=previous?.replayState?.version===1&&Array.isArray(previous.replayWallets)&&sameMarkets&&[1,2].includes(replayVersion);
+ const prefixHash=compatible?replayInputHash(state,transfers,previous.throughBlock,previous.openingBalances,replayVersion):null;
+ const exactInput=compatible&&previous.replayState.inputHash===prefixHash;
+ const migratedOrder=!exactInput&&compatible&&replayVersion===1&&replayOrderWitnessMatches(previous,replayInputHash(state,transfers,previous.throughBlock,previous.openingBalances),legacyOrderWitness);
+ const resume=exactInput||migratedOrder;
+ progress({phase:'claim-replay-mode',mode:resume?'incremental':'full',reason:resume?(migratedOrder?'verified-legacy-order':'checkpoint-match'):!previous?'first-run':!previous.replayState?'legacy-checkpoint':!Array.isArray(previous.replayWallets)?'missing-wallet-lots':!sameMarkets?'market-change':'history-input-change',previousBlock:previous?.throughBlock??null,transfers:resume?added.length:transfers.length});
  const traced=traceClaimFlow({...options,transfers:resume?added:transfers,previous:resume?{...previous.report,replayState:{...previous.replayState,wallets:previous.replayWallets}}:null,progress,unsafeTransactions:Object.keys(proof).filter(tx=>proof[tx].unsafe)});
  const missingTime=[...new Set(traced.unconfirmedFlows.filter(e=>e.timestamp===null).map(e=>e.block))],blockTimes={...(previous?.blockTimes||{})};
  const newTimes=missingTime.filter(b=>!Object.hasOwn(blockTimes,b));
@@ -85,9 +98,10 @@ export async function collectClaimFlow(state,transport,{previous,progress=()=>{}
  }
  const after=await transport.rpc('eth_getBlockByNumber',[hex(state.block),false],{fresh:true});ensure(after?.hash===end.hash,'FLOW_END_CHANGED');
  const {closingBalances,replayState:{wallets:replayWallets,...replayState},...report}=traced;
+ replayState.inputHashVersion=2;
  replayState.inputHash=replayInputHash(state,transfers,state.block,openingBalances);
  // Revision 3 adds the reconciled all-history source inflow counter; the
  // proportional sale-attribution algorithm is unchanged.
- Object.assign(report,{modelRevision:3,replayCheckpointVersion:1,replayInputHash:replayState.inputHash,token:TOKEN,source:SOURCE,startBlock,openingBlock,openingBlockHash:opening.hash,throughBlock:state.block,blockHash:state.blockHash,cutoff:state.cutoff,sourceInflow,transferCount:transfers.length,addressCount:addresses.length,receiptCount:Object.keys(proof).length,coverage:'single-token-rpc-logs; sale-receipts-and-wallet-balances-reconciled; unknown-net-zero-transfers-depend-on-rpc-completeness'});
+ Object.assign(report,{modelRevision:3,replayCheckpointVersion:2,replayInputHash:replayState.inputHash,token:TOKEN,source:SOURCE,startBlock,openingBlock,openingBlockHash:opening.hash,throughBlock:state.block,blockHash:state.blockHash,cutoff:state.cutoff,sourceInflow,transferCount:transfers.length,addressCount:addresses.length,receiptCount:Object.keys(proof).length,coverage:'single-token-rpc-logs; sale-receipts-and-wallet-balances-reconciled; unknown-net-zero-transfers-depend-on-rpc-completeness'});
  return {version:1,token:TOKEN,source:SOURCE,startBlock,openingBlock,openingBlockHash:opening.hash,throughBlock:state.block,blockHash:state.blockHash,cutoff:state.cutoff,openingBalances,transfers,receiptProof:proof,blockTimes,marketAddresses,replayState,replayWallets,report};
 }

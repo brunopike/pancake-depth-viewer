@@ -94,3 +94,7 @@ test('independent receipts into one hub do not repeatedly walk all its existing 
  assert.equal(result.closingBalances.hub,String(n));assert.equal(result.totals.issued_wei,String(n));assert.equal(result.totals.remaining_wei,String(n));
  assert(visits<12*n,`origin visits ${visits} must grow linearly with independent receipts`);
 });
+test('publishing replay input format v2 persists an equal-block checkpoint even when its digest was already canonical',()=>{
+ const old={throughBlock:100,modelRevision:3,replayCheckpointVersion:1,replayInputHash:'same'},current={...old,replayCheckpointVersion:2};
+ assert.equal(claimFlowAlreadyPublished(old,current),false);assert.equal(claimFlowAlreadyPublished(current,current),true);assert.equal(claimFlowAlreadyPublished(current,old),true);
+});
