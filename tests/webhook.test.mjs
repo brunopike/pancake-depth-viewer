@@ -48,10 +48,10 @@ test('snapshot compression round trips exact integer strings',()=>{
  assert.throws(()=>encodeSnapshot('unknown',data),/INVALID_REALTIME_SNAPSHOT/);
 });
 test('core snapshots and acknowledgement are one transaction and cannot move backwards',async()=>{
- const statements=[],sql={query:(q,p)=>{statements.push({q,p});return {q,p};},transaction:async qs=>{assert.equal(qs.length,3);throw Error('COMMIT_FAILED');}};
+ const statements=[],sql={query:(q,p)=>{const s={q,p};statements.push(s);return s;},transaction:async qs=>{assert.deepEqual(qs,statements);throw Error('COMMIT_FAILED');}};
  await assert.rejects(publishRealtime(['report','addresses'].map(kind=>({kind,data:{block:123,cutoff:100}})),{processedBlock:123,sql}),/COMMIT_FAILED/);
- assert(statements.slice(0,2).every(x=>x.q.includes('excluded.block>=esim_realtime_snapshots.block')));
- assert.match(statements[2].q,/greatest\(processed_block/);
+ const snapshots=statements.filter(x=>x.q.includes('INSERT INTO esim_realtime_snapshots'));assert.equal(snapshots.length,2);assert(snapshots.every(x=>x.q.includes('excluded.block>=esim_realtime_snapshots.block')));
+ assert.match(statements.at(-1).q,/greatest\(processed_block/);
 });
 test('worker coalesces duplicates, processes later events and recovers without notifications',()=>{
  const x={now:1000000,lastRun:1000000-FAST_INTERVAL,cutoff:990,pendingBlock:123,block:123};

@@ -21,5 +21,7 @@ CREATE TABLE IF NOT EXISTS esim_realtime_snapshot_parts (
  etag text NOT NULL CHECK(etag ~ '^[0-9a-f]{64}$'),
  part integer NOT NULL CHECK(part>=0 AND part<32),
  body text NOT NULL CHECK(length(body)<=3145728),
+ last_referenced_at timestamptz NOT NULL DEFAULT clock_timestamp(),
  PRIMARY KEY(kind,etag,part)
 );
+ALTER TABLE esim_realtime_snapshot_parts ADD COLUMN IF NOT EXISTS last_referenced_at timestamptz NOT NULL DEFAULT clock_timestamp();

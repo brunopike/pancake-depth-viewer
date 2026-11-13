@@ -19,15 +19,15 @@ function shares(lots,value,total){
 export function traceClaimFlow({source,marketAddresses,openingBalances,transfers,trades,unsafeTransactions=[],zero=ZERO,progress=()=>{},previous=null}){
  const saved=previous?.replayState;
  if(previous)ensure(saved?.version===1,'FLOW_REPLAY_CHECKPOINT');
- const markets=new Set(marketAddresses),wallets=new Map((saved?.wallets||[]).map(([a,w])=>[a,{...w,balance:BigInt(w.balance),lots:new Map(w.lots.map(lot=>[key(lot),{...lot,amount:BigInt(lot.amount)}]))}])),sales=[...(previous?.sales||[])],unconfirmedFlows=[...(previous?.unconfirmedFlows||[])],byTx=new Map(),seen=new Set(),unsafe=new Set(unsafeTransactions),times=new Map();
+ const markets=new Set(marketAddresses),wallets=new Map((saved?.wallets||[]).map(([a,w])=>[a,{...w,hasPayer:w.lots.some(lot=>lot.payer!=null),balance:BigInt(w.balance),lots:new Map(w.lots.map(lot=>[key(lot),{...lot,amount:BigInt(lot.amount)}]))}])),sales=[...(previous?.sales||[])],unconfirmedFlows=[...(previous?.unconfirmedFlows||[])],byTx=new Map(),seen=new Set(),unsafe=new Set(unsafeTransactions),times=new Map();
  for(const t of trades){times.set(t.tx,t.timestamp);if(t.side==='buy')unsafe.add(t.tx);}
  const totals={issued:0n,direct:0n,relay:0n,pool:0n,returned:0n,burned:0n,matchedGross:0n};
  if(saved)for(const name of Object.keys(totals))totals[name]=BigInt(saved.totals[name]);
  for(const t of trades)if(t.side==='sell'&&t.address){if(!byTx.has(t.tx))byTx.set(t.tx,new Map());const m=byTx.get(t.tx),old=m.get(t.address);if(old)old.amount+=BigInt(t.amount_wei);else m.set(t.address,{...t,amount:BigInt(t.amount_wei)});}
  const get=(address,tx)=>{
   let w=wallets.get(address);
-  if(!w){ensure(Object.hasOwn(openingBalances,address),'FLOW_OPENING_MISSING');w={balance:BigInt(openingBalances[address]),lots:new Map(),tx:null};ensure(w.balance>=0n,'FLOW_BALANCE');wallets.set(address,w);}
-  if(w.tx!==tx){const merged=new Map();for(const lot of w.lots.values())add(merged,{...lot,payer:null});w.lots=merged;w.tx=tx;}
+  if(!w){ensure(Object.hasOwn(openingBalances,address),'FLOW_OPENING_MISSING');w={balance:BigInt(openingBalances[address]),lots:new Map(),tx:null,hasPayer:false};ensure(w.balance>=0n,'FLOW_BALANCE');wallets.set(address,w);}
+  if(w.tx!==tx){if(w.hasPayer){const merged=new Map();for(const lot of w.lots.values())add(merged,{...lot,payer:null});w.lots=merged;w.hasPayer=false;}w.tx=tx;}
   if(!w.lots.size&&w.balance)add(w.lots,{root:null,payer:null,amount:w.balance,path:[],txs:[],hops:0});
   return w;
  };
@@ -79,7 +79,7 @@ export function traceClaimFlow({source,marketAddresses,openingBalances,transfers
    totals.pool+=tracked;
    for(const p of parts){if(!sinks.has(p.payer))sinks.set(p.payer,{gross:0n,parts:[],block:e.order[0],timestamp:e.timestamp??null});const sink=sinks.get(p.payer);sink.gross+=p.amount;sink.parts.push(p);}continue;
   }
-  const w=get(e.to,tx);w.balance+=value;for(const p of parts)add(w.lots,p);
+  const w=get(e.to,tx);w.balance+=value;for(const p of parts){add(w.lots,p);if(p.payer!=null)w.hasPayer=true;}
  }
  finish();
  progress({phase:'claim-origin-replay',transfers:processed,total:ordered.length,wallets:wallets.size,elapsedMs:Date.now()-started});

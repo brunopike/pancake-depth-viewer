@@ -68,6 +68,7 @@ export async function collectClaimFlow(state,transport,{previous,progress=()=>{}
  }
  }
  const resume=previous?.replayState?.version===1&&Array.isArray(previous.replayWallets)&&previous.replayState.inputHash===replayInputHash(state,transfers,previous.throughBlock,previous.openingBalances);
+ progress({phase:'claim-replay-mode',mode:resume?'incremental':'full',reason:resume?'checkpoint-match':!previous?'first-run':!previous.replayState?'legacy-checkpoint':!Array.isArray(previous.replayWallets)?'missing-wallet-lots':!sameMarkets?'market-change':'history-input-change',previousBlock:previous?.throughBlock??null,transfers:resume?added.length:transfers.length});
  const traced=traceClaimFlow({...options,transfers:resume?added:transfers,previous:resume?{...previous.report,replayState:{...previous.replayState,wallets:previous.replayWallets}}:null,progress,unsafeTransactions:Object.keys(proof).filter(tx=>proof[tx].unsafe)});
  const missingTime=[...new Set(traced.unconfirmedFlows.filter(e=>e.timestamp===null).map(e=>e.block))],blockTimes={...(previous?.blockTimes||{})};
  const newTimes=missingTime.filter(b=>!Object.hasOwn(blockTimes,b));

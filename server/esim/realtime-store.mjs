@@ -42,10 +42,10 @@ export function encodeSnapshot(kind,data){
 export async function publishRealtime(snapshots,{processedBlock,sql=realtimeSQL(),lease=leaseFromEnvironment()}={}){
  const queries=snapshots.flatMap(({kind,data})=>{
   const s=encodeSnapshot(kind,data);
-  return [...(s.parts||[]).map((body,index)=>sql.query('INSERT INTO esim_realtime_snapshot_parts(kind,etag,part,body) VALUES($1,$2,$3,$4) ON CONFLICT DO NOTHING',[s.kind,s.hash,index,body])),sql.query(`WITH published AS (INSERT INTO esim_realtime_snapshots (kind,block,cutoff,body,etag)
+  return [sql.query('UPDATE esim_realtime_snapshot_parts SET last_referenced_at=clock_timestamp() WHERE kind=$1 AND etag=(SELECT etag FROM esim_realtime_snapshots WHERE kind=$1)',[s.kind]),...(s.parts||[]).map((body,index)=>sql.query('INSERT INTO esim_realtime_snapshot_parts(kind,etag,part,body) VALUES($1,$2,$3,$4) ON CONFLICT DO NOTHING',[s.kind,s.hash,index,body])),sql.query(`WITH published AS (INSERT INTO esim_realtime_snapshots (kind,block,cutoff,body,etag)
    VALUES ($1,$2,$3,$4,$5) ON CONFLICT (kind) DO UPDATE SET block=excluded.block,cutoff=excluded.cutoff,body=excluded.body,etag=excluded.etag,updated_at=now()
    WHERE excluded.block>=esim_realtime_snapshots.block RETURNING kind,etag)
-   DELETE FROM esim_realtime_snapshot_parts p USING published s WHERE p.kind=s.kind AND p.etag<>s.etag`,[s.kind,s.block,s.cutoff,s.body,s.hash])];
+   DELETE FROM esim_realtime_snapshot_parts p USING published s WHERE p.kind=s.kind AND p.etag<>s.etag AND p.last_referenced_at<clock_timestamp()-interval '10 minutes'`,[s.kind,s.block,s.cutoff,s.body,s.hash])];
  });
  if(processedBlock!==undefined)queries.push(sql.query(`UPDATE esim_realtime_control SET processed_block=greatest(processed_block,$1),last_processed=now(),last_error=NULL WHERE id=1`,[processedBlock]));
  // The check and all writes share one transaction and lock. Checking only
@@ -62,7 +62,7 @@ export function snapshotPartCount(row){
 }
 export async function readRealtimePart(kind,etag,index,sql=realtimeSQL()){
  if(!['report','addresses','holders','depth'].includes(kind)||!/^[0-9a-f]{64}$/.test(etag)||!Number.isInteger(index)||index<0||index>=32)throw Error('INVALID_SNAPSHOT_PART');
- const [row]=await sql.query('SELECT p.body FROM esim_realtime_snapshot_parts p JOIN esim_realtime_snapshots s ON s.kind=p.kind AND s.etag=p.etag WHERE p.kind=$1 AND p.etag=$2 AND p.part=$3',[kind,etag,index]);
+ const [row]=await sql.query('SELECT body FROM esim_realtime_snapshot_parts WHERE kind=$1 AND etag=$2 AND part=$3',[kind,etag,index]);
  if(!row||!row.body||row.body.length>3*1024*1024)throw Error('SNAPSHOT_PART_UNAVAILABLE');return row.body;
 }
 export async function readRealtime(kind,sql=realtimeSQL()){

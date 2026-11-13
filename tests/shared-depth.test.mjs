@@ -4,7 +4,7 @@ import {gunzipSync} from 'node:zlib';
 import {readSharedDepth} from '../src/shared-depth.mjs';
 import {encodeSnapshot} from '../server/esim/realtime-store.mjs';
 const value=(block,timestamp=Date.now())=>({blockNumber:String(block),timestamp});
-const response=data=>({ok:true,text:async()=>JSON.stringify(data)});
+const response=data=>new Response(JSON.stringify(data));
 const opts={hostname:'esimonchain.imstark.site',parse:JSON.parse,archiveURL:async()=>'/archive'};
 test('fresh default depth uses Neon without fetching the archive',async()=>{
  const calls=[],data=value(123);assert.deepEqual(await readSharedDepth({...opts,fetch:async url=>{calls.push(url);return response(data);}}),data);assert.deepEqual(calls,['./api/esim-snapshot?kind=depth']);

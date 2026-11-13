@@ -83,3 +83,14 @@ test('many serialized checkpoints retain exact rounding, mixed roots, returns an
  const first=traceClaimFlow({...options,transfers:[edge(1,source,'a',10,'split')]});
  assert.throws(()=>traceClaimFlow({...options,transfers:[edge(2,'a',pool,1,'split')],previous:first}),/FLOW_REPLAY_BOUNDARY/);
 });
+
+test('independent receipts into one hub do not repeatedly walk all its existing origins',()=>{
+ const n=200,transfers=[],opening={hub:'0'};let order=1;
+ for(let i=0;i<n;i++){const wallet='root'+i;opening[wallet]='0';transfers.push(edge(order++,source,wallet,1));}
+ for(let i=0;i<n;i++)transfers.push(edge(order++,'root'+i,'hub',1));
+ const values=Map.prototype.values;let visits=0;
+ Map.prototype.values=function*(){for(const item of values.call(this)){if(item&&Object.hasOwn(item,'root')&&Object.hasOwn(item,'amount'))visits++;yield item;}};
+ let result;try{result=traceClaimFlow({source,zero:'zero',marketAddresses:[pool],openingBalances:opening,transfers,trades:[]});}finally{Map.prototype.values=values;}
+ assert.equal(result.closingBalances.hub,String(n));assert.equal(result.totals.issued_wei,String(n));assert.equal(result.totals.remaining_wei,String(n));
+ assert(visits<12*n,`origin visits ${visits} must grow linearly with independent receipts`);
+});

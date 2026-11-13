@@ -4,6 +4,7 @@ import {randomBytes,createHash} from 'node:crypto';
 import {gunzipSync} from 'node:zlib';
 import {encodeSnapshot,publishRealtime,readRealtime} from '../server/esim/realtime-store.mjs';
 import {readSnapshot} from '../src/snapshot-client.mjs';
+import {readSharedDepth} from '../src/shared-depth.mjs';
 
 const data={version:1,block:123,cutoff:Date.now()/1000,windows:{history:{exactAmount:'123456789012345678901234567890',payload:randomBytes(5*1024*1024).toString('hex')}}};
 const digest=bytes=>createHash('sha256').update(bytes).digest('hex');
@@ -47,4 +48,12 @@ test('browser receives the complete large revision and rejects mixed or corrupt 
  };
  const result=await readSnapshot('addresses',{fetch:request,realtime:true});assert.equal(result.source,'realtime');assert.deepEqual(result.data,data);assert.equal(urls.length,e.parts.length+1);
  corrupt=true;await assert.rejects(readSnapshot('addresses',{fetch:request,realtime:true}),/数据暂时无法读取/);
+});
+
+test('large depth retains its existing caller parsing and original block fields',async()=>{
+ const depth={...data,blockNumber:'123',timestamp:Date.now(),chainId:56,base:'0x7765a659c5b0cfbfd9fbc2ef2298b75a598f2d2d',quote:'0x55d398326f99059ff775485246999027b3197955',blockHash:'0x'+'a'.repeat(64),pools:[{liquidity:'123456789012345678901234567890'}],failed:[]};delete depth.block;delete depth.cutoff;
+ const e=encodeSnapshot('depth',depth),manifest={version:1,chunked:true,kind:'depth',block:123,cutoff:depth.timestamp/1000,etag:e.hash,parts:e.parts.length};
+ const request=async url=>{const u=new URL(url,'https://example.test');if(!u.pathname.endsWith('/api/esim-snapshot'))return new Response('',{status:503});return u.searchParams.has('part')?new Response(Buffer.from(e.parts[Number(u.searchParams.get('part'))],'base64')):new Response(JSON.stringify(manifest));};
+ const result=await readSharedDepth({hostname:'esimonchain.imstark.site',parse:text=>{const v=JSON.parse(text);assert.equal(v.blockNumber,'123');assert.equal(v.pools[0].liquidity,'123456789012345678901234567890');return v;},archiveURL:async()=>'/unavailable',fetch:request});
+ assert.deepEqual(result,depth);
 });
